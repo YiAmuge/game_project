@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#11191b">
+  <title>도시 경계 — 4vs4 아레나</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23c7ac72' d='M32 2 60 18v28L32 62 4 46V18zm0 9L12 23v18l20 12 20-12V23z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <header class="masthead">
+    <a id="home" class="brand" href="#" aria-label="도시 경계 처음으로"><span class="brand-mark">◈</span><span>도시 경계<small>CITY BORDER</small></span></a>
+    <nav><span class="nav-active">아레나</span><button id="archive-open">챔피언 기록 <span>31</span></button><button id="help-open">플레이 가이드 ↗</button></nav>
+    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.2</b></span>
+  </header>
+  <main>
+    <section class="match-bar" aria-label="경기 상태">
+      <div class="team blue"><span class="team-sigil">◇</span><div><small>SECTOR 01</small><b>아군 진영</b></div><strong id="blue-score">0</strong><span id="blue-towers" class="tower-count">▰ ▰</span></div>
+      <div class="match-clock"><span>4 VS 4 · 두 개의 전선</span><strong id="clock">00:00</strong><small id="phase">출격 대기</small></div>
+      <div class="team red"><span id="red-towers" class="tower-count">▰ ▰</span><strong id="red-score">0</strong><div><small>SECTOR 02</small><b>적군 진영</b></div><span class="team-sigil">◇</span></div>
+    </section>
+    <section class="arena-shell">
+      <div class="field-top"><span><i class="live-dot"></i> 제13구역 <em>/</em> 경계 전장</span><div><span id="boss-time">중앙 보스 · 05:00</span><button id="fullscreen" title="F 전체 화면">⛶ 전체 화면</button><button id="field-help" title="플레이 가이드">?</button><button id="speed" title="시뮬레이션 속도 변경">1×</button><button id="pause" title="Esc 일시정지" disabled>Ⅱ</button></div></div>
+      <canvas id="arena" aria-label="플레이어 중심 4대4 전장. WASD 이동, 마우스 조준, 좌클릭 공격, 우클릭 전술기, Space 궁극기, F 전체 화면." tabindex="0"></canvas>
+      <canvas id="minimap" width="224" height="126" aria-label="팀 위치와 현재 카메라 범위" class="minimap hidden"></canvas>
+      <div class="field-legend"><span class="blue-dot">아군</span><span class="red-dot">적군</span><span class="gold-dot">중립</span><span class="purple-dot">보스</span><span class="map-note">수풀 · 원거리 은닉 / 근접 탐지</span></div>
+      <div id="event-feed" class="event-feed" aria-live="polite"></div>
+      <div id="respawn" class="respawn hidden"></div>
+      <div id="pause-banner" class="pause-banner hidden"><span>Ⅱ</span>작전 일시정지<button id="resume">계속하기</button><button id="leave">출격 준비로 돌아가기</button></div>
+      <section id="lobby" class="lobby">
+        <div class="lobby-copy"><span class="eyebrow">UNOFFICIAL FAN PROJECT / TACTICAL ARENA</span><h1>도시는,<br>다시 격돌한다.</h1><p>두 개의 전선. 여덟 명의 전투원.<br>당신의 선택으로 경계를 무너뜨리세요.</p><div class="lobby-meta"><span><b>4 : 4</b>팀 전투</span><span><b>10 MIN</b>제한 시간</span><span><b>2 LANES</b>대칭 전장</span></div></div>
+        <div class="deploy-panel"><div class="panel-label"><span>01 / 전투원 선택</span><span>4명 플레이 가능</span></div><div id="champion-select" class="champion-select"></div><div class="selected-detail"><span id="selected-role">저격</span><h2 id="selected-name">파우스트</h2><p id="selected-brief"></p><div id="selected-stats" class="stat-dots"></div></div><button id="start" class="primary">전장에 진입 <span>→</span></button><p class="deploy-note">나 + 아군 봇 3명 vs 적군 봇 4명<br>키보드·마우스 조작 · 오프라인 연습 경기</p></div>
+      </section>
+      <section id="result" class="result hidden" aria-live="polite"><span class="eyebrow">OPERATION COMPLETE</span><h1 id="result-title"></h1><p id="result-reason"></p><div id="result-stats"></div><button id="restart" class="primary">다시 출격 준비 <span>→</span></button></section>
+    </section>
+    <section class="hud" aria-label="플레이어 상태와 기술">
+      <div class="player-card"><div id="portrait" class="portrait"><canvas id="hud-face" width="80" height="80"></canvas><small id="level">LV.1</small></div><div class="player-vitals"><div><b id="player-name">파우스트</b><span id="kda">0 / 0</span></div><div class="health-track"><i id="health-fill"></i><span id="health-text">3400 / 3400</span></div><div class="xp-track"><i id="xp-fill"></i></div><div id="ammo" class="ammo"></div></div></div>
+      <div class="abilities"><button id="basic-btn" class="ability"><kbd>LMB</kbd><span>대상 분석</span><small>수동 조준</small></button><button id="q-btn" class="ability"><kbd>RMB</kbd><span>탐구</span><small>전술기</small><b class="cooldown"></b></button><button id="r-btn" class="ability ultimate"><kbd>SPACE</kbd><span>표상방출기</span><small>궁극기</small><b class="cooldown"></b></button><button id="potion-btn" class="ability potion"><kbd>1</kbd><span>회복 물약</span><small id="potion-count">미보유</small></button></div>
+      <button id="shop-toggle" class="shop-toggle"><span>◈ <b id="gold">250</b></span><small>부활소 상점 <kbd>B</kbd></small></button>
+    </section>
+    <section class="underbar"><span><kbd>W A S D</kbd> 이동 <i>·</i> 좌클릭 공격 <i>·</i> 우클릭 전술기 <i>·</i> <kbd>SPACE</kbd> 궁극기 <i>·</i> <kbd>F</kbd> 전체 화면</span><span>적 포탑 2개를 파괴하고 본진을 공략하세요.</span></section>
+    <aside id="shop" class="shop hidden"><div class="shop-heading"><div><span class="eyebrow">SUPPLY STATION</span><h2>부활소 보급</h2></div><button id="shop-close" aria-label="상점 닫기">×</button></div><p id="shop-status"></p><div id="upgrade-list"></div><button id="buy-potion" class="shop-item"><span>회복 물약 <small>4초 동안 체력 18% 회복 · 2회</small></span><b>90 ◈</b></button><p class="shop-foot">부활소 안에서 비전투 상태일 때 구매할 수 있습니다.</p></aside>
+  </main>
+  <footer><span>PROJECT MOON UNOFFICIAL FAN GAME</span><span>기획서 v1.0 기반 · 팬 아트 / 밸런스 검증용</span><span>CITY BORDER © FAN PROJECT</span></footer>
+  <dialog id="archive"><div class="dialog-heading"><div><span class="eyebrow">PERSONNEL ARCHIVE</span><h2>챔피언 기록</h2></div><button class="close-dialog" aria-label="기록 닫기">×</button></div><div class="archive-layout"><div><input id="roster-search" aria-label="챔피언 검색" placeholder="이름 또는 역할군 검색"><div id="roster-list"></div></div><article id="roster-detail"></article></div></dialog>
+  <dialog id="help"><div class="dialog-heading"><div><span class="eyebrow">FIELD MANUAL</span><h2>전장에 오신 것을 환영합니다.</h2></div><button class="close-dialog" aria-label="가이드 닫기">×</button></div><div class="help-grid"><section><h3>01 · 전투와 시점</h3><p>WASD로 이동하고 마우스로 조준합니다. 좌클릭을 누르면 연속 공격, 우클릭은 전술기, Space는 궁극기입니다. 자동 조준은 사용하지 않습니다.</p><p>화면은 내 캐릭터를 중심으로 따라갑니다. F 또는 ⛶ 버튼으로 전체 화면을 켭니다. 1 회복 물약 · B 상점 · Esc 일시정지.</p></section><section><h3>02 · 승리</h3><p>적 포탑 두 개를 모두 파괴해야 본진을 공격할 수 있습니다. 미니언이 없으면 챔피언의 구조물 피해가 80% 감소합니다.</p><p>10분에는 남은 포탑 수 → 포탑 체력 합 → 양쪽 포탑이 없을 때 본진 체력 순으로 판정합니다.</p></section><section><h3>03 · 수풀과 성장</h3><p>수풀 속 적은 원거리에서 보이지 않습니다. 같은 수풀에 들어가거나 2.5 거리 안으로 접근하면 팀에 드러납니다. 공격·스킬 사용 또는 피격 후에는 1.25초 노출됩니다.</p><p>본진 뒤 부활소에서 체력을 회복하고 B로 강화를 구매하세요. 30초 웨이브, 5분 보스, 10분 경기입니다.</p></section><section><h3>04 · 현재 버전</h3><p>1인 + 봇 7명의 오프라인 프로토타입입니다. 4명은 플레이 가능하며 기록실에서 31명 전체 원안을 볼 수 있습니다.</p><p>일부 기술은 단순화되어 있습니다. 온라인 경기, 특성, 물약 외 소모품은 후속 구현입니다. 1× 버튼으로 속도를 바꿀 수 있습니다.</p></section></div></dialog>
+  <div id="toast" class="toast hidden" role="status"></div>
+  <noscript><p style="position:fixed;inset:20px 20px auto;padding:20px;background:#eed29a;color:#18201a;z-index:100">이 미리보기에서는 게임 실행에 필요한 JavaScript가 꺼져 있습니다. 단일 HTML 실행본을 다운로드해 Chrome 또는 Edge에서 열어 주세요.</p></noscript>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+import { build } from 'esbuild';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const output = resolve(root, 'dist');
+const [template, css, roster, atlas, bundle] = await Promise.all([
+  readFile(resolve(root, 'index.html'), 'utf8'),
+  readFile(resolve(root, 'src/style.css'), 'utf8'),
+  readFile(resolve(root, 'src/roster.json'), 'utf8'),
+  readFile(resolve(root, 'src/assets/champions.png')),
+  build({
+    absWorkingDir: root,
+    entryPoints: ['src/main.js'],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: ['chrome100', 'firefox100', 'safari15.4'],
+    charset: 'utf8',
+    minify: false,
+    legalComments: 'none',
+    // HTML parser end tags must never occur inside an embedded script.
+    supported: { 'inline-script': true },
+  }),
+]);
+
+const styleTag = '<link rel="stylesheet" href="./src/style.css">';
+const moduleTag = '<script type="module" src="./src/main.js"></script>';
+if (!template.includes(styleTag) || !template.includes(moduleTag)) {
+  throw new Error('HTML entry tags changed: update the standalone builder.');
+}
+// Inline the JSON as data, without making it executable or allowing HTML end tags.
+const data = JSON.stringify(JSON.parse(roster)).replace(/</g, '\\u003c');
+const html = template
+  .replace(styleTag, () => `<style>${css.replace(/<\/style/gi, '<\\/style')}</style>`)
+  .replace(moduleTag, () => `<script id="roster-data" type="application/json">${data}</script>\n<script id="sprite-data" type="application/json">${JSON.stringify('data:image/png;base64,'+atlas.toString('base64'))}</script>\n<script>${bundle.outputFiles[0].text}</script>`);
+await mkdir(output, { recursive: true });
+await writeFile(resolve(output, 'city-border.html'), html);
+await writeFile(resolve(output, 'index.html'), html);
+console.log(`Built dist/city-border.html (${Buffer.byteLength(html).toLocaleString()} bytes). No server or external files required.`);

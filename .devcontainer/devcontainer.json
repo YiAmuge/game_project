@@ -1,0 +1,20 @@
+{
+  "name": "City Border — Browser Game Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "도시 경계 게임", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "npm ci",
+  "postAttachCommand": "node scripts/codespaces-start.mjs",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 800,
+        "editor.tabSize": 2,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
