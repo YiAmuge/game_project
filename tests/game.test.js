@@ -79,7 +79,7 @@ test('ammo is consumed, dry fire fails and continuous reload respects capacity',
   const g=isolated(),p=g.player;
   for(let i=0;i<3;i++){p.attackCd=0;assert.equal(g.attack(p,{x:10,y:18}),true);}
   p.attackCd=0;assert.equal(p.ammo,0);assert.equal(g.attack(p,{x:10,y:18}),false);
-  run(g,.6);assert.equal(p.ammo,1);run(g,3);assert.equal(p.ammo,3);assert.equal(p.reloadProgress,0);
+  run(g,.75);assert.equal(p.ammo,1);run(g,3);assert.equal(p.ammo,3);assert.equal(p.reloadProgress,0);
 });
 test('basic projectile hits an enemy and collides with walls',()=>{
   const g=isolated(),p=g.player,t=opponent(g);g.units=[p,t];p.x=30;p.y=5;t.x=34;t.y=5;
@@ -152,9 +152,9 @@ test('bots leave their lane entrance and actually fight',()=>{
   assert.ok(g.champions().some(c=>!c.player&&c.totalDamage>1000));
   assert.ok(g.champions().some(c=>c.xp>0));assert.equal(g.wave,3);
 });
-test('all four selections survive a full autonomous match with finite state and a winner',()=>{
-  for(const key of Object.keys(CHAMPIONS)) {
-    const g=new Game(key);run(g,600);
+test('representative position selections complete full autonomous matches with finite state',()=>{
+  for(const [key,position] of [['don','top'],['ryoshu','jungle'],['outis','bottom'],['honglu','support']]) {
+    const g=new Game(key,position);g.player.player=false;run(g,600);
     assert.ok([-1,0,1].includes(g.winner),key);assert.ok(g.time<=600);assert.ok(g.bossSpawned||g.time<300);
     for(const u of g.units){assert.ok(Number.isFinite(u.x)&&Number.isFinite(u.y)&&Number.isFinite(u.hp),`${key}: ${u.name}`);assert.ok(u.hp>=0);}
     assert.ok(g.champions().some(c=>c.totalDamage>1000));

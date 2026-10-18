@@ -1,8 +1,10 @@
+import { EXTRA_CHAMPIONS } from './extra-data.js';
 export const RULES = {
   duration: 600, bossAt: 300, waveEvery: 30, width: 64, height: 36,
   health: [0, 2200, 2800, 3400, 4000, 4600], power: [0, .82, .91, 1, 1.12, 1.25],
   reload: [0, .8, .68, .56, .45, .36], speed: [0, 3.1, 3.45, 3.8, 4.15, 4.5],
   xp: [0, 250, 600, 1050, 1650], costs: [160, 260, 400],
+  reloadEfficiency: .8, naturalHealDelay: 3, naturalHealRate: .13, allyExecuteThreshold: .17,
 };
 export const CHAMPIONS = {
   faust: { id: 2, name: '파우스트', tag: 'FAUST', role: '저격', color: '#c9d8df', icon: 'F', power: 4, health: 3, speed: 2, ammo: 3, reload: 3, range: 7.5, damage: 180, attackTime: .46, q: 11, r: 48,
@@ -22,6 +24,17 @@ export const CHAMPIONS = {
     brief: '아군의 피해를 줄이는 전선의 방패', qText: '4초 피해 -30% / 이동 +25% / 침묵·감속 해제', rText: '전방 사슬 / 피해·속박 / 전투력 약화',
   },
 };
+export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','rodya','outis','gregor'];
+for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=EXTRA_CHAMPIONS[key];
+export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!NEW_CHAMPION_KEYS.includes(key)));
+export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
+export const POSITIONS={
+  top:{name:'탑',lane:0,recommend:['보호','돌격'],description:'상단 라인 1vs1 · 수호·돌격 추천'},
+  jungle:{name:'정글',lane:0,recommend:['암살'],description:'중립 크립 사냥·갱킹 · 암살 추천'},
+  bottom:{name:'바텀',lane:1,recommend:['저격'],description:'서포터와 하단 2vs2 · 저격 추천'},
+  support:{name:'서포터',lane:1,recommend:['지원','방해'],description:'바텀 보호·하단 2vs2·로밍 · 지원·방해 추천'},
+};
+export const POSITION_ORDER=['top','jungle','bottom','support'];
 export const UPGRADES = [
   { key: 'power', name: '전투력', effect: '+4%', max: 3 },
   { key: 'health', name: '최대 체력', effect: '+6%', max: 3 },

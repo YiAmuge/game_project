@@ -7,6 +7,8 @@
 3. 설정이 완료되면 **Ports** 탭에서 **5173 / 도시 경계 게임 → Open in Browser**를 누른다.
 4. 코드 편집 탭과 게임 탭을 나란히 놓는다. 코드 저장 시 게임 탭이 자동 새로고침된다.
 
+브랜치 이름은 v0.2를 유지하지만 현재 내용은 v0.3이다. 기존 Codespace에서는 수정 내용을 Commit한 뒤 **Source Control → Pull**로 업데이트한다. Pull 이후 게임 탭을 새로고침하면 새 메뉴가 나타난다. 새 ZIP을 받을 필요는 없다.
+
 Codespaces 구성은 Node.js 22, 의존성 설치, 자동 저장, 포트 열기, 반복 연결 시 기존 서버 재사용을 설정한다. 이 작업에서 실제 Codespace 인스턴스를 생성하지는 않았다. GitHub 계정에서 Codespaces를 사용할 수 있어야 한다.
 
 게임이 시작되지 않으면 터미널에서 `node scripts/codespaces-start.mjs`를 실행한다. 로그는 `/tmp/city-border-dev.log`에 있다. 개발 서버가 종료된 상태라면 `npm run dev`로 직접 시작해도 된다.
@@ -22,13 +24,16 @@ Codespaces 구성은 Node.js 22, 의존성 설치, 자동 저장, 포트 열기,
 
 | 바꿀 내용 | 파일 |
 | --- | --- |
-| 챔피언 능력치·사거리·쿨다운 | `src/data.js` |
-| 공격·스킬 동작·부쉬 은닉 규칙 | `src/game.js` |
+| 공통 규칙·기존 4명·포지션 | `src/data.js` |
+| 신규 8명·실험 5명의 능력치·사거리·쿨다운 | `src/extra-data.js` |
+| 전투·자연 치유·장전·부쉬·봇 | `src/game.js` |
+| 신규 8명·실험 5명의 공격·스킬 | `src/skills.js` |
 | 카메라 확대 범위 | `src/camera.js` |
 | 무기·스킬 이펙트·맵 표현 | `src/render.js` |
 | 조작 키와 UI 연결 | `src/main.js` |
 | HUD 배치·전체 화면 화면 구성 | `src/style.css`, `index.html` |
-| 캐릭터 스프라이트 | `src/assets/champions.png`, `src/art.js` |
+| 캐릭터 스프라이트 | `src/assets/champions.png`, `src/assets/champions-extra.png`, `src/art.js` |
+| 도감 데이터 | `src/catalog.js`, `src/roster.json` |
 
 ## 누구나 주소로 플레이하게 만들기
 
