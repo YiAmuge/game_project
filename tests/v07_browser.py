@@ -1,4 +1,4 @@
-"""v0.7 actual input, status art and codex coverage for the ten adjusted champions."""
+"""v0.7 actual input, status art and codex coverage for the eleven adjusted champions."""
 import json,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
@@ -71,7 +71,7 @@ with sync_playwright() as pw:
     page.wait_for_function('__labels.has("JACKPOT!")');page.screenshot(path=str(art/'v07-rodya-jackpot.png'))
     page.keyboard.press('Space');page.wait_for_function('__moba.game.zones.some(z=>z.kind==="ice")');page.screenshot(path=str(art/'v07-rodya-missed-ice.png'))
     page.click('#pause');page.click('#leave');page.click('#practice-back');page.click('#menu-codex')
-    for name,text in [('구보','7.5'),('가환','0.75'),('넬리','210'),('묘','탄약 1개'),('루돌프','2.15'),('동백','360'),('동랑','빛나는 욕망'),('이스마엘','25초'),('로쟈','잭팟'),('뫼르소','233.75')]:
+    for name,text in [('돈키호테','노란 테두리'),('구보','7.5'),('가환','0.75'),('넬리','210'),('묘','탄약 1개'),('루돌프','2.15'),('동백','360'),('동랑','빛나는 욕망'),('이스마엘','25초'),('로쟈','잭팟'),('뫼르소','233.75')]:
         page.fill('#roster-search',name);page.click('#roster-list button');expect(page.locator('#roster-detail')).to_contain_text(text)
     assert not errors,errors
-    browser.close();print(json.dumps({'status':'passed','checks':['ten adjusted champions with actual mouse/keyboard input','villain and ally reticles','Gubo aim/travel/hit','Gahwan 0/.75/1.5 triple','Nelly mark proc/refill','Myo expanded magazine','Rudolph orange antler staff/debuff stage','Dongbaek instant ult','golden tree conversion/ground dash','Ishmael raised shield/full pull','Rodya jackpot/missed ice','ten codex records'],'page_errors':errors},ensure_ascii=False))
+    browser.close();print(json.dumps({'status':'passed','checks':['eleven adjusted champions with actual mouse/keyboard input','villain and ally reticles','Gubo aim/travel/hit','Gahwan 0/.75/1.5 triple','Nelly mark proc/refill','Myo expanded magazine','Rudolph orange antler staff/debuff stage','Dongbaek instant ult','golden tree conversion/ground dash','Ishmael raised shield/full pull','Rodya jackpot/missed ice','eleven codex records'],'page_errors':errors},ensure_ascii=False))
