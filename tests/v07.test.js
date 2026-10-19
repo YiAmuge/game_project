@@ -39,16 +39,16 @@ test('Gahwan close knockback cooldown is independent per champion and does not r
  const {g,p,t}=quiet('gahwan'),b=enemy(g,42,7.4);t.x=42;g.attack(p,t);close(t.motion.total,2.5);close(b.motion.total,2.5);delete t.motion;delete b.motion;p.attackCd=0;const hp=t.hp;g.attack(p,t);assert.equal(t.motion,undefined);assert.ok(t.hp<hp);g.time=2.01;p.attackCd=0;p.ammo=1;g.attack(p,t);close(t.motion.total,2.5);
 });
 test('Nelly mark does fixed fifteen percent max HP and basic and ultimate triggers both refund Q charge time',()=>{
- for(const ult of [false,true]){const {g,p,t}=quiet('nelly');t.x=41;p.state.knifeCharges=0;p.state.knifeReady=10;p.qCd=10;g.attack(p,t);const hp=t.hp;if(ult)g.cast(p,'r',t);else{p.attackCd=0;g.attack(p,t);}assert.ok(hp-t.hp>=1500);close(p.state.knifeReady,6.5);}
+ for(const ult of [false,true]){const {g,p,t}=quiet('nelly');t.x=41;p.state.knifeCharges=0;p.state.knifeReady=10;p.qCd=10;g.attack(p,t);const hp=t.hp;if(ult)g.cast(p,'r',t);else{p.attackCd=0;g.attack(p,t);}assert.ok(hp-t.hp>=1500);close(p.state.knifeReady,5);}
 });
 test('Nelly knives pierce multiple enemies and refill no more than once per throw; R restores two ammo',()=>{
- const {g,p,t}=quiet('nelly'),b=enemy(g,46);t.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};b.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};g.cast(p,'q',t);run(g,.5);assert.ok(t.hp<10000&&b.hp<10000);assert.ok(p.state.knifeReady>6.5&&p.state.knifeReady<6.7);p.ammo=0;t.x=43;g.cast(p,'r',t);assert.equal(p.ammo,2);
+ const {g,p,t}=quiet('nelly'),b=enemy(g,46);t.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};b.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};g.cast(p,'q',t);run(g,.5);assert.ok(t.hp<10000&&b.hp<10000);assert.ok(p.state.knifeReady>2.5&&p.state.knifeReady<2.7);p.ammo=0;t.x=43;g.cast(p,'r',t);assert.equal(p.ammo,2);
 });
 test('Myo kill refill, one-ammo Q and six-second expanded magazine clamp correctly at expiry',()=>{
  const {g,p,t}=quiet('myo');assert.equal(g.ammoCap(p),4);p.ammo=0;g.kill(t,p);assert.equal(p.ammo,2);g.cast(p,'q',{x:45,y:7});assert.equal(p.ammo,1);g.cast(p,'r',p);assert.equal(p.ammo,2);assert.equal(g.ammoCap(p),6);close(p.buffs.rabbitFrenzy,6);p.ammo=6;g.time=5.99;g.step(.02);assert.equal(g.ammoCap(p),4);assert.equal(p.ammo,4);
 });
-test('Rudolph consumes ten SP per second and advances debuffs across separate five-hit chains',()=>{
- const {g,p,t}=quiet('rudolph');g.attack(p,t);close(p.ammo,100-10/3);for(let i=0;i<5;i++){g.time=i*.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,1);close(g.stat(t,'slow'),.2);g.time+=.6;assert.equal(g.stat(t,'slow'),0);const ammo=t.ammo;for(let i=0;i<5;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.ammo,ammo-1);t.qCd=4;t.rCd=10;for(let i=0;i<5;i++){g.time+=.1;mentalWhip(g,p,t);}close(t.qCd,5.5);close(t.rCd,11.5);const until=t.state.mentalWhip[p.id].immuneUntil;for(let i=0;i<5;i++)mentalWhip(g,p,t);assert.equal(t.ammo,ammo-1);g.time=until+.01;mentalWhip(g,p,t);assert.equal(t.state.mentalWhip[p.id].stage,0);
+test('Rudolph consumes ten SP per second and caps the new damage debuff at three stacks',()=>{
+ const {g,p,t}=quiet('rudolph');g.attack(p,t);close(p.ammo,100-10/3);const ammo=t.ammo;t.qCd=4;t.rCd=10;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);close(g.stat(t,'slow'),0);assert.equal(t.ammo,ammo);close(t.qCd,4);close(t.rCd,10);
 });
 test('Rudolph cooldown reversal also delays ready charged skills and running charge regeneration',()=>{
  for(const key of ['nelly','dongrang']){const {g,p}=quiet(key);const s=p.state,field=key==='nelly'?'knifeReady':'treeReady',charges=key==='nelly'?'knifeCharges':'treeCharges';s[field]=g.time+3;s[charges]=1;g.rewindCooldowns(p,1.5);g.step(.01);assert.ok(p.qCd>1.4);close(s[field],4.5);assert.equal(g.cast(p,'q',{x:42,y:7}),false);run(g,1.6);assert.ok(g.cast(p,'q',{x:42,y:7}));}
@@ -63,7 +63,7 @@ test('Dongrang passive power purchases apply health immediately and augment remo
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);
 });
 test('natural healing and fountain/potion-style healing use distinct Dongrang growth accounting',()=>{
- const {g,p}=quiet('dongrang');p.hp-=1000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(null,p,800,false);assert.equal(ultGrowth(p).damage,215);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,215);
+ const {g,p}=quiet('dongrang');p.hp-=1000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(null,p,800,false);assert.equal(ultGrowth(p).damage,430);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,430);
 });
 test('each desire tree converts at 350 actual damage, heals one for one, stops attacking and lasts ten more seconds',()=>{
  const {g,p,t}=quiet('dongrang');p.hp-=1000;p.lastAttackAt=0;g.cast(p,'q',t);run(g,2.6);const z=g.zones[0];assert.equal(z.dealt,175);close(p.totalHealingReceived,175);run(g,2.5);assert.ok(z.golden);close(z.dealt,350);close(z.until-g.time,9.9,.08);const hp=t.hp;run(g,1);close(t.hp,hp);g.time=z.until+.01;g.updateDelayed(0);assert.equal(g.zones.length,0);
@@ -84,7 +84,7 @@ test('Ishmael wider harpoon pulls even a distant champion all the way in front w
  const {g,p,t}=quiet('ishmael');t.x=54;g.cast(p,'r',t);close(p.rCd,25);close(g.projectiles[0].width,.585);run(g,.9);close(t.x,54);run(g,.15);assert.ok(t.motion);assert.ok(t.x>53);run(g,2.5);close(t.x,p.x+p.radius+t.radius+.15);
 });
 test('Rodya three-head jackpot applies tails benefits too and completely reloads',()=>{
- const {g,p}=quiet('rodya');g.random=()=>.1;p.ammo=0;p.rCd=30;g.cast(p,'q',p);assert.ok(p.state.jackpot);assert.equal(p.state.coinHeads,3);assert.equal(p.state.coinTails,3);assert.equal(p.ammo,g.ammoCap(p));assert.ok(g.buff(p,'coinSpeed'));close(p.rCd,24);close(p.qCd,3);
+ const {g,p}=quiet('rodya');g.random=()=>.1;p.ammo=0;p.rCd=30;g.cast(p,'q',p);assert.ok(p.state.jackpot);assert.equal(p.state.coinHeads,3);assert.equal(p.state.coinTails,3);assert.equal(p.ammo,g.ammoCap(p));assert.ok(g.buff(p,'coinSpeed'));close(p.rCd,24);close(p.qCd,6);
 });
 test('Rodya ultimate creates ice on a miss at max range; its dot and reload debuff apply only to enemy champions',()=>{
  const {g,p,t}=quiet('rodya');t.y=15;g.cast(p,'r',{x:50,y:7});run(g,1);assert.equal(g.zones.length,1);const z=g.zones[0];close(z.x,48);Object.assign(t,{x:48,y:7});const n=g.entity({kind:'neutral',team:2,x:48,y:7,maxHp:1000});const hp=t.hp;z.nextTick=g.time;g.updateDelayed(0);assert.ok(t.hp<hp);close(g.stat(t,'reloadWeak'),.2);close(n.hp,1000);const after=t.hp;g.time+=.5;g.updateDelayed(0);close(after-t.hp,12.5*RULES.power[CHAMPIONS.rodya.power]*.9);g.zones=[];g.time+=.8;close(g.stat(t,'reloadWeak'),0);

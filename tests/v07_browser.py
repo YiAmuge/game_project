@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.add_init_script('''(() => {window.__labels=new Set();const draw=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){__labels.add(String(text));return draw.call(this,text,...args);};})();''')
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.7')
+    expect(page.locator('.build-tag')).to_contain_text('0.8')
     def choose(name):
         if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
         if page.evaluate('__moba.mode')=='menu':page.click('#practice-open')
@@ -31,8 +31,8 @@ with sync_playwright() as pw:
     page.wait_for_function('__target.hp<10000',timeout=2000)
     choose('가환');page.evaluate('__target.x=48');page.keyboard.press('Space');click(48,7)
     assert page.evaluate('__target.state.gaze[__moba.game.player.id].n')==1
-    page.wait_for_timeout(800);assert page.evaluate('__target.state.gaze[__moba.game.player.id].n')==2
-    page.wait_for_timeout(800);assert page.evaluate('__target.state.gaze[__moba.game.player.id].n')==3
+    page.wait_for_function('__target.state.gaze[__moba.game.player.id].n===2')
+    page.wait_for_function('__target.state.gaze[__moba.game.player.id].n===3')
     choose('넬리');page.evaluate('__target.x=41');click();page.wait_for_timeout(80);click()
     page.evaluate('__moba.game.player.attackCd=0');click();assert page.evaluate('__target.hp<8200')
     page.evaluate('''() => {const p=__moba.game.player;p.ammo=0;p.attackCd=0;}''');page.keyboard.press('Space');click(41,7)
@@ -71,7 +71,7 @@ with sync_playwright() as pw:
     page.wait_for_function('__labels.has("JACKPOT!")');page.screenshot(path=str(art/'v07-rodya-jackpot.png'))
     page.keyboard.press('Space');page.wait_for_function('__moba.game.zones.some(z=>z.kind==="ice")');page.screenshot(path=str(art/'v07-rodya-missed-ice.png'))
     page.click('#pause');page.click('#leave');page.click('#practice-back');page.click('#menu-codex')
-    for name,text in [('돈키호테','노란 테두리'),('구보','7.5'),('가환','0.75'),('넬리','210'),('묘','탄약 1개'),('루돌프','2.15'),('동백','360'),('동랑','빛나는 욕망'),('이스마엘','25초'),('로쟈','잭팟'),('뫼르소','233.75')]:
+    for name,text in [('돈키호테','노란 테두리'),('구보','7.5'),('가환','0.75'),('넬리','210'),('묘','탄약 1개'),('루돌프','최대 3중첩'),('동백','360'),('동랑','빛나는 욕망'),('이스마엘','25초'),('로쟈','잭팟'),('뫼르소','233.75')]:
         page.fill('#roster-search',name);page.click('#roster-list button');expect(page.locator('#roster-detail')).to_contain_text(text)
     assert not errors,errors
     browser.close();print(json.dumps({'status':'passed','checks':['eleven adjusted champions with actual mouse/keyboard input','villain and ally reticles','Gubo aim/travel/hit','Gahwan 0/.75/1.5 triple','Nelly mark proc/refill','Myo expanded magazine','Rudolph orange antler staff/debuff stage','Dongbaek instant ult','golden tree conversion/ground dash','Ishmael raised shield/full pull','Rodya jackpot/missed ice','eleven codex records'],'page_errors':errors},ensure_ascii=False))

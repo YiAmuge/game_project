@@ -10,8 +10,8 @@ function quiet(key='faust'){
  const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};
  const p=g.player,t=g.champions(1).find(c=>c.key==='faust');Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
-test('twenty ordinary and three experimental champions retain finite stats and complete unique growth definitions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,20);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,23);
+test('twenty-four ordinary and two experimental champions retain finite stats and complete unique growth definitions',()=>{
+ assert.equal(Object.keys(CHAMPIONS).length,24);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,26);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const g=new Game(key);assert.ok(g.player.maxHp>0);assert.ok(Number.isFinite(g.speed(g.player)));assert.ok(CHAMPIONS[key]?.growth||RUNTIME_CHAMPIONS[key].growth);}
 });
 test('new rear wings and two flank rooms are walkable and connected; void corners stay blocked',()=>{
@@ -33,8 +33,8 @@ test('both camp buffs last sixty seconds without extending the separate healing 
  for(const camp of ['amplify','blessing']){const {g,p}=quiet();const n=g.makeNeutral(40,7,camp);g.kill(n,p);close(p.buffs[camp]-g.time,60);if(camp==='blessing')close(p.buffs.blessingHeal-g.time,5);}
 });
 function pattern(camp){const {g,p}=quiet();g.player.x=41;const n=g.makeNeutral(40,7,camp);g.deal(p,n,1,{fixed:true});g.aiNeutral=Game.prototype.aiNeutral;return {g,p,n};}
-test('amplify pattern starts 1.5s after aggro, snapshots the target and explodes only after 2.75s',()=>{
- const {g,p,n}=pattern('amplify');run(g,1.4);assert.ok(!n.pattern);run(g,.2);assert.equal(n.pattern.kind,'amplify');close(n.pattern.at-n.pattern.startedAt,2.75);const old={x:n.pattern.x,y:n.pattern.y};p.x+=7;run(g,2.6);assert.ok(n.pattern);close(n.pattern.x,old.x);run(g,.2);assert.ok(!n.pattern);assert.ok(p.alive);
+test('amplify pattern starts 1.5s after aggro, locks a frontal sector and strikes after 2.65s',()=>{
+ const {g,p,n}=pattern('amplify');run(g,1.4);assert.ok(!n.pattern);run(g,.2);assert.equal(n.pattern.kind,'amplify');close(n.pattern.at-n.pattern.startedAt,2.65);const old={x:n.pattern.x,y:n.pattern.y};p.x+=7;run(g,2.4);assert.ok(n.pattern);close(n.pattern.x,old.x);run(g,.3);assert.ok(!n.pattern);assert.ok(p.alive);
 });
 test('blessing pattern locks a frontal sector for 2.65 seconds and hurts units inside it',()=>{
  const {g,p,n}=pattern('blessing');run(g,1.6);assert.equal(n.pattern.kind,'blessing');close(n.pattern.at-n.pattern.startedAt,2.65);const hp=p.hp;run(g,2.5);close(p.hp,hp);run(g,.2);assert.ok(p.hp<hp);assert.ok(!n.pattern);
@@ -53,7 +53,7 @@ test('wave creation spawns one minion per lane immediately and the rest at .35 s
 });
 test('uncontested minions march along one centerline in spawn order with visible spacing',()=>{
  const g=new Game();g.aiChampion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};run(g,5);let ms=g.units.filter(m=>m.kind==='minion'&&m.team===0&&m.lane===0),path=lanePath(0,0);
- assert.equal(ms.length,4);for(const m of ms)assert.ok(segmentDistance(m,path[0],path[1])<.01);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],path[1])<distance(ms[i],path[1]));run(g,5);for(const m of ms)close(m.y,path[1].y);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],ms[i])>.6);
+ assert.equal(ms.length,4);for(const m of ms)assert.ok(segmentDistance(m,path[0],path[1])<.4);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],path[1])<distance(ms[i],path[1]));run(g,5);for(const m of ms)close(m.y,path[1].y);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],ms[i])>=ms[i-1].radius+ms[i].radius);
 });
 test('one destroyed tower unlocks the core with half damage; destroying the second removes the shield',()=>{
  const g=new Game(),p=g.player,core=g.units.find(e=>e.kind==='core'&&e.team===1);p.x=core.x-2;p.y=core.y;assert.ok(g.locked(core));g.towers(1)[0].alive=false;assert.equal(g.locked(core),false);let hp=core.hp;g.deal(p,core,1000,{fixed:true});const half=hp-core.hp;g.towers(1)[0].alive=false;hp=core.hp;g.deal(p,core,1000,{fixed:true});close((hp-core.hp)/half,2);
@@ -93,7 +93,7 @@ test('Myo direct champion takedowns build only two four-second hunt stacks',()=>
  const {g,p}=quiet('myo');for(let i=0;i<3;i++){const t=g.makeChampion('yi',1,5);g.kill(t,p);}assert.equal(p.state.rabbitStacks,2);close(p.buffs.rabbitHunt-g.time,4);assert.ok(g.speed(p)>RULES.speed[5]);
 });
 test('Dongbaek extra attacks spend skill readiness and stop after three; real ammo resets the reserve',()=>{
- const {g,p,t}=quiet('dongbaek');p.ammo=0;for(let i=0;i<3;i++){p.attackCd=0;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);}close(p.qCd,4.5);close(p.rCd,4.5);p.attackCd=0;assert.equal(g.attack(p,t),false);p.ammo=1;g.attack(p,t);assert.equal(p.state.extraPetals,0);
+ const {g,p,t}=quiet('dongbaek');p.ammo=0;for(let i=0;i<3;i++){p.attackCd=0;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);}close(p.qCd,4.5);close(p.rCd,4.5);p.attackCd=0;assert.equal(g.attack(p,t),false);p.ammo=1;run(g,1.4);p.attackCd=0;g.attack(p,t);assert.equal(p.state.extraPetals,0);
 });
 test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate hits at the selected point without fragrance stacks',()=>{
  const {g,p,t}=quiet('dongbaek');close(g.armor(p),20);const reload=g.reloadInterval(p);g.cast(p,'q',p);close(g.armor(p),0);assert.ok(g.reloadInterval(p)>reload);assert.ok(g.shield(p)>0);t.x=47;const hp=t.hp;g.cast(p,'r',t);assert.ok(t.hp<hp);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.buff(p,'flowerReload'));assert.equal(p.channelUntil,undefined);
@@ -101,6 +101,6 @@ test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate 
 test('Dongrang power affects health and armor rather than damage or incoming healing and counts deliberate overheal',()=>{
  const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,100);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
 });
-test('Dongrang trees have two charges, fixed damage and healing, and his ultimate consumes nearby trees',()=>{
- const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,1);g.cast(p,'q',t);assert.equal(p.state.treeCharges,0);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,210);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=530);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,0);
+test('Dongrang has one tree, fixed damage and healing, and his ultimate consumes it',()=>{
+ const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=430);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,0);
 });

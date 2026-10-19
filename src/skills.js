@@ -1,3 +1,4 @@
+import * as V08 from './v08-champions.js';
 import * as V06 from './v06-champions.js';
 import * as New from './new-champions.js';
 import { has } from './augments.js';
@@ -6,7 +7,7 @@ import { distance, direction, clearLine, segmentDistance, blocked, clamp } from 
 
 function pushTarget(g,t,dx,dy,options={}){const length=Math.hypot(dx,dy);return g.startMotion(t,{x:dx/(length||1),y:dy/(length||1)},length,{kind:'knock',...options});}
 
-export const EXPERIMENTAL_KEYS=['alisa','moses','ezra'];
+export const EXPERIMENTAL_KEYS=['moses','ezra'];
 export const DRAG_KEYS=['moses','ezra'];
 export const EZRA_WEAPONS=[
  {name:'알라스 장갑',ammo:1,reload:3,range:2.2,damage:280},
@@ -51,9 +52,10 @@ export function canRecast(g,e,slot){
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='heathcliff'&&e.state.chargeAt!==undefined)||(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&e.state.dashWindow>g.time&&e.state.dashUses<3))||slot==='r'&&e.key==='ezra'&&g.buff(e,'ezraUlt');
 }
-export function init(g,e){New.init(g,e);V06.init(g,e);}
+export function init(g,e){New.init(g,e);V06.init(g,e);V08.init(g,e);}
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(!V08.validate(g,e,slot,p))return false;
  if(!New.validate(g,e,slot,p)||!V06.validate(g,e,slot,p))return false;
  if(g.stat(e,'root')&&(['outis','sinclair'].includes(e.key)||e.key==='don'&&slot==='r'||['ryoshu','heathcliff','alisa'].includes(e.key)&&slot==='q'))return false;
  if(e.key==='rudolph'&&slot==='r')return e.ammo>0&&terrainContains(p.x,p.y);
@@ -67,9 +69,9 @@ export function validateSkill(g,e,slot,p,options={}){
  return true;
 }
 export function ammoCap(g,e){
- const extra=(has(e,'magazine2')&&e.key!=='rudolph'?2:0)+(e.key==='faust'&&e.level===RULES.maxLevel?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
+ const extra=(has(e,'magazine2')?2:0)+(g.buff(e,'itemMagazine')?1:0)+(e.key==='faust'&&e.level===RULES.maxLevel?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
  if(e.key==='ezra')return (g.buff(e,'ezraUlt')?4:EZRA_WEAPONS[e.state.weapon||0].ammo)+extra;
- return CHAMPIONS[e.key].ammo+extra;
+ return CHAMPIONS[e.key].ammo+extra*(e.key==='rudolph'?15:1);
 }
 export function reloadGrade(e){return e.key==='ezra'?EZRA_WEAPONS[e.state.weapon||0].reload:CHAMPIONS[e.key].reload;}
 export function switchWeapon(g,e,step,shield=false){
@@ -77,6 +79,7 @@ export function switchWeapon(g,e,step,shield=false){
  if(shield)g.addShield(e,Math.min(360,120*(1+Math.floor((1-e.hp/e.maxHp)/.3)*.3)),`bag-${e.id}`);
 }
 export function beforeBasic(g,e,point,options={}){
+ if(g.stat(e,'captured')&&(['don','rodya','myo'].includes(e.key)||e.key==='ezra'))return false;
  if(!V06.beforeBasic(g,e,point,options))return false;
  if(g.stat(e,'root')&&(['don','rodya'].includes(e.key)||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0))))return false;
  if(e.key==='rudolph'){if(e.state.exhaustedUntil>g.time)return false;if(g.time-e.lastAttackAt>.5)e.state.whipChainAt=undefined;if(e.state.whipChainAt!==undefined&&g.time-e.state.whipChainAt>=3)return false;}
@@ -84,15 +87,15 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
- if(New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
+ if(V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
  case 'don':dash(g,e,d,2*g.attackRange(e)/e.range,230);return true;
  case 'ryoshu':cone(g.attackRange(e),1.7,220*(e.state.fullAmmo?1.35:1));return true;
- case 'honglu':area(g,e,e,g.attackRange(e),270);g.addBuff(e,'hongluStride',1);return true;
+ case 'honglu':area(g,e,e,g.attackRange(e),190);g.addBuff(e,'hongluStride',1);return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
  case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive){t.state.ishmaelWeak??={};t.state.ishmaelWeak[e.id]=Math.min(2,(t.state.ishmaelWeak[e.id]||0)+1);}});return true;
- case 'rodya':dash(g,e,d,1.2,0,()=>{},{onComplete:()=>cone(g.attackRange(e),1.8,220,t=>{if((t.rodyaSlowUntil||0)<=g.time){g.status(t,'slow',.18,2,e);g.status(t,'weak',.1,2,e);t.rodyaSlowUntil=g.time+2.5;}})});return true;
+ case 'rodya':dash(g,e,d,2.4,0,()=>{},{onComplete:()=>cone(g.attackRange(e),1.8,220,t=>{if((t.rodyaSlowUntil||0)<=g.time){g.status(t,'slow',.18,2,e);g.status(t,'weak',.1,2,e);t.rodyaSlowUntil=g.time+2.5;}})});return true;
  case 'outis':
   g.bullet(e,d,150,g.attackRange(e),{width:.16,onHit:(t,b)=>{const dist=distance(b.origin,t);const wanted=dist<2?150:dist<5?150+(dist-2)*30:dist<7?240+(dist-5)*45:330;g.deal(e,t,wanted-150);}});return true;
  case 'gregor':cone(g.attackRange(e),1.8,210);return true;
@@ -100,10 +103,10 @@ export function basic(g,e,p,d,options={}){
   g.bullet(e,d,360*(g.buff(e,'guboReload')?1.2:1),g.attackRange(e)*(g.buff(e,'guboReload')?1.2:1),{pierce:1,decay:.6,allowFriendly:true});
   return true;
  }
- case 'alisa':e.state.heat=Math.min(5,(e.state.heat||0)+1);cone(g.attackRange(e),1.1,230,t=>{t.burn={source:e,until:g.time+2,next:g.time+.5};});return true;
+ case 'alisa':e.state.heat=Math.min(5,(e.state.heat||0)+1);cone(g.attackRange(e),1.1,230*(1+.1*e.state.heat),t=>{t.burn={source:e,until:g.time+2,next:g.time+.5};});return true;
  case 'rudolph':
   // 3 hits/s and 10 SP/s; top up basic's 1 SP charge to 10/3 per tick.
-  e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(10/3-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'line',x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:3,color:'#ed883d',life:.2,maxLife:.2});area(g,e,whipPoint,3,60,t=>mentalWhip(g,e,t));return true;
+  e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(10/3-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'line',x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:3,color:'#ed883d',life:.2,maxLife:.2});area(g,e,whipPoint,3,t=>48*(1+.1*(t.state?.mentalWhip?.[e.id]?.stage||0)),t=>mentalWhip(g,e,t));return true;
  case 'moses':{
   const color=e.state.smoke;e.state.smoke=null;cone(g.attackRange(e),1.1,180,t=>{if(color==='down')g.status(t,'stun',1,.7,e);if(color==='left'){g.status(t,'slow',.2,3,e);g.status(t,'vulnerable',.12,3,e);}});
   if(['up','right'].includes(color))for(const a of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5)){const toward=direction(e,a);if(toward.x*d.x+toward.y*d.y<.4&&a!==e)continue;if(color==='up')g.addBuff(a,'mosesWhite',4);else {g.addShield(a,200,`smoke-${e.id}`);g.addBuff(a,'mosesHeal',2);}g.support(e);}
@@ -123,17 +126,9 @@ export function basic(g,e,p,d,options={}){
 }
 export function mentalWhip(g,e,t){
  if(t.kind!=='champion'||!t.alive)return;
- t.state.mentalWhip??={};let mark=t.state.mentalWhip[e.id];
- if(!mark)mark=t.state.mentalWhip[e.id]={hits:0,stage:0,at:-99,immuneUntil:0};
- if(mark.immuneUntil>g.time)return;
- if(mark.stage===3){mark.stage=0;mark.hits=0;}
- if(g.time-mark.at>.5)mark.hits=0;
- mark.at=g.time;
- if(++mark.hits>=5){mark.hits=0;mark.stage++;
-  if(mark.stage===2)t.ammo=Math.max(0,t.ammo-1);
-  if(mark.stage===3){g.rewindCooldowns(t,1.5);mark.immuneUntil=g.time+2.15;}
- }
- if(mark.stage>=1&&mark.stage<3)g.status(t,'slow',.2,.42,e);
+ t.state.mentalWhip??={};const mark=t.state.mentalWhip[e.id]??={hits:0,stage:0,at:-99};
+ if(g.time-mark.at>.5)mark.hits=0;mark.at=g.time;
+ if(++mark.hits>=5){mark.hits=0;mark.stage=Math.min(3,mark.stage+1);}
 }
 function shockIshmael(g,e){
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'burst',x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
@@ -141,7 +136,7 @@ function shockIshmael(g,e){
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
  const state=e.state;
- if(New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;
+ if(V08.cast(g,e,slot,p,d,options)||New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;
  switch(e.key){
  case 'don':
   if(slot==='q'){
@@ -158,7 +153,7 @@ export function cast(g,e,slot,p,d,options={}){
   }return true;
  case 'honglu':
   if(slot==='q')g.schedule(e,.6,()=>{let n=0;for(const t of g.champions(1-e.team))if(t.alive&&distance(t,p)<=6){t.revealedUntil=g.time+2;n++;}state.insightStacks=Math.min(4,n);if(n)g.addBuff(e,'insight',4);});
-  else g.zones.push({kind:'waterfall',source:e,x:p.x,y:p.y,r:6.5,until:g.time+4,nextTick:g.time+.5,damage:60,heal:50,cleanse:true,cleansed:new Set()});
+  else g.zones.push({kind:'waterfall',source:e,x:p.x,y:p.y,r:6.5,until:g.time+4,nextTick:g.time+.5,damage:60,heal:75*(1+.05*CHAMPIONS[e.key].power),cleanse:true,cleansed:new Set()});
   return true;
  case 'heathcliff':
   if(slot==='q'){
@@ -173,9 +168,9 @@ export function cast(g,e,slot,p,d,options={}){
   }return true;
  case 'rodya':
   if(slot==='q'){
-   const coins=[0,0,0].map(()=>g.random()<.5),heads=coins.filter(Boolean).length,tails=heads===3?3:3-heads;state.jackpot=heads===3;if(state.jackpot)e.ammo=ammoCap(g,e);state.coinHeads=heads;state.coinTails=tails;state.coinResults=coins;state.coinAt=g.time;
+   const coins=[0,0,0].map(()=>g.random()<.5),heads=coins.filter(Boolean).length,tails=heads===3?3:3-heads;state.jackpot=heads===3;if(state.jackpot){e.ammo=ammoCap(g,e);e.gold+=100;}state.coinHeads=heads;state.coinTails=tails;state.coinResults=coins;state.coinAt=g.time;
    if(heads)g.addBuff(e,'coins',4);if(tails)g.addBuff(e,'coinSpeed',3);e.rCd=Math.max(0,e.rCd-heads*2);e.qCd=Math.max(1,e.qCd-tails*2);
-  }else{const ice=p=>g.zones.push({kind:'ice',source:e,...p,r:3.5,until:g.time+3,nextTick:g.time,tickEvery:.5,damage:12.5,slow:.3,reloadWeak:.2,championsOnly:true});g.bullet(e,d,360,8,{width:.3,onHit:(t,b)=>{if(b.lastHpRatio>=.5)g.deal(e,t,108);g.status(t,'stun',1,1,e);ice({x:t.x,y:t.y});},onEnd:ice});}
+  }else{const ice=p=>g.zones.push({kind:'ice',source:e,...p,r:4.725,until:g.time+3.5,nextTick:g.time,tickEvery:.5,damage:12.5,slow:.3,reloadWeak:.2,championsOnly:true});g.bullet(e,d,360,8,{width:.36,visualScale:1.2,onHit:(t,b)=>{if(b.lastHpRatio>=.5)g.deal(e,t,108);g.status(t,'stun',1,1,e);ice({x:t.x,y:t.y});},onEnd:ice});}
   return true;
  case 'outis':
   if(slot==='q')dash(g,e,d,3,0,()=>{},{onComplete:()=>{let hit=false;area(g,e,e,2.5,180,t=>{g.status(t,'slow',.2,1.5,e);if(t.kind==='champion')hit=true;});if(hit)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}});
@@ -191,8 +186,8 @@ export function cast(g,e,slot,p,d,options={}){
   }else for(let i=0;i<2;i++)g.schedule(e,i*.35,()=>{g.cone(e,d,3.5,1.8,270,t=>{if(t.kind==='champion')gregorStack(g,e,2);pushTarget(g,t,d.x*1.5,d.y*1.5);});g.heal(e,e,160);});
   return true;
  case 'rudolph':
-  if(slot==='q'){const spend=Math.min(e.hp-1,e.hp*.1);e.hp-=spend;e.ammo=Math.min(100,e.ammo+35);g.addShield(e,spend,`focus-${e.id}`);}
-  else{const power=e.ammo/100;e.ammo=0;e.channelUntil=g.time+1.25;g.pending.push({type:'global',source:e,x:p.x,y:p.y,r:4.2,at:g.time+1.25,damage:450*power,ignoreWalls:true,onHit:t=>{for(const key of ['slow','reloadWeak','hasteWeak'])g.status(t,key,.2,1.5,e);g.status(t,'silence',1,.75,e);g.status(t,'root',1,1,e);}});}
+  if(slot==='q'){const spend=Math.min(e.hp-1,e.hp*.1);e.hp-=spend;e.ammo=Math.min(ammoCap(g,e),e.ammo+35);g.addShield(e,spend,`focus-${e.id}`);}
+  else{const power=e.ammo/ammoCap(g,e);e.ammo=0;e.channelUntil=g.time+1.25;g.pending.push({type:'global',source:e,x:p.x,y:p.y,r:5.25,at:g.time+1.25,damage:450*power,ignoreWalls:true,onHit:t=>{if(t.kind==='champion'){t.state.mentalWhip??={};t.state.mentalWhip[e.id]={hits:0,stage:3,at:g.time};}g.status(t,'slow',.3,1.5,e);}});}
   return true;
  case 'moses':
   if(slot==='q'){state.smoke=options.direction;if(state.smoke==='down')e.hp=Math.max(1,e.hp*.94);}
@@ -203,8 +198,8 @@ export function cast(g,e,slot,p,d,options={}){
   else if(g.buff(e,'ezraUlt'))endEzra(g,e);else {g.addBuff(e,'ezraUlt',6);state.ultMode=true;state.ultAttacks=0;e.ammo=ammoCap(g,e);}
   return true;
  case 'alisa':
-  if(slot==='q'){if(!(state.dashWindow>g.time)){state.dashUses=0;state.dashWindow=g.time+4;}state.dashUses++;state.heat=Math.min(5,(state.heat||0)+1);dash(g,e,d,3);e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}
-  else{state.heat=0;state.blastArmed=true;}
+  if(slot==='q'){if(!(state.dashWindow>g.time)){state.dashUses=0;state.dashWindow=g.time+4;}state.dashUses++;state.heat=Math.min(5,(state.heat||0)+1);dash(g,e,d,3);e.ammo=Math.min(ammoCap(g,e),e.ammo+1);if(state.dashUses===3){const heat=state.heat;state.heat=0;g.heal(e,e,e.maxHp*.045*heat,false);}}
+  else{state.blastArmed=true;e.ccImmuneUntil=Infinity;e.channelUntil=g.time+.8;g.schedule(e,.8,()=>{state.heat=0;});}
   return true;
  case 'gubo':
   if(slot==='q'){state.guboReloadAt=g.time;g.addBuff(e,'guboReload',4);}
@@ -217,7 +212,6 @@ export function damageBonus(g,e,t){
  if(!e.key)return 1;
  let b=1;
  if(e.key==='heathcliff'&&t.hp/t.maxHp>e.hp/e.maxHp)b*=1.18;
- if(e.key==='alisa')b*=1+.03*(e.state.heat||0);
  if(g.buff(e,'mutant'))b*=1.2;
  if(g.buff(e,'power'))b*=1.12;
  if(g.buff(e,'charge'))b*=1+.06*(e.state.chargeStacks||0);
@@ -256,17 +250,18 @@ export function guboBlast(g,e,victim,ratio=.15,cap=800){
  g.effects.push({type:'slash',x:victim.x,y:victim.y,r:7.5,angle:Math.atan2(d.y,d.x),spread:Math.acos(.4)*2,theme:'gubo',life:.7,maxLife:.7});
 }
 export function interceptDeath(g,e,killer){
+ if(V08.interceptDeath(g,e,killer))return true;
  if(e.key!=='alisa'||e.state.detonating||(!(e.state.heat>=5)&&!e.state.blastArmed))return false;
  e.hp=1;e.state.detonating=true;e.invulnerableUntil=g.time+2;
- g.schedule(e,2,()=>{area(g,e,e,4,600);g.effects.push({type:'burst',x:e.x,y:e.y,r:4,theme:e.key,life:.7,maxLife:.7});const armed=e.state.blastArmed;g.kill(e,killer);if(armed){e.respawnAt=g.time+3;e.state.fastReturn=true;}});
+ g.schedule(e,2,()=>{area(g,e,e,4,600,t=>{if(t.alive)t.burn={source:e,until:g.time+2,next:g.time+.5};});g.effects.push({type:'burst',x:e.x,y:e.y,r:4,theme:e.key,life:.7,maxLife:.7});const armed=e.state.blastArmed;g.kill(e,killer);if(armed){e.respawnAt=g.time+3;e.state.fastReturn=true;}});
  return true;
 }
 export function tick(g,e,dt){
  const s=e.state;New.tick(g,e,dt);V06.tick(g,e,dt);
- if(s.donBarrage){if(s.donBarrage.until<=g.time||g.stat(e,'stun')||g.stat(e,'silence')){delete s.donBarrage;delete e.buffs.donGuard;}else if(g.time+1e-8>=s.donBarrage.next){s.donBarrage.next+=.25;g.action(e,'skill',()=>g.cone(e,s.donBarrage.d,3,1.8,45));e.lastAttackAt=g.time;}}
+ if(s.donBarrage){if(s.donBarrage.until<=g.time||g.stat(e,'stun')||g.stat(e,'silence')){delete s.donBarrage;delete e.buffs.donGuard;}else if(g.time+1e-8>=s.donBarrage.next){s.donBarrage.next+=.25;g.action(e,'skill',()=>g.cone(e,s.donBarrage.d,6,1.8,45));e.lastAttackAt=g.time;}}
  if(e.burn?.until>g.time&&e.burn.next<=g.time){e.burn.next+=.5;g.deal(e.burn.source,e,27.5);if(!e.alive)return;}
  if(e.key==='alisa'){
-  if(g.canNaturalHeal(e)){s.heat=0;}else if(s.heat>0)g.selfDamage(e,e.maxHp*.008*s.heat*dt,{nonLethal:true,ignoreRegen:true});
+  if(g.canNaturalHeal(e)){s.heat=0;}else if(s.heat>0)g.selfDamage(e,e.maxHp*.0013*s.heat*dt,{nonLethal:true,ignoreRegen:true});
  }
  if(e.key==='don'&&(s.villainAt||0)<=g.time){s.villainAt=g.time+6;const enemies=g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=7);enemies.sort((a,b)=>(b.lastChampionKill||-99)-(a.lastChampionKill||-99)||distance(e,a)-distance(e,b));s.villain=enemies[0]?.id;}
  if(e.key==='heathcliff'){
@@ -280,9 +275,9 @@ export function tick(g,e,dt){
  }
  if(e.key==='ezra'&&s.ultMode&&!g.buff(e,'ezraUlt'))endEzra(g,e);
  if(e.key==='rudolph'){
-  if(s.exhaustedUntil){if(s.exhaustedUntil>g.time)return;delete s.exhaustedUntil;e.ammo=100;return;}
+  if(s.exhaustedUntil){if(s.exhaustedUntil>g.time)return;delete s.exhaustedUntil;e.ammo=ammoCap(g,e);return;}
   if(e.ammo<=0){s.exhaustedUntil=g.time+2.5;g.status(e,'silence',1,2.5);return;}
-  if(!g.reloadPaused(e)&&g.time-e.lastAttackAt>.4)e.ammo=Math.min(100,e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt);
+  if(!g.reloadPaused(e)&&g.time-e.lastAttackAt>.4)e.ammo=Math.min(ammoCap(g,e),e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt);
  }
  if(CHAMPIONS[e.key].role==='돌격'){
   if(g.time-e.lastCombat>3){s.combatAt=undefined;s.chargeStacks=0;delete e.buffs.charge;}

@@ -14,7 +14,7 @@ function quiet(key='faust'){
 function ally(g,key='yi'){const a=g.makeChampion(key,0,5,'support');a.x=41;a.y=7;return a;}
 
 test('all ordinary and experimental champions have individual positive growth and defined attack animation',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,20);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,23);
+ assert.equal(Object.keys(CHAMPIONS).length,24);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,26);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
@@ -46,8 +46,8 @@ test('Don tactical locks its direction while allowing movement and halves fronta
  const {g,p,t}=quiet('don');t.x=43;g.cast(p,'q',t);assert.ok(!p.motion);const before=p.x;g.input.y=1;run(g,.3);close(p.x,before);assert.ok(p.y>7);assert.ok(p.state.donBarrage.d.x>.99);assert.equal(g.attack(p,t),false);
  g.input.y=0;t.x=p.x+2;t.y=p.y;let hp=p.hp;g.deal(t,p,100);const front=hp-p.hp;t.x=p.x-2;hp=p.hp;g.deal(t,p,100);close((hp-p.hp)/front,2);run(g,2.5);assert.equal(p.state.donBarrage,undefined);
 });
-test('Rodion now travels before basic damage and tactical cooldown is five seconds shorter',()=>{
- const {g,p,t}=quiet('rodya');t.x=42;g.attack(p,t);close(t.hp,100000);assert.ok(p.motion);run(g,.3);assert.ok(t.hp<100000);assert.equal(CHAMPIONS.rodya.q,9);
+test('Rodion now travels before basic damage and tactical cooldown is twelve seconds',()=>{
+ const {g,p,t}=quiet('rodya');t.x=42;g.attack(p,t);close(t.hp,100000);assert.ok(p.motion);run(g,.3);assert.ok(t.hp<100000);assert.equal(CHAMPIONS.rodya.q,12);
 });
 test('Heath ultimate radius preview matches damage, Ishmael pierces at range 16 and Outis fires 18',()=>{
  const a=quiet('heathcliff');a.t.x=47;a.g.cast(a.p,'r',a.p);run(a.g,.6);assert.ok(a.t.hp<100000);close(skillTargeting(a.g,a.p,'r').radius,7.5);
@@ -87,8 +87,8 @@ test('battle haste requires three seconds of continuous combat and clears out of
 test('Gahwan gaze becomes contempt at seven hits and amplifies skills but not basics',()=>{
  const {g,p,t}=quiet('gahwan');for(let i=0;i<7;i++)g.deal(p,t,1,{damageKind:'basic'});assert.ok(t.state.contempt[p.id]>g.time);let hp=t.hp;g.deal(p,t,100,{proc:false,damageKind:'basic'});const basic=hp-t.hp;hp=t.hp;g.deal(p,t,100,{proc:false,damageKind:'skill'});close((hp-t.hp)/basic,1.12);
 });
-test('Nelly has two replenishing knife charges and a forced ultimate mark preserves the next three hits',()=>{
- const {g,p,t}=quiet('nelly');assert.equal(p.state.knifeCharges,2);g.cast(p,'q',t);assert.equal(p.state.knifeCharges,1);assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,0);assert.equal(g.cast(p,'q',t),false);g.time=10.1;g.step(.01);assert.equal(p.state.knifeCharges,1);
+test('Nelly has three replenishing knife charges and a forced ultimate mark preserves the next three hits',()=>{
+ const {g,p,t}=quiet('nelly');assert.equal(p.state.knifeCharges,3);g.cast(p,'q',t);assert.equal(p.state.knifeCharges,2);assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,1);assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,0);assert.equal(g.cast(p,'q',t),false);g.time=10.1;g.step(.01);assert.equal(p.state.knifeCharges,1);
  p.rCd=0;g.cast(p,'r',t);const mark=t.state.nellyMarks[p.id];assert.ok(mark.active);assert.equal(mark.hold,3);for(let i=0;i<3;i++)g.deal(p,t,1);assert.ok(mark.active);g.deal(p,t,1);assert.equal(mark.active,false);
 });
 test('Ahab guard stacks, cover rewards hits on harpooned enemies, and takedown support gets the bonus',()=>{
@@ -99,7 +99,7 @@ test('Ahab execution snapshots below ten percent and grants only one ultimate re
 });
 
 test('charge cooldown reduction and extra ultimate ammunition apply to special resource users',()=>{
- const {g,p,t}=quiet('nelly');p.augments=['cooldown15'];g.cast(p,'q',t);close(p.state.knifeReady-g.time,8.5);
+ const {g,p,t}=quiet('nelly');p.augments=['cooldown15'];g.cast(p,'q',t);close(p.state.knifeReady-g.time,4.25);
  const a=quiet('ezra');a.p.augments=['magazine2'];a.g.cast(a.p,'r',a.p);assert.equal(a.p.ammo,6);assert.equal(a.g.ammoCap(a.p),6);
 });
 test('central and boss creep leash clocks use the displayed shared camp boundary',()=>{

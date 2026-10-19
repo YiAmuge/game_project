@@ -2,12 +2,12 @@ import { RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance, direction, clearLine, blocked } from './geometry.js';
 import { area, dash } from './skills.js';
 
-export function init(g,e){if(e.key==='dongrang'){e.state.treeCharges=2;e.state.treeReady=Infinity;e.totalHealingReceived=0;}}
-export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/800);return {radius:3.2+Math.min(8,n)*.25,damage:180+Math.min(10,n)*35};}
+export function init(g,e){if(e.key==='dongrang'){e.totalHealingReceived=0;}}
+export function ultGrowth(e){const n=Math.min(5,Math.floor((e.totalHealingReceived||0)/100));return {radius:3.2+n*.6,damage:180+n*50};}
 export function validate(g,e,slot,p){
  if(e.key==='myo'&&slot==='q')return e.ammo>=1&&!g.buff(e,'rabbitFrenzy');
  if(e.key==='dongrang'&&slot==='r')return !g.stat(e,'root')&&!blocked(p.x,p.y,e.radius);
- if(e.key==='dongrang'&&slot==='q')return (e.state.treeCharges??2)>0&&!blocked(p.x,p.y,.15)&&g.zones.filter(z=>z.kind==='desireTree'&&z.source===e&&z.until>g.time).length<6;
+ if(e.key==='dongrang'&&slot==='q')return !blocked(p.x,p.y,.15)&&!g.zones.some(z=>z.kind==='desireTree'&&z.source===e&&z.until>g.time);
  return true;
 }
 export function beforeBasic(g,e){
@@ -29,6 +29,7 @@ export function basic(g,e,p,d){
    let hits=e.state.flowerHits[t.id];if(!hits||hits.at<g.time-4)hits=e.state.flowerHits[t.id]={n:0,at:g.time};
    g.deal(e,t,170*(1+.12*Math.min(4,hits.n)));hits.n++;hits.at=g.time;
   }
+  if(e.state.extraPetals===3)g.status(e,'disarm',1,1.35);
   g.effects.push({type:'slash',x:e.x,y:e.y,angle:e.facing,spread:1.3,r:g.attackRange(e),theme:e.key,life:.4,maxLife:.4});return true;
  }
  if(e.key==='dongrang'){for(const z of g.zones)if(z.kind==='desireTree'&&z.source===e&&z.golden&&z.until>g.time&&distance(e,z)<=g.attackRange(e)&&clearLine(e,z)){const v=direction(e,z);if(v.x*d.x+v.y*d.y>=Math.cos(.95)){z.until=g.time;g.heal(e,e,e.maxHp*.07,false);}}g.zones=g.zones.filter(z=>z.until>g.time);g.cone(e,d,g.attackRange(e),1.9,260);return true;}
@@ -40,7 +41,7 @@ export function cast(g,e,slot,p,d){
   if(slot==='q'){
    e.ammo-=1;e.attackCd=Math.max(e.attackCd,.35);e.lastAttackAt=g.time;
    for(let i=0;i<4;i++)g.schedule(e,i*.075,()=>{const a=Math.atan2(d.y,d.x)+(i-1.5)*.045;g.bullet(e,{x:Math.cos(a),y:Math.sin(a)},80,7,{speed:24,width:.14,onHit:t=>{if(t.kind==='champion'){t.state.rabbitMark??={};t.state.rabbitMark[e.id]=g.time+3;t.visuals.rabbitMark={until:g.time+3,theme:'myo'};}}});});
-  }else{g.addBuff(e,'rabbitFrenzy',6,{copy:false});e.ammo=Math.min(g.ammoCap(e),e.ammo+1);}return true;
+  }else{g.addBuff(e,'rabbitFrenzy',6,{copy:false});s.frenzyWas=true;e.ammo=Math.min(g.ammoCap(e),e.ammo+1);}return true;
  }
  if(e.key==='dongbaek'){
   if(slot==='q'){g.addShield(e,e.maxHp*.08,`petals-${e.id}`,3);g.addBuff(e,'flowerStride',3);}
@@ -49,7 +50,6 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='dongrang'){
   if(slot==='q'){
-   s.treeCharges=(s.treeCharges??2)-1;if(!Number.isFinite(s.treeReady))s.treeReady=g.time+g.cooldown(e,'q');e.qCd=s.treeCharges>0?0:s.treeReady-g.time;
    g.zones.push({kind:'desireTree',source:e,...p,r:2.5,until:g.time+8,nextTick:g.time+.5,tickEvery:.5,damage:35,fixed:true,lifesteal:1,dealt:0,golden:false,slow:.2});
   }else{
    const strike=()=>{const ult=ultGrowth(e),trees=g.zones.filter(z=>z.kind==='desireTree'&&z.source===e&&z.until>g.time&&distance(e,z)<=ult.radius);g.zones=g.zones.filter(z=>!trees.includes(z));g.heal(e,e,e.maxHp*.025*trees.length,false);
@@ -64,11 +64,6 @@ export function takedown(g,e,victim,direct){
  if(e.key==='myo'&&victim.kind==='champion'&&direct&&e.team!==victim.team){e.state.rabbitStacks=g.buff(e,'rabbitHunt')?Math.min(2,(e.state.rabbitStacks||0)+1):1;g.addBuff(e,'rabbitHunt',4,{copy:false});e.ammo=Math.min(g.ammoCap(e),e.ammo+2);}
 }
 export function tick(g,e){
- if(e.key==='dongrang'){
-  const s=e.state;s.treeCharges??=2;s.treeReady??=Infinity;
-  if(s.treeCharges<2&&g.time>=s.treeReady){s.treeCharges++;s.treeReady=s.treeCharges<2?g.time+g.cooldown(e,'q'):Infinity;}
-  e.qCd=Math.max(0,(s.qDelayUntil||0)-g.time,s.treeCharges>0?0:s.treeReady-g.time);
- }
- if(e.key==='myo'&&!g.buff(e,'rabbitFrenzy'))e.ammo=Math.min(e.ammo,g.ammoCap(e));
+ if(e.key==='myo'){if(e.state.frenzyWas&&!g.buff(e,'rabbitFrenzy'))e.ammo=Math.min(e.ammo,g.ammoCap(e));e.state.frenzyWas=g.buff(e,'rabbitFrenzy');}
  if(e.key==='dongbaek'&&e.ammo>=1)e.state.extraPetals=0;
 }

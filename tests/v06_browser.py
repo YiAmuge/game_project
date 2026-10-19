@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.add_init_script('''(() => {window.__drawnLabels=new Set();const draw=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){if(window.__drawnLabels.size<4000)__drawnLabels.add(String(text));return draw.call(this,text,...args);};})();''')
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.champion-option')).to_have_count(20)
+    expect(page.locator('.champion-option')).to_have_count(24)
     page.wait_for_function('__moba.renderer.atlasV06.naturalWidth>0')
     def choose(name):
         if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
@@ -99,4 +99,4 @@ with sync_playwright() as pw:
     page.click('#restart');page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(100)
     assert page.evaluate('document.body.scrollWidth<=innerWidth')
     assert not errors,errors
-    browser.close();print(json.dumps({'status':'passed','checks':['20 ordinary/four atlases','selective quickcast/coordinate confirmation','Gubo 35% timed gauge','Nelly single hit/4 ammo','Gahwan ground triple ultimate','Ahab teleport','four new sprites and skills','global map negative coordinates','two creep warnings/windup damage','moved rear wells/recall/shop','both two-unit flank rooms/minimap','minion column','core partial shield','20-minute result/frozen clock','mobile overflow'],'page_errors':errors},ensure_ascii=False))
+    browser.close();print(json.dumps({'status':'passed','checks':['24 ordinary/five atlases','selective quickcast/coordinate confirmation','Gubo 35% timed gauge','Nelly single hit/4 ammo','Gahwan ground triple ultimate','Ahab teleport','four new sprites and skills','global map negative coordinates','two creep warnings/windup damage','moved rear wells/recall/shop','both two-unit flank rooms/minimap','minion column','core partial shield','20-minute result/frozen clock','mobile overflow'],'page_errors':errors},ensure_ascii=False))

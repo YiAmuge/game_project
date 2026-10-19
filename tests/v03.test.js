@@ -13,7 +13,7 @@ function quiet(key='faust'){
 }
 
 test('twenty ordinary champions retain four named abilities, and every team has four positions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,20);
+ assert.equal(Object.keys(CHAMPIONS).length,24);
  for(const key of Object.keys(CHAMPIONS))for(const position of Object.keys(POSITIONS)){
   const g=new Game(key,position);assert.equal(g.champions().length,8);assert.equal(g.player.position,position);
   for(const team of [0,1])assert.deepEqual(g.champions(team).map(c=>c.position).sort(),['bottom','jungle','support','top']);
@@ -61,7 +61,7 @@ test('Ezra changes and reloads weapons on left/right drag and restores from ulti
 });
 test('Rudolph ultimate is global, delayed, costs SP at commitment, and SP recovers after exhaustion',()=>{
  const {g,p,t}=quiet('rudolph');t.x=56;t.y=30;t.hp=t.maxHp=5000;
- assert.equal(p.ammo,100);assert.ok(g.cast(p,'r',{x:56,y:30}));assert.equal(p.ammo,0);const hp=t.hp;run(g,1);assert.equal(t.hp,hp);run(g,.4);assert.ok(t.hp<hp);assert.ok(g.stat(t,'root')>0);run(g,1.5);assert.equal(p.ammo,100);
+ assert.equal(p.ammo,100);assert.ok(g.cast(p,'r',{x:56,y:30}));assert.equal(p.ammo,0);const hp=t.hp;run(g,1);assert.equal(t.hp,hp);run(g,.4);assert.ok(t.hp<hp);assert.ok(g.stat(t,'slow')>0);run(g,1.5);assert.equal(p.ammo,100);
 });
 test('new eight basic attacks and abilities execute without NaN state',()=>{
  for(const key of ['don','ryoshu','honglu','heathcliff','ishmael','rodya','outis','gregor']){

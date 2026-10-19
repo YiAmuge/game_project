@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     page=browser.new_page(viewport={'width':1440,'height':900})
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.7.1')
+    expect(page.locator('.build-tag')).to_contain_text('0.8.0')
     page.click('#practice-open');page.get_by_role('button',name='구보 선택').click();page.click('#start')
     def setup(hp=420):
         page.evaluate('''hp=>{const g=__moba.game;for(const name of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[name]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,ammo:3,attackCd:0,rCd:0,qCd:0,channelUntil:0});p.buffs={};g.units=[p];g.projectiles=[];g.minionQueue=[];g.events=[];g.effects=[];g.input.fire=false;const a=g.makeChampion('faust',0,4);Object.assign(a,{x:44,y:7,hp,maxHp:2000,lastDamageAt:g.time});window.__ally=a;}''',hp)

@@ -138,7 +138,7 @@ test('death grants kill/assist rewards and respawns with full health and ammo',(
 test('walls block movement, paths route around walls, diagonal input cannot speed up',()=>{
   const from=worldPoint(12,11.7),to=worldPoint(20,11.7),unit={...from,radius:.48};slide(unit,12,0);assert.ok(unit.x<WALLS[0].x);assert.equal(blocked(unit.x,unit.y,.48),false);
   assert.equal(clearLine(from,to),false);const path=findPath(from,to);assert.ok(path.length>0);assert.ok(path.every(p=>!blocked(p.x,p.y,.48)));
-  const a=isolated(),b=isolated();a.input.x=1;b.input.x=1;b.input.y=1;
+  const a=isolated(),b=isolated();a.units=[a.player];b.units=[b.player];a.minionQueue=[];b.minionQueue=[];a.input.x=1;b.input.x=1;b.input.y=1;
   const start={x:a.player.x,y:a.player.y};run(a,1);run(b,1);
   close(Math.hypot(a.player.x-start.x,a.player.y-start.y),Math.hypot(b.player.x-start.x,b.player.y-start.y));
 });

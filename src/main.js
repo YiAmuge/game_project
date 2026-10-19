@@ -1,3 +1,4 @@
+import * as Items from './items.js';
 import { skillTargeting, castPoint } from './targeting.js';
 import { AUGMENTS, AUGMENT_RULES, unlocked, has } from './augments.js';
 import { canRecast } from './skills.js';
@@ -13,7 +14,7 @@ const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 export const clock=t=>`${String(Math.floor(t/60)).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')}`;
 const roleName=role=>role==='보호'?'수호':role;
 let selected='faust',position='bottom',game=new Game(selected,position),mode='menu',paused=false,speed=1;
-let keys=new Set(),last=0,accumulator=0,lastHud=0,roster=[],activeRecord=2,category='champions',toastTimer,pointer=null,drag=null,globalTarget=false,globalPoint=null,scoreOpen=false;
+let keys=new Set(),last=0,accumulator=0,lastHud=0,roster=[],activeRecord=2,category='champions',toastTimer,pointer=null,drag=null,globalTarget=false,globalPoint=null,scoreOpen=false,shopSelection=null;
 const renderer=new Renderer($('arena'));
 new ResizeObserver(()=>renderer.resize()).observe($('arena'));
 function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2600);}
@@ -24,8 +25,8 @@ function clearInput(){delete game.targeting;keys.clear();game.input.fire=false;g
 function cancelDrag(){drag=null;$('drag-wheel').classList.add('hidden');}
 function cancelGlobal(){globalTarget=false;globalPoint=null;$('global-target').classList.add('hidden');}
 function showScore(show){scoreOpen=show&&inMatch();$('scoreboard').classList.toggle('hidden',!scoreOpen);if(scoreOpen){game.input.fire=false;updateScores();}}
-function renderPortraits(){document.querySelectorAll('.champion-portrait').forEach(c=>portrait(c,c.dataset.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06));portrait($('hud-face'),selected,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06);}
-renderer.atlas.addEventListener('load',renderPortraits);renderer.atlasExtra.addEventListener('load',renderPortraits);renderer.atlasV05.addEventListener('load',renderPortraits);renderer.atlasV06.addEventListener('load',renderPortraits);
+function renderPortraits(){document.querySelectorAll('.champion-portrait').forEach(c=>portrait(c,c.dataset.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08));portrait($('hud-face'),selected,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08);}
+renderer.atlas.addEventListener('load',renderPortraits);renderer.atlasExtra.addEventListener('load',renderPortraits);renderer.atlasV05.addEventListener('load',renderPortraits);renderer.atlasV06.addEventListener('load',renderPortraits);renderer.atlasV08.addEventListener('load',renderPortraits);
 function select(key){
  selected=key;game=new Game(key,position);const c=RUNTIME_CHAMPIONS[key];
  document.querySelectorAll('.champion-option').forEach(b=>{const chosen=b.dataset.key===key;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',chosen);b.classList.toggle('recommended',POSITIONS[position].recommend.includes(CHAMPIONS[b.dataset.key].role));});
@@ -74,11 +75,23 @@ $('q-btn').onclick=()=>skill('q');$('r-btn').onclick=()=>skill('r');$('basic-btn
 $('recall-btn').onclick=()=>{if(active()){clearInput();if(!game.recall(game.player))toast('지금은 귀환할 수 없습니다.');}};
 $('potion-btn').onclick=()=>{if(active()&&!game.usePotion(game.player))toast('사용할 수 있는 소모품이 없습니다.');};
 function confirmOrAttack(){if(game.targeting){const {slot,options}=game.targeting;const point=castPoint(game.player,game.input.aim,skillTargeting(game,game.player,slot));if(skill(slot,{...options,point,confirm:true}))delete game.targeting;game.input.fire=false;return;}if(game.player.key==='heathcliff'&&game.player.state.chargeAt!==undefined){skill('q',{confirm:true});game.input.fire=false;return;}game.attack(game.player,game.input.aim);}
-function toggleShop(){if(!$('shop').classList.contains('hidden')){$('shop').classList.add('hidden');return;}if(!active()||!game.canUpgrade(game.player)){toast('부활 대기 중 또는 아군 부활소의 비전투 상태에서 G를 누르세요.');return;}$('shop').classList.remove('hidden');updateHud();}
+function toggleShop(){if(!$('shop').classList.contains('hidden')){$('shop').classList.add('hidden');return;}if(!active()||!game.canUpgrade(game.player)){toast('부활 대기 중 또는 아군 부활소의 비전투 상태에서 G를 누르세요.');return;}clearInput();shopSelection=null;$('shop').classList.remove('hidden');updateHud();}
 $('shop-toggle').onclick=toggleShop;$('shop-close').onclick=()=>$('shop').classList.add('hidden');
-for(const item of UPGRADES){const b=document.createElement('button');b.className='shop-item';b.id=`buy-${item.key}`;b.onclick=()=>{if(active()&&game.buy(game.player,item.key)){toast(`${item.name} 강화 완료`);updateHud();}};$('upgrade-list').append(b);}
-for(const item of AUGMENTS){const b=document.createElement('button');b.className='shop-item augment-item';b.id=`augment-${item.key}`;b.onclick=()=>{if(!active())return;const owned=has(game.player,item.key);if(owned?game.sellAugment(game.player,item.key):game.buyAugment(game.player,item.key)){toast(`${item.name} ${owned?'판매':'선택'} 완료`);updateHud();}};$('augment-list').append(b);}
-$('buy-potion').onclick=()=>{if(active()&&game.buy(game.player,'potion')){toast('회복 물약 2회분 구입');updateHud();}};
+for(const item of UPGRADES){const b=document.createElement('button');b.className='shop-item';b.id=`buy-${item.key}`;b.onclick=()=>{if(active()&&game.buy(game.player,item.key)){toast(`${item.name} 강화 완료`);updateHud();}};const wrap=document.createElement('div');wrap.className='upgrade-card';wrap.append(b);const meter=document.createElement('div');meter.className='upgrade-meter';meter.id=`upgrade-meter-${item.key}`;meter.setAttribute('aria-label',item.name+' 구매 단계');wrap.append(meter);$('upgrade-list').append(wrap);}
+for(const item of AUGMENTS){const b=document.createElement('button');b.className='shop-item augment-item';b.id=`augment-${item.key}`;b.onclick=()=>{if(!active())return;const owned=has(game.player,item.key);if(owned){shopSelection={kind:'augment',key:item.key};updateHud();}else if(game.buyAugment(game.player,item.key)){toast(`${item.name} 선택 완료`);updateHud();}};$('augment-list').append(b);}
+for(const item of CONSUMABLES){const b=document.createElement('button');b.className='shop-item';b.id=item.key==='potion'?'buy-potion':'buy-item-'+item.key;b.innerHTML=`<span>${item.name}<small>${item.text} · ${item.uses}회</small></span><b>${item.cost} ◈</b>`;b.onclick=()=>{if(active()&&game.buyConsumable(game.player,item.key)){toast(item.name+' 구입');updateHud();}};$('consumable-list').append(b);}
+$('shop-sell').onclick=()=>{if(!active()||!shopSelection)return;const sold=shopSelection.kind==='augment'?game.sellAugment(game.player,shopSelection.key):game.sellConsumable(game.player);if(sold){toast('판매 완료');shopSelection=null;updateHud();}};
+function updateShopInventory(p){
+ const item=Items.current(p),owned=[...p.augments.map(key=>({kind:'augment',key,...AUGMENTS.find(a=>a.key===key)})),...(item?[{...item,kind:'consumable'}]:[])];
+ if(shopSelection&&!owned.some(a=>a.kind===shopSelection.kind&&a.key===shopSelection.key))shopSelection=null;
+ const holder=$('owned-list'),signature=JSON.stringify([owned.map(a=>[a.kind,a.key]),p.potion,shopSelection]);
+ if(holder.dataset.signature!==signature){
+  holder.dataset.signature=signature;holder.replaceChildren();
+  for(const a of owned){const b=document.createElement('button');b.className='owned-item'+(shopSelection?.kind===a.kind&&shopSelection.key===a.key?' selected':'');b.textContent=a.name+(a.kind==='consumable'?` ×${p.potion}`:'');b.onclick=()=>{shopSelection={kind:a.kind,key:a.key};updateHud();};holder.append(b);}
+ }
+ const selected=owned.find(a=>a.kind===shopSelection?.kind&&a.key===shopSelection.key),value=selected?(selected.kind==='augment'?350:Items.refund(p)):0;
+ $('shop-selected-info').textContent=selected?`${selected.name} · 판매 시 ${value} ◈ 환급`:'판매할 보유 항목을 선택하세요.';$('shop-sell').textContent=selected?`판매 +${value} ◈`:'판매';$('shop-sell').disabled=!selected||!active()||!game.canUpgrade(p);
+}
 function updatePointer(e){pointer={x:e.clientX,y:e.clientY};renderer.follow(game,inMatch());game.input.aim=renderer.point(e.clientX,e.clientY);}
 function updateDrag(e){
  if(!drag)return;drag.choice=dragChoice(drag.key,e.clientX-drag.x,e.clientY-drag.y);
@@ -87,7 +100,7 @@ function updateDrag(e){
 }
 $('arena').addEventListener('pointermove',updatePointer);window.addEventListener('pointermove',updateDrag);
 $('arena').addEventListener('pointerdown',e=>{
- if(!active()||globalTarget||scoreOpen)return;updatePointer(e);e.preventDefault();$('arena').focus();
+ if(!active()||globalTarget||scoreOpen||!$('shop').classList.contains('hidden'))return;updatePointer(e);e.preventDefault();$('arena').focus();
  if(e.button===0){if(game.targeting||game.player.key==='heathcliff'&&game.player.state.chargeAt!==undefined){confirmOrAttack();return;}game.input.fire=true;game.attack(game.player,game.input.aim);}
  if(e.button===2){
   if(game.targeting){delete game.targeting;toast('스킬 조준 취소');return;}
@@ -136,13 +149,14 @@ function updateHud(){
  $('recall-btn').querySelector('span').textContent=p.recall?`${Math.max(0,p.recall.until-game.time).toFixed(1)}s`:'귀환';$('recall-btn').classList.toggle('recalling',Boolean(p.recall));
  $('basic-btn').querySelector('span').textContent=p.key==='ezra'?(game.buff(p,'ezraUlt')?'총공 모드':EZRA_WEAPONS[p.state.weapon||0].name):c.basic;
  for(const [slot,name,description] of [['q',c.tactical,c.qText],['r',c.ultimate,c.rText]]){const b=$(slot+'-btn');b.querySelector('span').textContent=name;b.title=description;b.querySelector('.cooldown').textContent=p[slot+'Cd']>0?Math.ceil(p[slot+'Cd']):'';b.classList.toggle('on-cooldown',p[slot+'Cd']>0);}
- $('gold').textContent=Math.floor(p.gold).toLocaleString();$('potion-btn').querySelector('span').textContent=p.potion?'회복 물약':'소모품 없음';$('potion-count').textContent=p.potion?`${p.potion}회 남음`:'비어 있음';$('potion-btn').classList.toggle('empty',!p.potion);
+ $('gold').textContent=Math.floor(p.gold).toLocaleString();$('potion-btn').querySelector('span').textContent=p.potion?Items.current(p).name:'소모품 없음';$('potion-count').textContent=p.potion?`${p.potion}회 남음`:'비어 있음';$('potion-btn').classList.toggle('empty',!p.potion);
  $('shop-status').textContent=game.canUpgrade(p)?(p.alive?'구매 가능 · 부활소 보급':'부활 대기 중 · 능력치 / 증강 변경 가능'):'부활 대기 중 또는 부활소에서 3초 비전투 시 구매 가능합니다.';
- for(const item of UPGRADES){const n=p.upgrades[item.key],b=$('buy-'+item.key),cost=RULES.costs[n];b.innerHTML=`<span>${item.name} <small>${item.effect} / 단계 · ${n} / ${item.max}</small></span><b>${n>=item.max?'완료':cost+' ◈'}</b>`;b.disabled=!active()||!game.canUpgrade(p)||n>=item.max||p.gold<cost;}
- $('buy-potion').disabled=!active()||!game.canShop(p)||p.gold<90||p.potion>0;
+ for(const item of UPGRADES){const n=p.upgrades[item.key],b=$('buy-'+item.key),cost=RULES.costs[n];b.innerHTML=`<span>${item.name} <small>${item.effect} / 단계 · ${n} / ${item.max}</small></span><b>${n>=item.max?'완료':cost+' ◈'}</b>`;b.disabled=!active()||!game.canUpgrade(p)||n>=item.max||p.gold<cost;$('upgrade-meter-'+item.key).innerHTML=Array.from({length:item.max},(_,i)=>`<i class="${i<n?'filled':''}"></i>`).join('');}
+ for(const item of CONSUMABLES)$(item.key==='potion'?'buy-potion':'buy-item-'+item.key).disabled=!active()||!game.canShop(p)||p.gold<item.cost||p.potion>0;
  if(!$('shop').classList.contains('hidden')&&p.alive&&!game.inSpawn(p))$('shop').classList.add('hidden');
  $('augment-count').textContent=`${p.augments.length} / ${AUGMENT_RULES.slots} · 구매 ${AUGMENT_RULES.cost} ◈ / 판매 ${AUGMENT_RULES.cost*AUGMENT_RULES.refund} ◈`;
- for(const item of AUGMENTS){const b=$('augment-'+item.key),owned=has(p,item.key),gate=unlocked(p,item.group),label={combat:'전투 3단계',survival:'체력 3단계',tech:'이동·장전·가속 합계 3단계'}[item.group];b.classList.toggle('equipped',owned);b.innerHTML=`<span>${owned?'◆ ':''}${item.name}<small>${item.text}</small><small>${gate?'선택 조건 충족':label+' 필요'}</small></span><b>${owned?'판매 +350':'500 ◈'}</b>`;b.disabled=!active()||!game.canUpgrade(p)||!owned&&(!gate||p.gold<500||p.augments.length>=3||p.key==='rudolph'&&item.key==='magazine2');}
+ for(const item of AUGMENTS){const b=$('augment-'+item.key),owned=has(p,item.key),gate=unlocked(p,item.group),label={combat:'전투 3단계',survival:'체력 3단계',tech:'이동·장전·가속 합계 3단계'}[item.group];b.classList.toggle('equipped',owned);b.innerHTML=`<span>${owned?'◆ ':''}${item.name}<small>${item.text}</small><small>${gate?'선택 조건 충족':label+' 필요'}</small></span><b>${owned?'보유 · 선택':'500 ◈'}</b>`;b.disabled=!active()||!game.canUpgrade(p)||!owned&&(!gate||p.gold<500||p.augments.length>=3);}
+ updateShopInventory(p);
  const buffs=game.activeBuffs(p);$('buff-list').innerHTML=buffs.length?buffs.slice(0,3).map(b=>`<div class="buff-chip"><i>◆</i><b>${escape(BUFF_LABELS[b.key]||b.key)}</b><span>${Math.ceil(b.until-game.time)}s</span></div>`).join(''):'<small>활성 버프 없음</small>';
  $('respawn').classList.toggle('hidden',p.alive||mode!=='playing'||game.winner!==null);if(!p.alive)$('respawn').innerHTML=`부활 대기<b>${Math.max(0,Math.ceil(p.respawnAt-game.time))}</b>`;
  const entries=!inMatch()?[]:game.logs.filter(l=>game.time-l.time<8).slice(0,3);const feed=entries.map(l=>`<div class="${l.kind}"><time>${clock(l.time)}</time>${escape(l.text)}</div>`).join('');if($('event-feed').innerHTML!==feed)$('event-feed').innerHTML=feed;
@@ -158,7 +172,7 @@ function frame(t){
   accumulator+=elapsed*speed;while(accumulator>=1/30&&game.winner===null){renderer.follow(game,true);if(pointer)game.input.aim=renderer.point(pointer.x,pointer.y);game.step(1/30);accumulator-=1/30;}if(game.winner!==null)finish();
  }else accumulator=0;
  renderer.draw(game,inMatch());if(inMatch())renderer.minimap($('minimap'),game);if(scoreOpen)renderer.minimap($('score-map'),game);
- if(globalTarget){renderer.minimap($('target-map'),game);if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/WORLD.w,sy=$('target-map').height/WORLD.h;c.beginPath();c.ellipse((globalPoint.x-WORLD.x)*sx,(globalPoint.y-WORLD.y)*sy,4.2*sx,4.2*sy,0,0,Math.PI*2);c.fillStyle='#ffac5033';c.fill();c.strokeStyle='#ffd396';c.lineWidth=2;c.stroke();}}
+ if(globalTarget){renderer.minimap($('target-map'),game);if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/WORLD.w,sy=$('target-map').height/WORLD.h;c.beginPath();c.ellipse((globalPoint.x-WORLD.x)*sx,(globalPoint.y-WORLD.y)*sy,5.25*sx,5.25*sy,0,0,Math.PI*2);c.fillStyle='#ffac5033';c.fill();c.strokeStyle='#ffd396';c.lineWidth=2;c.stroke();}}
  if(t-lastHud>100){updateHud();lastHud=t;}requestAnimationFrame(frame);
 }
 function showDialog(id){clearInput();cancelDrag();cancelGlobal();showScore(false);$(id).showModal();}

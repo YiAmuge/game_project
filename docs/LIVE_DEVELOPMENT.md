@@ -7,7 +7,7 @@
 3. 설정이 완료되면 **Ports** 탭에서 **5173 / 도시 경계 게임 → Open in Browser**를 누른다.
 4. 코드 편집 탭과 게임 탭을 나란히 놓는다. 코드 저장 시 게임 탭이 자동 새로고침된다.
 
-브랜치 이름은 v0.2를 유지하지만 현재 내용은 v0.7이다. 기존 Codespace에서는 수정 내용을 Commit한 뒤 **Source Control → Pull**로 업데이트한다. Pull 이후 게임 탭을 새로고침하면 새 메뉴가 나타난다. 새 ZIP을 받을 필요는 없다.
+브랜치 이름은 v0.2를 유지하지만 현재 내용은 v0.8이다. 기존 Codespace에서는 수정 내용을 Commit한 뒤 **Source Control → Pull**로 업데이트한다. Pull 이후 게임 탭을 새로고침하면 새 메뉴가 나타난다. 새 ZIP을 받을 필요는 없다.
 
 Codespaces 구성은 Node.js 22, 의존성 설치, 자동 저장, 포트 열기를 설정한다. 컨테이너 시작 시와 편집기 연결 시 개발 서버를 확인하고, 이미 실행 중이면 재사용한다. 이 작업에서 실제 Codespace 인스턴스를 생성하지는 않았다. GitHub 계정에서 Codespaces를 사용할 수 있어야 한다.
 
@@ -37,9 +37,9 @@ Codespace를 꺼도 유지되는 플레이 주소가 필요하면 아래의 GitH
 | 바꿀 내용 | 파일 |
 | --- | --- |
 | 공통 규칙·기존 4명·포지션 | `src/data.js` |
-| 신규 8명·실험 5명의 능력치·사거리·쿨다운 | `src/extra-data.js` |
+| 추가 챔피언의 능력치·사거리·쿨다운 | `src/extra-data.js`, `src/new-data.js` |
 | 전투·연속 이동·귀환·자연 치유·장전·캠프·봇 | `src/game.js` |
-| 신규 8명·실험 5명의 공격·스킬 | `src/skills.js` |
+| 추가 챔피언의 공격·스킬 | `src/skills.js`, `src/new-champions.js`, `src/v06-champions.js`, `src/v08-champions.js` |
 | 카메라 확대 범위 | `src/camera.js` |
 | 무기·스킬 이펙트·맵 표현 | `src/render.js` |
 | 머리 위 체력·자원·스택·상태 효과·충전 범위 | `src/overlays.js` |

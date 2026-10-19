@@ -35,7 +35,7 @@ test('waves are faster, base health is higher, and minion scaling stops at twelv
  const mid=spawn(120);assert.ok(mid[0].hp>680);const capped=spawn(720),late=spawn(36000);close(capped[0].hp,680*1.36);close(capped[0].damage,58*1.3);close(late[0].hp,capped[0].hp);close(late[0].damage,capped[0].damage);assert.equal(MINIONS.maxGrowth,6);
 });
 test('Don Quixote moves gradually and damages each target only when the path reaches it',()=>{
- const {g,p,t}=quiet('don');t.x=42.5;t.hp=t.maxHp=10000;const initial=t.hp;assert.ok(g.attack(p,t));close(p.x,40);close(t.hp,initial);g.step(.05);assert.ok(p.x>40&&p.x<41);close(t.hp,initial);run(g,.3);close(p.x,42);assert.ok(t.hp<initial);const hp=t.hp;run(g,.1);close(t.hp,hp);
+ const {g,p,t}=quiet('don');t.x=42.5;t.hp=t.maxHp=10000;const initial=t.hp;assert.ok(g.attack(p,t));close(p.x,40);close(t.hp,initial);g.step(.05);assert.ok(p.x>40&&p.x<41);close(t.hp,initial);run(g,.3);assert.ok(p.x>41.5&&p.x<=42);assert.ok(distance(p,t)>=p.radius+t.radius-.01);assert.ok(t.hp<initial);const hp=t.hp;run(g,.1);close(t.hp,hp);
 });
 test('dashes respect a visible speed cap even with movement input, and stun interrupts them',()=>{
  const {g,p,t}=quiet('don');t.x=50;g.input.x=1;g.attack(p,t);let x=p.x;
@@ -44,7 +44,7 @@ test('dashes respect a visible speed cap even with movement input, and stun inte
 });
 test('explicit Ryoshu teleport remains instant, while Sinclair leap travels before landing damage',()=>{
  const a=quiet('ryoshu');a.t.x=46;assert.ok(a.g.cast(a.p,'r',a.t));close(a.p.x,46);
- const {g,p,t}=quiet('sinclair');t.x=45;t.hp=t.maxHp=10000;g.cast(p,'r',t);close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<45);close(t.hp,10000);run(g,.3);close(t.hp,10000);run(g,.4);close(p.x,45);assert.ok(t.hp<10000);
+ const {g,p,t}=quiet('sinclair');t.x=45;t.hp=t.maxHp=10000;g.cast(p,'r',t);close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<45);close(t.hp,10000);run(g,.3);close(t.hp,10000);run(g,.4);assert.ok(Math.abs(p.x-45)<.5);assert.ok(distance(p,t)>=p.radius+t.radius-.01);assert.ok(t.hp<10000);
 });
 test('Ryoshu dash invulnerability blocks forced movement and ends at wall collision',()=>{
  const {g,p}=quiet('ryoshu');Object.assign(p,{x:16.5,y:15});assert.ok(g.cast(p,'q',{x:22,y:15}));
@@ -59,7 +59,7 @@ test('Gregor knockback triggers extra damage and stun at wall contact, not at ca
  g.cast(p,'q',t);close(t.x,16.2);const hp=t.hp;assert.equal(g.stat(t,'stun'),0);run(g,.2);assert.ok(t.x>16.2&&t.x<17.1);assert.ok(t.hp<hp);assert.ok(g.stat(t,'stun')>0);assert.ok(!blocked(t.x,t.y,t.radius));
 });
 test('Heathcliff preview and actual landing share progressive charge range and wall constraints',()=>{
- const {g,p}=quiet('heathcliff'),aim={x:50,y:7};g.cast(p,'q',aim);g.time=1.2;close(heathCharge(g,p,aim).range,5);g.time=1.8;close(heathCharge(g,p,aim).range,6);g.time=2.4;const charged=heathCharge(g,p,aim);close(charged.range,7);g.cast(p,'q',aim);close(p.x,40);run(g,1);close(p.x,charged.landing.x);close(p.y,charged.landing.y);
+ const {g,p,t}=quiet('heathcliff');t.y=10;const aim={x:50,y:7};g.cast(p,'q',aim);g.time=1.2;close(heathCharge(g,p,aim).range,5);g.time=1.8;close(heathCharge(g,p,aim).range,6);g.time=2.4;const charged=heathCharge(g,p,aim);close(charged.range,7);g.cast(p,'q',aim);close(p.x,40);run(g,1);close(p.x,charged.landing.x);close(p.y,charged.landing.y);
 });
 test('all seventeen implemented champions can finish a three second recall to their fountain',()=>{
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);assert.ok(g.recall(p),key);run(g,2.9);close(p.x,40);run(g,.1);assert.equal(p.recall,undefined);close(distance(p,FOUNTAINS[0]),0);}

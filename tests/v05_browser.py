@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.add_init_script('''(() => {window.__drawnLabels=new Set();const draw=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){if(window.__drawnLabels.size<3000)__drawnLabels.add(String(text));return draw.call(this,text,...args);};})();''')
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.champion-option')).to_have_count(20)
+    expect(page.locator('.champion-option')).to_have_count(24)
     page.wait_for_function('__moba.renderer.atlasV05.naturalWidth>0')
     def choose(name):
         if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
@@ -51,7 +51,7 @@ with sync_playwright() as pw:
     page.click('#augment-power15');page.click('#augment-range7');page.click('#augment-finalBullet')
     assert page.evaluate('__moba.game.player.augments.length')==3
     expect(page.locator('#augment-reloadStacks')).to_be_disabled()
-    gold=page.evaluate('__moba.game.player.gold');page.click('#augment-power15');assert page.evaluate('__moba.game.player.gold')>=gold+350
+    gold=page.evaluate('__moba.game.player.gold');page.click('#augment-power15');assert page.evaluate('__moba.game.player.augments.length')==3;page.click('#shop-sell');assert page.evaluate('__moba.game.player.gold')>=gold+350
     page.click('#augment-reloadStacks');assert page.evaluate('__moba.game.player.augments.length')==3
     assert page.evaluate('__moba.game.player.hp')==0
     expect(page.locator('#buy-potion')).to_be_disabled()
@@ -62,7 +62,7 @@ with sync_playwright() as pw:
         click_world(42,7);page.wait_for_timeout(120)
         page.screenshot(path=str(art/f'v05-{key}.png'))
         if key=='nelly':
-            click_world(44,7,button='right');assert page.evaluate('__moba.game.player.state.knifeCharges')==1
+            click_world(44,7,button='right');assert page.evaluate('__moba.game.player.state.knifeCharges')==2
         if key=='ahab':
             page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r';click_world(44,7);page.wait_for_timeout(750)
     choose('돈키호테');click_world(44,7,button='right');assert page.evaluate('__moba.game.player.qCd')>0
@@ -83,4 +83,4 @@ with sync_playwright() as pw:
     page.screenshot(path=str(art/'v05-mobile-shop.png'),full_page=True)
     assert not errors,errors
     browser.close()
-    print(json.dumps({'status':'passed','checks':['20 ordinary/four atlases','range preview and cancel without cost','LMB confirm without basic fire','ground teleport confirmation','quick dash','dead shop and caps','three augment slots/sale/replacement','four new sprites/skills','Don directional moving barrage','enemy corpse','separate semicircular well','mobile scrollable shop'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['24 ordinary/five atlases','range preview and cancel without cost','LMB confirm without basic fire','ground teleport confirmation','quick dash','dead shop and caps','three augment slots/sale/replacement','four new sprites/skills','Don directional moving barrage','enemy corpse','separate semicircular well','mobile scrollable shop'],'page_errors':errors},ensure_ascii=False))

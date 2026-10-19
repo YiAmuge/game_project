@@ -2,30 +2,22 @@ export const MONSTERS=[
  {name:'근접 미니언',hp:680,armor:0,attack:'58 / 1.25초',reward:'24 XP · 15 재화',text:'0초부터 0.35초 간격 출격, 이후 25초 웨이브. 근접부터 3기. 포탑 피해 30% 감소.'},
  {name:'원거리 미니언',hp:480,armor:0,attack:'72 / 1.50초',reward:'26 XP · 18 재화',text:'각 웨이브의 근접 3기 뒤에 출격. 유도 투사체 · 사거리 5.5 · 포탑 피해 20% 감소.'},
  {name:'공성 미니언',hp:1320,armor:0,attack:'125 / 2초',reward:'45 XP · 30 재화',text:'3번째 웨이브마다 1기 추가. 포탑에 주는 피해 1.35배 · 포탑에서 받는 피해 50% 감소.'},
- {name:'중앙 일반 크립',hp:700,armor:10,attack:'80 / 1.3초',reward:'25 XP · 18 재화',text:'중앙 4기. 20초 재생성. 5분에 영구 제거.'},
- {name:'중립 크립 캠프',hp:850,armor:15,attack:'100 / 1.2초',reward:'25 XP · 18 재화',text:'측면 2기. 20초 재생성. 본진 앞 2곳과 위·아래 외곽 2곳에 각 2마리.'},
- {name:'증폭 크립',hp:1662.5,armor:25,attack:'120 / 1.2초',reward:'50 XP · 40 재화',text:'45초 재생성. 원형 예고 2.75초 후 180 피해. 첫 적대 1.5초 후, 이후 5초 간격. 집중 중 받는 피해 +20%. 60초간 적중 시 35 고정 피해·12% 감속, 대상당 1초 간격.'},
- {name:'가호 크립',hp:1662.5,armor:25,attack:'100 / 1.2초',reward:'50 XP · 40 재화',text:'45초 재생성. 전방 부채꼴 예고 2.65초 후 160 피해. 첫 적대 1.5초 후, 이후 5초 간격. 집중 중 받는 피해 +20%. 5초간 150 회복, 60초간 장전·가속 12% 증가.'},
+ {name:'중앙 일반 크립',hp:700,armor:10,attack:'80 / 1.3초',reward:'62.5 XP · 18 재화',text:'중앙 4기. 20초 재생성. 5분에 영구 제거.'},
+ {name:'중립 크립 캠프',hp:850,armor:15,attack:'100 / 1.2초',reward:'62.5 XP · 18 재화',text:'측면 2기. 20초 재생성. 본진 앞 2곳과 위·아래 외곽 2곳에 각 2마리.'},
+ {name:'증폭 크립',hp:1662.5,armor:25,attack:'120 / 1.2초',reward:'125 XP · 40 재화',text:'45초 재생성. 전방 부채꼴 예고 2.65초 후 160 피해. 첫 적대 1.5초 후, 이후 5초 간격. 집중 중 받는 피해 +20%. 60초간 적중 시 35 고정 피해·12% 감속, 대상당 1초 간격.'},
+ {name:'가호 크립',hp:1662.5,armor:25,attack:'100 / 1.2초',reward:'125 XP · 40 재화',text:'45초 재생성. 전방 부채꼴 예고 2.65초 후 160 피해. 첫 적대 1.5초 후, 이후 5초 간격. 집중 중 받는 피해 +20%. 5초간 150 회복, 60초간 장전·가속 12% 증가.'},
  {name:'중앙 보스',hp:15000,armor:60,attack:'350 / 1.5초 + 부채꼴 240 / 2.5초',reward:'아군 전원 180 XP · 160 재화',text:'5분 중앙 크립을 대체. 재등장 없음.'},
- {name:'라인 포탑',hp:7600,armor:120,attack:'280 / 1.05초',reward:'적팀 전원 120 XP · 130 재화',text:'사거리 8.5. 미니언 없이 챔피언만 공격하면 받는 피해 80% 감소.'},
- {name:'본진',hp:12000,armor:100,attack:'320 / 1초',reward:'파괴 시 즉시 승리',text:'같은 팀 포탑 1개 파괴 시 공격 가능. 포탑이 하나 남았으면 받는 피해 50% 감소. 사거리 9.'},
+ {name:'라인 포탑',hp:6460,armor:120,attack:'280 / 1.05초',reward:'적팀 전원 120 XP · 130 재화',text:'사거리 8.5. 미니언 없이 챔피언만 공격하면 받는 피해 80% 감소.'},
+ {name:'본진',hp:10200,armor:100,attack:'320 / 1초',reward:'파괴 시 즉시 승리',text:'같은 팀 포탑 1개 파괴 시 공격 가능. 포탑이 하나 남았으면 받는 피해 50% 감소. 사거리 9.'},
 ];
-export const CONSUMABLES=[
- {key:'potion',name:'회복 물약',cost:90,uses:2,implemented:true,text:'4초 동안 최대 체력의 18% 회복. 피격해도 유지.'},
- {key:'ward',name:'와드',cost:100,uses:1,implemented:false,text:'45초간 시야 반경 8. 기본 공격 3회에 파괴.'},
- {key:'cleanse',name:'정화 팔찌',cost:140,uses:1,implemented:false,text:'해로운 효과 해제·CC 면역 1초·이동속도 +20%.'},
- {key:'speed',name:'가속제',cost:100,uses:2,implemented:false,text:'이동속도 +0.8에서 3초에 걸쳐 선형 감소.'},
- {key:'weakness',name:'약화 표식',cost:120,uses:1,implemented:false,text:'사거리 7. 3초간 이동·장전 성능 -20%.'},
- {key:'battle',name:'전투 물약',cost:150,uses:1,implemented:false,text:'8초간 전투력 +12%·스킬 가속 +15%.'},
- {key:'magazine',name:'추가 탄창',cost:150,uses:1,implemented:false,text:'8초간 장전 성능 +20%·최대 탄약 +1.'},
-];
+export { CONSUMABLES } from './items.js';
 export const GAME_RULES=[
  ['승리','적 포탑 1개 파괴 시 본진 무적 해제. 포탑 하나가 남은 본진은 피해 50% 감소. 본진 파괴 시 즉시 승리. 20분에는 생존 포탑 수 → 생존 포탑 체력 합계를 비교하고, 양쪽 포탑이 모두 없으면 본진 체력으로 판정한다. 같으면 무승부.'],
  ['포지션','탑 1명, 정글 1명, 바텀 1명, 서포터 1명. 탑은 상단 1vs1, 바텀·서포터는 하단 2vs2. 정글은 크립 사냥과 갱킹을 담당한다. 추천 역할군은 선택 제한이 아니다.'],
  ['자연 치유','3초 동안 공격하지 않고 외부 피해도 받지 않으면 초당 최대 체력의 13%를 회복한다. 빗나간 기본 공격과 공격형 기술도 대기시간을 다시 시작한다. 알리사 열화 자해는 이 피격 조건에서 제외한다.'],
  ['장전','모든 챔피언의 현재 장전 성능을 추가로 35% 감소. 원안 대비 계수는 0.8×0.65=0.52, 동일 조건의 장전 간격은 v0.3의 약 1.538배다. 기본 공격으로 탄약을 소모하는 동안 장전이 일시 정지하며 부분 진행도는 보존된다. 기본 공격 소모 간격은 30% 증가하되 히스클리프 등 원래 빠른 공격 간격(0.4초 이하)은 유지한다. 미구현 챔피언도 같은 공통 계수를 따른다.'],
  ['수풀','수풀 속 적은 원거리에서 숨는다. 2.5 거리 이내 또는 같은 수풀에서 팀 공유 탐지. 공격·피격 후 1.25초 노출. 수동 투사체와 범위 공격은 숨은 적도 맞힌다.'],
- ['성장과 상점','레벨 1~10에서 챔피언별 전투력·체력·이동속도가 성장한다. 미니언 처치 시 근처 아군이 있으면 처치자가 보상의 80%를, 근처 아군이 나머지 20%를 나누어 받는다. 초당 1 재화. 아군 부활소에서 3초 비전투 상태로 G를 눌러 구매한다. 소모품은 한 종류만 보유. 사망 중에도 능력치·증강을 구매할 수 있다. 능력치 상한은 전투·체력 5단계, 이동·장전·가속 3단계. 증강은 조건 충족 후 최대 3개 선택 가능하며 구매 500·판매 350 재화다. 현재 사용 가능한 소모품은 회복 물약.'],
+ ['성장과 상점','레벨 1~10에서 챔피언별 전투력·체력·이동속도가 성장한다. 미니언 처치 시 근처 아군이 있으면 처치자가 보상의 80%를, 근처 아군이 나머지 20%를 나누어 받는다. 초당 1 경험치·1 재화. 아군 부활소에서 3초 비전투 상태로 G를 눌러 구매한다. 소모품은 한 종류만 보유. 사망 중에도 능력치·증강을 구매할 수 있다. 능력치 상한은 전투·체력 5단계, 이동·장전·가속 3단계. 증강은 조건 충족 후 최대 3개 선택 가능하며 구매 500·판매 350 재화다. 소모품 6종을 사용할 수 있다. 보유 항목 선택 후 판매 버튼으로 판매하며 소모품은 남은 사용량에 비례해 50% 환급한다.'],
  ['중앙 목표물','0초 첫 출격 후 25초 웨이브, 세 번째 웨이브 공성 미니언. 5분에는 중앙 일반 크립이 영구 제거되고 보스가 한 번 등장한다.'],
  ['조작','WASD 이동, 좌클릭 수동 공격, 우클릭 전술기, Space 궁극기는 커서 방향으로 빠른 시전. 좌표 생성·좌표 지정 이동·순간이동 기술은 범위 조준 후 좌클릭 확정, 우클릭·Esc 취소, 1 소모품, Tab을 누르는 동안 확대 미니맵·점수창, G 부활소 상점, B 3초 귀환, F12 전체 화면, Esc 취소·일시정지.'],
  ['이동과 귀환','순간이동으로 명시된 기술 외에는 최대 초당 8 거리로 연속 이동한다. 강제 이동은 초당 6 거리. B로 3초간 정신집중하면 아군 부활소로 귀환한다. 피격·이동·공격·기술 사용·강한 군중제어는 귀환을 취소한다.'],
@@ -33,5 +25,5 @@ export const GAME_RULES=[
  ['특수 조작','루돌프: Space 후 확대 지도에서 좌클릭으로 전역 궁극기 지점 확정. 모제스: 우클릭 드래그 방향으로 곰방대 선택. 에즈라: 우클릭 좌우 드래그로 무기 선택. 방향 선택 후 버튼을 놓으면 바로 적용한다. 히스클리프: 우클릭으로 충전 후 좌클릭으로 발사. 드래그 없는 손 떼기는 자원·쿨다운 소모 없이 취소. 도감의 실험실에서 확인 가능.'],
 ];
 export const BUFF_LABELS={
- chainArmor:'타인의 사슬 · 방어 +10%',flowerReload:'절정의 향기 · 장전 +20%',rabbitHunt:'토끼 시술',rabbitFrenzy:'광폭한 칼날',flowerStride:'개화의 발걸음',flowerFragrance:'절정의 향기',augReload:'교전 장전',augBattleHaste:'전장 적응',emergencyRepair:'비상 수복',ahabOrder:'선장의 명령',ahabGuard:'자, 막아내라!',ahabCover:'엄호해라!',resolve:'판단 거부',marks:'어느 표지',ogamdo:'오감도',blessing:'가호',blessingHeal:'가호 회복',amplify:'증폭',explore:'탐구',faustUlt:'표상방출',support:'지원 중첩',charge:'돌격 중첩',disrupt:'방해 중첩',donGuard:'정의의 방어',donLifesteal:'산쵸의 흡혈',ryoshuReady:'무차별적 예술',hongluStride:'선풍',insight:'통찰',heathUlt:'시체자루',ishmaelSurvive:'살아남을 마음',ishmaelShield:'난파',coins:'동전의 앞면',coinSpeed:'동전의 뒷면',mutant:'인자 코드 변이',executedHaste:'흉탄의 귀환',guboReload:'흉탄 장전',mosesWhite:'흰 곰방대',mosesHeal:'붉은 곰방대',ezraUlt:'총공 모드',alisaHaste:'홍염살 귀환',haste:'가속',speed:'이동 강화',power:'전투 강화',defense:'방어 강화',
+ itemBattle:'전투 물약',itemMagazine:'추가 탄창',itemSpeed:'가속제',itemCleanse:'정화 팔찌',martonStride:'뿌리의 발걸음',martonDrain:'양분 흡수',queequegUlt:'불굴의 작살잡이',tetherArmor:'절박 매듭',hohenheimStride:'직류 인버팅',hohenheimHitStride:'직류 가속',chainArmor:'타인의 사슬 · 방어 +10%',flowerReload:'절정의 향기 · 장전 +20%',rabbitHunt:'토끼 시술',rabbitFrenzy:'광폭한 칼날',flowerStride:'개화의 발걸음',flowerFragrance:'절정의 향기',augReload:'교전 장전',augBattleHaste:'전장 적응',emergencyRepair:'비상 수복',ahabOrder:'선장의 명령',ahabGuard:'자, 막아내라!',ahabCover:'엄호해라!',resolve:'판단 거부',marks:'어느 표지',ogamdo:'오감도',blessing:'가호',blessingHeal:'가호 회복',amplify:'증폭',explore:'탐구',faustUlt:'표상방출',support:'지원 중첩',charge:'돌격 중첩',disrupt:'방해 중첩',donGuard:'정의의 방어',donLifesteal:'산쵸의 흡혈',ryoshuReady:'무차별적 예술',hongluStride:'선풍',insight:'통찰',heathUlt:'시체자루',ishmaelSurvive:'살아남을 마음',ishmaelShield:'난파',coins:'동전의 앞면',coinSpeed:'동전의 뒷면',mutant:'인자 코드 변이',executedHaste:'흉탄의 귀환',guboReload:'흉탄 장전',mosesWhite:'흰 곰방대',mosesHeal:'붉은 곰방대',ezraUlt:'총공 모드',alisaHaste:'홍염살 귀환',haste:'가속',speed:'이동 강화',power:'전투 강화',defense:'방어 강화',
 };

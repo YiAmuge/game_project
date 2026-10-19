@@ -11,7 +11,7 @@
   <header class="masthead">
     <a id="home" class="brand" href="#" aria-label="도시 경계 처음으로"><span class="brand-mark">◈</span><span>도시 경계<small>CITY BORDER</small></span></a>
     <nav><span class="nav-active">아레나</span><button id="archive-open">도감 <span>31</span></button><button id="help-open">플레이 가이드 ↗</button></nav>
-    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.7.1</b></span>
+    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.8.0</b></span>
   </header>
   <main>
     <section class="match-bar" aria-label="경기 상태">
@@ -43,7 +43,12 @@
     <aside id="buff-tray" class="buff-tray hidden" aria-label="최근 획득한 버프"><span>보유 버프 · 최근 획득순</span><div id="buff-list"></div></aside>
     <section class="underbar"><span><kbd>W A S D</kbd> 이동 <i>·</i> 좌클릭 공격 <i>·</i> 우클릭 전술기 <i>·</i> <kbd>SPACE</kbd> 궁극기 <i>·</i> <kbd>TAB</kbd> 지도·점수 <i>·</i> <kbd>G</kbd> 상점 <i>·</i> <kbd>B</kbd> 귀환 <i>·</i> <kbd>F12</kbd> 전체 화면</span><span>적 포탑 2개를 파괴하고 본진을 공략하세요.</span></section>
     <button id="score-toggle" class="score-toggle hidden">확대 지도 · 점수 <kbd>TAB</kbd></button>
-    <aside id="shop" class="shop hidden"><div class="shop-heading"><div><span class="eyebrow">SUPPLY STATION</span><h2>부활소 보급</h2></div><button id="shop-close" aria-label="상점 닫기">×</button></div><p id="shop-status"></p><div id="upgrade-list"></div><button id="buy-potion" class="shop-item"><span>회복 물약 <small>4초 동안 체력 18% 회복 · 2회</small></span><b>90 ◈</b></button><h3 class="augment-heading">증강 <small id="augment-count"></small></h3><p class="shop-foot">최대 3개 선택 · 같은 증강 중복 불가 · 재판매 가능</p><div id="augment-list"></div><p class="shop-foot">부활 대기 중에도 강화·증강을 변경할 수 있습니다. 물약은 살아서 부활소에 있을 때 구입합니다.</p></aside>
+    <aside id="shop" class="shop hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+      <div class="shop-heading"><div><span class="eyebrow">SUPPLY STATION</span><h2 id="shop-title">부활소 보급</h2></div><button id="shop-close" aria-label="상점 닫기">×</button></div><p id="shop-status"></p>
+      <div class="shop-catalog"><section><h3>증강 <small id="augment-count"></small></h3><div id="augment-list"></div></section><section><h3>소모품 <small>한 종류만 보유</small></h3><div id="consumable-list"></div></section></div>
+      <section class="shop-upgrades"><h3>능력치 업그레이드</h3><div id="upgrade-list"></div></section>
+      <div class="shop-inventory"><div><h3>현재 보유 · 선택 후 판매</h3><div id="owned-list"></div><p id="shop-selected-info">판매할 보유 항목을 선택하세요.</p></div><button id="shop-sell" disabled>판매</button></div>
+    </aside>
   </main>
   <footer><span>PROJECT MOON UNOFFICIAL FAN GAME</span><span>기획서 v1.0 기반 · 팬 아트 / 밸런스 검증용</span><span>CITY BORDER © FAN PROJECT</span></footer>
   <dialog id="archive"><div class="dialog-heading"><div><span class="eyebrow">CITY ENCYCLOPEDIA</span><h2>도감</h2></div><button class="close-dialog" aria-label="도감 닫기">×</button></div><nav id="codex-tabs" class="codex-tabs"><button data-category="champions" class="active">챔피언</button><button data-category="monsters">몹·목표물</button><button data-category="items">소모품</button><button data-category="rules">게임 규칙</button></nav><div id="champion-archive" class="archive-layout"><div><input id="roster-search" aria-label="챔피언 검색" placeholder="이름 또는 역할군 검색"><div id="roster-list"></div></div><article id="roster-detail"></article></div><div id="codex-content" class="codex-grid hidden"></div></dialog>
