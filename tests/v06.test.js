@@ -67,27 +67,27 @@ test('clock stops at exactly twenty minutes and freezes all simulation after the
  const {g}=quiet();g.time=1199.98;g.step(.5);close(g.time,1200);assert.equal(g.winner,-1);const time=g.time;g.step(1);close(g.time,time);assert.match(g.reason,/20분/);
 });
 test('coordinate creation and ground/target teleports confirm; directional, self and enemy-target shots quickcast',()=>{
- for(const [key,slot] of [['faust','r'],['yi','q'],['gahwan','q'],['gahwan','r'],['ahab','r'],['nelly','r'],['dongbaek','r'],['dongrang','q'],['ryoshu','r'],['sinclair','r']]){const {g,p}=quiet(key);assert.ok(skillTargeting(g,p,slot).confirm,key+slot);}
- for(const [key,slot] of [['faust','q'],['meursault','r'],['rodya','q'],['ishmael','r'],['gubo','r'],['gubo','q'],['myo','q'],['dongrang','r']]){const {g,p}=quiet(key);assert.equal(skillTargeting(g,p,slot).confirm,false,key+slot);}
+ for(const [key,slot] of [['faust','r'],['yi','q'],['gahwan','q'],['gahwan','r'],['ahab','r'],['nelly','r'],['dongbaek','r'],['dongrang','q'],['dongrang','r'],['ryoshu','r'],['sinclair','r']]){const {g,p}=quiet(key);assert.ok(skillTargeting(g,p,slot).confirm,key+slot);}
+ for(const [key,slot] of [['faust','q'],['meursault','r'],['rodya','q'],['ishmael','r'],['gubo','r'],['gubo','q'],['myo','q']]){const {g,p}=quiet(key);assert.equal(skillTargeting(g,p,slot).confirm,false,key+slot);}
 });
-test('Nelly has four single-hit ammunition charges and 1.7 percentage points more power growth',()=>{
- const {g,p,t}=quiet('nelly');assert.equal(p.ammo,4);const hp=t.hp;g.attack(p,t);close(hp-t.hp,130*1.12*.9);assert.equal(p.ammo,3);assert.equal(g.events.length,0);g.award(p,250,0);close(g.powerScale(p),1.083);
+test('Nelly has four 210-damage single-hit ammunition charges and restores the original power growth',()=>{
+ const {g,p,t}=quiet('nelly');assert.equal(p.ammo,4);const hp=t.hp;g.attack(p,t);close(hp-t.hp,210*1.12*.9);assert.equal(p.ammo,3);assert.equal(g.events.length,0);g.award(p,250,0);close(g.powerScale(p),1.066);
 });
 test('Gubo allied threshold changes from 21 to 35 percent only while the four-second tactical buff is live',()=>{
  const {g,p}=quiet('gubo'),a=g.makeChampion('faust',0,5);a.x=41;a.y=7;a.maxHp=1000;a.hp=211;assert.equal(g.cast(p,'r',a,{executeAlly:true}),false);assert.equal(p.rCd,0);a.hp=210;assert.ok(g.cast(p,'r',a,{executeAlly:true}));
  const b=quiet('gubo');close(b.g.allyExecuteThreshold(b.p),.21);b.g.cast(b.p,'q',b.p);close(b.g.allyExecuteThreshold(b.p),.35);b.g.time=4.01;close(b.g.allyExecuteThreshold(b.p),.21);
 });
 test('Gahwan ranges and close knockback follow the new percentages',()=>{
- const {g,p,t}=quiet('gahwan');close(g.attackRange(p),4.16);close(skillTargeting(g,p,'q').range,7.2);t.x=41;g.attack(p,t);close(t.motion.total,.9);
+ const {g,p,t}=quiet('gahwan');close(g.attackRange(p),7.5);close(skillTargeting(g,p,'q').range,8.2);t.x=41;g.attack(p,t);close(t.motion.total,2.5);
 });
 test('Gahwan ultimate channels then hits the selected distant area three times instead of himself',()=>{
- const {g,p,t}=quiet('gahwan');t.x=48;const hp=t.hp;g.cast(p,'r',t);assert.equal(g.pending.length,3);assert.ok(g.pending.every(ev=>ev.x===48));run(g,.9);close(t.hp,hp);run(g,.2);assert.ok(t.hp<hp);const first=t.hp;run(g,.5);assert.ok(t.hp<first);assert.equal(g.pending.length,0);close(p.x,40);
+ const {g,p,t}=quiet('gahwan');t.x=48;const hp=t.hp;g.cast(p,'r',t);assert.equal(g.pending.length,2);assert.ok(g.pending.every(ev=>ev.x===48));assert.ok(t.hp<hp);const first=t.hp;run(g,.7);close(t.hp,first);run(g,.1);assert.ok(t.hp<first);run(g,.8);assert.equal(g.pending.length,0);close(p.x,40);
 });
 test('Ahab power drops twelve percent and his ultimate teleports before the original attack sequence',()=>{
  const {g,p,t}=quiet('ahab');close(g.powerScale(p),.88);g.cast(p,'r',t);close(p.x,42);assert.equal(p.motion,undefined);const hp=t.hp;run(g,.1);assert.ok(t.hp<hp);run(g,.5);assert.ok(t.hp<hp-500);
 });
-test('Myo grazing travels at the visible movement cap, Q spends two ammo, frenzy blocks Q',()=>{
- const {g,p,t}=quiet('myo');assert.ok(g.attack(p,t));close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<41);run(g,.3);assert.ok(t.hp<100000);p.ammo=6;assert.ok(g.cast(p,'q',t));assert.equal(p.ammo,4);run(g,.3);assert.ok(t.state.rabbitMark[p.id]>g.time);assert.ok(g.cast(p,'r',p));assert.ok(g.buff(p,'rabbitFrenzy'));assert.equal(g.cast(p,'q',t),false);close(g.attackRange(p),3.6);
+test('Myo grazing travels at the visible movement cap, Q spends one ammo, frenzy blocks Q',()=>{
+ const {g,p,t}=quiet('myo');assert.ok(g.attack(p,t));close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<41);run(g,.3);assert.ok(t.hp<100000);p.ammo=4;assert.ok(g.cast(p,'q',t));assert.equal(p.ammo,3);run(g,.3);assert.ok(t.state.rabbitMark[p.id]>g.time);assert.ok(g.cast(p,'r',p));assert.ok(g.buff(p,'rabbitFrenzy'));assert.equal(g.cast(p,'q',t),false);close(g.attackRange(p),3.6);
 });
 test('Myo direct champion takedowns build only two four-second hunt stacks',()=>{
  const {g,p}=quiet('myo');for(let i=0;i<3;i++){const t=g.makeChampion('yi',1,5);g.kill(t,p);}assert.equal(p.state.rabbitStacks,2);close(p.buffs.rabbitHunt-g.time,4);assert.ok(g.speed(p)>RULES.speed[5]);
@@ -95,12 +95,12 @@ test('Myo direct champion takedowns build only two four-second hunt stacks',()=>
 test('Dongbaek extra attacks spend skill readiness and stop after three; real ammo resets the reserve',()=>{
  const {g,p,t}=quiet('dongbaek');p.ammo=0;for(let i=0;i<3;i++){p.attackCd=0;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);}close(p.qCd,4.5);close(p.rCd,4.5);p.attackCd=0;assert.equal(g.attack(p,t),false);p.ammo=1;g.attack(p,t);assert.equal(p.state.extraPetals,0);
 });
-test('Dongbaek Q readiness affects armor/reload and the delayed flower ultimate hits at the selected point',()=>{
- const {g,p,t}=quiet('dongbaek');close(g.armor(p),20);const reload=g.reloadInterval(p);g.cast(p,'q',p);close(g.armor(p),0);assert.ok(g.reloadInterval(p)>reload);assert.ok(g.shield(p)>0);t.x=47;g.cast(p,'r',t);const hp=t.hp;run(g,1.7);close(t.hp,hp);run(g,.1);assert.ok(t.hp<hp);assert.equal(p.state.fragranceStacks,1);
+test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate hits at the selected point without fragrance stacks',()=>{
+ const {g,p,t}=quiet('dongbaek');close(g.armor(p),20);const reload=g.reloadInterval(p);g.cast(p,'q',p);close(g.armor(p),0);assert.ok(g.reloadInterval(p)>reload);assert.ok(g.shield(p)>0);t.x=47;const hp=t.hp;g.cast(p,'r',t);assert.ok(t.hp<hp);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.buff(p,'flowerReload'));assert.equal(p.channelUntil,undefined);
 });
-test('Dongrang power affects incoming healing rather than damage and counts deliberate overheal',()=>{
- const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);assert.ok(p.totalHealingReceived-total>100);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
+test('Dongrang power affects health and armor rather than damage or incoming healing and counts deliberate overheal',()=>{
+ const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,100);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
 });
 test('Dongrang trees have two charges, fixed damage and healing, and his ultimate consumes nearby trees',()=>{
- const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,1);g.cast(p,'q',t);assert.equal(p.state.treeCharges,0);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,140);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=530);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,0);
+ const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,1);g.cast(p,'q',t);assert.equal(p.state.treeCharges,0);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,210);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=530);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,0);
 });

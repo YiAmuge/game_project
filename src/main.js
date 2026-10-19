@@ -158,7 +158,7 @@ function frame(t){
   accumulator+=elapsed*speed;while(accumulator>=1/30&&game.winner===null){renderer.follow(game,true);if(pointer)game.input.aim=renderer.point(pointer.x,pointer.y);game.step(1/30);accumulator-=1/30;}if(game.winner!==null)finish();
  }else accumulator=0;
  renderer.draw(game,inMatch());if(inMatch())renderer.minimap($('minimap'),game);if(scoreOpen)renderer.minimap($('score-map'),game);
- if(globalTarget){renderer.minimap($('target-map'),game);if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/WORLD.w,sy=$('target-map').height/WORLD.h;c.beginPath();c.ellipse((globalPoint.x-WORLD.x)*sx,(globalPoint.y-WORLD.y)*sy,4.2*sx,4.2*sy,0,0,Math.PI*2);c.fillStyle='#d89af433';c.fill();c.strokeStyle='#e9c9ff';c.lineWidth=2;c.stroke();}}
+ if(globalTarget){renderer.minimap($('target-map'),game);if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/WORLD.w,sy=$('target-map').height/WORLD.h;c.beginPath();c.ellipse((globalPoint.x-WORLD.x)*sx,(globalPoint.y-WORLD.y)*sy,4.2*sx,4.2*sy,0,0,Math.PI*2);c.fillStyle='#ffac5033';c.fill();c.strokeStyle='#ffd396';c.lineWidth=2;c.stroke();}}
  if(t-lastHud>100){updateHud();lastHud=t;}requestAnimationFrame(frame);
 }
 function showDialog(id){clearInput();cancelDrag();cancelGlobal();showScore(false);$(id).showModal();}

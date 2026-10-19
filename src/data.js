@@ -34,7 +34,7 @@ export const CHAMPIONS = {
     passive: '어느 표지', basic: '연속 베기', tactical: '공포를 이기는 용기', ultimate: '지식나무의 가지',
     brief: '표식을 쌓아 돌파하는 근접 암살자', qText: '3.2 거리 돌진 / 경로 피해 / 표식', rText: '0.7초 후 도약 / 범위 피해 / 체력에 따른 강화',
   },
-  meursault: { id: 5, name: '뫼르소', tag: 'MEURSAULT', role: '보호', color: '#a6bdc6', icon: 'M', power: 3, health: 5, speed: 1, ammo: 2, reload: 3, range: 1.9, damage: 275, attackTime: .55, q: 14, r: 50,
+  meursault: { id: 5, name: '뫼르소', tag: 'MEURSAULT', role: '보호', color: '#a6bdc6', icon: 'M', power: 3, health: 5, speed: 1, ammo: 3, reload: 3, range: 1.9, damage: 233.75, attackTime: .55, q: 14, r: 50,
     passive: '이방인', basic: '원, 투', tactical: '판단 거부', ultimate: '타인의 사슬',
     brief: '아군의 피해를 줄이는 전선의 방패', qText: '4초 피해 -30% / 이동 +25% / 침묵·감속 해제', rText: '전방 사슬 / 피해·속박 / 전투력 약화',
   },
@@ -44,7 +44,7 @@ for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!NEW_CHAMPION_KEYS.includes(key)));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
 export const GROWTH={
- faust:[.055,.045,.008],yi:[.042,.052,.012],sinclair:[.058,.048,.016],meursault:[.038,.075,.007],don:[.052,.061,.013],ryoshu:[.064,.04,.017],honglu:[.046,.055,.014],heathcliff:[.061,.063,.01],ishmael:[.043,.072,.009],rodya:[.054,.065,.011],outis:[.06,.047,.01],gregor:[.045,.074,.008],gubo:[.063,.044,.006],gahwan:[.051,.049,.011],nelly:[.083,.043,.018],ahab:[.057,.041,.009],alisa:[.058,.057,.012],rudolph:[.05,.048,.007],moses:[.036,.058,.01],ezra:[.052,.067,.012],myo:[.064,.038,.015],dongbaek:[.053,.044,.01],dongrang:[.041,.075,.008],
+ faust:[.055,.045,.008],yi:[.042,.052,.012],sinclair:[.058,.048,.016],meursault:[.038,.075,.007],don:[.052,.061,.013],ryoshu:[.064,.04,.017],honglu:[.046,.055,.014],heathcliff:[.061,.063,.01],ishmael:[.043,.072,.009],rodya:[.054,.065,.011],outis:[.06,.047,.01],gregor:[.045,.074,.008],gubo:[.063,.044,.006],gahwan:[.051,.049,.011],nelly:[.066,.043,.018],ahab:[.057,.041,.009],alisa:[.058,.057,.012],rudolph:[.05,.048,.007],moses:[.036,.058,.01],ezra:[.052,.067,.012],myo:[.064,.038,.015],dongbaek:[.053,.044,.01],dongrang:[.041,.075,.008],
 };
 export const ATTACK_STYLES={faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'flame',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash'};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
@@ -53,7 +53,7 @@ CHAMPIONS.don.qText='2.5초 동안 방향을 고정해 랜스 연속 찌르기 �
 CHAMPIONS.heathcliff.rText='반경 7.5의 시체자루 · 피해·흡혈·처치 연장';
 CHAMPIONS.yi.qText='장판 내 적에게 0.1초마다 침묵 0.25초와 장전 −10%를 지속 부여';
 CHAMPIONS.outis.rText='후퇴 후 사거리 18의 폭발 사격';
-CHAMPIONS.ishmael.rText='사거리 16 · 관통 작살 투사체 · 300 피해와 1.5 거리 끌기';
+CHAMPIONS.ishmael.rText='사거리 16 · 관통 작살 투사체 · 300 피해 · 적 챔피언을 바로 앞으로 끌기 · 쿨다운 25초';
 export const POSITIONS={
   top:{name:'탑',lane:0,recommend:['보호','돌격'],description:'상단 라인 1vs1 · 수호·돌격 추천'},
   jungle:{name:'정글',lane:0,recommend:['암살'],description:'중립 크립 사냥·갱킹 · 암살 추천'},

@@ -29,9 +29,9 @@ with sync_playwright() as pw:
     page.screenshot(path=str(art/'v06-gubo-gauge.png'))
     choose('넬리');assert page.evaluate('__moba.game.player.ammo')==4
     before=page.evaluate('__moba.game.champions(1).find(c=>c.key==="faust").hp');click();page.wait_for_timeout(180)
-    after=page.evaluate('__moba.game.champions(1).find(c=>c.key==="faust").hp');assert 100<before-after<150
+    after=page.evaluate('__moba.game.champions(1).find(c=>c.key==="faust").hp');assert 200<before-after<230
     choose('가환');page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r';click(48,7)
-    assert page.evaluate('__moba.game.pending.length')==3
+    assert page.evaluate('__moba.game.pending.length')==2
     assert page.evaluate('__moba.game.pending.every(e=>e.x>47)')
     page.screenshot(path=str(art/'v06-gahwan-ground-ult.png'))
     choose('에이해브');page.keyboard.press('Space');assert page.evaluate('__moba.game.player.x')==40;click(44,7)
@@ -48,20 +48,21 @@ with sync_playwright() as pw:
             expect(page.locator('#global-target')).to_be_hidden()
             assert abs(page.evaluate('__moba.game.pending[0].y')+3.8)<.2
         if key=='myo':
-            click(button='right');assert page.evaluate('__moba.game.player.ammo')==4
+            click(button='right');assert page.evaluate('__moba.game.player.ammo')==3
             page.keyboard.press('Space');assert page.evaluate('__moba.game.buff(__moba.game.player,"rabbitFrenzy")')
             assert not page.evaluate('Boolean(__moba.targeting)')
         if key=='dongbaek':
             click(button='right');assert page.evaluate('__moba.game.shield(__moba.game.player)')>0
             page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r';click(47,7)
-            assert page.evaluate('__moba.game.pending[0].type')=='flowerBurst'
+            assert page.evaluate('__moba.game.pending.length')==0
+            assert page.evaluate('__moba.game.buff(__moba.game.player,"flowerReload")')
             page.screenshot(path=str(art/'v06-spicebush-ult.png'))
         if key=='dongrang':
             click(button='right');assert page.evaluate('__moba.targeting.slot')=='q';click(42,7)
             assert page.evaluate('__moba.game.zones.filter(z=>z.kind==="desireTree").length')==1
             page.wait_for_timeout(1600);assert page.evaluate('__moba.game.player.totalHealingReceived')>0
             page.screenshot(path=str(art/'v06-desire-tree.png'))
-            page.keyboard.press('Space');assert not page.evaluate('Boolean(__moba.targeting)');assert page.evaluate('__moba.game.zones.length')==0
+            page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r';click(41,7);page.wait_for_timeout(400);assert page.evaluate('__moba.game.zones.length')==0
     # Test both creep warnings through their actual AI and real-time renderer.
     for camp in ['amplify','blessing']:
         choose('파우스트')

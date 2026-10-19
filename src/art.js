@@ -32,7 +32,7 @@ export const THEMES = {
   rodya:{light:"#bfe6ff",dark:"#477ba0",accent:"#e8c57d",weapon:"axe"},
   outis:{light:"#c8dfb4",dark:"#627b57",accent:"#f0f2d9",weapon:"sabre"},
   gregor:{light:"#c7df90",dark:"#607342",accent:"#b58f60",weapon:"claw"},
-  rudolph:{light:"#d6a9fc",dark:"#755692",accent:"#a6dae2",weapon:"mind"},
+  rudolph:{light:"#ffc078",dark:"#a95a2d",accent:"#ff963e",weapon:"antlerStaff"},
   moses:{light:"#f0e1d4",dark:"#715d6d",accent:"#c27472",weapon:"pipe"},
   ezra:{light:"#f4cd96",dark:"#8c6b3d",accent:"#cee0dd",weapon:"hammer"},
   alisa:{light:"#ffb67a",dark:"#a04538",accent:"#fbd064",weapon:"fire"},
