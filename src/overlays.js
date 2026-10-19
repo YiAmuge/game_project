@@ -3,6 +3,9 @@ import { THEMES } from './art.js';
 import { heathCharge } from './skills.js';
 
 export function stackInfo(e,g){
+ if(e.key==='dongrang')return {label:'양분 '+Math.floor((e.totalHealingReceived||0)/800),value:e.state.treeCharges??2,max:2,color:'#d8d48b',shape:'leaf'};
+ if(e.key==='dongbaek')return {label:'추가 꽃잎',value:3-(e.state.extraPetals||0),max:3,color:'#efda98',shape:'leaf'};
+ if(e.key==='myo'&&g.buff(e,'rabbitHunt'))return {label:'토끼 시술',value:e.state.rabbitStacks||0,max:2,color:'#c7a6e7',shape:'mirror'};
  if(e.key==='nelly')return {label:'비도',value:e.state.knifeCharges??2,max:2,color:'#d8e0ed',shape:'mirror'};
  if(e.key==='ahab'&&e.state.order)return {label:e.state.order==='guard'?'방어 명령':'엄호 명령',value:2,max:2,color:'#d9c587',shape:'mirror'};
  const gaze=Object.values(e.state.gaze||{}).find(m=>m.until>g.time&&m.n>0);if(gaze)return {label:'시선',value:gaze.n,max:7,color:'#efbdb9',shape:'mirror'};
@@ -31,6 +34,7 @@ export function championHud(r,e,g){
   const gap=.075,w=(width-gap*(cap-1))/cap;
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
  }
+ if(e.key==='gubo'&&g.buff(e,'guboReload')){const left=e.buffs.guboReload-g.time;c.fillStyle='#241b2f';c.fillRect(x,resourceY+.32,width,.13);c.fillStyle='#d1a3ea';c.fillRect(x,resourceY+.32,width*Math.min(1,left/4),.13);r.text(`흉탄 ${left.toFixed(1)}s · 아군 ≤35%`,e.x,resourceY+.64,'#e4b8ef',.22);}
  r.text(`${e.name} · ${e.level}`,e.x,e.y-3.02,e.player?'#f4dfa3':e.team===0?'#a7d8df':'#edb2a4',.29);
  const stack=stackInfo(e,g);
  if(stack){
@@ -62,6 +66,7 @@ export function championEffects(r,e,g){
  if(shared?.until>g.time){
   for(let i=0;i<3;i++){c.beginPath();c.ellipse(e.x,e.y-.55+i*.45,1.02+Math.sin(g.time*3+i)*.12,.28,Math.sin(g.time+i)*.18,0,Math.PI*2);c.strokeStyle=i%2?'#9cebddaa':'#4bb7bdaa';c.lineWidth=.07;c.stroke();}
  }
+ if(e.key==='gubo'&&g.buff(e,'guboReload')){r.circle(e.x,e.y-.6,1,'#d9a3ee12','#d9a3ee99',.06);for(let i=0;i<3;i++)r.shard(e.x+Math.cos(g.time*2+i*2.1),e.y-.7+Math.sin(g.time*2+i*2.1)*.5,.15,g.time,'#e1b6f0');}
  if(e.key==='ryoshu'&&g.time-e.lastCombat>=2)for(let i=0;i<2;i++){const a=g.time+i*Math.PI;r.shard(e.x+Math.cos(a)*.85,e.y-.6+Math.sin(a)*.4,.16,a,'#efb0a0');}
  if(e.key==='alisa'&&(e.state.heat||0)>0)for(let i=0;i<e.state.heat;i++){const x=e.x+(i-(e.state.heat-1)/2)*.3,y=e.y+.3-Math.sin(g.time*5+i)*.15;r.polygon([[x-.12,y],[x,y-.45],[x+.14,y+.02]],'#ed9d6377');}
  if(e.key==='moses'&&e.state.smoke){const color={up:'#f1ede0',down:'#99b4ef',left:'#c59ae5',right:'#f29e8f'}[e.state.smoke];for(let i=0;i<3;i++){const a=g.time*1.3+i*2.1;r.circle(e.x+Math.cos(a)*.7,e.y-.6-Math.sin(g.time*2+i)*.35,.16,color+'88');}}

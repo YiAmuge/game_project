@@ -21,17 +21,17 @@ test('map expands 30 percent in each axis, old walls only 10 percent, entities k
 });
 test('35 percent additional reload reduction applies to all runtime and future roster champions',()=>{
  close(RULES.reloadEfficiency,.8*.65);const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),RULES.reload[grade]/.8/.65);}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),RULES.reload[grade]/.8/.65);}
 });
 test('growth reaches level ten, caps there, and updates health and score growth',()=>{
  const {g,p}=quiet('meursault');g.award(p,RULES.xp[9],0);assert.equal(p.level,10);close(p.maxHp,4600*1.675);assert.equal(g.bonusStats(p).health,68);g.award(p,1e6,0);assert.equal(p.level,10);assert.ok(Number.isFinite(g.bonusStats(p).power));
 });
-test('there is no time adjudication after ten minutes or several hours',()=>{
- const {g}=quiet();g.time=599.99;g.wave=23;g.step(.05);assert.equal(g.winner,null);assert.ok(g.time>600);g.time=14400;g.wave=576;g.step(.1);assert.equal(g.winner,null);assert.equal(g.time,14400.1);
+test('matches continue past ten minutes and stop at twenty',()=>{
+ const {g}=quiet();g.time=599.99;g.wave=23;g.step(.05);assert.equal(g.winner,null);assert.ok(g.time>600);g.time=1199.99;g.wave=48;g.step(.1);assert.notEqual(g.winner,null);close(g.time,1200);
 });
 test('waves are faster, base health is higher, and minion scaling stops at twelve minutes',()=>{
  const {g}=quiet();assert.equal(g.wave,1);run(g,24.9);assert.equal(g.wave,1);run(g,.1);assert.equal(g.wave,2);const first=g.units.find(u=>u.kind==='minion'&&!u.ranged&&!u.siege);assert.equal(first.maxHp,680);
- const spawn=time=>{g.units=g.units.filter(e=>e.kind!=='minion');g.time=time;g.spawnWave();return g.units.filter(u=>u.kind==='minion').map(u=>({hp:u.maxHp,damage:u.damage,siege:u.siege}));};
+ const spawn=time=>{g.units=g.units.filter(e=>e.kind!=='minion');g.minionQueue=[];g.time=time;g.spawnWave();return g.units.filter(u=>u.kind==='minion').map(u=>({hp:u.maxHp,damage:u.damage,siege:u.siege}));};
  const mid=spawn(120);assert.ok(mid[0].hp>680);const capped=spawn(720),late=spawn(36000);close(capped[0].hp,680*1.36);close(capped[0].damage,58*1.3);close(late[0].hp,capped[0].hp);close(late[0].damage,capped[0].damage);assert.equal(MINIONS.maxGrowth,6);
 });
 test('Don Quixote moves gradually and damages each target only when the path reaches it',()=>{
@@ -84,7 +84,7 @@ test('distant hostile creeps also wait 1.85 seconds before a visible return',()=
  const {g}=quiet();const n=g.makeNeutral(30,7,'side');n.x=40;n.hostile=true;n.aggro=g.player.id;g.aiNeutral=Game.prototype.aiNeutral;g.step(1/30);assert.ok(!n.returning);g.time+=1.86;const before=n.x;g.step(1/30);assert.ok(n.returning);assert.ok(n.x<before&&n.x>before-1);assert.ok(CAMP_RULES.returnSpeed>2.7);
 });
 test('camp timers count down, disappear on respawn, and never revive removed central creeps',()=>{
- const {g,p}=quiet();const n=g.makeNeutral(30,7,'side');g.kill(n,p);assert.equal(g.campTimers()[0].seconds,90);g.time=30;assert.equal(g.campTimers()[0].seconds,60);g.time=89.99;g.wave=3;g.step(.02);assert.ok(n.alive);assert.equal(g.campTimers().length,0);
+ const {g,p}=quiet();const n=g.makeNeutral(30,7,'side');g.kill(n,p);assert.equal(g.campTimers()[0].seconds,20);g.time=10;assert.equal(g.campTimers()[0].seconds,10);g.time=19.99;g.wave=3;g.step(.02);assert.ok(n.alive);assert.equal(g.campTimers().length,0);
  const c=g.makeNeutral(40,23,'central');g.kill(c,p);g.spawnBoss();assert.ok(!g.campTimers().some(t=>t.id===c.id));g.time=500;g.step(.02);assert.equal(c.alive,false);
 });
 test('stack UI reflects actual Sinclair, Gregor and Alisa state',()=>{

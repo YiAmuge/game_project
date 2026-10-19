@@ -2,7 +2,7 @@ import { skillTargeting, castPoint } from './targeting.js';
 import { AUGMENTS, AUGMENT_RULES, unlocked, has } from './augments.js';
 import { canRecast } from './skills.js';
 import { Game } from './game.js';
-import { CHAMPIONS, EXPERIMENTAL_CHAMPIONS, RUNTIME_CHAMPIONS, RULES, UPGRADES, POSITIONS } from './data.js';
+import { CHAMPIONS, EXPERIMENTAL_CHAMPIONS, RUNTIME_CHAMPIONS, RULES, UPGRADES, POSITIONS, WORLD } from './data.js';
 import { Renderer } from './render.js';
 import { portrait } from './art.js';
 import { dragChoice, DRAG_KEYS, EZRA_WEAPONS } from './skills.js';
@@ -24,8 +24,8 @@ function clearInput(){delete game.targeting;keys.clear();game.input.fire=false;g
 function cancelDrag(){drag=null;$('drag-wheel').classList.add('hidden');}
 function cancelGlobal(){globalTarget=false;globalPoint=null;$('global-target').classList.add('hidden');}
 function showScore(show){scoreOpen=show&&inMatch();$('scoreboard').classList.toggle('hidden',!scoreOpen);if(scoreOpen){game.input.fire=false;updateScores();}}
-function renderPortraits(){document.querySelectorAll('.champion-portrait').forEach(c=>portrait(c,c.dataset.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05));portrait($('hud-face'),selected,renderer.atlas,renderer.atlasExtra,renderer.atlasV05);}
-renderer.atlas.addEventListener('load',renderPortraits);renderer.atlasExtra.addEventListener('load',renderPortraits);renderer.atlasV05.addEventListener('load',renderPortraits);
+function renderPortraits(){document.querySelectorAll('.champion-portrait').forEach(c=>portrait(c,c.dataset.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06));portrait($('hud-face'),selected,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06);}
+renderer.atlas.addEventListener('load',renderPortraits);renderer.atlasExtra.addEventListener('load',renderPortraits);renderer.atlasV05.addEventListener('load',renderPortraits);renderer.atlasV06.addEventListener('load',renderPortraits);
 function select(key){
  selected=key;game=new Game(key,position);const c=RUNTIME_CHAMPIONS[key];
  document.querySelectorAll('.champion-option').forEach(b=>{const chosen=b.dataset.key===key;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',chosen);b.classList.toggle('recommended',POSITIONS[position].recommend.includes(CHAMPIONS[b.dataset.key].role));});
@@ -61,11 +61,11 @@ function skill(slot,options={}){
  if(slot==='q'&&DRAG_KEYS.includes(p.key)&&!options.direction){toast(p.key==='moses'?'우클릭을 누르고 상하좌우로 드래그하세요.':'우클릭을 누르고 좌우로 드래그하세요.');return false;}
  const target=options.point||game.input.aim;
  const spec=skillTargeting(game,p,slot);
- if(!options.confirm&&spec.kind!=='quick'&&spec.kind!=='global'){
+ if(!options.confirm&&spec.confirm&&spec.kind!=='global'){
   if(!p.alive||p.motion||game.hidden(p)||game.stat(p,'stun')||game.stat(p,'silence')&&!(p.key==='meursault'&&slot==='q')||p.channelUntil>game.time||p[slot+'Cd']>0&&!canRecast(game,p,slot)){toast('지금은 이 스킬을 준비할 수 없습니다.');return false;}
   game.input.fire=false;game.targeting={slot,options};toast('사거리 표시 · 좌클릭으로 시전 · 우클릭 / Esc 취소');return true;
  }
- const casted=game.cast(p,slot,target,options);if(!casted)toast('재사용 대기·대상·군중제어 조건을 확인하세요.');updateHud();return casted;
+ const casted=game.cast(p,slot,target,options);if(casted)delete game.targeting;if(!casted)toast('재사용 대기·대상·군중제어 조건을 확인하세요.');updateHud();return casted;
 }
 $('practice-open').onclick=showPractice;$('practice-back').onclick=mainMenu;$('start').onclick=start;
 $('pause').onclick=togglePause;$('resume').onclick=togglePause;$('restart').onclick=showPractice;$('leave').onclick=showPractice;
@@ -88,7 +88,7 @@ function updateDrag(e){
 $('arena').addEventListener('pointermove',updatePointer);window.addEventListener('pointermove',updateDrag);
 $('arena').addEventListener('pointerdown',e=>{
  if(!active()||globalTarget||scoreOpen)return;updatePointer(e);e.preventDefault();$('arena').focus();
- if(e.button===0){if(game.targeting||game.player.key==='heathcliff'&&game.player.state.chargeAt!==undefined){confirmOrAttack();return;}game.input.fire=true;game.input.executeAlly=e.ctrlKey;}
+ if(e.button===0){if(game.targeting||game.player.key==='heathcliff'&&game.player.state.chargeAt!==undefined){confirmOrAttack();return;}game.input.fire=true;game.input.executeAlly=e.ctrlKey;game.attack(game.player,game.input.aim,{executeAlly:e.ctrlKey});}
  if(e.button===2){
   if(game.targeting){delete game.targeting;toast('스킬 조준 취소');return;}
   if(DRAG_KEYS.includes(game.player.key)){
@@ -99,7 +99,7 @@ $('arena').addEventListener('pointerdown',e=>{
 });
 window.addEventListener('pointerup',e=>{if(e.button===0)game.input.fire=false;if(e.button===2&&drag){updateDrag(e);const chosen=drag.choice,owner=drag.owner;cancelDrag();if(chosen&&game.player.id===owner)skill('q',{direction:chosen});else toast('전술기 선택 취소');}});
 $('arena').addEventListener('contextmenu',e=>e.preventDefault());
-function mapPoint(canvas,e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*RULES.width,y:(e.clientY-r.top)/r.height*RULES.height};}
+function mapPoint(canvas,e){const r=canvas.getBoundingClientRect();return {x:WORLD.x+(e.clientX-r.left)/r.width*WORLD.w,y:WORLD.y+(e.clientY-r.top)/r.height*WORLD.h};}
 $('target-map').addEventListener('pointermove',e=>globalPoint=mapPoint($('target-map'),e));
 $('target-map').addEventListener('pointerdown',e=>{e.preventDefault();if(e.button===2){cancelGlobal();return;}if(e.button===0&&globalTarget){const point=mapPoint($('target-map'),e);if(skill('r',{confirmGlobal:true,point})){cancelGlobal();$('arena').focus();}}});
 $('global-target').addEventListener('contextmenu',e=>e.preventDefault());$('global-cancel').onclick=cancelGlobal;
@@ -126,7 +126,7 @@ function updateScores(){
 }
 function updateHud(){
  const p=game.player,c=RUNTIME_CHAMPIONS[p.key];
- $('clock').textContent=clock(game.time);$('phase').textContent=!inMatch()?'출격 대기':game.winner!==null?'경기 종료':paused?'일시정지':game.bossSpawned?'후반전':'전반전';
+ $('clock').textContent=clock(Math.max(0,RULES.timeLimit-game.time));$('phase').textContent=!inMatch()?'출격 대기':game.winner!==null?'경기 종료':paused?'일시정지':game.bossSpawned?'남은 시간 · 후반전':'남은 시간 · 전반전';
  $('blue-score').textContent=game.kills[0];$('red-score').textContent=game.kills[1];
  $('blue-towers').textContent='▰ '.repeat(game.towers(0).length)+'▱ '.repeat(2-game.towers(0).length);$('red-towers').textContent='▰ '.repeat(game.towers(1).length)+'▱ '.repeat(2-game.towers(1).length);
  const boss=game.units.find(u=>u.camp==='boss');$('boss-time').textContent=boss?(boss.alive?`중앙 보스 · ${Math.ceil(boss.hp).toLocaleString()} HP`:'중앙 보스 · 처치 완료'):`보스까지 ${clock(Math.max(0,300-game.time))}`;
@@ -158,7 +158,7 @@ function frame(t){
   accumulator+=elapsed*speed;while(accumulator>=1/30&&game.winner===null){renderer.follow(game,true);if(pointer)game.input.aim=renderer.point(pointer.x,pointer.y);game.step(1/30);accumulator-=1/30;}if(game.winner!==null)finish();
  }else accumulator=0;
  renderer.draw(game,inMatch());if(inMatch())renderer.minimap($('minimap'),game);if(scoreOpen)renderer.minimap($('score-map'),game);
- if(globalTarget){renderer.minimap($('target-map'),game);if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/RULES.width,sy=$('target-map').height/RULES.height;c.beginPath();c.ellipse(globalPoint.x*sx,globalPoint.y*sy,4.2*sx,4.2*sy,0,0,Math.PI*2);c.fillStyle='#d89af433';c.fill();c.strokeStyle='#e9c9ff';c.lineWidth=2;c.stroke();}}
+ if(globalTarget){renderer.minimap($('target-map'),game);if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/WORLD.w,sy=$('target-map').height/WORLD.h;c.beginPath();c.ellipse((globalPoint.x-WORLD.x)*sx,(globalPoint.y-WORLD.y)*sy,4.2*sx,4.2*sy,0,0,Math.PI*2);c.fillStyle='#d89af433';c.fill();c.strokeStyle='#e9c9ff';c.lineWidth=2;c.stroke();}}
  if(t-lastHud>100){updateHud();lastHud=t;}requestAnimationFrame(frame);
 }
 function showDialog(id){clearInput();cancelDrag();cancelGlobal();showScore(false);$(id).showModal();}

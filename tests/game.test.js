@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Game, damageFormula, respawnTime } from '../src/game.js';
-import { CHAMPIONS, RULES, WALLS, worldPoint } from '../src/data.js';
+import { CHAMPIONS, RULES, WALLS, FOUNTAINS, worldPoint } from '../src/data.js';
 import { blocked, clearLine, slide, findPath } from '../src/geometry.js';
 
 const run=(g,seconds)=>{for(let i=0;i<Math.round(seconds*30);i++)g.step(1/30);};
@@ -18,20 +18,20 @@ test('31 original champion records retain four named skills',()=>{
   assert.equal(roster.length,31);assert.equal(new Set(roster.map(c=>c.id)).size,31);
   for(const c of roster){assert.equal(c.skills.length,4);assert.ok(c.skills.every(s=>s.name&&s.description.length>20));}
 });
-test('match starts with 4+4 champions, four towers, two cores and ten neutrals',()=>{
+test('match starts with 4+4 champions, four towers, two cores and sixteen neutrals',()=>{
   const g=new Game();assert.equal(g.champions(0).length,4);assert.equal(g.champions(1).length,4);
   assert.equal(g.champions().filter(c=>c.player).length,1);assert.equal(g.units.filter(u=>u.kind==='tower').length,4);
-  assert.equal(g.units.filter(u=>u.kind==='core').length,2);assert.equal(g.units.filter(u=>u.kind==='neutral').length,10);
+  assert.equal(g.units.filter(u=>u.kind==='core').length,2);assert.equal(g.units.filter(u=>u.kind==='neutral').length,16);
   assert.equal(g.units.filter(u=>u.camp==='central').length,4);
 });
 test('damage uses grade, level and armor; example rounds to 246',()=>{
   close(damageFormula(300,4,5,50),246.4);close(damageFormula(300,3,3,0),300);
 });
-test('base opens only after both of its OWN towers fall',()=>{
+test('base opens after one of its OWN towers falls and retains a partial shield',()=>{
   const g=isolated(),core=g.units.find(u=>u.kind==='core'&&u.team===1),p=g.player;
   p.x=core.x-2;p.y=core.y;const hp=core.hp;g.deal(p,core,1000);assert.equal(core.hp,hp);
   for(const t of g.towers(0))t.alive=false;assert.equal(g.locked(core),true);
-  g.towers(1)[0].alive=false;assert.equal(g.locked(core),true);
+  g.towers(1)[0].alive=false;assert.equal(g.locked(core),false);
   g.towers(1)[0].alive=false;assert.equal(g.locked(core),false);
   g.deal(p,core,1000);assert.ok(core.hp<hp);
 });
@@ -47,8 +47,8 @@ test('friendly damage is rejected',()=>{
   const g=isolated(),ally=g.champions(0)[1];g.deal(g.player,ally,1000);assert.equal(ally.hp,ally.maxHp);
 });
 test('wave starts at zero, both lanes, siege every third wave',()=>{
-  const g=isolated();assert.equal(g.wave,1);assert.equal(g.units.filter(u=>u.kind==='minion').length,16);run(g,24);assert.equal(g.wave,1);run(g,1);assert.equal(g.wave,2);
-  g.units=g.units.filter(u=>u.kind!=='minion');g.time=49.99;g.wave=2;g.step(.01);
+  const g=isolated();assert.equal(g.wave,1);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,24);assert.equal(g.wave,1);run(g,1);assert.equal(g.wave,2);
+  g.units=g.units.filter(u=>u.kind!=='minion');g.minionQueue=[];g.time=49.99;g.wave=2;g.step(.01);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,1.5);
   assert.equal(g.units.filter(u=>u.kind==='minion').length,20);assert.equal(g.units.filter(u=>u.siege).length,4);
 });
 test('5:00 permanently removes central creeps, even pending respawns, and spawns one boss',()=>{
@@ -65,7 +65,7 @@ test('boss gives all teammates 180 XP and 160 currency once',()=>{
 });
 test('matches continue past the former ten-minute limit',()=>{
   const g=isolated();g.time=599.99;g.wave=23;g.step(.05);assert.equal(g.winner,null);assert.ok(g.time>600);
-  g.time=3600;g.wave=144;g.step(.05);assert.equal(g.winner,null);assert.ok(g.time>3600);
+  g.time=1199;g.wave=48;g.step(.05);assert.equal(g.winner,null);assert.ok(g.time<1200);
 });
 test('core destruction ends immediately and subsequent ticks cannot change the result',()=>{
   const g=isolated();g.towers(1).forEach(t=>t.alive=false);const core=g.units.find(u=>u.kind==='core'&&u.team===1);
@@ -115,7 +115,7 @@ test('shields refresh by source and combined shields cap at 35%',()=>{
 test('shop requires spawn and peace, charges progressive costs, enforces caps',()=>{
   const g=isolated(),p=g.player;assert.ok(g.buy(p,'power'));assert.equal(p.gold,90);assert.equal(p.upgrades.power,1);
   assert.equal(g.buy(p,'power'),false);p.gold=5000;p.lastCombat=g.time;assert.equal(g.buy(p,'power'),false);
-  p.lastCombat=-99;p.x=20;assert.equal(g.buy(p,'power'),false);Object.assign(p,worldPoint(3,18));
+  p.lastCombat=-99;p.x=20;assert.equal(g.buy(p,'power'),false);Object.assign(p,FOUNTAINS[0]);
   for(let i=0;i<4;i++)assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,2960);
   for(let i=0;i<3;i++)assert.ok(g.buy(p,'speed'));assert.equal(g.buy(p,'speed'),false);
 });

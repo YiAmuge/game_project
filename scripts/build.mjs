@@ -5,13 +5,14 @@ import { build } from 'esbuild';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = resolve(root, 'dist');
-const [template, css, roster, atlas, atlasExtra, atlasV05, bundle] = await Promise.all([
+const [template, css, roster, atlas, atlasExtra, atlasV05, atlasV06, bundle] = await Promise.all([
   readFile(resolve(root, 'index.html'), 'utf8'),
   readFile(resolve(root, 'src/style.css'), 'utf8'),
   readFile(resolve(root, 'src/roster.json'), 'utf8'),
   readFile(resolve(root, 'src/assets/champions.png')),
   readFile(resolve(root, 'src/assets/champions-extra.png')),
   readFile(resolve(root, 'src/assets/champions-v05.png')),
+  readFile(resolve(root, 'src/assets/champions-v06.png')),
   build({
     absWorkingDir: root,
     entryPoints: ['src/main.js'],
@@ -37,7 +38,7 @@ if (!template.includes(styleTag) || !template.includes(moduleTag)) {
 const data = JSON.stringify(JSON.parse(roster)).replace(/</g, '\\u003c');
 const html = template
   .replace(styleTag, () => `<style>${css.replace(/<\/style/gi, '<\\/style')}</style>`)
-  .replace(moduleTag, () => `<script id="roster-data" type="application/json">${data}</script>\n<script id="sprite-data" type="application/json">${JSON.stringify('data:image/png;base64,'+atlas.toString('base64'))}</script>\n<script id="sprite-data-extra" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasExtra.toString('base64'))}</script>\n<script id="sprite-data-v05" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV05.toString('base64'))}</script>\n<script>${bundle.outputFiles[0].text}</script>`);
+  .replace(moduleTag, () => `<script id="roster-data" type="application/json">${data}</script>\n<script id="sprite-data" type="application/json">${JSON.stringify('data:image/png;base64,'+atlas.toString('base64'))}</script>\n<script id="sprite-data-extra" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasExtra.toString('base64'))}</script>\n<script id="sprite-data-v05" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV05.toString('base64'))}</script>\n<script id="sprite-data-v06" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV06.toString('base64'))}</script>\n<script>${bundle.outputFiles[0].text}</script>`);
 await mkdir(output, { recursive: true });
 await writeFile(resolve(output, 'city-border.html'), html);
 await writeFile(resolve(output, 'index.html'), html);

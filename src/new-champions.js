@@ -37,9 +37,9 @@ export function basic(g,e,p,d){
  switch(e.key){
  case 'gahwan':
   for(let i=0;i<2;i++)g.schedule(e,i*.12,()=>g.cone(e,d,g.attackRange(e),.85,145));
-  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=1.5+t.radius&&clearLine(e,t)){const v=direction(e,t);if(v.x*d.x+v.y*d.y>.5){g.deal(e,t,95);g.startMotion(t,v,1,{kind:'knock'});}}
+  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=1.5+t.radius&&clearLine(e,t)){const v=direction(e,t);if(v.x*d.x+v.y*d.y>.5){g.deal(e,t,95);g.startMotion(t,v,.9,{kind:'knock'});}}
   return true;
- case 'nelly':for(let i=0;i<2;i++)g.schedule(e,i*.13,()=>g.cone(e,d,g.attackRange(e),1.2,130));return true;
+ case 'nelly':g.cone(e,d,g.attackRange(e),1.2,130);return true;
  case 'ahab':
   g.bullet(e,d,260,g.attackRange(e),{speed:16,width:.22,onHit:t=>{
    if(t.kind==='champion'){t.state.harpoon={source:e.id,team:e.team,until:g.time+4};t.revealedUntil=g.time+2.5;g.status(t,'armorDown',25,3,e);t.visuals.harpoon={until:g.time+4,theme:'ahab'};}
@@ -52,9 +52,12 @@ export function cast(g,e,slot,p,d){
  const s=e.state;
  if(e.key==='gahwan'){
   if(slot==='q'){
-   const len=Math.min(6,distance(e,p)),center={x:e.x+d.x*len,y:e.y+d.y*len},rooted=new Set();
+   const len=Math.min(7.2,distance(e,p)),center={x:e.x+d.x*len,y:e.y+d.y*len},rooted=new Set();
    for(let i=0;i<5;i++)g.schedule(e,i*.13,()=>{area(g,e,center,2.5,78,t=>{g.status(t,'slow',.25,1.5,e);if(t.kind==='champion'&&t.state.contempt?.[e.id]>g.time&&!rooted.has(t.id)&&(s.bindReady?.[t.id]||0)<=g.time){rooted.add(t.id);s.bindReady??={};s.bindReady[t.id]=g.time+5;g.status(t,'root',1,1.5,e);}});g.effects.push({type:'slash',...center,angle:e.facing+i*.5,spread:1.2,r:2.5,theme:e.key,life:.3,maxLife:.3});});
-  }else{e.channelUntil=g.time+1;g.schedule(e,1,()=>{area(g,e,e,5,350,t=>{const contempt=t.state?.contempt?.[e.id]>g.time;g.status(t,'stun',1,contempt?1.5:1,e);if(contempt)g.status(t,'armorDown',25,3,e);gaze(g,e,t,5);});g.effects.push({type:'burst',x:e.x,y:e.y,r:5,theme:e.key,life:.8,maxLife:.8});});}
+  }else{
+   e.channelUntil=g.time+1;
+   for(let i=0;i<3;i++)g.pending.push({type:'gazeBurst',source:e,...p,r:5,at:g.time+1+i*.25,windup:1+i*.25,damage:350/3,onHit:t=>{if(i===0){const contempt=t.state?.contempt?.[e.id]>g.time;g.status(t,'stun',1,contempt?1.5:1,e);if(contempt)g.status(t,'armorDown',25,3,e);}if(i===2)gaze(g,e,t,5);}});
+  }
   return true;
  }
  if(e.key==='nelly'){
@@ -73,13 +76,14 @@ export function cast(g,e,slot,p,d){
   else{
    const isRecast=recast(g,e,slot);s.recastSpent=isRecast;s.recastUntil=0;
    const len=Math.min(5,distance(e,p)),dest={x:e.x+d.x*len,y:e.y+d.y*len},execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
-   dash(g,e,d,len,0,()=>{},{kind:'leap',onComplete:()=>{
+   e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
+   {
     for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&clearLine(e,t))g.deal(e,t,180,{nonLethal:execute.has(t.id)});});
     g.schedule(e,.45,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&clearLine(e,t)){
      if(execute.has(t.id)){g.deal(e,t,t.hp+g.shield(t),{fixed:true});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+4;}
      else g.deal(e,t,300+(t.maxHp-t.hp)*.18);
     }g.effects.push({type:'burst',x:e.x,y:e.y,r:2.5,theme:e.key,life:.7,maxLife:.7});});
-   }});
+   }
   }return true;
  }
  return false;

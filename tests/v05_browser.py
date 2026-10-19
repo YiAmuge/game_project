@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.add_init_script('''(() => {window.__drawnLabels=new Set();const draw=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){if(window.__drawnLabels.size<3000)__drawnLabels.add(String(text));return draw.call(this,text,...args);};})();''')
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.champion-option')).to_have_count(16)
+    expect(page.locator('.champion-option')).to_have_count(20)
     page.wait_for_function('__moba.renderer.atlasV05.naturalWidth>0')
     def choose(name):
         if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
@@ -22,16 +22,16 @@ with sync_playwright() as pw:
         s=point(x,y);page.mouse.click(s['x'],s['y'],button=button)
     choose('파우스트')
     click_world(button='right')
-    assert page.evaluate('__moba.targeting.slot')=='q'
-    assert page.evaluate('__moba.game.player.qCd')==0
-    page.wait_for_function('__drawnLabels.has("좌클릭 시전 · 우클릭 / Esc 취소")')
-    page.screenshot(path=str(art/'v05-line-target.png'))
-    page.keyboard.press('Escape');assert not page.evaluate('Boolean(__moba.targeting)');assert not page.evaluate('__moba.paused')
-    assert page.evaluate('__moba.game.player.qCd')==0
-    click_world(button='right');click_world();assert page.evaluate('__moba.game.player.qCd')>9
-    page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r'
+    assert page.evaluate('__moba.game.player.qCd')>9
+    assert not page.evaluate('Boolean(__moba.targeting)')
+    page.keyboard.press('Space')
+    assert page.evaluate('__moba.targeting.slot')=='r'
     assert page.evaluate('__moba.game.player.rCd')==0
-    click_world(46,8);assert page.evaluate('__moba.game.player.rCd')>45
+    page.wait_for_function('__drawnLabels.has("좌클릭 시전 · 우클릭 / Esc 취소")')
+    page.screenshot(path=str(art/'v05-circle-target.png'))
+    page.keyboard.press('Escape');assert not page.evaluate('Boolean(__moba.targeting)');assert not page.evaluate('__moba.paused')
+    assert page.evaluate('__moba.game.player.rCd')==0
+    page.keyboard.press('Space');click_world(46,8);assert page.evaluate('__moba.game.player.rCd')>45
     assert page.evaluate('__moba.game.pending.length')==1
     # A coordinate teleport is armed without moving or spending its cooldown.
     choose('료슈');x=page.evaluate('__moba.game.player.x');page.keyboard.press('Space')
@@ -62,12 +62,11 @@ with sync_playwright() as pw:
         click_world(42,7);page.wait_for_timeout(120)
         page.screenshot(path=str(art/f'v05-{key}.png'))
         if key=='nelly':
-            click_world(44,7,button='right');assert page.evaluate('__moba.game.player.state.knifeCharges')==2
-            click_world(44,7);assert page.evaluate('__moba.game.player.state.knifeCharges')==1
+            click_world(44,7,button='right');assert page.evaluate('__moba.game.player.state.knifeCharges')==1
         if key=='ahab':
             page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r';click_world(44,7);page.wait_for_timeout(750)
-    choose('돈키호테');click_world(44,7,button='right');assert page.evaluate('__moba.game.player.qCd')==0
-    page.screenshot(path=str(art/'v05-don-cone.png'));click_world(44,7)
+    choose('돈키호테');click_world(44,7,button='right');assert page.evaluate('__moba.game.player.qCd')>0
+    page.screenshot(path=str(art/'v05-don-barrage-start.png'))
     assert page.evaluate('Boolean(__moba.game.player.state.donBarrage)')
     page.keyboard.down('KeyD');page.wait_for_timeout(200);page.keyboard.up('KeyD');assert page.evaluate('__moba.game.player.x')>40
     page.screenshot(path=str(art/'v05-don-barrage.png'))
@@ -84,4 +83,4 @@ with sync_playwright() as pw:
     page.screenshot(path=str(art/'v05-mobile-shop.png'),full_page=True)
     assert not errors,errors
     browser.close()
-    print(json.dumps({'status':'passed','checks':['16 ordinary/three atlases','range preview and cancel without cost','LMB confirm without basic fire','ground teleport confirmation','quick dash','dead shop and caps','three augment slots/sale/replacement','four new sprites/skills','Don directional moving barrage','enemy corpse','separate semicircular well','mobile scrollable shop'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['20 ordinary/four atlases','range preview and cancel without cost','LMB confirm without basic fire','ground teleport confirmation','quick dash','dead shop and caps','three augment slots/sale/replacement','four new sprites/skills','Don directional moving barrage','enemy corpse','separate semicircular well','mobile scrollable shop'],'page_errors':errors},ensure_ascii=False))

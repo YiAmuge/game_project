@@ -12,8 +12,8 @@ function quiet(key='faust'){
  g.player.x=30;g.player.y=5.5;const t=g.champions(1).find(c=>c.key==='faust');t.x=31;t.y=5.5;g.units=[g.player,t];return {g,p:g.player,t};
 }
 
-test('sixteen ordinary champions retain four named abilities, and every team has four positions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,16);
+test('twenty ordinary champions retain four named abilities, and every team has four positions',()=>{
+ assert.equal(Object.keys(CHAMPIONS).length,20);
  for(const key of Object.keys(CHAMPIONS))for(const position of Object.keys(POSITIONS)){
   const g=new Game(key,position);assert.equal(g.champions().length,8);assert.equal(g.player.position,position);
   for(const team of [0,1])assert.deepEqual(g.champions(team).map(c=>c.position).sort(),['bottom','jungle','support','top']);
@@ -23,7 +23,7 @@ test('all 31 catalog champions and all runtime champions share the cumulative re
  const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){
   const {g,p}=quiet(key);p.lastCombat=g.time;
-  const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
+  if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
   close(g.reloadInterval(p),RULES.reload[grade]/RULES.reloadEfficiency);
  }
 });
@@ -41,11 +41,11 @@ test('Alisa heat self-damage is nonlethal and excluded from healing; idle healin
  run(g,2.9);assert.ok(p.alive);close(p.hp,1);assert.equal(p.lastDamageAt,-99);assert.equal(p.state.heat,5);
  run(g,.2);assert.equal(p.state.heat,0);assert.ok(p.hp>1);assert.ok(p.alive);
 });
-test('Gubo ally firing is explicit and permits health at 17 percent but not above',()=>{
- const {g,p}=quiet('gubo');const ally=g.makeChampion('faust',0,5,'support');ally.x=31;ally.y=5.5;ally.maxHp=1000;ally.hp=170;
- g.units=[p,ally];assert.ok(g.attack(p,ally));assert.equal(ally.hp,170);
- p.attackCd=0;p.ammo=3;ally.hp=171;g.attack(p,ally,{executeAlly:true});assert.equal(ally.hp,171);
- p.attackCd=0;p.ammo=3;ally.hp=170;g.attack(p,ally,{executeAlly:true});assert.equal(ally.alive,false);close(ally.respawnAt-g.time,3);assert.equal(g.kills[0],0);
+test('Gubo ally firing is explicit and permits health at 21 percent but not above',()=>{
+ const {g,p}=quiet('gubo');const ally=g.makeChampion('faust',0,5,'support');ally.x=31;ally.y=5.5;ally.maxHp=1000;ally.hp=210;
+ g.units=[p,ally];assert.ok(g.attack(p,ally));assert.equal(ally.hp,210);
+ p.attackCd=0;p.ammo=3;ally.hp=211;g.attack(p,ally,{executeAlly:true});assert.equal(ally.hp,211);
+ p.attackCd=0;p.ammo=3;ally.hp=210;g.attack(p,ally,{executeAlly:true});assert.equal(ally.alive,false);close(ally.respawnAt-g.time,3);assert.equal(g.kills[0],0);
 });
 test('dragging needs distance; Moses supports four directions and Ezra only left/right',()=>{
  assert.equal(dragChoice('moses',0,0),null);assert.equal(dragChoice('moses',4,3),null);
@@ -116,10 +116,10 @@ test('score growth includes level, upgrades, and current effects without conditi
  assert.equal(g.bonusStats(p).health,6);assert.equal(g.bonusStats(p).power,10);
  g.addBuff(p,'power',5);assert.equal(g.bonusStats(p).power,24);
 });
-test('Gubo ultimate validates the 17 percent ally target before consuming cooldown',()=>{
- const {g,p}=quiet('gubo');const ally=g.makeChampion('faust',0,5,'support');ally.x=31;ally.y=5.5;ally.maxHp=1000;ally.hp=171;g.units=[p,ally];
+test('Gubo ultimate validates the 21 percent ally target before consuming cooldown',()=>{
+ const {g,p}=quiet('gubo');const ally=g.makeChampion('faust',0,5,'support');ally.x=31;ally.y=5.5;ally.maxHp=1000;ally.hp=211;g.units=[p,ally];
  assert.equal(g.cast(p,'r',ally,{executeAlly:true}),false);assert.equal(p.rCd,0);
- ally.hp=170;assert.ok(g.cast(p,'r',ally,{executeAlly:true}));assert.ok(p.rCd>0);assert.equal(ally.hp,170);
+ ally.hp=210;assert.ok(g.cast(p,'r',ally,{executeAlly:true}));assert.ok(p.rCd>0);assert.equal(ally.hp,210);
  ally.lastAttackAt=g.time;run(g,1.3);assert.equal(ally.alive,false);assert.equal(g.kills[0],0);
 });
 test('every playable champion completes 60 seconds of active bot simulation',()=>{

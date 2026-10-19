@@ -1,5 +1,9 @@
 // Generated fan-art atlas; each frame is read from the unchanged transparent PNG.
 export const FRAMES = {
+  rudolph:{x:58,y:9,w:454,h:715,sheet:3},
+  myo:{x:576,y:14,w:407,h:710,sheet:3},
+  dongbaek:{x:1029,y:15,w:584,h:695,sheet:3},
+  dongrang:{x:1647,y:47,w:484,h:663,sheet:3},
   gubo:{x:16,y:15,w:526,h:693,sheet:2},
   gahwan:{x:571,y:12,w:496,h:694,sheet:2},
   nelly:{x:1112,y:28,w:480,h:678,sheet:2},
@@ -35,16 +39,19 @@ export const THEMES = {
   gahwan:{light:'#f4cebf',dark:'#7d3044',accent:'#e9ba66',weapon:'spear'},
   nelly:{light:'#d4e2f5',dark:'#485572',accent:'#a4bcda',weapon:'knives'},
   ahab:{light:'#e2d6a5',dark:'#596d4d',accent:'#d9ae68',weapon:'harpoon'},
+  myo:{light:'#e6ae78',dark:'#8150a3',accent:'#c59ff0',weapon:'rabbitBlade'},
+  dongbaek:{light:'#fff0cc',dark:'#8e7540',accent:'#f0ce63',weapon:'fan'},
+  dongrang:{light:'#e3d99c',dark:'#756939',accent:'#b6c575',weapon:'scythe'},
   gubo:{light:"#d8c1d4",dark:"#745c80",accent:"#d8a494",weapon:"rifle"},
 };
 export function loadAtlas(sheet=0){
   sheet=Number(sheet);
   const image=new Image();
-  const id=['sprite-data','sprite-data-extra','sprite-data-v05'][sheet];image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${['champions','champions-extra','champions-v05'][sheet]}.png`;
+  const id=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06'][sheet];image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${['champions','champions-extra','champions-v05','champions-v06'][sheet]}.png`;
   return image;
 }
-export function portrait(canvas,key,image,extraImage,v05Image){
-  if(FRAMES[key]?.sheet===1)image=extraImage;if(FRAMES[key]?.sheet===2)image=v05Image;
+export function portrait(canvas,key,image,extraImage,v05Image,v06Image){
+  if(FRAMES[key]?.sheet===1)image=extraImage;if(FRAMES[key]?.sheet===2)image=v05Image;if(FRAMES[key]?.sheet===3)image=v06Image;
   if(!canvas||!image||!image.complete||!image.naturalWidth)return;
   const c=canvas.getContext('2d'),f=FRAMES[key];c.clearRect(0,0,canvas.width,canvas.height);c.imageSmoothingEnabled=false;
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}

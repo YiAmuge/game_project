@@ -30,7 +30,7 @@ with sync_playwright() as p:
     expect(frame.locator('#main-menu .menu-action')).to_have_count(3)
     expect(frame.locator('#online')).to_be_disabled()
     frame.locator('#practice-open').click()
-    expect(frame.locator('.champion-option')).to_have_count(16)
+    expect(frame.locator('.champion-option')).to_have_count(20)
     expect(frame.locator('.position-option')).to_have_count(4)
     expect(frame.locator('body')).to_have_css('background-color', 'rgb(16, 22, 23)')
     assert frame.locator('script[type="module"], script[src], link[rel="stylesheet"]').count() == 0
@@ -54,7 +54,7 @@ with sync_playwright() as p:
     frame.locator('#start').click()
     expect(frame.locator('#lobby')).to_be_hidden()
     page.wait_for_timeout(1200)
-    assert frame.locator('#clock').inner_text() != '00:00'
+    assert frame.locator('#clock').inner_text() != '20:00'
     frame.locator('#shop-toggle').click()
     frame.locator('#buy-power').click()
     expect(frame.locator('#buy-power')).to_contain_text('1 / 5')
@@ -92,4 +92,4 @@ with sync_playwright() as p:
     page.evaluate('(html) => document.querySelector("iframe").srcdoc = html', html)
     expect(page.frame_locator('#preview').locator('noscript p')).to_be_visible()
     browser.close()
-    print('Standalone passed: three-entry menu, 16 champions/four positions, three embedded sprite atlases, four codex categories/31 records, shop, tactical/ultimate, 8-row score/map, pause, help, home, no-script fallback. External requests: 0. JS errors: 0.')
+    print('Standalone passed: three-entry menu, 20 champions/four positions, four embedded sprite atlases, four codex categories/31 records, shop, tactical/ultimate, 8-row score/map, pause, help, home, no-script fallback. External requests: 0. JS errors: 0.')

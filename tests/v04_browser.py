@@ -56,7 +56,7 @@ with sync_playwright() as pw:
     page.wait_for_function('__drawnLabels.has("이형발작 11/12")')
     page.screenshot(path=str(art/'v04-gregor-stacks.png'))
     choose('로쟈')
-    page.mouse.click(1000,480,button='right');page.mouse.click(1000,480);page.wait_for_timeout(1000)
+    page.mouse.click(1000,480,button='right');page.wait_for_timeout(1000)
     assert page.evaluate('__moba.game.player.state.coinResults.length')==3
     page.wait_for_function('__drawnLabels.has("앞") || __drawnLabels.has("뒤")')
     page.screenshot(path=str(art/'v04-coins.png'))
@@ -69,13 +69,13 @@ with sync_playwright() as pw:
     page.evaluate('''() => {const g=__moba.game,n=g.units.find(e=>e.camp==='side');g.player.x=n.home.x-3;g.player.y=n.home.y;g.kill(n,g.player);window.__drawnLabels.clear();}''')
     page.wait_for_function('__drawnLabels.has("재생성")')
     page.screenshot(path=str(art/'v04-camp-timer.png'))
-    page.keyboard.down('Tab');expect(page.locator('#camp-timers')).to_contain_text('측면 크립');expect(page.locator('#score-rows tr')).to_have_count(8)
+    page.keyboard.down('Tab');expect(page.locator('#camp-timers')).to_contain_text('중립 크립');expect(page.locator('#score-rows tr')).to_have_count(8)
     page.screenshot(path=str(art/'v04-expanded-map.png'));page.keyboard.up('Tab')
     page.evaluate('__moba.game.award(__moba.game.player,100000,0)')
     expect(page.locator('#level')).to_have_text('LV.10');assert page.locator('#xp-fill').get_attribute('style')=='width: 100%;'
     page.evaluate('__moba.game.time=601');page.wait_for_timeout(100);expect(page.locator('#result')).to_be_hidden()
     # Experimental SP uses a gauge with an actual value instead of magazine segments.
-    page.click('#pause');page.click('#leave');page.click('#archive-open');page.fill('#roster-search','루돌프');page.click('#roster-list button');page.click('#record-play')
+    page.click('#pause');page.click('#leave');page.click('#archive-open');page.fill('#roster-search','루돌프');page.click('#roster-list button');page.click('#record-play');page.click('#start')
     page.wait_for_function('[...__drawnLabels].some(s=>s.startsWith("SP 100 / 100"))')
     page.screenshot(path=str(art/'v04-sp-gauge.png'))
     page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(100);page.screenshot(path=str(art/'v04-mobile.png'),full_page=True)
