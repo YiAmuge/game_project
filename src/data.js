@@ -1,18 +1,22 @@
+import { NEW_DATA } from './new-data.js';
 import { EXTRA_CHAMPIONS } from './extra-data.js';
 export const RULES = {
   bossAt: 300, waveEvery: 25, width: 83.2, height: 46.8, maxLevel: 10,
   health: [0, 2200, 2800, 3400, 4000, 4600], power: [0, .82, .91, 1, 1.12, 1.25],
   reload: [0, .8, .68, .56, .45, .36], speed: [0, 3.1, 3.45, 3.8, 4.15, 4.5],
-  xp: [0, 250, 600, 1050, 1650, 2400, 3300, 4350, 5550, 6900], costs: [160, 260, 400],
+  xp: [0, 250, 600, 1050, 1650, 2400, 3300, 4350, 5550, 6900], costs: [160, 260, 400, 580, 800],
   reloadEfficiency: .8*.65, naturalHealDelay: 3, naturalHealRate: .13, allyExecuteThreshold: .17,
-  dashSpeed: 8, knockSpeed: 6, recallTime: 3,
+  dashSpeed: 8, knockSpeed: 6, recallTime: 3, attackIntervalMultiplier:1.3, fastAttackThreshold:.4, shareFraction:.2,
 };
 export const MAP_SCALE=1.3;
 export const worldPoint=(x,y)=>({x:x*MAP_SCALE,y:y*MAP_SCALE});
 export const MAP_CENTER=worldPoint(32,18);
 export const FOUNTAINS=[worldPoint(2,18),worldPoint(62,18)];
 export const MINIONS={health:{melee:680,ranged:480,siege:1320},growthEvery:120,maxGrowth:6,hpGrowth:.06,attackGrowth:.05};
-export const CAMP_RULES={radius:3.4,leashDistance:5.4,leashDelay:1.5,hardLeash:9,returnSpeed:9};
+export const CAMP_RULES={radius:3.4,leashDistance:3.4,leashDelay:1.85,hardLeash:Infinity,returnSpeed:9};
+export const CORE_POSITIONS=[{x:10.2,y:MAP_CENTER.y},{x:RULES.width-10.2,y:MAP_CENTER.y}];
+export const WELL_ROOMS=[{x:5.8,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width-5.8,y:MAP_CENTER.y,r:5.2,team:1}];
+export function inWell(e,team=e.team){const w=WELL_ROOMS[team];return Math.hypot(e.x-w.x,e.y-w.y)<=w.r&&(team===0?e.x<=w.x:e.x>=w.x);}
 export const CHAMPIONS = {
   faust: { id: 2, name: '파우스트', tag: 'FAUST', role: '저격', color: '#c9d8df', icon: 'F', power: 4, health: 3, speed: 2, ammo: 3, reload: 3, range: 7.5, damage: 180, attackTime: .46, q: 11, r: 48,
     passive: '게젤샤프트', basic: '대상 분석', tactical: '탐구', ultimate: '표상방출기',
@@ -31,10 +35,21 @@ export const CHAMPIONS = {
     brief: '아군의 피해를 줄이는 전선의 방패', qText: '4초 피해 -30% / 이동 +25% / 침묵·감속 해제', rText: '전방 사슬 / 피해·속박 / 전투력 약화',
   },
 };
-export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','rodya','outis','gregor'];
-for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=EXTRA_CHAMPIONS[key];
+export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','rodya','outis','gregor','gubo','gahwan','nelly','ahab'];
+for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!NEW_CHAMPION_KEYS.includes(key)));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
+export const GROWTH={
+ faust:[.055,.045,.008],yi:[.042,.052,.012],sinclair:[.058,.048,.016],meursault:[.038,.075,.007],don:[.052,.061,.013],ryoshu:[.064,.04,.017],honglu:[.046,.055,.014],heathcliff:[.061,.063,.01],ishmael:[.043,.072,.009],rodya:[.054,.065,.011],outis:[.06,.047,.01],gregor:[.045,.074,.008],gubo:[.063,.044,.006],gahwan:[.051,.049,.011],nelly:[.066,.043,.018],ahab:[.057,.041,.009],alisa:[.058,.057,.012],rudolph:[.05,.048,.007],moses:[.036,.058,.01],ezra:[.052,.067,.012],
+};
+export const ATTACK_STYLES={faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'flame',rudolph:'whip',moses:'shot',ezra:'punch'};
+for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
+CHAMPIONS.rodya.q=9;CHAMPIONS.rodya.brief='짧은 돌진 도끼와 동전의 도박사';
+CHAMPIONS.don.qText='2.5초 동안 방향을 고정해 랜스 연속 찌르기 · 이동 가능 · 정면 피해 50% 감소';
+CHAMPIONS.heathcliff.rText='반경 7.5의 시체자루 · 피해·흡혈·처치 연장';
+CHAMPIONS.yi.qText='장판 내 적에게 0.1초마다 침묵 0.25초와 장전 −10%를 지속 부여';
+CHAMPIONS.outis.rText='후퇴 후 사거리 18의 폭발 사격';
+CHAMPIONS.ishmael.rText='사거리 16 · 관통 작살 투사체 · 300 피해와 1.5 거리 끌기';
 export const POSITIONS={
   top:{name:'탑',lane:0,recommend:['보호','돌격'],description:'상단 라인 1vs1 · 수호·돌격 추천'},
   jungle:{name:'정글',lane:0,recommend:['암살'],description:'중립 크립 사냥·갱킹 · 암살 추천'},
@@ -43,11 +58,11 @@ export const POSITIONS={
 };
 export const POSITION_ORDER=['top','jungle','bottom','support'];
 export const UPGRADES = [
-  { key: 'power', name: '전투력', effect: '+4%', max: 3 },
-  { key: 'health', name: '최대 체력', effect: '+6%', max: 3 },
-  { key: 'speed', name: '이동속도', effect: '+3%', max: 2 },
-  { key: 'haste', name: '스킬 가속', effect: '+5%', max: 2 },
-  { key: 'reload', name: '장전 성능', effect: '+5%', max: 2 },
+  { key: 'power', name: '전투력', effect: '+4%', max: 5 },
+  { key: 'health', name: '최대 체력', effect: '+6%', max: 5 },
+  { key: 'speed', name: '이동속도', effect: '+3%', max: 3 },
+  { key: 'haste', name: '스킬 가속', effect: '+5%', max: 3 },
+  { key: 'reload', name: '장전 성능', effect: '+5%', max: 3 },
 ];
 const leftWalls = [
   { x: 13, y: 11, w: 6, h: 1.6 }, { x: 20, y: 8.5, w: 8, h: 1.6 },
@@ -76,5 +91,5 @@ export const BUSHES = [
 export const lanePath = (team, lane) => {
   const y = lane === 0 ? 5.5 : 30.5;
   const points = [{x:5.5,y:18},{x:10,y},{x:54,y},{x:58.5,y:18}];
-  return (team === 0 ? points : points.reverse()).map(p=>worldPoint(p.x,p.y));
+  const scaled=points.map(p=>worldPoint(p.x,p.y));scaled[0]={...CORE_POSITIONS[0]};scaled[3]={...CORE_POSITIONS[1]};return team===0?scaled:scaled.reverse();
 };

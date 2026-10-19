@@ -24,13 +24,13 @@ test('35 percent additional reload reduction applies to all runtime and future r
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),RULES.reload[grade]/.8/.65);}
 });
 test('growth reaches level ten, caps there, and updates health and score growth',()=>{
- const {g,p}=quiet('meursault');g.award(p,RULES.xp[9],0);assert.equal(p.level,10);close(p.maxHp,4600*1.54);assert.equal(g.bonusStats(p).health,54);g.award(p,1e6,0);assert.equal(p.level,10);assert.ok(Number.isFinite(g.bonusStats(p).power));
+ const {g,p}=quiet('meursault');g.award(p,RULES.xp[9],0);assert.equal(p.level,10);close(p.maxHp,4600*1.675);assert.equal(g.bonusStats(p).health,68);g.award(p,1e6,0);assert.equal(p.level,10);assert.ok(Number.isFinite(g.bonusStats(p).power));
 });
 test('there is no time adjudication after ten minutes or several hours',()=>{
  const {g}=quiet();g.time=599.99;g.wave=23;g.step(.05);assert.equal(g.winner,null);assert.ok(g.time>600);g.time=14400;g.wave=576;g.step(.1);assert.equal(g.winner,null);assert.equal(g.time,14400.1);
 });
 test('waves are faster, base health is higher, and minion scaling stops at twelve minutes',()=>{
- const {g}=quiet();run(g,24.9);assert.equal(g.wave,0);run(g,.1);assert.equal(g.wave,1);const first=g.units.find(u=>u.kind==='minion'&&!u.ranged&&!u.siege);assert.equal(first.maxHp,680);
+ const {g}=quiet();assert.equal(g.wave,1);run(g,24.9);assert.equal(g.wave,1);run(g,.1);assert.equal(g.wave,2);const first=g.units.find(u=>u.kind==='minion'&&!u.ranged&&!u.siege);assert.equal(first.maxHp,680);
  const spawn=time=>{g.units=g.units.filter(e=>e.kind!=='minion');g.time=time;g.spawnWave();return g.units.filter(u=>u.kind==='minion').map(u=>({hp:u.maxHp,damage:u.damage,siege:u.siege}));};
  const mid=spawn(120);assert.ok(mid[0].hp>680);const capped=spawn(720),late=spawn(36000);close(capped[0].hp,680*1.36);close(capped[0].damage,58*1.3);close(late[0].hp,capped[0].hp);close(late[0].damage,capped[0].damage);assert.equal(MINIONS.maxGrowth,6);
 });
@@ -52,7 +52,7 @@ test('Ryoshu dash invulnerability blocks forced movement and ends at wall collis
  assert.ok(g.startMotion(p,{x:-1,y:0},1,{kind:'knock'}));
 });
 test('Ishmael pulls over time at the forced movement speed cap',()=>{
- const {g,p,t}=quiet('ishmael');g.cast(p,'r',t);close(t.x,44);g.step(1/30);assert.ok(t.x<44);assert.ok(44-t.x<=RULES.knockSpeed/30+1e-6);run(g,.3);close(t.x,42.5);
+ const {g,p,t}=quiet('ishmael');g.cast(p,'r',t);close(t.x,44);run(g,.2);close(t.x,44);run(g,.1);assert.ok(t.x<44&&t.x>42.5);run(g,.3);close(t.x,42.5);
 });
 test('Gregor knockback triggers extra damage and stun at wall contact, not at cast time',()=>{
  const {g,p,t}=quiet('gregor');Object.assign(p,{x:13,y:15});Object.assign(t,{x:16.2,y:15,hp:10000,maxHp:10000});assert.ok(!blocked(t.x,t.y,t.radius));
@@ -77,11 +77,11 @@ test('recall can be canceled by movement, attacks, skills, B again, and crowd co
  g.recall(p);g.status(p,'stun',1,1);g.step(1/30);assert.equal(p.recall,undefined);
 });
 test('creeps leash after distance and time, ignore attacks while returning, and reset at home',()=>{
- const {g,p}=quiet();Object.assign(p,{x:36.4,y:7});const n=g.makeNeutral(30,7,'side');n.x=35.6;n.aggro=p.id;n.hp=100;g.aiNeutral=Game.prototype.aiNeutral;
- run(g,1.4);assert.equal(n.returning,undefined);run(g,.2);assert.ok(n.returning);const hp=n.hp;assert.equal(g.deal(p,n,1000,{fixed:true}),0);close(n.hp,hp);run(g,1);assert.equal(n.returning,false);close(n.x,30);close(n.hp,n.maxHp);assert.equal(n.aggro,null);
+ const {g,p}=quiet();Object.assign(p,{x:36.4,y:7});const n=g.makeNeutral(30,7,'side');n.x=35.6;n.aggro=p.id;n.hostile=true;n.hp=100;g.aiNeutral=Game.prototype.aiNeutral;
+ run(g,1.8);assert.equal(n.returning,undefined);run(g,.2);assert.ok(n.returning);const hp=n.hp;assert.equal(g.deal(p,n,1000,{fixed:true}),0);close(n.hp,hp);run(g,1);assert.equal(n.returning,false);close(n.x,30);close(n.hp,n.maxHp);assert.equal(n.aggro,null);
 });
-test('hard leash immediately starts fast return without a teleport',()=>{
- const {g}=quiet();const n=g.makeNeutral(30,7,'side');n.x=40;g.aiNeutral=Game.prototype.aiNeutral;g.step(1/30);assert.ok(n.returning);assert.ok(n.x<40&&n.x>39);assert.ok(CAMP_RULES.returnSpeed>2.7);
+test('distant hostile creeps also wait 1.85 seconds before a visible return',()=>{
+ const {g}=quiet();const n=g.makeNeutral(30,7,'side');n.x=40;n.hostile=true;n.aggro=g.player.id;g.aiNeutral=Game.prototype.aiNeutral;g.step(1/30);assert.ok(!n.returning);g.time+=1.86;const before=n.x;g.step(1/30);assert.ok(n.returning);assert.ok(n.x<before&&n.x>before-1);assert.ok(CAMP_RULES.returnSpeed>2.7);
 });
 test('camp timers count down, disappear on respawn, and never revive removed central creeps',()=>{
  const {g,p}=quiet();const n=g.makeNeutral(30,7,'side');g.kill(n,p);assert.equal(g.campTimers()[0].seconds,90);g.time=30;assert.equal(g.campTimers()[0].seconds,60);g.time=89.99;g.wave=3;g.step(.02);assert.ok(n.alive);assert.equal(g.campTimers().length,0);

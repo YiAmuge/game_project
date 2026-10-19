@@ -1,5 +1,9 @@
 // Generated fan-art atlas; each frame is read from the unchanged transparent PNG.
 export const FRAMES = {
+  gubo:{x:16,y:15,w:526,h:693,sheet:2},
+  gahwan:{x:571,y:12,w:496,h:694,sheet:2},
+  nelly:{x:1112,y:28,w:480,h:678,sheet:2},
+  ahab:{x:1618,y:6,w:552,h:702,sheet:2},
   faust:{x:85,y:67,w:433,h:625}, yi:{x:543,y:52,w:483,h:648},
   sinclair:{x:1089,y:41,w:538,h:651}, meursault:{x:1630,y:53,w:522,h:671},
   don:{"x": 0, "y": 16, "w": 384, "h": 514, "sheet": 1},
@@ -28,15 +32,19 @@ export const THEMES = {
   moses:{light:"#f0e1d4",dark:"#715d6d",accent:"#c27472",weapon:"pipe"},
   ezra:{light:"#f4cd96",dark:"#8c6b3d",accent:"#cee0dd",weapon:"hammer"},
   alisa:{light:"#ffb67a",dark:"#a04538",accent:"#fbd064",weapon:"fire"},
+  gahwan:{light:'#f4cebf',dark:'#7d3044',accent:'#e9ba66',weapon:'spear'},
+  nelly:{light:'#d4e2f5',dark:'#485572',accent:'#a4bcda',weapon:'knives'},
+  ahab:{light:'#e2d6a5',dark:'#596d4d',accent:'#d9ae68',weapon:'harpoon'},
   gubo:{light:"#d8c1d4",dark:"#745c80",accent:"#d8a494",weapon:"rifle"},
 };
-export function loadAtlas(extra=false){
+export function loadAtlas(sheet=0){
+  sheet=Number(sheet);
   const image=new Image();
-  const id=extra?'sprite-data-extra':'sprite-data';image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${extra?'champions-extra':'champions'}.png`;
+  const id=['sprite-data','sprite-data-extra','sprite-data-v05'][sheet];image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${['champions','champions-extra','champions-v05'][sheet]}.png`;
   return image;
 }
-export function portrait(canvas,key,image,extraImage){
-  if(FRAMES[key]?.sheet===1)image=extraImage;
+export function portrait(canvas,key,image,extraImage,v05Image){
+  if(FRAMES[key]?.sheet===1)image=extraImage;if(FRAMES[key]?.sheet===2)image=v05Image;
   if(!canvas||!image||!image.complete||!image.naturalWidth)return;
   const c=canvas.getContext('2d'),f=FRAMES[key];c.clearRect(0,0,canvas.width,canvas.height);c.imageSmoothingEnabled=false;
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}

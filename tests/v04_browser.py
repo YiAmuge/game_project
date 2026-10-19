@@ -43,9 +43,9 @@ with sync_playwright() as pw:
     choose('히스클리프')
     page.mouse.move(1100,480);page.mouse.click(1100,480,button='right');page.wait_for_timeout(1850)
     assert page.evaluate('__moba.game.player.state.chargeAt!==undefined')
-    page.wait_for_function('[...__drawnLabels].some(s=>s.startsWith("우클릭 발사 · 최대 6"))')
+    page.wait_for_function('[...__drawnLabels].some(s=>s.startsWith("좌클릭 발사 · 최대 6"))')
     page.screenshot(path=str(art/'v04-charge.png'))
-    x=page.evaluate('__moba.game.player.x');page.mouse.click(1100,480,button='right');page.wait_for_timeout(90)
+    x=page.evaluate('__moba.game.player.x');page.mouse.click(1100,480);page.wait_for_timeout(90)
     assert x<page.evaluate('__moba.game.player.x')<x+5
     choose('싱클레어')
     page.evaluate('__moba.game.player.marks=2')
@@ -56,7 +56,7 @@ with sync_playwright() as pw:
     page.wait_for_function('__drawnLabels.has("이형발작 11/12")')
     page.screenshot(path=str(art/'v04-gregor-stacks.png'))
     choose('로쟈')
-    page.mouse.click(1000,480,button='right');page.wait_for_timeout(1000)
+    page.mouse.click(1000,480,button='right');page.mouse.click(1000,480);page.wait_for_timeout(1000)
     assert page.evaluate('__moba.game.player.state.coinResults.length')==3
     page.wait_for_function('__drawnLabels.has("앞") || __drawnLabels.has("뒤")')
     page.screenshot(path=str(art/'v04-coins.png'))

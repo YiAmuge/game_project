@@ -142,3 +142,8 @@ body.in-game .player-vitals>div:first-child{display:block}.player-vitals #kda{di
 .camp-timers{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin:0 0 12px;font-size:10px;color:#bdc9ac}.camp-timers span{background:#273726;border:1px solid #556344;padding:5px 8px}.camp-timers b{color:#e1ce94;margin-left:5px;font-weight:500}
 @media(max-width:760px){body.in-game .hud .player-card{width:240px}.recall-btn{padding:4px 6px}}
 @media(max-width:540px){body.in-game .hud .player-card{bottom:178px;width:230px;height:62px}.camp-timers{gap:4px;font-size:8px}.camp-timers span{padding:4px}}
+
+/* Scrollable upgrade and augment shop remains usable during the respawn countdown. */
+.shop{max-height:calc(100dvh - 110px);overflow-y:auto;overscroll-behavior:contain}.augment-heading{margin:20px 0 5px;font-size:15px}.augment-heading small{display:block;color:#b5b69f;font-size:10px;margin-top:7px}.augment-item small{max-width:250px;line-height:1.5}.augment-item.equipped{border-color:#d0b982;background:#49432b66}.respawn{pointer-events:none}#augment-list .shop-item{min-height:76px}
+
+body.in-game .shop{top:80px;bottom:165px;max-height:none;height:auto}body.in-game .shop-heading{position:sticky;top:-22px;background:#1b2523;padding:10px 0;z-index:1}@media(max-width:760px){body.in-game .shop{top:65px;bottom:190px}}

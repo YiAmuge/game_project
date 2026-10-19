@@ -46,10 +46,9 @@ test('tower is invulnerable without invading units and reduces lone champion dam
 test('friendly damage is rejected',()=>{
   const g=isolated(),ally=g.champions(0)[1];g.deal(g.player,ally,1000);assert.equal(ally.hp,ally.maxHp);
 });
-test('wave starts at 25s, both lanes, siege every third wave',()=>{
-  const g=isolated();run(g,24);assert.equal(g.wave,0);run(g,1);
-  assert.equal(g.wave,1);assert.equal(g.units.filter(u=>u.kind==='minion').length,16);
-  g.units=g.units.filter(u=>u.kind!=='minion');g.time=74.99;g.wave=2;g.step(.01);
+test('wave starts at zero, both lanes, siege every third wave',()=>{
+  const g=isolated();assert.equal(g.wave,1);assert.equal(g.units.filter(u=>u.kind==='minion').length,16);run(g,24);assert.equal(g.wave,1);run(g,1);assert.equal(g.wave,2);
+  g.units=g.units.filter(u=>u.kind!=='minion');g.time=49.99;g.wave=2;g.step(.01);
   assert.equal(g.units.filter(u=>u.kind==='minion').length,20);assert.equal(g.units.filter(u=>u.siege).length,4);
 });
 test('5:00 permanently removes central creeps, even pending respawns, and spawns one boss',()=>{
@@ -95,10 +94,9 @@ test('Faust ultimate telegraphs before applying damage, then goes on cooldown',(
   assert.ok(g.cast(p,'r',t));const hp=t.hp;run(g,1);assert.equal(t.hp,hp);assert.equal(g.cast(p,'r',t),false);
   run(g,.3);assert.ok(t.hp<hp);assert.ok(p.rCd>46);assert.ok(g.buff(p,'faustUlt'));
 });
-test('Yi Sang pool silences only after continuous exposure and deals periodic damage',()=>{
+test('Yi Sang pool continuously refreshes short silence and reload slow',()=>{
   const g=isolated('yi'),p=g.player,t=opponent(g);g.units=[p,t];p.x=30;p.y=5;t.x=34;t.y=5;
-  g.cast(p,'q',t);run(g,1);assert.equal(g.stat(t,'silence'),0);assert.ok(t.hp<t.maxHp);
-  run(g,.3);assert.equal(g.stat(t,'silence'),1);
+  g.cast(p,'q',t);run(g,.1);assert.equal(g.stat(t,'silence'),1);close(g.stat(t,'reloadWeak'),.1);run(g,1);assert.ok(t.hp<t.maxHp);run(g,.3);assert.equal(g.stat(t,'silence'),1);
 });
 test('Sinclair marks proc after twelve basic hits and fully refill ammo',()=>{
   const g=isolated('sinclair'),p=g.player,t=opponent(g);g.units=[p,t];p.x=30;p.y=5;t.x=31;t.y=5;t.hp=t.maxHp=100000;
@@ -118,8 +116,8 @@ test('shop requires spawn and peace, charges progressive costs, enforces caps',(
   const g=isolated(),p=g.player;assert.ok(g.buy(p,'power'));assert.equal(p.gold,90);assert.equal(p.upgrades.power,1);
   assert.equal(g.buy(p,'power'),false);p.gold=5000;p.lastCombat=g.time;assert.equal(g.buy(p,'power'),false);
   p.lastCombat=-99;p.x=20;assert.equal(g.buy(p,'power'),false);Object.assign(p,worldPoint(3,18));
-  assert.ok(g.buy(p,'power'));assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,4340);
-  assert.ok(g.buy(p,'speed'));assert.ok(g.buy(p,'speed'));assert.equal(g.buy(p,'speed'),false);
+  for(let i=0;i<4;i++)assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,2960);
+  for(let i=0;i<3;i++)assert.ok(g.buy(p,'speed'));assert.equal(g.buy(p,'speed'),false);
 });
 test('one potion purchase grants two uses; healing continues through damage',()=>{
   const g=isolated(),p=g.player;assert.ok(g.buy(p,'potion'));assert.equal(p.potion,2);assert.equal(g.buy(p,'potion'),false);
@@ -128,7 +126,7 @@ test('one potion purchase grants two uses; healing continues through damage',()=
 });
 test('experience is personal, caps at level ten and increases max HP',()=>{
   const g=isolated(),p=g.player,other=g.champions(0)[1];g.award(p,10000,0);
-  assert.equal(p.level,10);close(p.maxHp,3400*1.54);assert.equal(other.level,1);assert.equal(other.xp,0);
+  assert.equal(p.level,10);close(p.maxHp,3400*1.405);assert.equal(other.level,1);assert.equal(other.xp,0);
 });
 test('death grants kill/assist rewards and respawns with full health and ammo',()=>{
   const g=isolated(),p=g.player,t=opponent(g),ally=g.champions(0)[1];t.hp=100;
@@ -147,7 +145,7 @@ test('walls block movement, paths route around walls, diagonal input cannot spee
 test('bots leave their lane entrance and actually fight',()=>{
   const g=new Game();run(g,90);
   assert.ok(g.champions().some(c=>!c.player&&c.totalDamage>1000));
-  assert.ok(g.champions().some(c=>c.xp>0));assert.equal(g.wave,3);
+  assert.ok(g.champions().some(c=>c.xp>0));assert.equal(g.wave,4);
 });
 test('representative positions simulate ten minutes or a core victory with finite state',()=>{
   for(const [key,position] of [['don','top'],['ryoshu','jungle'],['outis','bottom'],['honglu','support']]) {

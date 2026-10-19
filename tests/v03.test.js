@@ -12,8 +12,8 @@ function quiet(key='faust'){
  g.player.x=30;g.player.y=5.5;const t=g.champions(1).find(c=>c.key==='faust');t.x=31;t.y=5.5;g.units=[g.player,t];return {g,p:g.player,t};
 }
 
-test('twelve ordinary champions retain four named abilities, and every team has four positions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,12);
+test('sixteen ordinary champions retain four named abilities, and every team has four positions',()=>{
+ assert.equal(Object.keys(CHAMPIONS).length,16);
  for(const key of Object.keys(CHAMPIONS))for(const position of Object.keys(POSITIONS)){
   const g=new Game(key,position);assert.equal(g.champions().length,8);assert.equal(g.player.position,position);
   for(const team of [0,1])assert.deepEqual(g.champions(team).map(c=>c.position).sort(),['bottom','jungle','support','top']);
@@ -114,7 +114,7 @@ test('score growth includes level, upgrades, and current effects without conditi
  assert.equal(g.bonusStats(p).power,0);
  g.award(p,RULES.xp[1],0);p.upgrades.power=1;
  assert.equal(g.bonusStats(p).health,6);assert.equal(g.bonusStats(p).power,10);
- g.addBuff(p,'power',5);assert.equal(g.bonusStats(p).power,23);
+ g.addBuff(p,'power',5);assert.equal(g.bonusStats(p).power,24);
 });
 test('Gubo ultimate validates the 17 percent ally target before consuming cooldown',()=>{
  const {g,p}=quiet('gubo');const ally=g.makeChampion('faust',0,5,'support');ally.x=31;ally.y=5.5;ally.maxHp=1000;ally.hp=171;g.units=[p,ally];

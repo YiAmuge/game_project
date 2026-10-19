@@ -20,7 +20,7 @@ with sync_playwright() as p:
     expect(page.locator('.hud')).to_be_hidden()
     page.screenshot(path=str(artifacts / 'v03-menu.png'), full_page=True)
     page.click('#practice-open')
-    expect(page.locator('.champion-option')).to_have_count(12)
+    expect(page.locator('.champion-option')).to_have_count(16)
     expect(page.locator('.position-option')).to_have_count(4)
     page.click('[data-position=jungle]')
     page.get_by_role('button', name='료슈 선택').click()
@@ -113,10 +113,15 @@ with sync_playwright() as p:
     page.keyboard.press('KeyQ')
     assert page.evaluate('__moba.game.player.qCd') == 0
     page.mouse.click(mx, my, button='right')
+    assert page.evaluate('__moba.game.player.qCd') == 0
+    assert page.evaluate('__moba.targeting.slot') == 'q'
+    page.mouse.click(mx,my)
     assert page.evaluate('__moba.game.player.qCd') > 9
     page.keyboard.press('KeyR')
     assert page.evaluate('__moba.game.player.rCd') == 0
     page.keyboard.press('Space')
+    assert page.evaluate('__moba.game.player.rCd') == 0
+    page.mouse.click(mx,my)
     assert page.evaluate('__moba.game.player.rCd') > 45
     page.wait_for_timeout(1400)
     assert page.evaluate("__moba.game.champions(1).find(c=>c.key==='faust').hp") < target_hp
@@ -207,6 +212,8 @@ with sync_playwright() as p:
         page.screenshot(path=str(artifacts / ('v03-drag-' + state_key + '.png')), full_page=True)
         page.mouse.up(button='right')
         expect(page.locator('#drag-wheel')).to_be_hidden()
+        assert page.evaluate('__moba.game.player.qCd') == 0
+        page.mouse.click(790,450)
         assert page.evaluate('__moba.game.player.qCd') > 0
         assert page.evaluate('__moba.game.player.state.' + state_key) == (1 if name=='에즈라' else 'right')
 
@@ -229,4 +236,4 @@ with sync_playwright() as p:
     assert page.evaluate('document.body.scrollWidth <= innerWidth')
     assert not errors, errors
     browser.close()
-    print(json.dumps({'status':'passed','checks':['three-entry menu','12 champions and four positions','unrestricted recommendations','31 champion and three other codex categories','latest balance descriptions','viewport and centered camera','HUD quadrants and three latest buffs','G fountain-only shop and potion','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R bindings; B recall','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['three-entry menu','16 champions and four positions','unrestricted recommendations','31 champion and three other codex categories','latest balance descriptions','viewport and centered camera','HUD quadrants and three latest buffs','G fountain-only shop and potion','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R bindings; B recall','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))
