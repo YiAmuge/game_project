@@ -19,12 +19,12 @@ test('twelve ordinary champions retain four named abilities, and every team has 
   for(const team of [0,1])assert.deepEqual(g.champions(team).map(c=>c.position).sort(),['bottom','jungle','support','top']);
  }
 });
-test('all 31 catalog champions and all runtime champions share the 20 percent reload nerf',()=>{
- const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===.8));
+test('all 31 catalog champions and all runtime champions share the cumulative reload nerf',()=>{
+ const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){
   const {g,p}=quiet(key);p.lastCombat=g.time;
   const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
-  close(g.reloadInterval(p),RULES.reload[grade]/.8);
+  close(g.reloadInterval(p),RULES.reload[grade]/RULES.reloadEfficiency);
  }
 });
 test('natural healing waits three seconds after attacks including missed attacks',()=>{
@@ -77,7 +77,7 @@ test('new eight basic attacks and abilities execute without NaN state',()=>{
  }
 });
 test('Heathcliff charge can be recast and is stronger after 2.4 seconds',()=>{
- const {g,p,t}=quiet('heathcliff');t.x=35;g.cast(p,'q',t);run(g,2.5);assert.ok(g.cast(p,'q',t));assert.equal(p.state.chargeAt,undefined);assert.ok(p.x>34);assert.ok(t.hp<t.maxHp);
+ const {g,p,t}=quiet('heathcliff');t.x=35;g.cast(p,'q',t);run(g,2.5);assert.ok(g.cast(p,'q',t));assert.equal(p.state.chargeAt,undefined);run(g,1);assert.ok(p.x>34);assert.ok(t.hp<t.maxHp);
 });
 test('Ishmael shield detonates on recast and on expiry, and low-health passive has cooldown',()=>{
  const {g,p,t}=quiet('ishmael');g.cast(p,'q',t);assert.ok(g.shield(p)>0);assert.ok(g.cast(p,'q',t));assert.ok(t.hp<t.maxHp);assert.ok(g.stat(t,'stun')>0);
@@ -93,7 +93,7 @@ test('Hong Lu receives and copies Yi Sang ultimate before the following shield u
  assert.ok(g.cast(yi,'r',p));assert.ok(g.buff(p,'ogamdo'));assert.ok(g.buff(ally,'ogamdo'));assert.equal(g.shield(ally),0);
 });
 test('Don Quixote lethal marked hit records positive actual damage and only one takedown',()=>{
- const {g,p,t}=quiet('don');t.hp=100;p.state.villain=t.id;g.attack(p,t);
+ const {g,p,t}=quiet('don');t.hp=100;p.state.villain=t.id;g.attack(p,t);run(g,.4);
  assert.equal(t.alive,false);assert.equal(p.kills,1);assert.equal(p.totalDamage,100);assert.equal(g.damageDone,100);
 });
 test('Gregor transforms at 12 hits and restores max health after five seconds',()=>{

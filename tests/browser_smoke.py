@@ -45,7 +45,7 @@ with sync_playwright() as p:
     expect(page.locator('#codex-content')).to_contain_text('기획 수록 · 미구현')
     page.click('[data-category=rules]')
     expect(page.locator('#codex-content')).to_contain_text('13%')
-    expect(page.locator('#codex-content')).to_contain_text('1.25배')
+    expect(page.locator('#codex-content')).to_contain_text('1.538배')
     page.locator('#archive .close-dialog').click()
     page.click('#practice-open')
     page.click('[data-position=bottom]')
@@ -80,7 +80,7 @@ with sync_playwright() as p:
     expect(page.locator('#scoreboard')).to_be_visible()
     expect(page.locator('#score-rows tr')).to_have_count(8)
     expect(page.locator('#score-rows tr').first).to_contain_text('전투 +4%')
-    expect(page.locator('#score-rows tr').first).to_contain_text('장전 -20%')
+    expect(page.locator('#score-rows tr').first).to_contain_text('장전 -48%')
     assert page.locator('#score-map').bounding_box()['width'] > mini['width']*2
     page.screenshot(path=str(artifacts / 'v03-score.png'), full_page=True)
     page.keyboard.up('Tab')
@@ -148,7 +148,12 @@ with sync_playwright() as p:
     page.wait_for_function('__moba.game.bossSpawned')
     assert page.evaluate("__moba.game.units.filter(u=>u.camp==='central').every(c=>!c.alive)")
     page.evaluate('__moba.game.time=599.99')
+    page.wait_for_timeout(150)
+    expect(page.locator('#result')).to_be_hidden()
+    assert page.evaluate('__moba.game.time') > 600
+    page.evaluate('''() => {const g=__moba.game;g.towers(1).forEach(t=>t.alive=false);const core=g.units.find(e=>e.kind==='core'&&e.team===1);g.player.x=core.x-2;g.player.y=core.y;g.deal(g.player,core,1e7,{fixed:true});}''')
     expect(page.locator('#result')).to_be_visible()
+    expect(page.locator('#result-reason')).to_contain_text('본진 파괴')
     page.click('#restart')
     expect(page.locator('#practice-panel')).to_be_visible()
     assert page.evaluate('__moba.game.time') == 0
@@ -224,4 +229,4 @@ with sync_playwright() as p:
     assert page.evaluate('document.body.scrollWidth <= innerWidth')
     assert not errors, errors
     browser.close()
-    print(json.dumps({'status':'passed','checks':['three-entry menu','12 champions and four positions','unrestricted recommendations','31 champion and three other codex categories','latest balance descriptions','viewport and centered camera','HUD quadrants and three latest buffs','G fountain-only shop and potion','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R/B bindings','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['three-entry menu','12 champions and four positions','unrestricted recommendations','31 champion and three other codex categories','latest balance descriptions','viewport and centered camera','HUD quadrants and three latest buffs','G fountain-only shop and potion','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R bindings; B recall','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))

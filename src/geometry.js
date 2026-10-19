@@ -28,19 +28,20 @@ export function segmentDistance(p,a,b) {
 // A small deterministic breadth-first grid search. Recomputed only when an AI path expires.
 export function findPath(start,goal,r=.48) {
   const sx=Math.floor(start.x),sy=Math.floor(start.y),gx=Math.floor(goal.x),gy=Math.floor(goal.y);
-  const key=(x,y)=>y*64+x, origin=key(sx,sy), dest=key(gx,gy);
+  const cols=Math.ceil(RULES.width),rows=Math.ceil(RULES.height);
+  const key=(x,y)=>y*cols+x, origin=key(sx,sy), dest=key(gx,gy);
   const queue=[origin], prev=new Map([[origin,null]]); let found=null;
   for(let i=0;i<queue.length;i++) {
-    const k=queue[i],x=k%64,y=Math.floor(k/64);
+    const k=queue[i],x=k%cols,y=Math.floor(k/cols);
     if(k===dest) {found=k;break;}
     for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]) {
       const nx=x+dx,ny=y+dy,nk=key(nx,ny);
-      if(nx<0||ny<0||nx>=64||ny>=36||prev.has(nk)||blocked(nx+.5,ny+.5,r)) continue;
+      if(nx<0||ny<0||nx>=cols||ny>=rows||prev.has(nk)||blocked(nx+.5,ny+.5,r)) continue;
       prev.set(nk,k);queue.push(nk);
     }
   }
   if(found===null) return [];
   const path=[];
-  for(let k=found;k!==origin;k=prev.get(k)) path.push({x:k%64+.5,y:Math.floor(k/64)+.5});
+  for(let k=found;k!==origin;k=prev.get(k)) path.push({x:k%cols+.5,y:Math.floor(k/cols)+.5});
   return path.reverse();
 }

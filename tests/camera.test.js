@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Camera } from '../src/camera.js';
 import { Game } from '../src/game.js';
-import { BUSHES } from '../src/data.js';
+import { BUSHES, RULES } from '../src/data.js';
 
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 test('player sprite center stays at the viewport center, including map edges',()=>{
@@ -20,10 +20,10 @@ test('screen-to-world aim follows movement without moving the pointer',()=>{
 });
 test('bush layout is symmetric and includes inner, outer and flank green connectors',()=>{
   assert.equal(BUSHES.length,10);
-  for(const b of BUSHES)assert.ok(BUSHES.some(m=>Math.abs(m.x-(64-b.x-b.w))<1e-7&&m.y===b.y&&m.w===b.w&&m.h===b.h));
+  for(const b of BUSHES)assert.ok(BUSHES.some(m=>Math.abs(m.x-(RULES.width-b.x-b.w))<1e-7&&m.y===b.y&&m.w===b.w&&m.h===b.h));
 });
 function setup(){
-  const g=new Game(),enemy=g.champions(1)[0],patch=BUSHES[0];
+  const g=new Game(),enemy=g.champions(1).find(c=>c.key==='faust'),patch=BUSHES[0];
   enemy.x=patch.x+patch.w/2;enemy.y=patch.y+patch.h/2;
   g.champions(0).forEach((a,i)=>{a.x=3;a.y=16+i;});g.time=10;
   return {g,enemy};

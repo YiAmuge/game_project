@@ -1,7 +1,7 @@
 import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
-import { distance, direction, slide, clearLine, segmentDistance, blocked, clamp } from './geometry.js';
+import { distance, direction, clearLine, segmentDistance, blocked, clamp } from './geometry.js';
 
-function pushTarget(t,dx,dy){if(['champion','minion','neutral'].includes(t.kind))slide(t,dx,dy);}
+function pushTarget(g,t,dx,dy,options={}){const length=Math.hypot(dx,dy);return g.startMotion(t,{x:dx/(length||1),y:dy/(length||1)},length,{kind:'knock',...options});}
 
 export const EXPERIMENTAL_KEYS=['gubo','alisa','rudolph','moses','ezra'];
 export const DRAG_KEYS=['moses','ezra'];
@@ -24,10 +24,17 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
  }
  return hits;
 }
-export function dash(g,e,d,len,damage=0,hit=()=>{}){
- const from={x:e.x,y:e.y};slide(e,d.x*len,d.y*len);
- if(damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&segmentDistance(t,from,e)<t.radius+.6&&clearLine(e,t)){g.deal(e,t,damage);hit(t);}
- g.effects.push({type:'line',...from,to:{x:e.x,y:e.y},theme:e.key,color:'#d3c9ac',life:.35,maxLife:.35});
+export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
+ const hitIds=new Set();
+ return g.startMotion(e,d,len,{...options,onStep:(from,to)=>{
+  if(damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&segmentDistance(t,from,to)<t.radius+.6&&clearLine(e,t)){hitIds.add(t.id);g.deal(e,t,damage);hit(t);}
+  g.effects.push({type:'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});
+ }});
+}
+export function heathCharge(g,e,point){
+ const elapsed=g.time-(e.state.chargeAt??g.time),progress=clamp((elapsed-1.2)/1.2,0,1),range=5+2*progress,d=g.aim(e,point),len=Math.min(range,distance(e,point));
+ let travel=0;for(let t=.1;t<=len+.1;t+=.1){const next=Math.min(t,len);if(blocked(e.x+d.x*next,e.y+d.y*next,e.radius))break;travel=next;}
+ return {elapsed,progress,range,ready:elapsed>=1.2,radius:1.8,damage:180*(1+.4*progress),stun:.6+.4*progress,landing:{x:clamp(e.x+d.x*travel,e.radius,RULES.width-e.radius),y:clamp(e.y+d.y*travel,e.radius,RULES.height-e.radius)}};
 }
 export function targetAt(g,e,p,r,team=1-e.team){
  return g.champions(team).filter(t=>t.alive&&!g.hidden(t)&&g.visibleTo(e.team,t)&&distance(e,t)<=r+t.radius&&distance(p,t)<2&&clearLine(e,t)).sort((a,b)=>distance(p,a)-distance(p,b))[0];
@@ -37,7 +44,8 @@ export function canRecast(g,e,slot){
  return slot==='q'&&((e.key==='heathcliff'&&e.state.chargeAt!==undefined)||(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&e.state.dashWindow>g.time&&e.state.dashUses<3))||slot==='r'&&e.key==='ezra'&&g.buff(e,'ezraUlt');
 }
 export function validateSkill(g,e,slot,p,options={}){
- if(e.key==='rudolph'&&slot==='r')return e.ammo>0&&p.x>=0&&p.x<=64&&p.y>=0&&p.y<=36;
+ if(g.stat(e,'root')&&(['don','outis','sinclair'].includes(e.key)||['ryoshu','heathcliff','alisa'].includes(e.key)&&slot==='q'))return false;
+ if(e.key==='rudolph'&&slot==='r')return e.ammo>0&&p.x>=0&&p.x<=RULES.width&&p.y>=0&&p.y<=RULES.height;
  if(e.key==='moses'&&slot==='q')return ['up','down','left','right'].includes(options.direction);
  if(e.key==='ezra'&&slot==='q')return ['left','right'].includes(options.direction)&&!g.buff(e,'ezraUlt');
  if(e.key==='don'&&slot==='r')return Boolean(targetAt(g,e,p,6.5));
@@ -58,6 +66,7 @@ export function switchWeapon(g,e,step,shield=false){
  if(shield)g.addShield(e,Math.min(360,120*(1+Math.floor((1-e.hp/e.maxHp)/.3)*.3)),`bag-${e.id}`);
 }
 export function beforeBasic(g,e,point,options={}){
+ if(g.stat(e,'root')&&(e.key==='don'||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0))))return false;
  if(e.key==='rudolph'&&e.state.exhaustedUntil>g.time)return false;
  if(e.key==='ezra'&&e.ammo<1&&!g.buff(e,'ezraUlt')){switchWeapon(g,e,1,true);e.attackCd=.2;return false;}
  return true;
@@ -90,12 +99,12 @@ export function basic(g,e,p,d,options={}){
   return true;
  }
  case 'ezra':{
-  if(g.buff(e,'ezraUlt')){dash(g,e,d,1.2);e.state.ultAttacks=(e.state.ultAttacks||0)+1;area(g,e,e,e.state.ultAttacks===4?3:2.2,e.state.ultAttacks===4?320:250,t=>{g.status(t,'slow',.2,1.2,e);g.status(t,e.state.ultAttacks===4?'stun':'root',1,e.state.ultAttacks===4?.8:.6,e);});if(e.ammo<1)endEzra(g,e);return true;}
+  if(g.buff(e,'ezraUlt')){e.state.ultAttacks=(e.state.ultAttacks||0)+1;const fourth=e.state.ultAttacks===4;dash(g,e,d,1.2,0,()=>{},{onComplete:()=>{area(g,e,e,fourth?3:2.2,fourth?320:250,t=>{g.status(t,'slow',.2,1.2,e);g.status(t,fourth?'stun':'root',1,fourth?.8:.6,e);});if(e.ammo<1)endEzra(g,e);}});return true;}
   const w=e.state.weapon||0;
   if(w===0)dash(g,e,d,2.2,280);
   if(w===1)cone(2.8,1.7,240,t=>g.status(t,'slow',.2,1.2,e));
   if(w===2)for(let i=0;i<3;i++)g.schedule(e,i*.12,()=>g.cone(e,d,3.2,.7,100,t=>{if(g.stat(t,'root')||g.stat(t,'stun'))g.deal(e,t,35);}));
-  if(w===3){dash(g,e,d,2.5);area(g,e,e,2.5,230,t=>{const toward=direction(t,e);pushTarget(t,toward.x,toward.y);g.status(t,'slow',.2,1.5,e);});}
+  if(w===3)dash(g,e,d,2.5,0,()=>{},{onComplete:()=>area(g,e,e,2.5,230,t=>{const toward=direction(t,e);pushTarget(g,t,toward.x,toward.y);g.status(t,'slow',.2,1.5,e);})});
   return true;
  }
  default:return false;
@@ -110,14 +119,13 @@ export function cast(g,e,slot,p,d,options={}){
  switch(e.key){
  case 'don':
   if(slot==='q'){
-   dash(g,e,d,2.2);g.addBuff(e,'donGuard',1.2);
-   for(let i=0;i<3;i++)g.schedule(e,i*.4,()=>g.cone(e,d,2.3,.65,95));
-  }else{const t=targetAt(g,e,p,6.5);dash(g,e,d,Math.max(0,distance(e,t)-1));g.heal(e,e,g.deal(e,t,300)*.4,false);g.addBuff(e,'donLifesteal',5);}
+   dash(g,e,d,2.2,0,()=>{},{onComplete:()=>{g.addBuff(e,'donGuard',1.2);for(let i=0;i<3;i++)g.schedule(e,i*.4,()=>g.cone(e,d,2.3,.65,95));}});
+  }else{const t=targetAt(g,e,p,6.5);dash(g,e,d,Math.max(0,distance(e,t)-1),0,()=>{},{onComplete:()=>{if(t.alive&&distance(e,t)<2&&clearLine(e,t)){g.heal(e,e,g.deal(e,t,300)*.4,false);g.addBuff(e,'donLifesteal',5);}}});}
   return true;
  case 'ryoshu':
-  if(slot==='q'){e.invulnerableUntil=g.time+.2;dash(g,e,d,4*(g.buff(e,'amplify')?1.2:1),180);}
+  if(slot==='q'){const len=4*(g.buff(e,'amplify')?1.2:1);e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,180,()=>{},{onComplete:()=>e.invulnerableUntil=0});}
   else{
-   const len=Math.min(7*(g.buff(e,'amplify')?1.2:1),distance(e,p)),dest={x:clamp(e.x+d.x*len,.6,63.4),y:clamp(e.y+d.y*len,.6,35.4)};
+   const len=Math.min(7*(g.buff(e,'amplify')?1.2:1),distance(e,p)),dest={x:clamp(e.x+d.x*len,.6,RULES.width-.6),y:clamp(e.y+d.y*len,.6,RULES.height-.6)};
    if(!blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
    for(let i=0;i<4;i++)g.schedule(e,i*.12,()=>area(g,e,e,2.6,140,t=>g.status(t,'armorDown',25,3,e)));
    e.ammo=ammoCap(g,e);
@@ -129,34 +137,33 @@ export function cast(g,e,slot,p,d,options={}){
  case 'heathcliff':
   if(slot==='q'){
    if(state.chargeAt===undefined){state.chargeAt=g.time;state.chargeAim={x:p.x,y:p.y};g.status(e,'slow',.15,4);}
-   else{const held=g.time-state.chargeAt;if(held<1.2)return true;const charged=held>=2.4;delete state.chargeAt;delete e.status.slow;dash(g,e,d,charged?7:5);area(g,e,e,1.8,charged?252:180,t=>g.status(t,'stun',1,charged?1:.6,e));}
+   else{const charge=heathCharge(g,e,p);if(!charge.ready)return true;delete state.chargeAt;delete e.status.slow;dash(g,e,d,distance(e,charge.landing),0,()=>{},{onComplete:()=>area(g,e,e,charge.radius,charge.damage,t=>g.status(t,'stun',1,charge.stun,e))});}
   }else{state.heathExtensions=0;g.addBuff(e,'heathUlt',5);state.auraTick=g.time+.5;}
   return true;
  case 'ishmael':
   if(slot==='q'){if(g.buff(e,'ishmaelShield'))shockIshmael(g,e);else {g.addShield(e,e.maxHp*.12,`wreck-${e.id}`,2.5);g.addBuff(e,'ishmaelShield',2.5);state.shockAt=g.time+2.5;}}
   else{
    const start={x:e.x,y:e.y},end={x:e.x+d.x*8,y:e.y+d.y*8};g.effects.push({type:'line',...start,to:end,theme:e.key,color:'#9bd9dd',life:.8,maxLife:.8});
-   for(const t of g.champions(1-e.team).filter(t=>t.alive&&segmentDistance(t,start,end)<t.radius+.45&&clearLine(e,t))){g.deal(e,t,300);const v=direction(t,e);pushTarget(t,v.x*1.5,v.y*1.5);g.status(t,'slow',.2,2,e);}
+   for(const t of g.champions(1-e.team).filter(t=>t.alive&&segmentDistance(t,start,end)<t.radius+.45&&clearLine(e,t))){g.deal(e,t,300);const v=direction(t,e);pushTarget(g,t,v.x*1.5,v.y*1.5);g.status(t,'slow',.2,2,e);}
   }return true;
  case 'rodya':
   if(slot==='q'){
-   const heads=[0,0,0].reduce(n=>n+(g.random()<.5?1:0),0),tails=3-heads;state.coinHeads=heads;state.coinTails=tails;
+   const coins=[0,0,0].map(()=>g.random()<.5),heads=coins.filter(Boolean).length,tails=3-heads;state.coinHeads=heads;state.coinTails=tails;state.coinResults=coins;state.coinAt=g.time;
    if(heads)g.addBuff(e,'coins',4);if(tails)g.addBuff(e,'coinSpeed',3);e.rCd=Math.max(0,e.rCd-heads*2);e.qCd=Math.max(1,e.qCd-tails*2);
   }else g.bullet(e,d,360,8,{width:.3,onHit:(t,b)=>{if(b.lastHpRatio>=.5)g.deal(e,t,108);g.status(t,'stun',1,1,e);g.zones.push({kind:'ice',source:e,x:t.x,y:t.y,r:3.5,until:g.time+3,nextTick:g.time,damage:0,slow:.3});}});
   return true;
  case 'outis':
-  if(slot==='q'){dash(g,e,d,3);let hit=false;area(g,e,e,2.5,180,t=>{g.status(t,'slow',.2,1.5,e);if(t.kind==='champion')hit=true;});if(hit)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}
+  if(slot==='q')dash(g,e,d,3,0,()=>{},{onComplete:()=>{let hit=false;area(g,e,e,2.5,180,t=>{g.status(t,'slow',.2,1.5,e);if(t.kind==='champion')hit=true;});if(hit)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}});
   else{
-   dash(g,e,{x:-d.x,y:-d.y},2.5);
    const follow=(p)=>{g.effects.push({type:'cast',x:p.x,y:p.y,r:3,angle:Math.atan2(d.y,d.x),theme:e.key,slot:'r',life:.5,maxLife:.5});for(const t of [...g.units])if(g.hostile(e,t)&&distance(t,p)<=3.5&&clearLine(p,t))g.deal(e,t,250*(t.hp/t.maxHp<.5?1.3:1));};
-   g.bullet(e,d,450,9,{width:.3,bonusLowHp:.3,onHit:(t)=>follow(t),onEnd:follow});
+   dash(g,e,{x:-d.x,y:-d.y},2.5,0,()=>{},{onComplete:()=>g.bullet(e,d,450,9,{width:.3,bonusLowHp:.3,onHit:(t)=>follow(t),onEnd:follow})});
   }return true;
  case 'gregor':
   if(slot==='q'){
    const end={x:e.x+d.x*5,y:e.y+d.y*5};for(const t of [...g.units])if(g.hostile(e,t)&&segmentDistance(t,e,end)<.8+t.radius&&clearLine(e,t)){
-    g.deal(e,t,250);const old={x:t.x,y:t.y};pushTarget(t,d.x*3,d.y*3);if(['champion','minion','neutral'].includes(t.kind)&&distance(old,t)<2.8){g.deal(e,t,180);g.status(t,'stun',1,1,e);}
+    g.deal(e,t,250);pushTarget(g,t,d.x*3,d.y*3,{onCollision:()=>{g.deal(e,t,180);g.status(t,'stun',1,1,e);}});
    }
-  }else for(let i=0;i<2;i++)g.schedule(e,i*.35,()=>{g.cone(e,d,3.5,1.8,270,t=>{if(t.kind==='champion')gregorStack(g,e,2);pushTarget(t,d.x*1.5,d.y*1.5);});g.heal(e,e,160);});
+  }else for(let i=0;i<2;i++)g.schedule(e,i*.35,()=>{g.cone(e,d,3.5,1.8,270,t=>{if(t.kind==='champion')gregorStack(g,e,2);pushTarget(g,t,d.x*1.5,d.y*1.5);});g.heal(e,e,160);});
   return true;
  case 'rudolph':
   if(slot==='q'){const spend=Math.min(e.hp-1,e.hp*.1);e.hp-=spend;e.ammo=Math.min(100,e.ammo+35);g.addShield(e,spend,`focus-${e.id}`);}

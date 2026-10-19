@@ -1,11 +1,18 @@
 import { EXTRA_CHAMPIONS } from './extra-data.js';
 export const RULES = {
-  duration: 600, bossAt: 300, waveEvery: 30, width: 64, height: 36,
+  bossAt: 300, waveEvery: 25, width: 83.2, height: 46.8, maxLevel: 10,
   health: [0, 2200, 2800, 3400, 4000, 4600], power: [0, .82, .91, 1, 1.12, 1.25],
   reload: [0, .8, .68, .56, .45, .36], speed: [0, 3.1, 3.45, 3.8, 4.15, 4.5],
-  xp: [0, 250, 600, 1050, 1650], costs: [160, 260, 400],
-  reloadEfficiency: .8, naturalHealDelay: 3, naturalHealRate: .13, allyExecuteThreshold: .17,
+  xp: [0, 250, 600, 1050, 1650, 2400, 3300, 4350, 5550, 6900], costs: [160, 260, 400],
+  reloadEfficiency: .8*.65, naturalHealDelay: 3, naturalHealRate: .13, allyExecuteThreshold: .17,
+  dashSpeed: 8, knockSpeed: 6, recallTime: 3,
 };
+export const MAP_SCALE=1.3;
+export const worldPoint=(x,y)=>({x:x*MAP_SCALE,y:y*MAP_SCALE});
+export const MAP_CENTER=worldPoint(32,18);
+export const FOUNTAINS=[worldPoint(2,18),worldPoint(62,18)];
+export const MINIONS={health:{melee:680,ranged:480,siege:1320},growthEvery:120,maxGrowth:6,hpGrowth:.06,attackGrowth:.05};
+export const CAMP_RULES={radius:3.4,leashDistance:5.4,leashDelay:1.5,hardLeash:9,returnSpeed:9};
 export const CHAMPIONS = {
   faust: { id: 2, name: '파우스트', tag: 'FAUST', role: '저격', color: '#c9d8df', icon: 'F', power: 4, health: 3, speed: 2, ammo: 3, reload: 3, range: 7.5, damage: 180, attackTime: .46, q: 11, r: 48,
     passive: '게젤샤프트', basic: '대상 분석', tactical: '탐구', ultimate: '표상방출기',
@@ -48,7 +55,11 @@ const leftWalls = [
   { x: 24, y: 16, w: 2.1, h: 4 }, { x: 28, y: 13, w: 2, h: 1.4 },
   { x: 28, y: 21.6, w: 2, h: 1.4 },
 ];
-export const WALLS = [...leftWalls, ...leftWalls.map(w => ({ ...w, x: 64 - w.x - w.w }))];
+export const WALLS = [...leftWalls, ...leftWalls.map(w => ({ ...w, x: 64 - w.x - w.w }))].map(w=>({
+  x:(w.x+w.w/2)*MAP_SCALE-w.w*1.1/2,y:(w.y+w.h/2)*MAP_SCALE-w.h*1.1/2,w:w.w*1.1,h:w.h*1.1,
+}));
+// Leave entrances above and below; separate the fountain approach from side camps.
+WALLS.push({x:15,y:18.8,w:1.4,h:9.2,baseDivider:true},{x:RULES.width-16.4,y:18.8,w:1.4,h:9.2,baseDivider:true});
 // Green connectors in the user's original sketch, mirrored around x=32.
 const leftBushes = [
   { x: 18.8, y: 10.1, w: 2, h: 1.6 },
@@ -61,9 +72,9 @@ export const BUSHES = [
   { x: 30, y: 13, w: 4, h: 1.35 },
   { x: 30, y: 21.65, w: 4, h: 1.35 },
   ...leftBushes, ...leftBushes.map(b => ({ ...b, x: 64-b.x-b.w })),
-].map((b,id) => ({...b,id}));
+].map((b,id) => ({x:b.x*MAP_SCALE,y:b.y*MAP_SCALE,w:b.w*MAP_SCALE,h:b.h*MAP_SCALE,id}));
 export const lanePath = (team, lane) => {
   const y = lane === 0 ? 5.5 : 30.5;
   const points = [{x:5.5,y:18},{x:10,y},{x:54,y},{x:58.5,y:18}];
-  return team === 0 ? points : points.reverse();
+  return (team === 0 ? points : points.reverse()).map(p=>worldPoint(p.x,p.y));
 };
