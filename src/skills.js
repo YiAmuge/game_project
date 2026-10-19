@@ -39,8 +39,12 @@ export function heathCharge(g,e,point){
  let travel=0;for(let t=.1;t<=len+.1;t+=.1){const next=Math.min(t,len);if(blocked(e.x+d.x*next,e.y+d.y*next,e.radius))break;travel=next;}
  return {elapsed,progress,range,ready:elapsed>=1.2,radius:1.8,damage:180*(1+.4*progress),stun:.6+.4*progress,landing:{x:clamp(e.x+d.x*travel,WORLD.x+e.radius,WORLD.x+WORLD.w-e.radius),y:clamp(e.y+d.y*travel,WORLD.y+e.radius,WORLD.y+WORLD.h-e.radius)}};
 }
-export function targetAt(g,e,p,r,team=1-e.team){
- return g.champions(team).filter(t=>t.alive&&!g.hidden(t)&&g.visibleTo(e.team,t)&&distance(e,t)<=r+t.radius&&distance(p,t)<2&&clearLine(e,t)).sort((a,b)=>distance(p,a)-distance(p,b))[0];
+export function targetAt(g,e,p,r,team=1-e.team,eligible=()=>true){
+ return g.champions(team).filter(t=>t.alive&&!g.hidden(t)&&eligible(t)&&g.visibleTo(e.team,t)&&distance(e,t)<=r+t.radius&&distance(p,t)<2&&clearLine(e,t)).sort((a,b)=>distance(p,a)-distance(p,b))[0];
+}
+function guboTarget(g,e,p,allyOnly=false){
+ const ally=targetAt(g,e,p,12,e.team,t=>g.canGuboHitAlly(e,t));if(allyOnly)return ally;
+ return [ally,targetAt(g,e,p,12)].filter(Boolean).sort((a,b)=>distance(p,a)-distance(p,b))[0];
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','ezra','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
@@ -58,8 +62,7 @@ export function validateSkill(g,e,slot,p,options={}){
  if(e.key==='don'&&slot==='r')return Boolean(targetAt(g,e,p,6.5));
  if(e.key==='alisa'&&slot==='r')return e.state.heat>=5;
  if(e.key==='gubo'&&slot==='r'){
-  const t=targetAt(g,e,p,12,options.executeAlly?e.team:1-e.team);
-  return Boolean(t&&(!options.executeAlly||t!==e&&t.hp/t.maxHp<=g.allyExecuteThreshold(e)));
+  return Boolean(guboTarget(g,e,p,options.executeAlly));
  }
  return true;
 }
@@ -94,9 +97,7 @@ export function basic(g,e,p,d,options={}){
   g.bullet(e,d,150,g.attackRange(e),{width:.16,onHit:(t,b)=>{const dist=distance(b.origin,t);const wanted=dist<2?150:dist<5?150+(dist-2)*30:dist<7?240+(dist-5)*45:330;g.deal(e,t,wanted-150);}});return true;
  case 'gregor':cone(g.attackRange(e),1.8,210);return true;
  case 'gubo':{
-  const ally=options.executeAlly?targetAt(g,e,p,e.range,e.team):null;
-  if(ally&&ally!==e&&ally.hp/ally.maxHp<=g.allyExecuteThreshold(e)){g.deal(e,ally,360,{allowFriendly:true});}
-  else g.bullet(e,d,360*(g.buff(e,'guboReload')?1.2:1),g.attackRange(e)*(g.buff(e,'guboReload')?1.2:1),{pierce:1,decay:.6});
+  g.bullet(e,d,360*(g.buff(e,'guboReload')?1.2:1),g.attackRange(e)*(g.buff(e,'guboReload')?1.2:1),{pierce:1,decay:.6,allowFriendly:true});
   return true;
  }
  case 'alisa':e.state.heat=Math.min(5,(e.state.heat||0)+1);cone(g.attackRange(e),1.1,230,t=>{t.burn={source:e,until:g.time+2,next:g.time+.5};});return true;
@@ -207,7 +208,7 @@ export function cast(g,e,slot,p,d,options={}){
   return true;
  case 'gubo':
   if(slot==='q'){state.guboReloadAt=g.time;g.addBuff(e,'guboReload',4);}
-  else {const t=options.executeAlly?targetAt(g,e,p,12,e.team):targetAt(g,e,p,12);if(t){e.channelUntil=g.time+1.2;state.guboAim={target:t,until:g.time+1.2};g.schedule(e,1.2,()=>{delete state.guboAim;if(!t.alive)return;g.projectiles.push({source:e,target:t,homing:true,theme:'gubo',ultimate:true,x:e.x,y:e.y,damage:500,damageKind:'skill',allowFriendly:Boolean(options.executeAlly),speed:18,remaining:4,width:.25,onHit:()=>{if(!t.alive&&t.team!==e.team)guboBlast(g,e,t,.14,1100);}});});}}
+  else {const t=guboTarget(g,e,p,options.executeAlly);if(t){e.channelUntil=g.time+1.2;state.guboAim={target:t,until:g.time+1.2};g.schedule(e,1.2,()=>{delete state.guboAim;if(!t.alive)return;g.projectiles.push({source:e,target:t,homing:true,theme:'gubo',ultimate:true,x:e.x,y:e.y,damage:500,damageKind:'skill',allowFriendly:t.team===e.team,speed:18,remaining:4,width:.25,onHit:()=>{if(!t.alive&&t.team!==e.team)guboBlast(g,e,t,.14,1100);}});});}}
   return true;
  default:return false;
  }

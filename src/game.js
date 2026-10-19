@@ -135,6 +135,7 @@ export class Game {
   heal(source,e,amount,scale=true,{natural=false}={}){if(!e.alive)return 0;const value=Math.max(0,scale&&source?.kind==='champion'?damageFormula(amount,CHAMPIONS[source.key].power,1)*this.powerScale(source):amount);const actual=Math.min(e.maxHp-e.hp,value);if(e.key==='dongrang'&&!natural)e.totalHealingReceived=(e.totalHealingReceived||0)+value;e.hp+=actual;if(actual>0&&source?.team===e.team&&source!==e)e.supporters[source.id]=this.time;return actual;}
   powerScale(e){return (CHAMPIONS[e.key].powerMultiplier??1)*(1+CHAMPIONS[e.key].growth.power*(e.level-1))*(1+e.upgrades.power*.04*(e.key==='moses'?.5:1))*(Augments.has(e,'power15')?1.15:1);}
   allyExecuteThreshold(e){return this.buff(e,'guboReload')?RULES.allyExecuteBuffThreshold:RULES.allyExecuteThreshold;}
+  canGuboHitAlly(source,target){return source.key==='gubo'&&target!==source&&target.team===source.team&&target.kind==='champion'&&target.alive&&!this.hidden(target)&&target.hp>0&&target.hp<=target.maxHp*this.allyExecuteThreshold(source)+1e-8;}
   powerWeak(e){return Math.max(this.stat(e,'weak'),Math.max(0,...Object.values(e.state?.ishmaelWeak||{}))*.02);}
   desireEfficiency(e){return e.key==='dongrang'?1+[0,.06,.13,.20,.27,.34][CHAMPIONS[e.key].power]+Math.max(0,this.powerScale(e)-1):1;}
   armor(e){const armor=e.armor+(e.key==='dongbaek'&&e.qCd<=0?20:0)+(this.buff(e,'ahabGuard')?(e.state.guardStacks||0)*12:0);return (100+armor)*(Augments.has(e,'armorHealth')?1.175:1)*this.desireEfficiency(e)*(this.buff(e,'chainArmor')?1.1:1)-100;}
@@ -215,7 +216,7 @@ export class Game {
     }
   }
   deal(source,target,base,{fixed=false,proc=true,allowFriendly=false,damageKind=source.actionKind||'skill',nonLethal=false}={}) {
-    const alliedAllowed=allowFriendly&&source.key==='gubo'&&target.kind==='champion'&&target!==source&&target.hp/target.maxHp<=this.allyExecuteThreshold(source);
+    const alliedAllowed=allowFriendly&&this.canGuboHitAlly(source,target);
     if(!target.alive||target.returning||(source.team===target.team&&!alliedAllowed)||this.hidden(target)||target.invulnerableUntil>this.time||this.locked(target)||this.winner!==null) return 0;
     let amount=base;
     if(!fixed) {
@@ -248,7 +249,7 @@ export class Game {
     if(amount>0)this.cancelRecall(target);
     if(source.kind==='champion') {
       source.lastAttackAt=this.time;
-      if(target.kind==='champion') {
+      if(target.kind==='champion'&&source.team!==target.team) {
         target.contributors[source.id]=this.time;
         for(const u of this.units) if(u.alive&&u.team===target.team&&u.kind!=='champion'&&distance(u,source)<(u.range||2)+1) {u.aggro=source.id;u.aggroUntil=this.time+3;}
       }
@@ -541,10 +542,10 @@ export class Game {
       for(let i=0;i<n&&p.remaining>0;i++) {
         p.x+=p.dx*travel/n;p.y+=p.dy*travel/n;p.remaining-=travel/n;
         if(blocked(p.x,p.y,.08)){p.remaining=0;break;}
-        const t=this.units.find(t=>this.hostile(p.source,t)&&!p.hitIds.has(t.id)&&distance(p,t)<=t.radius+p.width);
+        const t=this.units.find(t=>(this.hostile(p.source,t)||p.allowFriendly&&this.canGuboHitAlly(p.source,t))&&!p.hitIds.has(t.id)&&distance(p,t)<=t.radius+p.width);
         if(t) {
           p.hitIds.add(t.id);p.lastHpRatio=t.hp/t.maxHp;
-          p.beforeHit?.(t,p);this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind});
+          p.beforeHit?.(t,p);this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly});
           p.onHit?.(t,p);
           if(p.knock)this.startMotion(t,{x:p.dx,y:p.dy},p.knock,{kind:'knock'});
           if(p.pierce>0){p.pierce--;p.damage*=p.decay??1;}else {p.remaining=0;p.hit=true;}
@@ -630,7 +631,7 @@ export class Game {
         Skills.tick(this,e,dt);Augments.tick(this,e);if(!e.alive)continue;
         if(e.player) {
           if(!moving&&!e.motion&&!e.recall&&!this.stat(e,'root')&&!this.stat(e,'stun')&&!this.hidden(e)&&!(e.channelUntil>this.time)) {const len=Math.hypot(this.input.x,this.input.y)||1;slide(e,this.input.x/len*this.speed(e)*dt,this.input.y/len*this.speed(e)*dt);}
-          if(this.input.fire)this.attack(e,this.input.aim,{executeAlly:this.input.executeAlly});
+          if(this.input.fire)this.attack(e,this.input.aim);
           e.facing=Math.atan2(this.input.aim.y-e.y,this.input.aim.x-e.x);
         } else if(!moving&&!e.motion&&!e.recall)this.aiChampion(e,dt);
       } else if(e.kind==='minion'){if(!moving&&!e.motion)this.aiMinion(e,dt);}

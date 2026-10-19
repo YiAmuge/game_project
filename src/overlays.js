@@ -62,7 +62,7 @@ export function championEffects(r,e,g){
   for(const line of lines)r.line(line,'#ffe258',.22);
   for(const line of lines)r.line(line,'#d82b39',.105);
  }
- if(g.champions(e.team).some(a=>a!==e&&a.alive&&a.key==='gubo'&&e.hp/e.maxHp<=g.allyExecuteThreshold(a))){
+ if(g.champions(e.team).some(a=>a.alive&&g.canGuboHitAlly(a,e))){
   const y=e.y-5.2;r.circle(e.x,y,.28,'#43151b99','#f35759',.065);
   r.line([{x:e.x-.43,y},{x:e.x+.43,y}],'#ff6262',.055);r.line([{x:e.x,y:y-.43},{x:e.x,y:y+.43}],'#ff6262',.055);
  }

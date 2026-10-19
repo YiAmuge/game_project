@@ -20,7 +20,7 @@ function toast(message){$('toast').textContent=message;$('toast').classList.remo
 function inMatch(){return mode==='playing'||mode==='result';}
 function modalOpen(){return Boolean(document.querySelector('dialog[open]'));}
 function active(){return mode==='playing'&&!paused&&!modalOpen()&&game.winner===null;}
-function clearInput(){delete game.targeting;keys.clear();game.input.fire=false;game.input.x=0;game.input.y=0;game.input.executeAlly=false;}
+function clearInput(){delete game.targeting;keys.clear();game.input.fire=false;game.input.x=0;game.input.y=0;}
 function cancelDrag(){drag=null;$('drag-wheel').classList.add('hidden');}
 function cancelGlobal(){globalTarget=false;globalPoint=null;$('global-target').classList.add('hidden');}
 function showScore(show){scoreOpen=show&&inMatch();$('scoreboard').classList.toggle('hidden',!scoreOpen);if(scoreOpen){game.input.fire=false;updateScores();}}
@@ -88,7 +88,7 @@ function updateDrag(e){
 $('arena').addEventListener('pointermove',updatePointer);window.addEventListener('pointermove',updateDrag);
 $('arena').addEventListener('pointerdown',e=>{
  if(!active()||globalTarget||scoreOpen)return;updatePointer(e);e.preventDefault();$('arena').focus();
- if(e.button===0){if(game.targeting||game.player.key==='heathcliff'&&game.player.state.chargeAt!==undefined){confirmOrAttack();return;}game.input.fire=true;game.input.executeAlly=e.ctrlKey;game.attack(game.player,game.input.aim,{executeAlly:e.ctrlKey});}
+ if(e.button===0){if(game.targeting||game.player.key==='heathcliff'&&game.player.state.chargeAt!==undefined){confirmOrAttack();return;}game.input.fire=true;game.attack(game.player,game.input.aim);}
  if(e.button===2){
   if(game.targeting){delete game.targeting;toast('스킬 조준 취소');return;}
   if(DRAG_KEYS.includes(game.player.key)){
@@ -117,7 +117,7 @@ window.addEventListener('keydown',e=>{
  if(e.code==='KeyB'&&!e.repeat){e.preventDefault();if(active()&&!globalTarget&&!scoreOpen){clearInput();if(!game.recall(game.player))toast('지금은 귀환할 수 없습니다.');}return;}
  if(e.code==='KeyG'&&!e.repeat){e.preventDefault();toggleShop();return;}
  if(!active())return;keys.add(e.code);
- if(!e.repeat){if(e.code==='Space'&&!globalTarget)skill('r',{executeAlly:e.ctrlKey&&game.player.key==='gubo'});if(e.code==='Digit1')$('potion-btn').click();}
+ if(!e.repeat){if(e.code==='Space'&&!globalTarget)skill('r');if(e.code==='Digit1')$('potion-btn').click();}
 });
 window.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='Tab'){e.preventDefault();showScore(false);}});
 function updateScores(){

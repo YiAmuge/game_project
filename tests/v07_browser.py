@@ -44,9 +44,9 @@ with sync_playwright() as pw:
     choose('루돌프')
     # Long-lived stage 2 is reached through real continuous-fire input across the three-second cap.
     page.evaluate('''() => {__target.x=43;__target.ammo=3;__target.attackCd=100;}''')
-    s=page.evaluate('__moba.renderer.camera.worldToScreen(__target)');page.mouse.move(s['x'],s['y']);page.mouse.down();page.wait_for_timeout(2100);page.mouse.up()
+    s=page.evaluate('__moba.renderer.camera.worldToScreen(__target)');page.mouse.move(s['x'],s['y']);page.mouse.down();page.wait_for_function('__target.state.mentalWhip?.[__moba.game.player.id]?.stage===1',timeout=7000);page.mouse.up()
     assert page.evaluate('__target.state.mentalWhip[__moba.game.player.id].stage')==1
-    page.wait_for_timeout(600);page.mouse.down();page.wait_for_timeout(2100);page.mouse.up()
+    page.wait_for_function('__moba.game.time-__moba.game.player.lastAttackAt>.55',timeout=3000);page.mouse.down();page.wait_for_function('__target.state.mentalWhip?.[__moba.game.player.id]?.stage===2',timeout=7000);page.mouse.up()
     assert page.evaluate('__target.state.mentalWhip[__moba.game.player.id].stage')==2
     page.screenshot(path=str(art/'v07-rudolph-antlers-stage2.png'))
     page.keyboard.press('Space');expect(page.locator('#global-target')).to_be_visible();page.keyboard.press('Escape')

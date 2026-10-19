@@ -74,7 +74,7 @@ test('Nelly has four 210-damage single-hit ammunition charges and restores the o
  const {g,p,t}=quiet('nelly');assert.equal(p.ammo,4);const hp=t.hp;g.attack(p,t);close(hp-t.hp,210*1.12*.9);assert.equal(p.ammo,3);assert.equal(g.events.length,0);g.award(p,250,0);close(g.powerScale(p),1.066);
 });
 test('Gubo allied threshold changes from 21 to 35 percent only while the four-second tactical buff is live',()=>{
- const {g,p}=quiet('gubo'),a=g.makeChampion('faust',0,5);a.x=41;a.y=7;a.maxHp=1000;a.hp=211;assert.equal(g.cast(p,'r',a,{executeAlly:true}),false);assert.equal(p.rCd,0);a.hp=210;assert.ok(g.cast(p,'r',a,{executeAlly:true}));
+ const {g,p}=quiet('gubo'),a=g.makeChampion('faust',0,5);a.x=41;a.y=7;a.maxHp=1000;a.hp=211;g.units=[p,a];assert.equal(g.cast(p,'r',a),false);assert.equal(p.rCd,0);a.hp=210;assert.ok(g.cast(p,'r',a));
  const b=quiet('gubo');close(b.g.allyExecuteThreshold(b.p),.21);b.g.cast(b.p,'q',b.p);close(b.g.allyExecuteThreshold(b.p),.35);b.g.time=4.01;close(b.g.allyExecuteThreshold(b.p),.21);
 });
 test('Gahwan ranges and close knockback follow the new percentages',()=>{
