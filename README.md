@@ -8,6 +8,8 @@ GitHub **`codex/city-border-v0.2` 브랜치**의 **Code → Codespaces → Creat
 
 **Ports → 5173 → Open in Browser**로 게임을 엽니다. 파일은 800ms 후 자동 저장되고 약 1.2초 후 게임이 새로고침됩니다. 새로고침하면 경기는 초기화됩니다. GitHub에도 변경을 보관하려면 **Commit → Sync Changes / Push**가 필요합니다. [상세 개발 안내](docs/LIVE_DEVELOPMENT.md)를 참고하세요.
 
+껐다 켠 뒤 `app.github.dev` 주소에서 404가 나오면 먼저 기존 Codespace를 열고, 터미널에서 `node scripts/codespaces-start.mjs`를 실행한 다음 Ports의 5173을 다시 여세요. 이 주소는 Codespace가 켜져 있을 때 사용하는 개발 주소입니다. [재시작·404 복구 안내](docs/LIVE_DEVELOPMENT.md#껐다-켠-뒤-게임-주소가-404일-때)를 참고하세요.
+
 ## 플레이
 
 입장 메뉴는 온라인 대전(준비중), AI 연습전, 도감입니다. 연습전에서 탑·정글·바텀·서포터와 챔피언을 선택합니다. 추천 역할군은 선택을 제한하지 않습니다.

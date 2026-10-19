@@ -9,9 +9,21 @@
 
 브랜치 이름은 v0.2를 유지하지만 현재 내용은 v0.6이다. 기존 Codespace에서는 수정 내용을 Commit한 뒤 **Source Control → Pull**로 업데이트한다. Pull 이후 게임 탭을 새로고침하면 새 메뉴가 나타난다. 새 ZIP을 받을 필요는 없다.
 
-Codespaces 구성은 Node.js 22, 의존성 설치, 자동 저장, 포트 열기, 반복 연결 시 기존 서버 재사용을 설정한다. 이 작업에서 실제 Codespace 인스턴스를 생성하지는 않았다. GitHub 계정에서 Codespaces를 사용할 수 있어야 한다.
+Codespaces 구성은 Node.js 22, 의존성 설치, 자동 저장, 포트 열기를 설정한다. 컨테이너 시작 시와 편집기 연결 시 개발 서버를 확인하고, 이미 실행 중이면 재사용한다. 이 작업에서 실제 Codespace 인스턴스를 생성하지는 않았다. GitHub 계정에서 Codespaces를 사용할 수 있어야 한다.
 
 게임이 시작되지 않으면 터미널에서 `node scripts/codespaces-start.mjs`를 실행한다. 로그는 `/tmp/city-border-dev.log`에 있다. 개발 서버가 종료된 상태라면 `npm run dev`로 직접 시작해도 된다.
+
+## 껐다 켠 뒤 게임 주소가 404일 때
+
+`…-5173.app.github.dev`는 실행 중인 Codespace의 개발 포트를 연결하는 주소다. 고정된 공개 게임 사이트가 아니며, 주소만 열어서는 중지된 Codespace가 시작되지 않는다. Codespace 중지·삭제, 개발 서버 종료, 포트 연결 해제 또는 다른 GitHub 계정으로 접근할 때 연결되지 않을 수 있다.
+
+1. [GitHub Codespaces](https://github.com/codespaces)에서 기존 `game_project` Codespace를 열고 편집기가 준비될 때까지 기다린다. 해당 Codespace를 사용할 수 있는 GitHub 계정으로 로그인한다.
+2. 프로젝트 터미널에서 `node scripts/codespaces-start.mjs`를 실행한다. `City Border is running on port 5173`이 나오면 서버가 응답한 상태다. 이미 켜져 있으면 중복 실행하지 않는다.
+3. **Ports → 5173 → Open in Browser**로 게임을 연다. 5173이 없으면 **Forward a Port → 5173**으로 추가한다. 이전 즐겨찾기보다 여기서 현재 제공되는 주소를 사용한다.
+
+이 저장소는 컨테이너 시작 시 자동 실행도 설정한다. 기존 Codespace에서 새 `.devcontainer/devcontainer.json`을 Pull한 경우, 설정을 적용하려면 명령 팔레트의 **Codespaces: Rebuild Container**를 한 번 실행한다. 당장 게임을 다시 여는 데는 재빌드 없이 위 터미널 명령을 사용하면 된다.
+
+Codespace를 꺼도 유지되는 플레이 주소가 필요하면 아래의 GitHub Pages 게시 절차를 사용한다. 포트 공개 설정을 바꾸는 것만으로 중지된 서버가 실행되지는 않는다.
 
 ## 저장의 두 단계
 

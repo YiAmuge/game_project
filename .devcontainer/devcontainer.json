@@ -6,6 +6,7 @@
     "5173": { "label": "도시 경계 게임", "onAutoForward": "openBrowser" }
   },
   "postCreateCommand": "npm ci",
+  "postStartCommand": "node scripts/codespaces-start.mjs",
   "postAttachCommand": "node scripts/codespaces-start.mjs",
   "customizations": {
     "vscode": {
