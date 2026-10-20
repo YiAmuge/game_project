@@ -59,7 +59,7 @@ test('5:00 permanently removes central creeps, even pending respawns, and spawns
 test('boss gives all teammates 180 XP and 160 currency once',()=>{
   const g=isolated();g.spawnBoss();const boss=g.units.find(u=>u.camp==='boss');
   g.deal(g.player,boss,100000,{fixed:true});
-  for(const c of g.champions(0)){close(c.gold,410);close(c.xp,c.key==='faust'?207:180);}
+  for(const c of g.champions(0)){close(c.gold,410);close(c.xp,c.key==='faust'?207:c.key==='starbuck'?198:180);}
   assert.ok(g.champions(1).every(c=>c.xp===0));g.deal(g.player,boss,100000,{fixed:true});close(g.player.gold,410);
 });
 test('matches continue past the former ten-minute limit',()=>{
@@ -125,7 +125,7 @@ test('experience is personal, caps at level ten and increases max HP',()=>{
 test('death grants kill/assist rewards and respawns with full health and ammo',()=>{
   const g=isolated(),p=g.player,t=opponent(g),ally=g.champions(0)[1];t.hp=100;
   g.deal(ally,t,20,{fixed:true});g.deal(p,t,1000,{fixed:true});assert.equal(t.alive,false);assert.equal(g.kills[0],1);
-  assert.equal(p.kills,1);assert.equal(t.deaths,1);close(ally.gold,290);
+  assert.equal(p.kills,1);assert.equal(t.deaths,1);close(ally.gold,250+40*4/3);
   assert.equal(respawnTime(0,1),6);assert.equal(respawnTime(600,5),20);assert.equal(respawnTime(1200,5),20);
   run(g,6.1);assert.ok(t.alive);assert.equal(t.hp,t.maxHp);assert.equal(t.ammo,CHAMPIONS[t.key].ammo);
 });

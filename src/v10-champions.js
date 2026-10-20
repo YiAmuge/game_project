@@ -2,12 +2,12 @@ import { distance,blocked } from './geometry.js';
 import { dash,area } from './skills.js';
 import { canOccupy,settleBody } from './collision.js';
 
-export const STARBUCK={basicRange:2.6,qDamage:150,qRange:2.6,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320};
+export const STARBUCK={basicRange:2.6,basicDash:2.875,qDamage:150,qRange:2.6,qAngle:1.54,qInterval:.33,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320};
 export function validate(g,e,slot,p){return e.key!=='starbuck'||slot!=='r'||!blocked(p.x,p.y,e.radius)&&canOccupy(g,e,p,{phaseEnemies:true});}
 export function basic(g,e,p,d){
  if(e.key!=='starbuck')return false;
  const strike=()=>g.cone(e,d,g.attackRange(e),.75,190);
- strike();if(e.state.fullAmmo)dash(g,e,d,2.5,0,()=>{},{offensive:true});return true;
+ strike();if(e.state.fullAmmo)dash(g,e,d,STARBUCK.basicDash,0,()=>{},{offensive:true});return true;
 }
 export function cast(g,e,slot,p,d){
  if(e.key!=='starbuck')return false;
@@ -15,8 +15,9 @@ export function cast(g,e,slot,p,d){
   const stab=index=>{
    if(!e.alive||g.stat(e,'silence')||g.stat(e,'stun'))return;
    e.lastAttackAt=g.time;e.attackAt=g.time;e.attackFacing=Math.atan2(d.y,d.x);
-   let hit=false;g.cone(e,d,STARBUCK.qRange,.7,STARBUCK.qDamage*1.03**index,t=>{hit=true;g.status(t,'slow',.2,STARBUCK.qSlow,e);});
-   if(hit&&index<4)g.schedule(e,.45,()=>stab(index+1));
+   let hit=false;g.cone(e,d,STARBUCK.qRange,STARBUCK.qAngle,STARBUCK.qDamage*1.03**index,t=>{hit=true;g.status(t,'slow',.2,STARBUCK.qSlow,e);});
+   g.effects.push({type:'slash',x:e.x,y:e.y,r:STARBUCK.qRange,angle:Math.atan2(d.y,d.x),spread:STARBUCK.qAngle,theme:e.key,life:.2,maxLife:.2});
+   if(hit&&index<4)g.schedule(e,STARBUCK.qInterval,()=>stab(index+1));
   };stab(0);
  }else{
   const origin={x:e.x,y:e.y},destination={...p};e.untargetableUntil=g.time+.7;e.channelUntil=g.time+.7;

@@ -47,8 +47,9 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='queequeg'){
   if(slot==='q'){
-   const t=targetAt(g,e,p,5,e.team,a=>a!==e);detach(g,e);e.state.tether={target:t.id,until:g.time+8,nextResistance:g.time+1};g.addBuff(t,'tetherArmor',8,{copy:false});t.state.tetherSource=e.id;t.state.tetherResistance=0;
-  }else{g.addBuff(e,'queequegUlt',4);e.state.queegHealAt=g.time+4;const tether=e.state.tether,t=g.units.find(t=>t.id===tether?.target&&t.alive);if(t&&tether.until>g.time){tether.until=g.time+8;g.addBuff(t,'tetherArmor',8,{copy:false});if(g.buff(t,'tetherResistance'))t.buffs.tetherResistance=tether.until;g.addBuff(t,'tetherStride',4,{copy:false});}}
+   const t=targetAt(g,e,p,5,e.team,a=>a!==e);detach(g,e);const previous=g.units.find(a=>a.id===t.state.tetherSource);if(previous)detach(g,previous);
+   e.state.tether={target:t.id,until:Infinity,nextResistance:g.time+1};g.addBuff(t,'tetherArmor',Infinity,{copy:false});g.addBuff(t,'tetherGuard',Infinity,{copy:false});g.addBuff(e,'tetherGuard',Infinity,{copy:false});t.state.tetherSource=e.id;t.state.tetherResistance=0;
+  }else{g.addBuff(e,'queequegUlt',4);e.state.queegHealAt=g.time+4;const tether=e.state.tether,t=g.units.find(t=>t.id===tether?.target&&t.alive);if(t&&tether.until>g.time)g.addBuff(t,'tetherStride',4,{copy:false});}
   return true;
  }
  return false;
@@ -63,11 +64,13 @@ export function controlTaunt(g,e,dt){
  }else if(distance(e,target)>e.range+target.radius)g.moveToward(e,target,dt);else if(e.attackCd<=0){g.simpleAttack(e,target);e.attackCd=e.interval;}
  return true;
 }
-function detach(g,e){const old=g.units.find(t=>t.id===e.state.tether?.target);if(old?.state.tetherSource===e.id){delete old.buffs.tetherArmor;delete old.buffs.tetherResistance;delete old.state.tetherResistance;delete old.state.tetherSource;}delete e.state.tether;}
+function detach(g,e){const old=g.units.find(t=>t.id===e.state.tether?.target);if(old?.state.tetherSource===e.id){delete old.buffs.tetherArmor;if(!old.state.tether)delete old.buffs.tetherGuard;delete old.buffs.tetherResistance;delete old.state.tetherResistance;delete old.state.tetherSource;}delete e.state.tether;if(!e.state.tetherSource)delete e.buffs.tetherGuard;}
+export function crowdControlled(g,e){return ['stun','root','silence','disarm','slow','taunt','captured'].some(key=>g.stat(e,key)>0)||Boolean(e.motion?.forced);}
 export function transfer(g,source,target,amount,kind){
  const owner=g.units.find(e=>e.id===target.state?.tetherSource&&e.alive&&e.state.tether?.target===target.id&&e.state.tether.until>g.time);
  if(!owner)return amount;
- g.deal(source,owner,amount*.3,{fixed:true,proc:false,damageKind:kind,transferred:true});return amount*.7;
+ const fraction=crowdControlled(g,target)?.5:.3;
+ g.deal(source,owner,amount*fraction,{fixed:true,proc:false,damageKind:kind,transferred:true});return amount*(1-fraction);
 }
 export function afterDamage(g,source,target,actual){
  if(actual<=0)return;
@@ -82,6 +85,7 @@ export function interceptDeath(g,e,killer){
 export function onDeath(g,e){
  if(e.kind!=='champion')return;
  if(e.key==='queequeg')detach(g,e);
+ const owner=g.units.find(a=>a.id===e.state.tetherSource);if(owner)detach(g,owner);
  if(e.key==='marton')g.entity({kind:'bait',key:'marton',name:'초롱 미끼',team:e.team,x:e.x,y:e.y,maxHp:500,radius:.5,until:g.time+5,owner:e.id,state:{},buffs:{},visuals:{},tauntReady:{}});
 }
 export function tick(g,e){

@@ -11,7 +11,7 @@
   <header class="masthead">
     <a id="home" class="brand" href="#" aria-label="도시 경계 처음으로"><span class="brand-mark">◈</span><span>도시 경계<small>CITY BORDER</small></span></a>
     <nav><span class="nav-active">아레나</span><button id="archive-open">도감 <span>32</span></button><button id="help-open">플레이 가이드 ↗</button></nav>
-    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.10.0</b></span>
+    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.11.0</b></span>
   </header>
   <main>
     <section class="match-bar" aria-label="경기 상태">
@@ -25,6 +25,7 @@
       <canvas id="minimap" width="224" height="126" aria-label="팀 위치와 현재 카메라 범위" class="minimap hidden"></canvas>
       <div class="field-legend"><span class="blue-dot">아군</span><span class="red-dot">적군</span><span class="gold-dot">중립</span><span class="purple-dot">보스</span><span class="map-note">수풀 · 원거리 은닉 / 근접 탐지</span></div>
       <div id="event-feed" class="event-feed" aria-live="polite"></div>
+      <section id="battle-announcement" class="battle-announcement hidden" role="status" aria-live="polite" aria-atomic="true"><span id="announcement-kicker"></span><strong id="announcement-title"></strong><p id="announcement-detail"></p></section>
       <div id="respawn" class="respawn hidden"></div>
       <div id="pause-banner" class="pause-banner hidden"><span>Ⅱ</span>작전 일시정지<button id="resume">계속하기</button><button id="leave">출격 준비로 돌아가기</button></div>
       <section id="lobby" class="lobby">

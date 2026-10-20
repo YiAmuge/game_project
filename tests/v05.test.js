@@ -92,7 +92,7 @@ test('Nelly has two replenishing knife charges and a forced ultimate mark preser
  p.rCd=0;g.cast(p,'r',t);const mark=t.state.nellyMarks[p.id];assert.ok(mark.active);assert.equal(mark.hold,3);for(let i=0;i<3;i++)g.deal(p,t,1);assert.ok(mark.active);g.deal(p,t,1);assert.equal(mark.active,false);
 });
 test('Ahab cover rewards the captain and takedown support retains its bonus',()=>{
- const {g,p,t}=quiet('ahab'),a=ally(g);assert.equal(p.state.order,'cover');p.attackCd=0;g.attack(p,t);run(g,.2);assert.ok(t.state.harpoon);g.deal(a,t,1);assert.ok(g.buff(p,'ahabCover'));assert.equal(g.buff(a,'ahabCover'),false);const xp=a.xp,gold=a.gold;g.deal(p,t,1000000,{fixed:true});close(a.xp-xp,150);close(a.gold-gold,90);
+ const {g,p,t}=quiet('ahab'),a=ally(g);assert.equal(p.state.order,'cover');p.attackCd=0;g.attack(p,t);run(g,.2);assert.ok(t.state.harpoon);g.deal(a,t,1);assert.ok(g.buff(p,'ahabCover'));assert.equal(g.buff(a,'ahabCover'),false);const xp=a.xp,gold=a.gold;g.deal(p,t,1000000,{fixed:true});close(a.xp-xp,150);close(a.gold-gold,120);
 });
 
 test('Ahab execution snapshots below ten percent and grants only one ultimate recast',()=>{

@@ -160,7 +160,15 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='Tab'){e.preventDefault();showScore(false);}});
 function updateScores(){
  $('camp-timers').innerHTML=game.campTimers().map(t=>`<span>${escape(t.name)} <b>${clock(t.seconds)}</b></span>`).join('')||'<span>재생성 대기 중인 크립 없음</span>';
- $('score-rows').innerHTML=game.champions().map(p=>{const b=game.bonusStats(p),pct=n=>`${n>=0?'+':''}${n}%`;return `<tr class="${p.team===0?'ally-row':'enemy-row'}"><td>${p.team===0?'아군':'적군'} · ${escape(p.name)}${p.player?' (나)':''}</td><td>${POSITIONS[p.position].name}</td><td>${p.level}</td><td>${p.kills} / ${p.deaths} / ${p.assists}</td><td>전투 ${pct(b.power)} · 체력 ${pct(b.health)} · 이동 ${pct(b.speed)} · 가속 ${pct(b.haste)} · 장전 ${pct(b.reload)}</td></tr>`;}).join('');
+ $('score-rows').innerHTML=game.champions().map(p=>{const b=game.bonusStats(p),pct=n=>`${n>=0?'+':''}${n}%`,bounty=game.bounty(p);return `<tr class="${p.team===0?'ally-row':'enemy-row'}"><td>${p.team===0?'아군':'적군'} · ${escape(p.name)}${p.player?' (나)':''}${bounty?` <small class="bounty-tag">현상금 +${bounty} ◈</small>`:''}</td><td>${POSITIONS[p.position].name}</td><td>${p.level}</td><td>${p.kills} / ${p.deaths} / ${p.assists}</td><td>전투 ${pct(b.power)} · 체력 ${pct(b.health)} · 이동 ${pct(b.speed)} · 가속 ${pct(b.haste)} · 장전 ${pct(b.reload)}</td></tr>`;}).join('');
+}
+let visibleAnnouncement=null;
+function updateAnnouncement(){
+ const entry=mode==='playing'?game.currentAnnouncement():null,banner=$('battle-announcement');banner.classList.toggle('hidden',!entry);
+ if(entry===visibleAnnouncement)return;visibleAnnouncement=entry;if(!entry)return;
+ banner.dataset.kind=entry.kind;banner.classList.toggle('ally',entry.team===0);banner.classList.toggle('enemy',entry.team===1);
+ $('announcement-kicker').textContent=entry.first?'선취점 확보 · 첫 처치 보상 +⅓':({kill:'챔피언 처치',execution:'처형',tower:'전장 상황','boss-spawn':'중앙 목표물','boss-kill':'목표물 확보'}[entry.kind]||'전장 상황');
+ $('announcement-title').textContent=entry.title;$('announcement-detail').textContent=entry.detail;
 }
 function updateHud(){
  const p=game.player,c=RUNTIME_CHAMPIONS[p.key];
@@ -174,13 +182,13 @@ function updateHud(){
  $('recall-btn').querySelector('span').textContent=p.recall?`${Math.max(0,p.recall.until-game.time).toFixed(1)}s`:'귀환';$('recall-btn').classList.toggle('recalling',Boolean(p.recall));
  $('basic-btn').querySelector('span').textContent=p.key==='ezra'?(game.buff(p,'ezraUlt')?'총공 모드':EZRA_WEAPONS[p.state.weapon||0].name):c.basic;
  for(const [slot,name,description] of [['q',c.tactical,c.qText],['r',c.ultimate,c.rText]]){const b=$(slot+'-btn');b.querySelector('span').textContent=name;b.title=description;b.querySelector('.cooldown').textContent=p[slot+'Cd']>0?Math.ceil(p[slot+'Cd']):'';b.classList.toggle('on-cooldown',p[slot+'Cd']>0);}
- $('gold').textContent=Math.floor(p.gold).toLocaleString();
+ $('gold').textContent=Math.floor(p.gold).toLocaleString();updateAnnouncement();
  $('shop-status').textContent=game.canUpgrade(p)?(p.alive?'구매 가능 · 부활소 보급':'부활 대기 중 · 능력치 / 증강 변경 가능'):'부활 대기 중 또는 부활소에서 3초 비전투 시 구매 가능합니다.';
  updateShopCards(p);
  if(!$('shop').classList.contains('hidden')&&p.alive&&!game.inSpawn(p))$('shop').classList.add('hidden');
  $('augment-count').textContent=`${p.augments.length} / ${AUGMENT_RULES.slots} · 구매 ${AUGMENT_RULES.cost} ◈ / 판매 ${AUGMENT_RULES.cost*AUGMENT_RULES.refund} ◈`;
  updateShopInventory(p);
- const buffs=game.activeBuffs(p);$('buff-list').innerHTML=buffs.length?buffs.slice(0,3).map(b=>`<div class="buff-chip"><i>◆</i><b>${escape(BUFF_LABELS[b.key]||b.key)}</b><span>${Math.ceil(b.until-game.time)}s</span></div>`).join(''):'<small>활성 버프 없음</small>';
+ const buffs=game.activeBuffs(p);$('buff-list').innerHTML=buffs.length?buffs.slice(0,3).map(b=>`<div class="buff-chip"><i>◆</i><b>${escape(BUFF_LABELS[b.key]||b.key)}</b><span>${Number.isFinite(b.until)?Math.ceil(b.until-game.time)+'s':'∞'}</span></div>`).join(''):'<small>활성 버프 없음</small>';
  $('respawn').classList.toggle('hidden',p.alive||mode!=='playing'||game.winner!==null);if(!p.alive)$('respawn').innerHTML=`부활 대기<b>${Math.max(0,Math.ceil(p.respawnAt-game.time))}</b>`;
  const entries=!inMatch()?[]:game.logs.filter(l=>game.time-l.time<8).slice(0,3);const feed=entries.map(l=>`<div class="${l.kind}"><time>${clock(l.time)}</time>${escape(l.text)}</div>`).join('');if($('event-feed').innerHTML!==feed)$('event-feed').innerHTML=feed;
  if(scoreOpen)updateScores();

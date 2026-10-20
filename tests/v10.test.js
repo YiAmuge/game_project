@@ -94,8 +94,8 @@ test('Dongbaek refills all three petals every ten seconds and pauses ammo recove
 test('Queequeg is support, grants stacking resistance while linked, and clears it when detached',()=>{
  const {g,p}=quiet('queequeg'),a=ally(g);assert.equal(CHAMPIONS.queequeg.role,'지원');g.cast(p,'q',a);run(g,4.02);assert.equal(a.state.tetherResistance,4);g.status(a,'silence',1,2);close(a.status.silence.until-g.time,2*.85*.8);a.x=60;run(g,1.6);assert.equal(p.state.tether,undefined);assert.equal(g.buff(a,'tetherResistance'),false);
 });
-test('Queequeg ultimate resets the link to eight seconds and shares four seconds of movement speed',()=>{
- const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);run(g,2);const speed=g.speed(a);g.cast(p,'r',p);close(p.state.tether.until-g.time,8);close(a.buffs.tetherStride-g.time,4);close(g.speed(a)/speed,1.25);run(g,4.1);assert.equal(g.buff(a,'tetherStride'),false);
+test('Queequeg ultimate preserves the infinite link and shares four seconds of movement speed',()=>{
+ const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);run(g,2);const speed=g.speed(a);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);close(a.buffs.tetherStride-g.time,4);close(g.speed(a)/speed,1.25);run(g,4.1);assert.equal(g.buff(a,'tetherStride'),false);
 });
 test('Ahab starts and respawns with cover, is sniper and gains range plus baseline reload',()=>{
  const {g,p,t}=quiet('ahab');assert.equal(CHAMPIONS.ahab.role,'저격');assert.equal(p.state.order,'cover');close(p.range,10.8);close(g.reloadInterval(p),RULES.reload[CHAMPIONS.ahab.reload]/(RULES.reloadEfficiency*1.15));g.kill(p,t);g.time=p.respawnAt;g.step(.01);assert.equal(p.state.order,'cover');assert.ok(g.buff(p,'ahabOrder'));
@@ -115,11 +115,11 @@ test('consumables have no live module, champion resource, purchase, use or codex
 test('Starbuck joins ordinary drafts with requested grades, harpoon damage and jungle rewards',()=>{
  const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,25);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,110);g.kill(n,p);close(p.xp,56.25*1.1);
 });
-test('Starbuck full-ammo basic stabs once then advances 2.5, while a partial magazine stays still',()=>{
- const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,190*.9);close(p.motion.total,2.5);run(g,.4);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.equal(p.motion,undefined);close(p.x,x);
+test('Starbuck full-ammo basic stabs once then advances 2.875, while a partial magazine stays still',()=>{
+ const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,190*.9);close(p.motion.total,2.875);run(g,.4);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.equal(p.motion,undefined);close(p.x,x);
 });
-test('Starbuck tactical hits five times at .45 intervals with increasing damage and stops after a miss',()=>{
- const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p)hits.push({at:g.time,n});return deal(e,t,n,o);};g.cast(p,'q',t);run(g,1.9);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.45*i,.02);close(hits[i].n,150*1.03**i);}close(g.stat(t,'slow'),.2);p.qCd=0;t.y=14;hits.length=0;g.cast(p,'q',{x:45,y:7});run(g,2);assert.equal(hits.length,0);
+test('Starbuck tactical hits five times at .33 intervals with increasing damage and stops after a miss',()=>{
+ const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p)hits.push({at:g.time,n});return deal(e,t,n,o);};g.cast(p,'q',t);run(g,1.9);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.33*i,.02);close(hits[i].n,150*1.03**i);}close(g.stat(t,'slow'),.2);p.qCd=0;t.y=14;hits.length=0;g.cast(p,'q',{x:45,y:7});run(g,2);assert.equal(hits.length,0);
 });
 test('Starbuck ultimate disappears for .7 seconds, teleports and resets tactical only on damage',()=>{
  const {g,p,t}=quiet('starbuck');t.x=46;p.qCd=5;assert.ok(g.cast(p,'r',{x:46,y:7}));assert.ok(g.hidden(p));const hp=t.hp;run(g,.65);close(p.x,40);close(t.hp,hp);run(g,.1);assert.equal(g.hidden(p),false);assert.ok(p.x>44&&t.hp<hp);close(p.qCd,0);assert.ok(distance(p,t)>=p.radius+t.radius);

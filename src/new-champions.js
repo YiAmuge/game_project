@@ -86,7 +86,7 @@ export function cast(g,e,slot,p,d){
   if(slot==='q'){s.order=s.order==='guard'?'cover':'guard';s.orderAt=g.time;g.addBuff(e,'ahabOrder',36000,{copy:false});}
   else{
    const isRecast=recast(g,e,slot);s.recastSpent=isRecast;s.recastUntil=0;
-   const len=Math.min(5,distance(e,p)),dest={x:e.x+d.x*len,y:e.y+d.y*len},execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
+   const len=Math.min(6.5,distance(e,p)),dest={x:e.x+d.x*len,y:e.y+d.y*len},execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
    s.ahabUlt={origin:{x:e.x,y:e.y},immune:e.ccImmuneUntil||0,invulnerable:e.invulnerableUntil||0};e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.channelUntil=g.time+.45;
    e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
    {
