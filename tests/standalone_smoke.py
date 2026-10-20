@@ -30,13 +30,13 @@ with sync_playwright() as p:
     expect(frame.locator('#main-menu .menu-action')).to_have_count(3)
     expect(frame.locator('#online')).to_be_disabled()
     frame.locator('#practice-open').click()
-    expect(frame.locator('.champion-option')).to_have_count(25)
+    expect(frame.locator('.champion-option')).to_have_count(27)
     expect(frame.locator('.position-option')).to_have_count(4)
     expect(frame.locator('body')).to_have_css('background-color', 'rgb(16, 22, 23)')
     assert frame.locator('script[type="module"], script[src], link[rel="stylesheet"]').count() == 0
     frame.get_by_role('button', name='홍루 선택').click()
     expect(frame.locator('#selected-name')).to_have_text('홍루')
-    assert frame.locator('script[id^=sprite-data]').count() == 6
+    assert frame.locator('script[id^=sprite-data]').count() == 7
     frame.locator('#archive-open').click()
     expect(frame.locator('#roster-list button')).to_have_count(32)
     frame.locator('#roster-search').fill('료슈')
@@ -46,7 +46,7 @@ with sync_playwright() as p:
     expect(frame.locator('#roster-detail')).to_contain_text('연습전 플레이 가능')
     frame.locator('[data-category=monsters]').click()
     expect(frame.locator('#codex-content article')).to_have_count(10)
-    expect(frame.locator('#codex-tabs button')).to_have_count(3)
+    expect(frame.locator('#codex-tabs button')).to_have_count(4)
     frame.locator('[data-category=rules]').click()
     expect(frame.locator('#codex-content')).to_contain_text('13%')
     frame.locator('#archive .close-dialog').click()
@@ -91,4 +91,4 @@ with sync_playwright() as p:
     page.evaluate('(html) => document.querySelector("iframe").srcdoc = html', html)
     expect(page.frame_locator('#preview').locator('noscript p')).to_be_visible()
     browser.close()
-    print('Standalone passed: three-entry menu, 25 champions/four positions, six embedded sprite atlases, three codex categories/32 records, shop, tactical/ultimate, 8-row score/map, pause, help, home, no-script fallback. External requests: 0. JS errors: 0.')
+    print('Standalone passed: three-entry menu, 27 champions/four positions, seven embedded sprite atlases, four codex categories/32 records, shop, tactical/ultimate, 8-row score/map, pause, help, home, no-script fallback. External requests: 0. JS errors: 0.')

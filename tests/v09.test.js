@@ -46,8 +46,8 @@ test('Marton attack range is reduced to 4.9 without changing its ground effect r
 test('Myo frenzy reloads during basic attacks, grants sixty percent reload and removes boosted dash length',()=>{
  const {g,p,t}=quiet('myo');const reload=g.reloadInterval(p);g.cast(p,'r',p);close(g.reloadInterval(p),reload/1.6);close(g.attackRange(p),2.4);g.attack(p,t);close(p.motion.total,2.4);assert.equal(p.motion.actionKind,'basic');p.ammo=0;p.reloadProgress=0;g.input.fire=true;run(g,.15);assert.ok(p.reloadProgress>0);
 });
-test('Myo eighty percent reduction applies only during an active frenzy basic dash',()=>{
- const {g,p,t}=quiet('myo');const plain=g.deal(t,p,100);g.cast(p,'r',p);g.attack(p,{x:47,y:7});close(g.deal(t,p,100)/plain,.2);run(g,.4);close(g.deal(t,p,100),plain);p.attackCd=0;g.attack(p,t);delete p.buffs.rabbitFrenzy;close(g.deal(t,p,100),plain);
+test('Myo fifty percent reduction applies only during an active frenzy basic dash',()=>{
+ const {g,p,t}=quiet('myo');const plain=g.deal(t,p,100);g.cast(p,'r',p);g.attack(p,{x:47,y:7});close(g.deal(t,p,100)/plain,.5);run(g,.4);close(g.deal(t,p,100),plain);p.attackCd=0;g.attack(p,t);delete p.buffs.rabbitFrenzy;close(g.deal(t,p,100),plain);
 });
 test('Rudolph vulnerability loses one stack per two seconds and every basic hit refreshes the next decay',()=>{
  const {g,p,t}=quiet('rudolph');for(let i=0;i<15;i++){g.time+=.1;mentalWhip(g,p,t);}const m=t.state.mentalWhip[p.id];assert.equal(m.stage,3);g.time=m.at+1.99;g.step(.001);assert.equal(m.stage,3);g.time=m.at+2.01;g.step(.001);assert.equal(m.stage,2);mentalWhip(g,p,t);const next=m.decayAt;g.time=next-.01;g.step(.001);assert.equal(m.stage,2);g.time=next+.01;g.step(.001);assert.equal(m.stage,1);g.time=next+2.01;g.step(.001);assert.equal(m.stage,0);
@@ -60,7 +60,7 @@ test('Rudolph can damage minions, creeps and towers without champion-only debuff
 });
 test('position recommendations and seedable drafts cover varied champions without same-team duplicates',()=>{
  assert.deepEqual(POSITIONS.top.recommend,['보호','돌격']);assert.deepEqual(POSITIONS.jungle.recommend,['암살','돌격']);assert.deepEqual(POSITIONS.bottom.recommend,['저격','방해']);assert.deepEqual(POSITIONS.support.recommend,['지원','방해']);const keys=new Set();
- for(let seed=1;seed<=100;seed++){const g=new Game('faust','bottom',{seed});for(const team of [0,1]){const cs=g.champions(team);assert.equal(new Set(cs.map(c=>c.key)).size,4);for(const c of cs.filter(c=>!c.player)){assert.ok(POSITIONS[c.position].recommend.includes(CHAMPIONS[c.key].role));keys.add(c.key);}}}assert.equal(keys.size,25);assert.deepEqual(new Game('don','top',{seed:42}).champions().map(e=>e.key),new Game('don','top',{seed:42}).champions().map(e=>e.key));
+ for(let seed=1;seed<=100;seed++){const g=new Game('faust','bottom',{seed});for(const team of [0,1]){const cs=g.champions(team);assert.equal(new Set(cs.map(c=>c.key)).size,4);for(const c of cs.filter(c=>!c.player)){assert.ok(POSITIONS[c.position].recommend.includes(CHAMPIONS[c.key].role));keys.add(c.key);}}}assert.equal(keys.size,27);assert.deepEqual(new Game('don','top',{seed:42}).champions().map(e=>e.key),new Game('don','top',{seed:42}).champions().map(e=>e.key));
 });
 test('minions pass an allied tower with visible clearance instead of pushing into its center',()=>{
  const {g,p}=quiet();g.units=[];g.aiMinion=Game.prototype.aiMinion;const tower=g.entity({kind:'tower',team:0,x:44,y:7.15,maxHp:1000,radius:.9});const m=g.entity({kind:'minion',team:0,x:40,y:7.15,maxHp:1000,radius:.28,waypoint:2,lane:0,range:1.2,damage:58,interval:1,wave:1,formationIndex:0,path:[],pathAt:0});let detour=0;for(let i=0;i<360;i++){g.step(1/60);detour=Math.max(detour,Math.abs(m.y-7.15));assert.ok(distance(m,tower)>=m.radius+tower.radius-.01);assert.ok(!blocked(m.x,m.y,m.radius));}assert.ok(m.x>49&&detour>1.1);

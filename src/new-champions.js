@@ -1,3 +1,4 @@
+import { trapPoint } from './confinement.js';
 import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance, direction, clearLine, blocked } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
@@ -76,8 +77,8 @@ export function cast(g,e,slot,p,d){
    s.knifeCharges=(s.knifeCharges??2)-1;if(!Number.isFinite(s.knifeReady))s.knifeReady=g.time+g.cooldown(e,'q');e.qCd=s.knifeCharges>0?0:s.knifeReady-g.time;let refunded=false;
    for(const off of [-.28,-.14,0,.14,.28])g.bullet(e,{x:Math.cos(e.facing+off),y:Math.sin(e.facing+off)},70,7,{speed:18,pierce:Infinity,beforeHit:t=>{e.state.knifeRefundCast=true;if(!refunded&&t.state?.nellyMarks?.[e.id]?.active){refunded=true;refundKnife(g,e);}},onHit:()=>{delete e.state.knifeRefundCast;}});
   }else{
-   e.ammo=Math.min(g.ammoCap(e),e.ammo+2);const t=targetAt(g,e,p,7),behind=direction(e,t),dest={x:t.x+behind.x*.9,y:t.y+behind.y*.9};
-   if(!blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}else{e.x=t.x-behind.x*.9;e.y=t.y-behind.y*.9;}
+   e.ammo=Math.min(g.ammoCap(e),e.ammo+2);const t=targetAt(g,e,p,7),behind=direction(e,t),dest=trapPoint(g,e,{x:t.x+behind.x*.9,y:t.y+behind.y*.9});
+   if(!blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}else{const back=trapPoint(g,e,{x:t.x-behind.x*.9,y:t.y-behind.y*.9});if(!blocked(back.x,back.y,e.radius)){e.x=back.x;e.y=back.y;}}
    // Apply the forced mark after the opening strike so the following three hits preserve it.
    g.deal(e,t,300);if(t.alive){g.status(t,'root',1,.7,e);nellyMark(g,e,t,true);}g.effects.push({type:'slash',x:e.x,y:e.y,r:2,angle:e.facing,spread:2.8,theme:e.key,life:.5,maxLife:.5});
   }return true;
@@ -86,7 +87,7 @@ export function cast(g,e,slot,p,d){
   if(slot==='q'){s.order=s.order==='guard'?'cover':'guard';s.orderAt=g.time;g.addBuff(e,'ahabOrder',36000,{copy:false});}
   else{
    const isRecast=recast(g,e,slot);s.recastSpent=isRecast;s.recastUntil=0;
-   const len=Math.min(6.5,distance(e,p)),dest={x:e.x+d.x*len,y:e.y+d.y*len},execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
+   const len=Math.min(6.5,distance(e,p)),dest=trapPoint(g,e,{x:e.x+d.x*len,y:e.y+d.y*len}),execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
    s.ahabUlt={origin:{x:e.x,y:e.y},immune:e.ccImmuneUntil||0,invulnerable:e.invulnerableUntil||0};e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.channelUntil=g.time+.45;
    e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
    {

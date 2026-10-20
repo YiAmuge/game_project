@@ -69,11 +69,11 @@ test('tower destruction, boss spawn and boss death enqueue objective announcemen
 test('announcement queue is bounded and pause without simulation ticks does not expire it',()=>{
  const {g}=quiet();for(let i=0;i<20;i++)g.announce('tower','포탑 '+i);assert.equal(g.announcements.length,4);const entry=g.currentAnnouncement();assert.equal(g.currentAnnouncement(),entry);assert.equal(COMBAT_RULES.announcementDuration,3.2);
 });
-test('Starbuck full-ammo advance gains fifteen percent without changing normal basic range',()=>{
- const {g,p,t}=quiet('starbuck');t.x=41.4;g.attack(p,t);close(p.motion.total,2.875);close(g.attackRange(p),2.6);run(g,.5);close(p.x,42.875);p.attackCd=0;p.ammo=1;g.attack(p,{x:49,y:7});assert.equal(p.motion,undefined);
+test('Starbuck all basics advance 2.875 and gain thirty percent range',()=>{
+ const {g,p,t}=quiet('starbuck');t.x=41.4;g.attack(p,t);close(p.motion.total,2.875);close(g.attackRange(p),3.38);run(g,.5);close(p.x,42.875);p.attackCd=0;p.ammo=1;g.attack(p,{x:49,y:7});assert.ok(p.motion);
 });
-test('Starbuck tactical reaches both widened sides, keeps forward range, and repeats every .33 seconds',()=>{
- const {g,p,t}=quiet('starbuck');Object.assign(t,{x:42,y:8.4});const other=enemy(g,42,5.6),back=enemy(g,38,7);const hits=[],deal=g.deal.bind(g);g.deal=(s,t,n,o)=>{if(s===p&&t===other)hits.push({at:g.time,n});return deal(s,t,n,o);};g.cast(p,'q',{x:45,y:7});run(g,1.4);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.33*i,.017);close(hits[i].n,150*1.03**i);}assert.ok(t.hp<100000);close(back.hp,100000);close(skillTargeting(g,p,'q').range,2.6);close(skillTargeting(g,p,'q').radius,1.54);
+test('Starbuck tactical reaches both widened sides, keeps forward range, and repeats every .3 seconds',()=>{
+ const {g,p,t}=quiet('starbuck');Object.assign(t,{x:42,y:8.4});const other=enemy(g,42,5.6),back=enemy(g,38,7);const hits=[],deal=g.deal.bind(g);g.deal=(s,t,n,o)=>{if(s===p&&t===other)hits.push({at:g.time,n});return deal(s,t,n,o);};g.cast(p,'q',{x:45,y:7});run(g,1.4);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.3*i,.017);close(hits[i].n,150*1.045**i);}assert.ok(t.hp<100000);close(back.hp,100000);close(skillTargeting(g,p,'q').range,2.782);close(skillTargeting(g,p,'q').radius,1.6478);
 });
 test('Ahab gains a third magazine, guard movement and defense, and a 6.5-range ultimate',()=>{
  const {g,p}=quiet('ahab');assert.equal(p.ammo,3);assert.equal(g.ammoCap(p),3);const speed=g.speed(p),armor=g.armor(p);g.cast(p,'q',p);close(g.speed(p)/speed,1.12);close((100+g.armor(p))/(100+armor),1.12);close(skillTargeting(g,p,'r').range,6.5);p.qCd=0;g.cast(p,'q',p);close(g.speed(p),speed);close(g.armor(p),armor);g.cast(p,'r',{x:60,y:7});close(p.x,46.5);close(p.y,7);

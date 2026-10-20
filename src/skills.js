@@ -1,3 +1,5 @@
+import * as V12 from './v12-champions.js';
+import { trapPoint } from './confinement.js';
 import * as V08 from './v08-champions.js';
 import * as V10 from './v10-champions.js';
 import * as V06 from './v06-champions.js';
@@ -32,7 +34,7 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set();
  return g.startMotion(e,d,len,{phaseEnemies:typeof damage==='function'||damage>0||Boolean(options.offensive),...options,onComplete:result=>options.onComplete?.({...result,hitIds}),onStep:(from,to)=>{
-  if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&segmentDistance(t,from,to)<t.radius+.6&&clearLine(e,t)){hitIds.add(t.id);g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t);}
+  if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&segmentDistance(t,from,to)<t.radius+(options.hitWidth??.6)&&clearLine(e,t)){hitIds.add(t.id);const actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual);}
   g.effects.push({type:'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});
  }});
 }
@@ -50,6 +52,7 @@ function guboTarget(g,e,p,allyOnly=false){
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','ezra','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(V12.recast(g,e,slot)||e.key==='don'&&slot==='q'&&e.state.donBarrage?.until>g.time)return true;
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='heathcliff'&&e.state.chargeAt!==undefined)||(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')))||slot==='r'&&e.key==='ezra'&&g.buff(e,'ezraUlt');
 }
@@ -59,6 +62,7 @@ export const coverMultiplier=New.coverMultiplier;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(!V12.validate(g,e,slot,p))return false;
  if(!V10.validate(g,e,slot,p))return false;
  if(!V08.validate(g,e,slot,p))return false;
  if(!New.validate(g,e,slot,p)||!V06.validate(g,e,slot,p))return false;
@@ -66,7 +70,6 @@ export function validateSkill(g,e,slot,p,options={}){
  if(e.key==='rudolph'&&slot==='r')return e.ammo>0&&terrainContains(p.x,p.y);
  if(e.key==='moses'&&slot==='q')return ['up','down','left','right'].includes(options.direction);
  if(e.key==='ezra'&&slot==='q')return ['left','right'].includes(options.direction)&&!g.buff(e,'ezraUlt');
- if(e.key==='don'&&slot==='r')return Boolean(targetAt(g,e,p,6.5));
  if(e.key==='alisa'&&slot==='r')return e.state.heat>=5;
  if(e.key==='gubo'&&slot==='r'){
   return Boolean(guboTarget(g,e,p,options.executeAlly));
@@ -84,7 +87,7 @@ export function switchWeapon(g,e,step,shield=false){
  if(shield)g.addShield(e,Math.min(360,120*(1+Math.floor((1-e.hp/e.maxHp)/.3)*.3)),`bag-${e.id}`);
 }
 export function beforeBasic(g,e,point,options={}){
- if(e.key==='starbuck'&&e.ammo>=g.ammoCap(e)&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
+ if(e.key==='starbuck'&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
  if(g.stat(e,'captured')&&(['don','rodya','myo'].includes(e.key)||e.key==='ezra'))return false;
  if(!V06.beforeBasic(g,e,point,options))return false;
  if(g.stat(e,'root')&&(['don','rodya'].includes(e.key)||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0))))return false;
@@ -93,10 +96,10 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
- if(V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
+ if(V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
- case 'don':dash(g,e,d,2*g.attackRange(e)/e.range,230);return true;
+ case 'don':dash(g,e,d,2*g.attackRange(e)/e.range,230,()=>{},{hitWidth:.72});return true;
  case 'ryoshu':cone(g.attackRange(e),1.7,220*(e.state.fullAmmo?1.35:1));return true;
  case 'honglu':area(g,e,e,g.attackRange(e),190);g.addBuff(e,'hongluStride',1);return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
@@ -142,18 +145,18 @@ function shockIshmael(g,e){
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
  const state=e.state;
- if(V10.cast(g,e,slot,p,d,options)||V08.cast(g,e,slot,p,d,options)||New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;
+ if(V12.cast(g,e,slot,p,d,options)||V10.cast(g,e,slot,p,d,options)||V08.cast(g,e,slot,p,d,options)||New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;
  switch(e.key){
  case 'don':
   if(slot==='q'){
-   state.donBarrage={d:{...d},until:g.time+2.5,next:g.time};g.addBuff(e,'donGuard',2.5);
-  }else{const t=targetAt(g,e,p,6.5);dash(g,e,d,Math.max(0,distance(e,t)-1),0,()=>{},{offensive:true,onComplete:()=>{if(t.alive&&distance(e,t)<2&&clearLine(e,t)){g.heal(e,e,g.deal(e,t,300)*.4,false);g.addBuff(e,'donLifesteal',5);}}});}
+   if(state.donBarrage?.until>g.time){const remaining=state.donBarrage.until-g.time;e.qCd=Math.max(0,e.qCd-state.donBarrage.cooldown*remaining/2.5);delete state.donBarrage;delete e.buffs.donGuard;}else{state.donBarrage={d:{...d},until:g.time+2.5,next:g.time,cooldown:e.qCd};g.addBuff(e,'donGuard',2.5);}
+  }else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
   return true;
  case 'ryoshu':
   if(slot==='q'){const len=4*(g.buff(e,'amplify')?1.2:1);e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,180,()=>{},{onComplete:()=>e.invulnerableUntil=0});}
   else{
-   const len=Math.min(7*(g.buff(e,'amplify')?1.2:1),distance(e,p)),dest={x:clamp(e.x+d.x*len,WORLD.x+.6,WORLD.x+WORLD.w-.6),y:clamp(e.y+d.y*len,WORLD.y+.6,WORLD.y+WORLD.h-.6)};
-   if(!blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
+   const len=Math.min(7*(g.buff(e,'amplify')?1.2:1),distance(e,p)),rawDest={x:clamp(e.x+d.x*len,WORLD.x+.6,WORLD.x+WORLD.w-.6),y:clamp(e.y+d.y*len,WORLD.y+.6,WORLD.y+WORLD.h-.6)};
+   const dest=trapPoint(g,e,rawDest);if(!blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
    for(let i=0;i<4;i++)g.schedule(e,i*.12,()=>area(g,e,e,2.6,140,t=>g.status(t,'armorDown',25,3,e)));
    e.ammo=ammoCap(g,e);
   }return true;
@@ -223,7 +226,8 @@ export function damageBonus(g,e,t){
  if(g.buff(e,'charge'))b*=1+.06*(e.state.chargeStacks||0);
  return b;
 }
-export function afterDamage(g,e,t,actual,proc=true,kind){
+export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
+ V12.afterDamage(g,e,t,actual,proc,kind,absorbed);
  New.afterDamage(g,e,t,actual,proc,kind);
  if(!proc)return;
  if(e.kind==='champion'){
@@ -244,6 +248,7 @@ export function gregorStack(g,e,n=1){
 }
 export function takedown(g,e,victim,direct){
  if(!e||e.kind!=='champion')return;
+ if(e.key==='starbuck'&&victim.kind==='neutral'&&direct)g.heal(e,e,150,false);
  V06.takedown(g,e,victim,direct);
  if(e.key==='rodya'&&victim.kind==='champion'){e.qCd=Math.max(0,e.qCd-4);e.rCd=Math.max(0,e.rCd-4);e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}
  if(e.key==='outis'&&direct)e.ammo=Math.min(ammoCap(g,e),e.ammo+(victim.kind==='champion'?1.5:.25));
@@ -269,7 +274,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
- const s=e.state;decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);
+ const s=e.state;decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);
  if(s.donBarrage){if(s.donBarrage.until<=g.time||g.stat(e,'stun')||g.stat(e,'silence')){delete s.donBarrage;delete e.buffs.donGuard;}else if(g.time+1e-8>=s.donBarrage.next){s.donBarrage.next+=.25;g.action(e,'skill',()=>g.cone(e,s.donBarrage.d,6,1.8,45));e.lastAttackAt=g.time;}}
  if(e.burn?.until>g.time&&e.burn.next<=g.time){e.burn.next+=.5;g.deal(e.burn.source,e,27.5);if(!e.alive)return;}
  if(e.key==='alisa'){

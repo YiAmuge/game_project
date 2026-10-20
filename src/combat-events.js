@@ -22,7 +22,7 @@ export function rewardKill(g,victim,killer){
  killer.lastChampionKill=g.time;
  const gold=COMBAT_RULES.killGold*factor+shutdown;
  g.award(killer,COMBAT_RULES.killXp,gold);
- for(const ally of assists){ally.assists++;g.award(ally,COMBAT_RULES.assistXp+(killer.key==='ahab'?80:0),(COMBAT_RULES.assistGold+(killer.key==='ahab'?50:0))*factor);}
+ for(const ally of assists){ally.assists++;g.award(ally,COMBAT_RULES.assistXp+(killer.key==='ahab'?80:0),(COMBAT_RULES.assistGold+(killer.key==='ahab'?50:0))*factor,{assist:true});}
  return {first,shutdown,assists,gold,count:killer.multiKillCount};
 }
 export function currentAnnouncement(g){

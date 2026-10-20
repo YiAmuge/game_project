@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.11.0')
+ expect(page.locator('.build-tag')).to_contain_text('0.12.0')
  def choose(name):
   if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
   if page.evaluate('__moba.mode')=='menu':page.click('#practice-open')
@@ -42,7 +42,7 @@ with sync_playwright() as pw:
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(150);box=page.locator('#battle-announcement').bounding_box();assert box['x']>=140 and box['x']+box['width']<=391;assert page.evaluate('document.body.scrollWidth<=innerWidth');page.screenshot(path=str(art/'v11-mobile-announcement.png'));page.set_viewport_size({'width':1440,'height':900})
  choose('스타벅');expect(page.locator('#battle-announcement')).to_be_hidden()
  page.evaluate('''() => {const g=__moba.game;Object.assign(__target,{x:42,y:8.4});window.__hits=[];const deal=g.deal.bind(g);g.deal=(s,t,n,o)=>{if(s===g.player&&t===__target)__hits.push(g.time);return deal(s,t,n,o);};}''');click(45,7,button='right')
- page.screenshot(path=str(art/'v11-starbuck-wide-stab.png'));page.wait_for_function('__hits.length===5',timeout=6000);hits=page.evaluate('__hits');assert all(abs(hits[i]-hits[i-1]-.33)<.04 for i in range(1,5))
+ page.screenshot(path=str(art/'v11-starbuck-wide-stab.png'));page.wait_for_function('__hits.length===5',timeout=6000);hits=page.evaluate('__hits');assert all(abs(hits[i]-hits[i-1]-.3)<.04 for i in range(1,5))
  page.evaluate('''() => {const g=__moba.game;Object.assign(__target,{x:41.4,y:7});g.player.attackCd=0;g.player.ammo=2;}''');click(41.4,7)
  assert abs(page.evaluate('__moba.game.player.motion.total')-2.875)<1e-5
  choose('에이해브');assert page.evaluate('__moba.game.player.ammo')==3
@@ -64,7 +64,7 @@ with sync_playwright() as pw:
  page.wait_for_function('__hohen.state.posthumous');assert page.evaluate('__moba.game.player.kills')==0
  page.wait_for_function('!__hohen.alive',timeout=5000);expect(page.locator('#blue-score')).to_have_text('1');assert page.evaluate('__hohen.deaths')==1
  page.click('#pause');page.click('#leave');page.click('#archive-open')
- for name,text in [('스타벅','0.33초'),('에이해브','6.5'),('퀴케그','무기한'),('이상','1.5%')]:
+ for name,text in [('스타벅','0.3초'),('에이해브','6.5'),('퀴케그','무기한'),('이상','1.5%')]:
   page.fill('#roster-search',name);page.click('#roster-list button');expect(page.locator('#roster-detail')).to_contain_text(text)
  page.click('[data-category=rules]');expect(page.locator('#codex-content')).to_contain_text('선취점');expect(page.locator('#codex-content')).to_contain_text('최대 +220')
- assert not errors,errors;b.close();print(json.dumps({'status':'passed','checks':['environmental attribution and first-blood payout','real LMB double kill and triple/all-kill banners','bounty scoreboard/shutdown reward','execution after ten seconds','tower/boss notifications','nonblocking responsive banner and pause','Starbuck widened .33s chain and 2.875 dash','Ahab ammo/guard/6.5 ultimate','infinite Queequeg link and CC sharing','Yi shield heal and depletion','nested mark damage keeps Hohenheim delayed death','codex rules and champion tooltips'],'page_errors':errors},ensure_ascii=False))
+ assert not errors,errors;b.close();print(json.dumps({'status':'passed','checks':['environmental attribution and first-blood payout','real LMB double kill and triple/all-kill banners','bounty scoreboard/shutdown reward','execution after ten seconds','tower/boss notifications','nonblocking responsive banner and pause','Starbuck widened .3s chain and 2.875 dash','Ahab ammo/guard/6.5 ultimate','infinite Queequeg link and CC sharing','Yi shield heal and depletion','nested mark damage keeps Hohenheim delayed death','codex rules and champion tooltips'],'page_errors':errors},ensure_ascii=False))

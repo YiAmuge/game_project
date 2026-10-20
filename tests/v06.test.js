@@ -11,7 +11,7 @@ function quiet(key='faust'){
  const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 test('twenty-four ordinary and two experimental champions retain finite stats and complete unique growth definitions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,25);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,27);
+ assert.equal(Object.keys(CHAMPIONS).length,27);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,29);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const g=new Game(key);assert.ok(g.player.maxHp>0);assert.ok(Number.isFinite(g.speed(g.player)));assert.ok(CHAMPIONS[key]?.growth||RUNTIME_CHAMPIONS[key].growth);}
 });
 test('new rear wings and two flank rooms are walkable and connected; void corners stay blocked',()=>{

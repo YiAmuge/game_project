@@ -14,7 +14,7 @@ function quiet(key='faust'){
 function ally(g,key='yi'){const a=g.makeChampion(key,0,5,'support');a.x=41;a.y=7;return a;}
 
 test('all ordinary and experimental champions have individual positive growth and defined attack animation',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,25);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,27);
+ assert.equal(Object.keys(CHAMPIONS).length,27);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,29);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
@@ -55,8 +55,8 @@ test('Heath ultimate radius preview matches damage, Ishmael pierces at range 16 
  const o=quiet('outis');o.g.cast(o.p,'r',o.t);run(o.g,.34);assert.ok(o.g.projectiles.length);assert.ok(o.g.projectiles[0].remaining>17);
 });
 test('targeting includes ground teleports, self effects and charge releases while dashes stay quick',()=>{
- for(const key of ['ryoshu','sinclair','nelly']){const {g,p}=quiet(key);assert.notEqual(skillTargeting(g,p,'r').kind,'quick');}
- for(const [key,slot] of [['sinclair','q'],['ryoshu','q'],['don','r'],['outis','r']]){const {g,p}=quiet(key);assert.equal(skillTargeting(g,p,slot).kind,'quick');}
+ for(const key of ['ryoshu','sinclair','nelly','don']){const {g,p}=quiet(key);assert.notEqual(skillTargeting(g,p,'r').kind,'quick');}
+ for(const [key,slot] of [['sinclair','q'],['ryoshu','q'],['outis','r']]){const {g,p}=quiet(key);assert.equal(skillTargeting(g,p,slot).kind,'quick');}
  const {g,p}=quiet('yi'),point=castPoint(p,{x:70,y:7},skillTargeting(g,p,'q'));close(distance(p,point),7);g.cast(p,'q',{x:70,y:7});close(g.zones[0].x,47);
 });
 test('champion death leaves a corpse at the death location before the living unit respawns elsewhere',()=>{

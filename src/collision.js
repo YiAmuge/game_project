@@ -1,3 +1,4 @@
+import { withinTrap } from './confinement.js';
 import { blocked,clearLine,distance,segmentDistance } from './geometry.js';
 
 const structure=e=>['tower','core'].includes(e.kind);
@@ -9,11 +10,11 @@ export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||false}={})
  return true;
 }
 export function canOccupy(g,e,p,options={}){
- return !blocked(p.x,p.y,e.radius)&&g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6);
+ return withinTrap(g,e,p)&&!blocked(p.x,p.y,e.radius)&&g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6);
 }
 export function moveBody(g,e,dx,dy,options={}){
  const n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.12));
- const safe=p=>!blocked(p.x,p.y,e.radius)&&g.units.every(t=>{
+ const safe=p=>withinTrap(g,e,p)&&!blocked(p.x,p.y,e.radius)&&g.units.every(t=>{
   if(!solid(g,e,t,options))return true;
   const before=distance(e,t),after=distance(p,t),gap=e.radius+t.radius+.006;
   return after>=gap-1e-6||before<gap&&after>before+1e-7;

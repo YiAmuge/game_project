@@ -1,9 +1,10 @@
 import { distance, direction, clearLine } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 
+export function endurance(e){return Math.max(0,Math.min(5,Math.floor((1-e.hp/e.maxHp+1e-8)/.1)));}
 export function init(g,e){if(e.key==='queequeg')e.state.endurance=0;}
 export function movementSkill(e,slot){
- const moves={don:['r'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],starbuck:['r']};
+ const moves={don:['r'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],starbuck:['r'],kim:['q']};
  return moves[e.key]?.includes(slot);
 }
 export function validate(g,e,slot,p){
@@ -25,7 +26,7 @@ export function basic(g,e,p,d){
   area(g,e,point,2.2,180,t=>{if(t.kind==='champion')g.addBuff(e,'martonStride',2.5);});g.effects.push({type:'burst',...point,r:2.2,theme:e.key,life:.4,maxLife:.4});return true;
  }
  if(e.key==='queequeg'){
-  for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>g.cone(e,d,g.attackRange(e),.8,28,t=>{
+  for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>g.cone(e,d,g.attackRange(e),1.36,28,t=>{
    if(t.kind==='champion'&&t.alive){e.state.captureHits??={};e.state.captureHits[t.id]=(e.state.captureHits[t.id]||0)+1;if(e.state.captureHits[t.id]%4===0)g.status(t,'captured',1,1.15,e);}
   }));return true;
  }
@@ -65,7 +66,7 @@ export function controlTaunt(g,e,dt){
  return true;
 }
 function detach(g,e){const old=g.units.find(t=>t.id===e.state.tether?.target);if(old?.state.tetherSource===e.id){delete old.buffs.tetherArmor;if(!old.state.tether)delete old.buffs.tetherGuard;delete old.buffs.tetherResistance;delete old.state.tetherResistance;delete old.state.tetherSource;}delete e.state.tether;if(!e.state.tetherSource)delete e.buffs.tetherGuard;}
-export function crowdControlled(g,e){return ['stun','root','silence','disarm','slow','taunt','captured'].some(key=>g.stat(e,key)>0)||Boolean(e.motion?.forced);}
+export function crowdControlled(g,e){return g.stat(e,'netCapture')||['stun','root','silence','disarm','slow','taunt','captured'].some(key=>g.stat(e,key)>0)||Boolean(e.motion?.forced);}
 export function transfer(g,source,target,amount,kind){
  const owner=g.units.find(e=>e.id===target.state?.tetherSource&&e.alive&&e.state.tether?.target===target.id&&e.state.tether.until>g.time);
  if(!owner)return amount;
@@ -76,7 +77,7 @@ export function afterDamage(g,source,target,actual){
  if(actual<=0)return;
  if(source.key==='marton'&&source.alive)g.heal(source,source,actual*.1,false);
  if(target.key==='marton'&&target.state.fairy)target.state.fairy.received+=actual;
- if(target.key==='queequeg'){target.state.lostHpFraction=(target.state.lostHpFraction||0)+actual/target.maxHp;target.state.endurance=Math.min(5,Math.floor((target.state.lostHpFraction+1e-8)/.1));}
+ if(target.key==='queequeg'){target.state.endurance=endurance(target);}
 }
 export function interceptDeath(g,e,killer){
  if(e.key!=='hohenheim'||e.state.posthumous)return false;

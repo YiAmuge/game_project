@@ -113,15 +113,15 @@ test('consumables have no live module, champion resource, purchase, use or codex
  const {g,p}=quiet();assert.equal(existsSync(new URL('../src/items.js',import.meta.url)),false);assert.equal(g.usePotion,undefined);assert.equal(g.buyConsumable,undefined);assert.equal(g.sellConsumable,undefined);assert.equal('potion' in p,false);assert.equal('CONSUMABLES' in Catalog,false);assert.equal(g.buy(p,'potion'),false);
 });
 test('Starbuck joins ordinary drafts with requested grades, harpoon damage and jungle rewards',()=>{
- const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,25);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,110);g.kill(n,p);close(p.xp,56.25*1.1);
+ const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,27);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,56.25*1.1);
 });
-test('Starbuck full-ammo basic stabs once then advances 2.875, while a partial magazine stays still',()=>{
- const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,190*.9);close(p.motion.total,2.875);run(g,.4);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.equal(p.motion,undefined);close(p.x,x);
+test('Starbuck every basic stabs once then advances 2.875 with either full or partial ammo',()=>{
+ const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,218.5*.9);close(p.motion.total,2.875);run(g,.4);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.ok(p.motion);close(p.motion.total,2.875);
 });
-test('Starbuck tactical hits five times at .33 intervals with increasing damage and stops after a miss',()=>{
- const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p)hits.push({at:g.time,n});return deal(e,t,n,o);};g.cast(p,'q',t);run(g,1.9);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.33*i,.02);close(hits[i].n,150*1.03**i);}close(g.stat(t,'slow'),.2);p.qCd=0;t.y=14;hits.length=0;g.cast(p,'q',{x:45,y:7});run(g,2);assert.equal(hits.length,0);
+test('Starbuck tactical hits five times at .3 intervals with increasing damage and stops after a miss',()=>{
+ const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p)hits.push({at:g.time,n});return deal(e,t,n,o);};g.cast(p,'q',t);run(g,1.9);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.3*i,.02);close(hits[i].n,150*1.045**i);}close(g.stat(t,'slow'),.2);p.qCd=0;t.y=14;hits.length=0;g.cast(p,'q',{x:45,y:7});run(g,2);assert.equal(hits.length,0);
 });
-test('Starbuck ultimate disappears for .7 seconds, teleports and resets tactical only on damage',()=>{
+test('Starbuck ultimate disappears for .7 seconds, teleports and resets tactical on either hit or miss',()=>{
  const {g,p,t}=quiet('starbuck');t.x=46;p.qCd=5;assert.ok(g.cast(p,'r',{x:46,y:7}));assert.ok(g.hidden(p));const hp=t.hp;run(g,.65);close(p.x,40);close(t.hp,hp);run(g,.1);assert.equal(g.hidden(p),false);assert.ok(p.x>44&&t.hp<hp);close(p.qCd,0);assert.ok(distance(p,t)>=p.radius+t.radius);
- const f=quiet('starbuck');f.t.y=14;f.p.qCd=5;f.g.cast(f.p,'r',{x:46,y:7});run(f.g,.8);assert.ok(f.p.qCd>4);
+ const f=quiet('starbuck');f.t.y=14;f.p.qCd=5;f.g.cast(f.p,'r',{x:46,y:7});run(f.g,.8);close(f.p.qCd,0);
 });

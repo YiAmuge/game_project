@@ -8,7 +8,7 @@ import { targetingPreview } from './targeting.js';
 import { championHud, championEffects, chargePreview } from './overlays.js';
 
 export class Renderer {
-  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.scale=1;this.ox=0;this.oy=0;this.resize();}
+  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.scale=1;this.ox=0;this.oy=0;this.resize();}
   resize() {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
@@ -126,7 +126,7 @@ export class Renderer {
 
     if(e.player&&inBush)this.text(e.revealedUntil>game.time?'노출 중':'수풀 은닉',e.x,e.y+.8,'#a9d890',.32);
   }
-  atlasFor(key){return FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
+  atlasFor(key){return FRAMES[key]?.sheet===6?this.atlasV12:FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
   corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.key],atlas=this.atlasFor(e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=1.7,w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
   draw(game,playing) {
     this.follow(game,playing);
@@ -150,13 +150,16 @@ export class Renderer {
       if(p.ultimate&&p.theme==='gubo'){const d={x:p.dx||Math.cos(p.source.facing),y:p.dy||Math.sin(p.source.facing)};this.line([{x:p.x-d.x*1.5,y:p.y-d.y*1.5},{x:p.x,y:p.y}],'#ffc181',.19);this.shard(p.x,p.y,.3,Math.atan2(d.y,d.x),'#fff0b2');}
       else if(p.theme==='boss'){c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(p.dy,p.dx));for(let i=0;i<3;i++){c.beginPath();c.arc(-i*.22,0,.55+i*.12,-1.05,1.05);c.strokeStyle=i?'#b67edc88':'#f0c7ff';c.lineWidth=.12-i*.025;c.stroke();}c.restore();}
       else if(p.theme==='ishmael'){c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(p.dy,p.dx));c.scale(1.3,1.3);this.line([{x:-1.4,y:0},{x:.25,y:0}],'#a6d9e899',.13);this.polygon([[.65,0],[.08,-.38],[.18,-.1],[-.12,-.21],[.05,0],[-.12,.21],[.18,.1],[.08,.38]],'#d1edf0','#6d9dad');c.restore();}
-      else if(p.theme==='yi')this.shard(p.x,p.y-.45,.27,Math.atan2(p.dy,p.dx),'#d5e9ef');
+      else if(p.theme==='kim'&&p.swordWave){this.shard(p.x,p.y,.85,Math.atan2(p.dy,p.dx),'#8bcfff');this.line([{x:p.x-p.dx*.8,y:p.y-p.dy*.8},{x:p.x,y:p.y}],'#498eff99',.25);}
+      else if(p.theme==='ppui'){this.line([{x:p.x-p.dx*.5,y:p.y-p.dy*.5},{x:p.x,y:p.y}],'#a93456',.13);this.shard(p.x,p.y,.25,Math.atan2(p.dy,p.dx),'#ffd6dc');}
+      else if(p.theme==='yi')this.shard(p.x,p.y-.45,.27*(p.visualScale||1),Math.atan2(p.dy,p.dx),'#d5e9ef');
       else if(p.theme==='faust'){c.save();c.translate(p.x,p.y-.45);c.rotate(Math.atan2(p.dy,p.dx));this.line([{x:-.85,y:0},{x:.3,y:0}],'#a7ebec77',.22);c.beginPath();c.arc(-.5,0,.65,-1,1);c.strokeStyle='#d3ffff';c.lineWidth=.12;c.stroke();c.restore();}
       else {const theme=THEMES[p.theme];this.line([{x:p.x-p.dx*.7,y:p.y-p.dy*.7},{x:p.x,y:p.y}],theme?.light||p.color,.12);if(p.theme==='rodya')this.shard(p.x,p.y,.32*(p.visualScale||1),Math.atan2(p.dy,p.dx),theme.light);else this.circle(p.x,p.y,.14,theme?.light||'#edf0cf');}
     }
     for(const fx of game.effects) {
       c.save();c.globalAlpha=Math.max(0,fx.life/fx.maxLife);
       if(fx.type==='line'){this.line([{x:fx.x,y:fx.y},fx.to],fx.color,.1);if(fx.theme==='rudolph'){this.line([{x:fx.x,y:fx.y-.45},fx.to],'#ffb65f',.18);for(let i=1;i<5;i++)this.shard(fx.x+(fx.to.x-fx.x)*i/5,fx.y+(fx.to.y-fx.y)*i/5,.13,game.time*8+i,'#ffd09b');}if(fx.theme==='sinclair')this.line([{x:fx.x,y:fx.y-.2},{x:fx.to.x,y:fx.to.y-.2}],'#f5e997',.08);}
+      if(fx.type==='nailVolley'){const travel=(1-fx.life/fx.maxLife)*fx.r;for(let i=0;i<11;i++){const a=fx.angle+(i-5)*.135,x=fx.x+Math.cos(a)*travel,y=fx.y+Math.sin(a)*travel;this.line([{x:x-Math.cos(a)*.45,y:y-Math.sin(a)*.45},{x,y}],'#a43251',.11);this.shard(x,y,.18,a,'#ffd3dc');}}
       if(fx.type==='ring'){this.circle(fx.x,fx.y,fx.r*(1-fx.life/fx.maxLife*.3),`${fx.color}11`,fx.color,.1);}
       if(fx.type==='number')this.text(fx.text,fx.x,fx.y-(1-fx.life/fx.maxLife),fx.color,.48);
       if(fx.type==='slash'){
@@ -197,6 +200,7 @@ export class Renderer {
     for(let i=0;i<n;i++){c.beginPath();c.ellipse(i*len/n,Math.sin(i*1.4)*.035,.15,i%2?.055:.09,0,0,Math.PI*2);c.stroke();}c.restore();
   }
   weapon(e,game){
+    if(e.key==='kim'&&e.state.swordGrab?.until>game.time)return;
     const c=this.ctx,style=game.attackStyle(e),swing=(game.time-(e.attackAt??-10))/.3,attacking=swing>=0&&swing<1,slash=['slash','sweep'].includes(style),side=(e.attackSerial||0)%2?1:-1;
     let a=attacking?(e.attackFacing??e.facing):e.facing??(e.team?Math.PI:0);if(slash&&attacking)a+=(swing-.5)*2.25*side;if(e.state.donBarrage?.until>game.time)a=Math.atan2(e.state.donBarrage.d.y,e.state.donBarrage.d.x);
     const lunge=!slash&&attacking?Math.sin(swing*Math.PI)*.38:0;
@@ -223,9 +227,10 @@ export class Renderer {
         this.line([{x:-.45,y:0},{x:1.7,y:0}],'#3b2e29',.16);this.line([{x:-.4,y:-.03},{x:1.7,y:-.03}],theme.accent,.065);
         if(e.key==='don')this.polygon([[1.25,-.16],[2.15,0],[1.25,.16]],'#e1c985','#655e50');
         else this.polygon([[1.1,-.12],[1.24,-.55],[1.75,-.5],[1.48,-.23],[1.95,0],[1.1,.12]],'#bbdfcb',theme.dark);
-      }else if(['ryoshu','outis'].includes(e.key)){
+      }else if(['ryoshu','outis','kim'].includes(e.key)){
         this.line([{x:-.2,y:0},{x:1.7,y:0}],e.key==='ryoshu'?'#3a2027':'#c2d3c0',.13);this.line([{x:.3,y:-.22},{x:.3,y:.22}],theme.accent,.08);this.line([{x:.45,y:-.055},{x:1.7,y:-.03}],theme.light,.04);
         if(e.key==='outis'){this.polygon([[-.1,-.18],[.8,-.18],[.95,-.03],[.48,.1],[.24,.36],[.02,.3],[.1,.05]],'#3c4b45',theme.accent);this.line([{x:.7,y:-.12},{x:1.1,y:-.12}],'#c8d4bc',.12);}
+      }else if(e.key==='ppui'){this.line([{x:.1,y:0},{x:1.05,y:0}],'#9f304d',.13);this.polygon([[.95,-.11],[1.5,0],[.95,.11]],'#f7bec5','#bc3c59');this.line([{x:.15,y:-.25},{x:.15,y:.25}],'#d05671',.11);
       }else if(e.key==='heathcliff'){
         this.polygon([[-.2,-.07],[.3,-.09],[1.3,-.22],[1.6,-.2],[1.7,0],[1.6,.2],[1.3,.22],[.3,.09],[-.2,.07]],'#7d5b48','#bd9a72');
       }else if(e.key==='rodya'){

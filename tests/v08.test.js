@@ -13,9 +13,9 @@ function quiet(key='faust'){
  const p=g.player,t=g.champions(1).find(e=>e.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 function ally(g,key='yi'){const e=g.makeChampion(key,0,5);Object.assign(e,{x:42,y:9});return e;}
-test('25 ordinary champions include all four additions; XP accrues at exactly one per second even while dead',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,25);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,27);
- for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,1);g.kill(p,t);run(g,1);close(p.xp,2);}
+test('27 ordinary champions include all four additions; XP accrues at exactly three per second even while dead',()=>{
+ assert.equal(Object.keys(CHAMPIONS).length,27);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,29);
+ for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,3);g.kill(p,t);run(g,1);close(p.xp,6);}
 });
 test('four ordinary creeps or two buff creeps now give 225 XP; building HP stays reduced',()=>{
  for(const [camp,n]of [['side',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++)g.kill(g.makeNeutral(42,7,camp),p);assert.equal(p.level,1);close(p.xp,225);}const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===6460));assert.equal(g.units.find(t=>t.kind==='core').maxHp,10200);
@@ -48,8 +48,8 @@ test('Marton lifesteals, drains without healing theft and leaves a destructible 
 test('Queequeg spends one of five ammo on six attacks and refreshes capture every fourth hit',()=>{
  const {g,p,t}=quiet('queequeg');g.attack(p,t);assert.equal(p.ammo,4);run(g,.5);assert.equal(p.state.captureHits[t.id],6);assert.ok(g.stat(t,'captured'));t.qCd=0;t.key='sinclair';assert.equal(g.cast(t,'q',p),false);const old=t.x;g.moveToward(t,{x:t.x+1,y:t.y},.1);assert.ok(t.x>old);p.attackCd=0;g.attack(p,t);run(g,.5);assert.equal(p.state.captureHits[t.id],12);assert.ok(t.status.captured.until>g.time+.8);
 });
-test('Queequeg damage stacks survive healing; tether transfers thirty percent and breaks after sustained separation',()=>{
- const {g,p,t}=quiet('queequeg'),a=ally(g);const hp=p.hp;g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.heal(null,p,1000,false);assert.equal(p.state.endurance,2);g.cast(p,'q',a);close(g.armor(a),43);const ahp=a.hp,php=p.hp;g.deal(t,a,100,{fixed:true});close(ahp-a.hp,70);close(php-p.hp,30);a.x=53;run(g,1.7);assert.equal(p.state.tether,undefined);close(g.armor(a),0);assert.ok(p.hp<=hp);
+test('Queequeg damage stacks update with healing; tether transfers thirty percent and breaks after sustained separation',()=>{
+ const {g,p,t}=quiet('queequeg'),a=ally(g);const hp=p.hp;g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.heal(null,p,1000,false);assert.equal(p.state.endurance,0);g.cast(p,'q',a);close(g.armor(a),43);const ahp=a.hp,php=p.hp;g.deal(t,a,100,{fixed:true});close(ahp-a.hp,70);close(php-p.hp,30);a.x=53;run(g,1.7);assert.equal(p.state.tether,undefined);close(g.armor(a),0);assert.ok(p.hp<=hp);
 });
 test('Queequeg ultimate cannot fall below one HP, including fixed damage, then heals missing health',()=>{
  const {g,p,t}=quiet('queequeg');g.cast(p,'r',p);g.deal(t,p,999999,{fixed:true});close(p.hp,1);p.lastDamageAt=g.time+4;run(g,4.05);assert.ok(p.alive&&p.hp>1);assert.equal(g.buff(p,'queequegUlt'),false);g.deal(t,p,999999,{fixed:true});assert.equal(p.alive,false);
@@ -66,6 +66,6 @@ test('collision separates coincident champions and keeps them outside structures
 test('Hohenheim bots still fire in the stationary posthumous state and recall is unavailable',()=>{
  const {g,p,t}=quiet('hohenheim');p.player=false;g.deal(t,p,999999,{fixed:true});assert.equal(g.recall(p),false);const x=p.x,hp=t.hp;run(g,.5);close(p.x,x);assert.ok(t.hp<hp);assert.equal(p.naturalHealing,false);
 });
-test('Queequeg retains earned endurance stacks when maximum health increases with level',()=>{
- const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.award(p,6900,0);g.deal(t,p,1,{fixed:true});assert.equal(p.state.endurance,2);
+test('Queequeg recomputes endurance stacks when maximum health increases with level',()=>{
+ const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.award(p,6900,0);g.deal(t,p,1,{fixed:true});assert.equal(p.state.endurance,1);
 });

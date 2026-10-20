@@ -44,8 +44,8 @@ test('Nelly mark does fixed seven percent max HP and basic and ultimate triggers
 test('Nelly knives pierce multiple enemies and refill no more than once per throw; R restores two ammo',()=>{
  const {g,p,t}=quiet('nelly'),b=enemy(g,46);t.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};b.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};g.cast(p,'q',t);run(g,.5);assert.ok(t.hp<10000&&b.hp<10000);assert.ok(p.state.knifeReady>2.5&&p.state.knifeReady<2.7);p.ammo=0;t.x=43;g.cast(p,'r',t);assert.equal(p.ammo,2);
 });
-test('Myo kill refill, one-ammo Q and six-second expanded magazine clamp correctly at expiry',()=>{
- const {g,p,t}=quiet('myo');assert.equal(g.ammoCap(p),4);p.ammo=0;g.kill(t,p);assert.equal(p.ammo,2);g.cast(p,'q',{x:45,y:7});assert.equal(p.ammo,1);g.cast(p,'r',p);assert.equal(p.ammo,2);assert.equal(g.ammoCap(p),6);close(p.buffs.rabbitFrenzy,6);p.ammo=6;g.time=5.99;g.step(.02);assert.equal(g.ammoCap(p),4);assert.equal(p.ammo,4);
+test('Myo kill refill, one-ammo Q and 4.5-second expanded magazine clamp correctly at expiry',()=>{
+ const {g,p,t}=quiet('myo');assert.equal(g.ammoCap(p),4);p.ammo=0;g.kill(t,p);assert.equal(p.ammo,2);g.cast(p,'q',{x:45,y:7});assert.equal(p.ammo,1);g.cast(p,'r',p);assert.equal(p.ammo,2);assert.equal(g.ammoCap(p),6);close(p.buffs.rabbitFrenzy,4.5);p.ammo=6;g.time=5.99;g.step(.02);assert.equal(g.ammoCap(p),4);assert.equal(p.ammo,4);
 });
 test('Rudolph consumes ten SP per second and caps the new damage debuff at three stacks',()=>{
  const {g,p,t}=quiet('rudolph');g.attack(p,t);close(p.ammo,100-10/3);const ammo=t.ammo;t.qCd=4;t.rCd=10;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);close(g.stat(t,'slow'),0);assert.equal(t.ammo,ammo);close(t.qCd,4);close(t.rCd,10);
