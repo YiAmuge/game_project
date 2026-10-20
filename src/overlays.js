@@ -6,9 +6,9 @@ export function stackInfo(e,g){
  if(e.key==='dongrang')return {label:'양분 '+Math.floor(e.totalHealingReceived||0),textOnly:true,color:'#d8d48b'};
  if(e.key==='queequeg')return {label:'헤집어진 문신',value:e.state.endurance||0,max:5,color:'#a0dfd9',shape:'claw'};
  if(e.key==='hohenheim'&&e.state.posthumous)return {label:'사후 '+Math.max(0,e.state.posthumous.until-g.time).toFixed(1)+'s',textOnly:true,color:'#9ff6f0'};
- if(e.key==='dongbaek')return {label:'추가 꽃잎',value:3-(e.state.extraPetals||0),max:3,color:'#efda98',shape:'leaf'};
+ if(e.key==='dongbaek')return {label:'추가 꽃잎'+(Number.isFinite(e.state.petalReady)?' '+Math.max(0,e.state.petalReady-g.time).toFixed(1)+'s':''),value:e.state.petals??3,max:3,color:'#efda98',shape:'leaf'};
  if(e.key==='myo'&&g.buff(e,'rabbitHunt'))return {label:'토끼 시술',value:e.state.rabbitStacks||0,max:2,color:'#c7a6e7',shape:'mirror'};
- if(e.key==='nelly')return {label:'비도',value:e.state.knifeCharges??3,max:3,color:'#d8e0ed',shape:'mirror'};
+ if(e.key==='nelly')return {label:'비도',value:e.state.knifeCharges??2,max:2,color:'#d8e0ed',shape:'mirror'};
  if(e.key==='ahab'&&e.state.order)return {label:e.state.order==='guard'?'방어 명령':'엄호 명령',value:2,max:2,color:'#d9c587',shape:'mirror'};
  const gaze=Object.values(e.state.gaze||{}).find(m=>m.until>g.time&&m.n>0);if(gaze)return {label:'시선',value:gaze.n,max:5,color:'#efbdb9',shape:'mirror'};
  if(e.key==='sinclair')return {label:g.buff(e,'marks')?'표지 발동':'어느 표지',value:e.marks,max:3,color:'#eddb83',shape:'leaf'};
@@ -73,7 +73,7 @@ export function championEffects(r,e,g){
   const y=e.y-.6,progress=1-(a.state.guboAim.until-g.time)/1.2;r.circle(e.x,y,1.2-progress*.4,null,'#ffb26c',.09);r.line([{x:a.x,y:a.y-.45},{x:e.x,y}],'#ed886288',.055,[.15,.18]);r.text('조준',e.x,e.y-5.8,'#ffb26c',.25);
  }
  const mental=Object.values(e.state.mentalWhip||{}).sort((a,b)=>b.stage-a.stage).find(m=>m.stage>0);
- if(mental){const y=e.y-(villain?5.4:4.45);r.text(`정신채찍 피해 +${mental.stage*10}%`,e.x,y-.35,'#ffb46a',.24);for(let i=0;i<3;i++)r.circle(e.x+(i-1)*.3,y,.09,i<mental.stage?'#ffac50':'#553826','#ffbe6b',.025);}
+ if(mental){const y=e.y-(villain?5.4:4.45);r.text(`정신채찍 +${mental.stage*10}% · ${Math.max(0,(mental.decayAt??mental.at+2)-g.time).toFixed(1)}s`,e.x,y-.35,'#ffb46a',.24);for(let i=0;i<3;i++)r.circle(e.x+(i-1)*.3,y,.09,i<mental.stage?'#ffac50':'#553826','#ffbe6b',.025);}
  if(g.powerWeak(e)&&Object.keys(e.state.ishmaelWeak||{}).length)r.text(`전투력 −${Math.round(g.powerWeak(e)*100)}%`,e.x,e.y+1.05,'#a6d8e5',.23);
  if(e.recall){
   const progress=Math.min(1,(g.time-e.recall.startedAt)/RULES.recallTime);
@@ -114,6 +114,9 @@ export function championEffects(r,e,g){
  if(g.stat(e,'captured')){r.circle(e.x,e.y,.85,null,'#81c6c9',.065);for(let i=0;i<3;i++)r.line([{x:e.x-.65+i*.65,y:e.y+.4},{x:e.x-.65+i*.65,y:e.y-1.8}],'#78a6a799',.06);r.text('포획',e.x,e.y-4.5,'#b5e9e5',.27);}
  if(e.state.tether){const t=g.units.find(t=>t.id===e.state.tether.target&&t.alive);if(t)r.chain({x:e.x,y:e.y-.5},{x:t.x,y:t.y-.5},'#afd8cd');}
  if(e.state.posthumous){r.circle(e.x,e.y,1.2,'#91f4e922','#a5fff0',.09);for(let i=0;i<3;i++)r.shard(e.x+Math.sin(g.time*8+i)*.6,e.y-1-i*.5,.17,g.time,'#acffec');}
+ if(e.key==='myo'&&g.buff(e,'rabbitFrenzy')&&e.motion?.actionKind==='basic')r.circle(e.x,e.y-.5,1.15,'#bba1ef22','#e7d4ffcc',.1);
+ if(g.buff(e,'alisaReload')){r.circle(e.x,e.y,1.05,'#ff8a4318','#ffb36d99',.07);r.text(`홍염살 장전 ${(e.buffs.alisaReload-g.time).toFixed(1)}s`,e.x,e.y-4.5,'#ffbd84',.26);}
+ if(e.state.detonatesAt>g.time){r.circle(e.x,e.y,4,'#ff8b3816','#ffbc8077',.06);r.text(`자폭 ${(e.state.detonatesAt-g.time).toFixed(1)}s`,e.x,e.y-5,'#ffaf6d',.38);}
  if(g.buff(e,'martonDrain'))r.circle(e.x,e.y,3,'#bdd78514','#b9cf8177',.06);
  if(g.stat(e,'silence')){r.circle(e.x+.95,e.y-3.15,.24,'#19232c','#cdbde2',.045);r.line([{x:e.x+.8,y:e.y-3.3},{x:e.x+1.1,y:e.y-3}],'#e3c9ef',.055);}
  if(g.stat(e,'slow'))for(let i=0;i<3;i++)r.line([{x:e.x-.65+i*.55,y:e.y+.25},{x:e.x-.8+i*.55,y:e.y+.8}],'#9bd7e988',.065);

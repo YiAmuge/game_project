@@ -1,6 +1,6 @@
 {
   "name": "city-border-moba",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "description": "Document-driven, offline 4v4 MOBA fan-game prototype",
@@ -9,7 +9,7 @@
     "start": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.js",
-    "check": "node --check src/v08-champions.js && node --check src/items.js && node --check src/collision.js && node --check src/v06-champions.js && node --check src/creep-patterns.js && node --check src/augments.js && node --check src/new-champions.js && node --check src/new-data.js && node --check src/targeting.js && node --check src/overlays.js && node --check src/game.js && node --check src/skills.js && node --check src/data.js && node --check src/extra-data.js && node --check src/catalog.js && node --check src/main.js && node --check src/render.js && node --check src/art.js && node --check src/camera.js && node --check scripts/serve.mjs && node --check scripts/build.mjs && node --check scripts/codespaces-start.mjs"
+    "check": "node --check src/boss-patterns.js && node --check src/bot-ai.js && node --check src/navigation.js && node --check src/v08-champions.js && node --check src/items.js && node --check src/collision.js && node --check src/v06-champions.js && node --check src/creep-patterns.js && node --check src/augments.js && node --check src/new-champions.js && node --check src/new-data.js && node --check src/targeting.js && node --check src/overlays.js && node --check src/game.js && node --check src/skills.js && node --check src/data.js && node --check src/extra-data.js && node --check src/catalog.js && node --check src/main.js && node --check src/render.js && node --check src/art.js && node --check src/camera.js && node --check scripts/serve.mjs && node --check scripts/build.mjs && node --check scripts/codespaces-start.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -7,7 +7,7 @@ import { ultGrowth } from '../src/v06-champions.js';
 import { skillTargeting } from '../src/targeting.js';
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.ceil(s*60);i++)g.step(1/60);};
-function quiet(key){const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};const p=g.player,t=g.champions(1).find(c=>c.key==='faust');Object.assign(p,{x:40,y:7});Object.assign(t,{x:44,y:7,hp:10000,maxHp:10000});g.units=[p,t];g.minionQueue=[];return {g,p,t};}
+function quiet(key){const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:44,y:7,hp:10000,maxHp:10000});g.units=[p,t];g.minionQueue=[];return {g,p,t};}
 function enemy(g,x=44,y=7){const t=g.makeChampion('faust',1,8);Object.assign(t,{x,y,hp:10000,maxHp:10000});return t;}
 
 test('Don widened barrage hits a target outside the old sector and keeps the same forward range',()=>{
@@ -38,8 +38,8 @@ test('Gahwan converts gaze at five and ultimate adds precisely one stack per hit
 test('Gahwan close knockback cooldown is independent per champion and does not remove close extra damage',()=>{
  const {g,p,t}=quiet('gahwan'),b=enemy(g,42,7.4);t.x=42;g.attack(p,t);close(t.motion.total,2.5);close(b.motion.total,2.5);delete t.motion;delete b.motion;p.attackCd=0;const hp=t.hp;g.attack(p,t);assert.equal(t.motion,undefined);assert.ok(t.hp<hp);g.time=2.01;p.attackCd=0;p.ammo=1;g.attack(p,t);close(t.motion.total,2.5);
 });
-test('Nelly mark does fixed fifteen percent max HP and basic and ultimate triggers both refund Q charge time',()=>{
- for(const ult of [false,true]){const {g,p,t}=quiet('nelly');t.x=41;p.state.knifeCharges=0;p.state.knifeReady=10;p.qCd=10;g.attack(p,t);const hp=t.hp;if(ult)g.cast(p,'r',t);else{p.attackCd=0;g.attack(p,t);}assert.ok(hp-t.hp>=1500);close(p.state.knifeReady,5);}
+test('Nelly mark does fixed seven percent max HP and basic and ultimate triggers both refund Q charge time',()=>{
+ for(const ult of [false,true]){const {g,p,t}=quiet('nelly');t.x=41;p.state.knifeCharges=0;p.state.knifeReady=10;p.qCd=10;g.attack(p,t);const hp=t.hp;if(ult)g.cast(p,'r',t);else{p.attackCd=0;g.attack(p,t);}assert.ok(hp-t.hp>=700);close(p.state.knifeReady,5);}
 });
 test('Nelly knives pierce multiple enemies and refill no more than once per throw; R restores two ammo',()=>{
  const {g,p,t}=quiet('nelly'),b=enemy(g,46);t.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};b.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};g.cast(p,'q',t);run(g,.5);assert.ok(t.hp<10000&&b.hp<10000);assert.ok(p.state.knifeReady>2.5&&p.state.knifeReady<2.7);p.ammo=0;t.x=43;g.cast(p,'r',t);assert.equal(p.ammo,2);
@@ -87,7 +87,7 @@ test('Rodya three-head jackpot applies tails benefits too and completely reloads
  const {g,p}=quiet('rodya');g.random=()=>.1;p.ammo=0;p.rCd=30;g.cast(p,'q',p);assert.ok(p.state.jackpot);assert.equal(p.state.coinHeads,3);assert.equal(p.state.coinTails,3);assert.equal(p.ammo,g.ammoCap(p));assert.ok(g.buff(p,'coinSpeed'));close(p.rCd,24);close(p.qCd,6);
 });
 test('Rodya ultimate creates ice on a miss at max range; its dot and reload debuff apply only to enemy champions',()=>{
- const {g,p,t}=quiet('rodya');t.y=15;g.cast(p,'r',{x:50,y:7});run(g,1);assert.equal(g.zones.length,1);const z=g.zones[0];close(z.x,48);Object.assign(t,{x:48,y:7});const n=g.entity({kind:'neutral',team:2,x:48,y:7,maxHp:1000});const hp=t.hp;z.nextTick=g.time;g.updateDelayed(0);assert.ok(t.hp<hp);close(g.stat(t,'reloadWeak'),.2);close(n.hp,1000);const after=t.hp;g.time+=.5;g.updateDelayed(0);close(after-t.hp,12.5*RULES.power[CHAMPIONS.rodya.power]*.9);g.zones=[];g.time+=.8;close(g.stat(t,'reloadWeak'),0);
+ const {g,p,t}=quiet('rodya');t.y=15;g.cast(p,'r',{x:50,y:7});run(g,1);assert.equal(g.zones.length,1);const z=g.zones[0];close(z.x,48);Object.assign(t,{x:48,y:7});const n=g.entity({kind:'neutral',team:2,x:48,y:7,maxHp:1000});const hp=t.hp;z.nextTick=g.time;g.updateDelayed(0);assert.ok(t.hp<hp);close(g.stat(t,'reloadWeak'),.2);close(n.hp,1000);const after=t.hp;g.time+=.5;g.updateDelayed(0);close(after-t.hp,50*RULES.power[CHAMPIONS.rodya.power]*.9);g.zones=[];g.time+=.8;close(g.stat(t,'reloadWeak'),0);
 });
 
 test('Ishmael pull follows the moving caster instead of ending at her previous location',()=>{

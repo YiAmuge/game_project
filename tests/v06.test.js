@@ -8,7 +8,7 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*30);i++)g.step(1/30);};
 function quiet(key='faust'){
  const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};
- const p=g.player,t=g.champions(1).find(c=>c.key==='faust');Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
+ const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 test('twenty-four ordinary and two experimental champions retain finite stats and complete unique growth definitions',()=>{
  assert.equal(Object.keys(CHAMPIONS).length,24);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,26);
@@ -53,7 +53,7 @@ test('wave creation spawns one minion per lane immediately and the rest at .35 s
 });
 test('uncontested minions march along one centerline in spawn order with visible spacing',()=>{
  const g=new Game();g.aiChampion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};run(g,5);let ms=g.units.filter(m=>m.kind==='minion'&&m.team===0&&m.lane===0),path=lanePath(0,0);
- assert.equal(ms.length,4);for(const m of ms)assert.ok(segmentDistance(m,path[0],path[1])<.4);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],path[1])<distance(ms[i],path[1]));run(g,5);for(const m of ms)close(m.y,path[1].y);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],ms[i])>=ms[i-1].radius+ms[i].radius);
+ assert.equal(ms.length,4);for(const m of ms)assert.ok(segmentDistance(m,path[0],path[1])<.4);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],path[1])<distance(ms[i],path[1]));run(g,5);for(const m of ms){assert.ok(Math.abs(m.y-path[1].y)<2);assert.ok(!blocked(m.x,m.y,m.radius));}for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],ms[i])>=ms[i-1].radius+ms[i].radius);
 });
 test('one destroyed tower unlocks the core with half damage; destroying the second removes the shield',()=>{
  const g=new Game(),p=g.player,core=g.units.find(e=>e.kind==='core'&&e.team===1);p.x=core.x-2;p.y=core.y;assert.ok(g.locked(core));g.towers(1)[0].alive=false;assert.equal(g.locked(core),false);let hp=core.hp;g.deal(p,core,1000,{fixed:true});const half=hp-core.hp;g.towers(1)[0].alive=false;hp=core.hp;g.deal(p,core,1000,{fixed:true});close((hp-core.hp)/half,2);
@@ -87,13 +87,13 @@ test('Ahab power drops twelve percent and his ultimate teleports before the orig
  const {g,p,t}=quiet('ahab');close(g.powerScale(p),.88);g.cast(p,'r',t);close(p.x,42);assert.equal(p.motion,undefined);const hp=t.hp;run(g,.1);assert.ok(t.hp<hp);run(g,.5);assert.ok(t.hp<hp-500);
 });
 test('Myo grazing travels at the visible movement cap, Q spends one ammo, frenzy blocks Q',()=>{
- const {g,p,t}=quiet('myo');assert.ok(g.attack(p,t));close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<41);run(g,.3);assert.ok(t.hp<100000);p.ammo=4;assert.ok(g.cast(p,'q',t));assert.equal(p.ammo,3);run(g,.3);assert.ok(t.state.rabbitMark[p.id]>g.time);assert.ok(g.cast(p,'r',p));assert.ok(g.buff(p,'rabbitFrenzy'));assert.equal(g.cast(p,'q',t),false);close(g.attackRange(p),3.6);
+ const {g,p,t}=quiet('myo');assert.ok(g.attack(p,t));close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<41);run(g,.3);assert.ok(t.hp<100000);p.ammo=4;assert.ok(g.cast(p,'q',t));assert.equal(p.ammo,3);run(g,.3);assert.ok(t.state.rabbitMark[p.id]>g.time);assert.ok(g.cast(p,'r',p));assert.ok(g.buff(p,'rabbitFrenzy'));assert.equal(g.cast(p,'q',t),false);close(g.attackRange(p),2.4);
 });
 test('Myo direct champion takedowns build only two four-second hunt stacks',()=>{
  const {g,p}=quiet('myo');for(let i=0;i<3;i++){const t=g.makeChampion('yi',1,5);g.kill(t,p);}assert.equal(p.state.rabbitStacks,2);close(p.buffs.rabbitHunt-g.time,4);assert.ok(g.speed(p)>RULES.speed[5]);
 });
-test('Dongbaek extra attacks spend skill readiness and stop after three; real ammo resets the reserve',()=>{
- const {g,p,t}=quiet('dongbaek');p.ammo=0;for(let i=0;i<3;i++){p.attackCd=0;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);}close(p.qCd,4.5);close(p.rCd,4.5);p.attackCd=0;assert.equal(g.attack(p,t),false);p.ammo=1;run(g,1.4);p.attackCd=0;g.attack(p,t);assert.equal(p.state.extraPetals,0);
+test('Dongbaek extra attacks spend skill readiness and recover independently from real ammo',()=>{
+ const {g,p,t}=quiet('dongbaek');p.ammo=0;for(let i=0;i<3;i++){p.attackCd=0;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);}close(p.qCd,7.5);close(p.rCd,7.5);p.attackCd=0;assert.equal(g.attack(p,t),false);p.ammo=1;run(g,2.9);p.attackCd=0;g.attack(p,t);assert.equal(p.state.petals,1);
 });
 test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate hits at the selected point without fragrance stacks',()=>{
  const {g,p,t}=quiet('dongbaek');close(g.armor(p),20);const reload=g.reloadInterval(p);g.cast(p,'q',p);close(g.armor(p),0);assert.ok(g.reloadInterval(p)>reload);assert.ok(g.shield(p)>0);t.x=47;const hp=t.hp;g.cast(p,'r',t);assert.ok(t.hp<hp);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.buff(p,'flowerReload'));assert.equal(p.channelUntil,undefined);

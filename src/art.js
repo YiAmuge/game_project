@@ -21,6 +21,7 @@ export const FRAMES = {
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
 export const THEMES = {
+  boss:{light:'#ddb2f0',dark:'#624177',accent:'#efc5ff',weapon:'none'},
   hohenheim:{light:'#91efec',dark:'#325c69',accent:'#d9fffa',weapon:'electric'},marton:{light:'#bfd785',dark:'#59723a',accent:'#ffe78c',weapon:'lantern'},queequeg:{light:'#8fdbd8',dark:'#346e78',accent:'#e6b6c0',weapon:'harpoon'},
   faust:{light:'#bff4f2',dark:'#449fba',accent:'#d0fff0',weapon:'zweihander'},
   yi:{light:'#d9e9ef',dark:'#6e8fac',accent:'#e6d5a2',weapon:'mirror'},

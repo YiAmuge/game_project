@@ -91,7 +91,7 @@ with sync_playwright() as p:
     page.keyboard.up('KeyD')
     assert page.evaluate('__moba.game.player.x') > x + 1
     page.evaluate('''() => {
-      const g=__moba.game,p=g.player,t=g.champions(1).find(c=>c.key==='faust');
+      const g=__moba.game,p=g.player,t=(g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8));
       p.x=20;p.y=5.5;t.x=24;t.y=5.5;t.hp=t.maxHp=10000;
       t.lastDamageAt=g.time;g.aiChampion=()=>{};g.input.aim={x:t.x,y:t.y};
     }''')

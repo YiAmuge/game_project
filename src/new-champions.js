@@ -2,9 +2,9 @@ import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance, direction, clearLine, blocked } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 
-export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=3;e.state.knifeReady=Infinity;}}
+export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}}
 export function validate(g,e,slot,p){
- if(e.key==='nelly'&&slot==='q')return (e.state.knifeCharges??3)>0;
+ if(e.key==='nelly'&&slot==='q')return (e.state.knifeCharges??2)>0;
  if(e.key==='nelly'&&slot==='r')return !g.stat(e,'root')&&Boolean(targetAt(g,e,p,7));
  if(e.key==='ahab'&&slot==='r')return !g.stat(e,'root')&&!blocked(p.x,p.y,e.radius);
  return true;
@@ -22,7 +22,7 @@ function nellyMark(g,e,t,force=false){
  if(force){t.state.nellyMarks[e.id]={active:true,ready:Infinity,hold:3,until:g.time+7};t.visuals.nellyMark={until:g.time+7,theme:'nelly',forced:true};return;}
  if(mark?.active&&mark.until>g.time){
   if(mark.hold>0){mark.hold--;return;}
-  mark.active=false;mark.ready=g.time+3;delete t.visuals.nellyMark;if(!e.state.knifeRefundCast)refundKnife(g,e);if(t.hp>0)g.deal(e,t,t.maxHp*.15,{fixed:true,proc:false});
+  mark.active=false;mark.ready=g.time+3;delete t.visuals.nellyMark;if(!e.state.knifeRefundCast)refundKnife(g,e);if(t.hp>0)g.deal(e,t,t.maxHp*.07,{fixed:true,proc:false});
  }else if(!mark||mark.ready<=g.time){t.state.nellyMarks[e.id]={active:true,ready:g.time+3,until:g.time+6};t.visuals.nellyMark={until:g.time+6,theme:'nelly'};}
 }
 export function afterDamage(g,e,t,actual,proc){
@@ -64,7 +64,7 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='nelly'){
   if(slot==='q'){
-   s.knifeCharges=(s.knifeCharges??3)-1;if(!Number.isFinite(s.knifeReady))s.knifeReady=g.time+g.cooldown(e,'q');e.qCd=s.knifeCharges>0?0:s.knifeReady-g.time;let refunded=false;
+   s.knifeCharges=(s.knifeCharges??2)-1;if(!Number.isFinite(s.knifeReady))s.knifeReady=g.time+g.cooldown(e,'q');e.qCd=s.knifeCharges>0?0:s.knifeReady-g.time;let refunded=false;
    for(const off of [-.28,-.14,0,.14,.28])g.bullet(e,{x:Math.cos(e.facing+off),y:Math.sin(e.facing+off)},70,7,{speed:18,pierce:Infinity,beforeHit:t=>{e.state.knifeRefundCast=true;if(!refunded&&t.state?.nellyMarks?.[e.id]?.active){refunded=true;refundKnife(g,e);}},onHit:()=>{delete e.state.knifeRefundCast;}});
   }else{
    e.ammo=Math.min(g.ammoCap(e),e.ammo+2);const t=targetAt(g,e,p,7),behind=direction(e,t),dest={x:t.x+behind.x*.9,y:t.y+behind.y*.9};
@@ -94,8 +94,8 @@ export function cast(g,e,slot,p,d){
 export function tick(g,e){
  const s=e.state;
  if(e.key==='nelly'){
-  s.knifeCharges??=3;s.knifeReady??=Infinity;
-  if(s.knifeCharges<3&&g.time>=s.knifeReady){s.knifeCharges++;s.knifeReady=s.knifeCharges<3?g.time+g.cooldown(e,'q'):Infinity;}
+  s.knifeCharges??=2;s.knifeReady??=Infinity;
+  if(s.knifeCharges<2&&g.time>=s.knifeReady){s.knifeCharges++;s.knifeReady=s.knifeCharges<2?g.time+g.cooldown(e,'q'):Infinity;}
   e.qCd=Math.max(0,(s.qDelayUntil||0)-g.time,s.knifeCharges>0?0:s.knifeReady-g.time);
  }
  if(e.key==='ahab'&&s.order==='guard'&&g.time>=(s.orderAt??0)){

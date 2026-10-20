@@ -2,7 +2,7 @@ import { distance,slide } from './geometry.js';
 // Rebuild a small spatial grid per pass; structures stay fixed while mobile bodies separate.
 export function separate(g){
  const bodies=g.units.filter(e=>e.alive&&!g.hidden(e)&&!e.state?.posthumous),size=3;
- const fixed=e=>e.kind==='tower'||e.kind==='core'||Boolean(e.state?.ahabUlt)||e.state?.returnAnchorUntil>g.time;
+ const fixed=e=>e.camp==='boss'||e.kind==='tower'||e.kind==='core'||Boolean(e.state?.ahabUlt)||e.state?.returnAnchorUntil>g.time;
  for(let pass=0;pass<4;pass++){
   const cells=new Map();for(const e of bodies){const key=`${Math.floor(e.x/size)},${Math.floor(e.y/size)}`;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(e);}
   let overlap=false;

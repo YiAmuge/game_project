@@ -9,7 +9,7 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*30);i++)g.step(1/30);};
 function quiet(key='faust'){
  const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[fn]=()=>{};
- const p=g.player,t=g.champions(1).find(c=>c.key==='faust');Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];return {g,p,t};
+ const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];return {g,p,t};
 }
 function ally(g,key='yi'){const a=g.makeChampion(key,0,5,'support');a.x=41;a.y=7;return a;}
 
@@ -87,8 +87,8 @@ test('battle haste requires three seconds of continuous combat and clears out of
 test('Gahwan gaze becomes contempt at seven hits and amplifies skills but not basics',()=>{
  const {g,p,t}=quiet('gahwan');for(let i=0;i<7;i++)g.deal(p,t,1,{damageKind:'basic'});assert.ok(t.state.contempt[p.id]>g.time);let hp=t.hp;g.deal(p,t,100,{proc:false,damageKind:'basic'});const basic=hp-t.hp;hp=t.hp;g.deal(p,t,100,{proc:false,damageKind:'skill'});close((hp-t.hp)/basic,1.12);
 });
-test('Nelly has three replenishing knife charges and a forced ultimate mark preserves the next three hits',()=>{
- const {g,p,t}=quiet('nelly');assert.equal(p.state.knifeCharges,3);g.cast(p,'q',t);assert.equal(p.state.knifeCharges,2);assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,1);assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,0);assert.equal(g.cast(p,'q',t),false);g.time=10.1;g.step(.01);assert.equal(p.state.knifeCharges,1);
+test('Nelly has two replenishing knife charges and a forced ultimate mark preserves the next three hits',()=>{
+ const {g,p,t}=quiet('nelly');assert.equal(p.state.knifeCharges,2);g.cast(p,'q',t);assert.equal(p.state.knifeCharges,1);assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,0);assert.equal(g.cast(p,'q',t),false);g.time=10.1;g.step(.01);assert.equal(p.state.knifeCharges,1);
  p.rCd=0;g.cast(p,'r',t);const mark=t.state.nellyMarks[p.id];assert.ok(mark.active);assert.equal(mark.hold,3);for(let i=0;i<3;i++)g.deal(p,t,1);assert.ok(mark.active);g.deal(p,t,1);assert.equal(mark.active,false);
 });
 test('Ahab guard stacks, cover rewards hits on harpooned enemies, and takedown support gets the bonus',()=>{
@@ -102,7 +102,7 @@ test('charge cooldown reduction and extra ultimate ammunition apply to special r
  const {g,p,t}=quiet('nelly');p.augments=['cooldown15'];g.cast(p,'q',t);close(p.state.knifeReady-g.time,4.25);
  const a=quiet('ezra');a.p.augments=['magazine2'];a.g.cast(a.p,'r',a.p);assert.equal(a.p.ammo,6);assert.equal(a.g.ammoCap(a.p),6);
 });
-test('central and boss creep leash clocks use the displayed shared camp boundary',()=>{
+test('central creep leash clocks use the displayed shared camp boundary',()=>{
  const {g,p}=quiet();g.aiNeutral=Game.prototype.aiNeutral;
- for(const camp of ['central','boss']){const n=g.makeNeutral(40,23.4,camp),view=g.campViews().find(c=>c.units.includes(n));n.hostile=true;n.aggro=p.id;n.x=view.home.x+view.radius-.1;n.y=view.home.y;g.aiNeutral(n,.001);assert.equal(n.outsideSince,undefined);n.x=view.home.x+view.radius+.1;g.aiNeutral(n,.001);assert.equal(n.outsideSince,g.time);}
+ for(const camp of ['central']){const n=g.makeNeutral(40,23.4,camp),view=g.campViews().find(c=>c.units.includes(n));n.hostile=true;n.aggro=p.id;n.x=view.home.x+view.radius-.1;n.y=view.home.y;g.aiNeutral(n,.001);assert.equal(n.outsideSince,undefined);n.x=view.home.x+view.radius+.1;g.aiNeutral(n,.001);assert.equal(n.outsideSince,g.time);}
 });

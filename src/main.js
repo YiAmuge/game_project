@@ -12,7 +12,7 @@ import { MONSTERS, CONSUMABLES, GAME_RULES, BUFF_LABELS } from './catalog.js';
 const $=id=>document.getElementById(id);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const clock=t=>`${String(Math.floor(t/60)).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')}`;
-const roleName=role=>role==='보호'?'수호':role;
+const roleName=role=>role;
 let selected='faust',position='bottom',game=new Game(selected,position),mode='menu',paused=false,speed=1;
 let keys=new Set(),last=0,accumulator=0,lastHud=0,roster=[],activeRecord=2,category='champions',toastTimer,pointer=null,drag=null,globalTarget=false,globalPoint=null,scoreOpen=false,shopSelection=null;
 const renderer=new Renderer($('arena'));

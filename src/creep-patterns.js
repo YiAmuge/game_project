@@ -9,7 +9,7 @@ export function update(g,e,target){
   if(g.stat(e,'stun')||g.stat(e,'silence')||e.motion?.forced){cancel(e);return true;}
   const p=e.pattern;
   if(g.time+1e-8>=p.at){
-   cancel(e);
+   cancel(e);e.exposedUntil=g.time+2;
    for(const t of [...g.units]){
     if(!g.hostile(e,t))continue;
     const inside=distance(p,t)<=p.r+t.radius&&(()=>{const d=direction(p,t);return d.x*p.dx+d.y*p.dy>=Math.cos(p.spread/2);})();

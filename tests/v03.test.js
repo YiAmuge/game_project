@@ -9,7 +9,7 @@ const run=(g,s)=>{for(let i=0;i<Math.round(s*30)&&g.winner===null;i++)g.step(1/3
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 function quiet(key='faust'){
  const g=new Game(key);g.aiChampion=()=>{};g.aiMinion=()=>{};g.aiNeutral=()=>{};g.aiStructure=()=>{};
- g.player.x=30;g.player.y=5.5;const t=g.champions(1).find(c=>c.key==='faust');t.x=31;t.y=5.5;g.units=[g.player,t];return {g,p:g.player,t};
+ g.player.x=30;g.player.y=5.5;const t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);t.x=31;t.y=5.5;g.units=[g.player,t];return {g,p:g.player,t};
 }
 
 test('twenty ordinary champions retain four named abilities, and every team has four positions',()=>{

@@ -52,12 +52,12 @@ CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.brief='짧은 돌진 도끼와 동전의 �
 CHAMPIONS.don.qText='2.5초 동안 사거리 6의 반투명 노란 범위로 방향을 고정해 랜스 연속 찌르기 · 이동 가능 · 정면 피해 50% 감소';
 CHAMPIONS.heathcliff.rText='반경 7.5의 시체자루 · 피해·흡혈·처치 연장';
 CHAMPIONS.yi.qText='장판 내 적에게 0.1초마다 침묵 0.25초와 장전 −10%를 지속 부여';
-CHAMPIONS.outis.rText='후퇴 후 사거리 18의 폭발 사격';
+CHAMPIONS.outis.rText='2.5거리 후퇴 후 사거리18 투사체로450피해. 명중 또는 사거리 끝에 반경3.5 폭발로250피해. 체력50%미만 대상에게 각각30% 추가피해.';
 CHAMPIONS.ishmael.rText='사거리 16 · 관통 작살 투사체 · 300 피해 · 적 챔피언을 바로 앞으로 끌기 · 쿨다운 25초';
 export const POSITIONS={
-  top:{name:'탑',lane:0,recommend:['보호','돌격'],description:'상단 라인 1vs1 · 수호·돌격 추천'},
-  jungle:{name:'정글',lane:0,recommend:['암살'],description:'중립 크립 사냥·갱킹 · 암살 추천'},
-  bottom:{name:'바텀',lane:1,recommend:['저격'],description:'서포터와 하단 2vs2 · 저격 추천'},
+  top:{name:'탑',lane:0,recommend:['보호','돌격'],description:'상단 라인 1vs1 · 보호·돌격 추천'},
+  jungle:{name:'정글',lane:0,recommend:['암살','돌격'],description:'중립 크립 사냥·갱킹 · 암살·돌격 추천'},
+  bottom:{name:'바텀',lane:1,recommend:['저격','방해'],description:'서포터와 하단 2vs2 · 저격·방해 추천'},
   support:{name:'서포터',lane:1,recommend:['지원','방해'],description:'바텀 보호·하단 2vs2·로밍 · 지원·방해 추천'},
 };
 export const POSITION_ORDER=['top','jungle','bottom','support'];

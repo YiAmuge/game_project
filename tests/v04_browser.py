@@ -21,7 +21,7 @@ with sync_playwright() as pw:
     choose('돈키호테')
     expect(page.locator('#health-fill,#health-text,#ammo')).to_have_count(0)
     page.wait_for_function('[...__drawnLabels].some(s=>s.includes("3400 / 3400"))')
-    page.evaluate('''() => {const g=__moba.game,t=g.champions(1).find(c=>c.key==='faust');t.x=42.5;t.y=7;t.hp=t.maxHp=10000;}''')
+    page.evaluate('''() => {const g=__moba.game,t=(g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8));t.x=42.5;t.y=7;t.hp=t.maxHp=10000;}''')
     point=page.evaluate('__moba.renderer.camera.worldToScreen({x:42.5,y:7})')
     page.mouse.move(point['x'],point['y']);page.mouse.down();page.wait_for_timeout(70)
     x=page.evaluate('__moba.game.player.x');assert 40<x<42,x

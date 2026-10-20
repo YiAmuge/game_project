@@ -11,7 +11,7 @@ function isolated(key='faust') {
   const g=new Game(key);g.aiChampion=()=>{};g.aiMinion=()=>{};g.aiNeutral=()=>{};g.aiStructure=()=>{};
   return g;
 }
-function opponent(g) {return g.champions(1).find(c=>c.key==='faust');}
+function opponent(g) {return g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);}
 
 test('31 original champion records retain four named skills',()=>{
   const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));

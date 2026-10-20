@@ -7,7 +7,7 @@ export function movementSkill(e,slot){
  return moves[e.key]?.includes(slot);
 }
 export function validate(g,e,slot,p){
- if(g.stat(e,'captured')&&movementSkill(e,slot))return false;
+ if(g.stat(e,'captured')&&movementSkill(e,slot)&&!(e.key==='alisa'&&slot==='q'&&g.buff(e,'alisaReload')))return false;
  if(e.key==='queequeg'&&slot==='q')return Boolean(targetAt(g,e,p,5,e.team,t=>t!==e));
  return true;
 }

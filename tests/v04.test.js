@@ -10,7 +10,7 @@ const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*30);i++)g.step(1/30);};
 function quiet(key='faust'){
  const g=new Game(key);g.aiChampion=()=>{};g.aiMinion=()=>{};g.aiNeutral=()=>{};g.aiStructure=()=>{};
- const p=g.player,t=g.champions(1).find(c=>c.key==='faust');Object.assign(p,{x:40,y:7});Object.assign(t,{x:44,y:7});g.units=[p,t];return {g,p,t};
+ const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:44,y:7});g.units=[p,t];return {g,p,t};
 }
 test('map expands 30 percent in each axis, old walls only 10 percent, entities keep their sizes',()=>{
  const g=new Game();close(RULES.width,64*1.3);close(RULES.height,36*1.3);close(WALLS[0].w,6*1.1);close(WALLS[0].h,1.6*1.1);
@@ -81,7 +81,7 @@ test('creeps leash after distance and time, ignore attacks while returning, and 
  run(g,1.8);assert.equal(n.returning,undefined);run(g,.2);assert.ok(n.returning);const hp=n.hp;assert.equal(g.deal(p,n,1000,{fixed:true}),0);close(n.hp,hp);run(g,1);assert.equal(n.returning,false);close(n.x,30);close(n.hp,n.maxHp);assert.equal(n.aggro,null);
 });
 test('distant hostile creeps also wait 1.85 seconds before a visible return',()=>{
- const {g}=quiet();const n=g.makeNeutral(30,7,'side');n.x=40;n.hostile=true;n.aggro=g.player.id;g.aiNeutral=Game.prototype.aiNeutral;g.step(1/30);assert.ok(!n.returning);g.time+=1.86;const before=n.x;g.step(1/30);assert.ok(n.returning);assert.ok(n.x<before&&n.x>before-1);assert.ok(CAMP_RULES.returnSpeed>2.7);
+ const {g,p}=quiet();p.y=9;const n=g.makeNeutral(30,7,'side');n.x=40;n.hostile=true;n.aggro=g.player.id;g.aiNeutral=Game.prototype.aiNeutral;g.step(1/30);assert.ok(!n.returning);g.time+=1.86;const before=n.x;g.step(1/30);assert.ok(n.returning);assert.ok(n.x<before&&n.x>before-1);assert.ok(CAMP_RULES.returnSpeed>2.7);
 });
 test('camp timers count down, disappear on respawn, and never revive removed central creeps',()=>{
  const {g,p}=quiet();const n=g.makeNeutral(30,7,'side');g.kill(n,p);assert.equal(g.campTimers()[0].seconds,20);g.time=10;assert.equal(g.campTimers()[0].seconds,10);g.time=19.99;g.wave=3;g.step(.02);assert.ok(n.alive);assert.equal(g.campTimers().length,0);
@@ -92,5 +92,5 @@ test('stack UI reflects actual Sinclair, Gregor and Alisa state',()=>{
 });
 test('Hong Lu shared effects carry water aura metadata and Rodion displays the actual coin outcomes',()=>{
  const {g,p}=quiet('honglu');const ally=g.makeChampion('yi',0,5,'support');Object.assign(ally,{x:41,y:7});g.addBuff(p,'blessing',25);assert.ok(g.buff(ally,'blessing'));assert.equal(ally.visuals.hongluShare.theme,'honglu');assert.ok(ally.visuals.hongluShare.until>g.time);
- const a=quiet('rodya');a.g.cast(a.p,'q',a.p);assert.equal(a.p.state.coinResults.length,3);assert.equal(a.p.state.coinResults.filter(Boolean).length,a.p.state.coinHeads);assert.equal(a.p.state.coinResults.filter(v=>!v).length,a.p.state.coinTails);
+ const a=quiet('rodya');a.g.cast(a.p,'q',a.p);assert.equal(a.p.state.coinResults.length,3);assert.equal(a.p.state.coinResults.filter(Boolean).length,a.p.state.coinHeads);assert.equal(a.p.state.jackpot?3:a.p.state.coinResults.filter(v=>!v).length,a.p.state.coinTails);
 });

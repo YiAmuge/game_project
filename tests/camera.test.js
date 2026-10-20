@@ -23,7 +23,7 @@ test('bush layout is symmetric and includes inner, outer and flank green connect
   for(const b of BUSHES)assert.ok(BUSHES.some(m=>Math.abs(m.x-(RULES.width-b.x-b.w))<1e-7&&m.y===b.y&&m.w===b.w&&m.h===b.h));
 });
 function setup(){
-  const g=new Game(),enemy=g.champions(1).find(c=>c.key==='faust'),patch=BUSHES[0];
+  const g=new Game(),enemy=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8),patch=BUSHES[0];
   enemy.x=patch.x+patch.w/2;enemy.y=patch.y+patch.h/2;
   g.champions(0).forEach((a,i)=>{a.x=3;a.y=16+i;});g.time=10;
   return {g,enemy};

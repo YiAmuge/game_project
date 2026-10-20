@@ -15,7 +15,7 @@ with sync_playwright() as pw:
         if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
         if page.evaluate('__moba.mode')=='menu':page.click('#practice-open')
         page.get_by_role('button',name=name+' 선택').click();page.click('#start')
-        page.evaluate('''() => {const g=__moba.game;g.aiChampion=()=>{};g.aiMinion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};g.player.x=40;g.player.y=7;const t=g.champions(1).find(c=>c.key==='faust');t.x=42;t.y=7;t.hp=t.maxHp=100000;window.__drawnLabels.clear();}''');page.wait_for_timeout(90)
+        page.evaluate('''() => {const g=__moba.game;g.aiChampion=()=>{};g.aiMinion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};g.player.x=40;g.player.y=7;const t=(g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8));t.x=42;t.y=7;t.hp=t.maxHp=100000;window.__drawnLabels.clear();}''');page.wait_for_timeout(90)
     def click(x=42,y=7,button='left'):
         s=page.evaluate('([x,y])=>__moba.renderer.camera.worldToScreen({x,y})',[x,y]);page.mouse.click(s['x'],s['y'],button=button)
     choose('파우스트');click(button='right')

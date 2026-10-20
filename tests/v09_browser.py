@@ -1,0 +1,33 @@
+"""Actual input and telegraphs for the v0.9 balance and stationary boss."""
+import json,os
+from pathlib import Path
+from playwright.sync_api import sync_playwright,expect
+root=Path(__file__).resolve().parents[1];art=root/'artifacts';art.mkdir(exist_ok=True)
+with sync_playwright()as pw:
+ b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox']);page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ page.add_init_script('''window.__labels=new Set();const old=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(s,...args){__labels.add(String(s));return old.call(this,s,...args);};''')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.9.0')
+ def choose(name):
+  if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
+  if page.evaluate('__moba.mode')=='menu':page.click('#practice-open')
+  page.get_by_role('button',name=name+' 선택').click();page.click('#start');page.evaluate('''() => {const g=__moba.game;for(const k of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[k]=()=>{};const p=g.player,t=g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:43,y:7,maxHp:100000,hp:100000});g.units=[p,t];g.minionQueue=[];window.__target=t;__labels.clear();}''');page.wait_for_timeout(100)
+ def click(x=43,y=7,button='left'):
+  pos=page.evaluate('([x,y])=>__moba.renderer.camera.worldToScreen({x,y})',[x,y]);page.mouse.move(pos['x'],pos['y']);page.mouse.click(pos['x'],pos['y'],button=button)
+ # Recommendations appear in the actual position selector.
+ page.click('#practice-open');page.click('[data-position=top]');expect(page.locator('#position-description')).to_contain_text('보호·돌격');page.click('[data-position=jungle]');expect(page.locator('#position-description')).to_contain_text('암살·돌격');page.click('[data-position=bottom]');expect(page.locator('#position-description')).to_contain_text('저격·방해')
+ choose('동백')
+ for _ in range(3):page.evaluate('__moba.game.player.ammo=0;__moba.game.player.attackCd=0');click()
+ assert page.evaluate('__moba.game.player.state.petals')==0;assert page.evaluate('__moba.game.player.status.disarm.until-__moba.game.time')>2.5;page.wait_for_function('[...__labels].some(s=>s.includes("무장해제"))');page.screenshot(path=str(art/'v09-dongbaek-disarm.png'));page.wait_for_function('__moba.game.player.state.petals===1',timeout=4500)
+ choose('넬리');click(button='right');assert page.evaluate('__moba.game.player.state.knifeCharges')==1;click(button='right');assert page.evaluate('__moba.game.player.state.knifeCharges')==0;page.screenshot(path=str(art/'v09-nelly-two-charges.png'))
+ choose('로쟈');page.evaluate('''() => {const g=__moba.game;g.award(g.player,6900,0);g.random=()=>.65;}''');click(button='right');assert page.evaluate('__moba.game.player.state.coinHeads')==3;assert page.evaluate('__moba.game.player.state.coinChance')==.7
+ choose('알리사');page.evaluate('__moba.game.player.hp=2000');click(48,7,button='right');page.wait_for_function('__moba.game.buff(__moba.game.player,"alisaReload")');assert page.evaluate('__moba.game.player.state.heat')==3;page.screenshot(path=str(art/'v09-alisa-reload-window.png'));x=page.evaluate('__moba.game.player.x');click(48,7,button='right');assert page.evaluate('__moba.game.player.state.heat')==0;assert abs(page.evaluate('__moba.game.player.x')-x)<.05;assert page.evaluate('__moba.game.player.hp')>2400
+ page.evaluate('__moba.game.player.state.heat=5;__moba.game.player.hp=__moba.game.player.maxHp');page.keyboard.press('Space');page.wait_for_function('__moba.game.player.state.detonating');assert page.evaluate('__moba.game.player.hp')>1000;page.screenshot(path=str(art/'v09-alisa-full-health-detonation.png'));page.wait_for_function('!__moba.game.player.alive',timeout=4000)
+ choose('묘');page.keyboard.press('Space');click();page.wait_for_timeout(70);assert page.evaluate('__moba.game.buff(__moba.game.player,"rabbitFrenzy")');page.screenshot(path=str(art/'v09-myo-frenzy.png'))
+ choose('루돌프');page.evaluate('''() => {const g=__moba.game;__target.state.mentalWhip={[g.player.id]:{stage:3,hits:0,at:g.time,decayAt:g.time+2}};}''');page.wait_for_function('__target.state.mentalWhip[__moba.game.player.id].stage===2',timeout=4000);page.screenshot(path=str(art/'v09-rudolph-decay.png'))
+ choose('파우스트');page.evaluate('''() => {const g=__moba.game,p=g.player;Object.assign(p,{x:45.8,y:23.4,hp:100000,maxHp:100000,lastDamageAt:100});g.units=[p];g.spawnBoss();g.aiNeutral=Object.getPrototypeOf(g).aiNeutral;const n=g.units.find(e=>e.camp==='boss');window.__boss=n;g.deal(p,n,1,{fixed:true});g.time=4.9;}''');page.wait_for_function('Boolean(__boss.bossPattern)');assert page.evaluate('__boss.maxHp')==9750;page.wait_for_function('[...__labels].some(s=>s.startsWith("충격파"))');page.screenshot(path=str(art/'v09-boss-shock-warning.png'));page.wait_for_function('__moba.game.projectiles.some(p=>p.theme==="boss")',timeout=2500);assert page.evaluate('__boss.x===__boss.home.x&&__boss.y===__boss.home.y')
+ page.evaluate('''() => {const g=__moba.game;g.projectiles=[];Object.assign(g.player,{x:45.8,y:23.4});g.time=6.9;const a=g.makeChampion('yi',0,5);Object.assign(a,{x:42,y:27});const t=g.makeChampion('faust',1,8);Object.assign(t,{x:38,y:23.4});}''');page.wait_for_function('__boss.bossMarkers?.length===3');page.screenshot(path=str(art/'v09-boss-ground-warnings.png'));page.wait_for_function('__moba.game.stat(__moba.game.player,"root")>0',timeout=4000);assert page.evaluate('__boss.x===__boss.home.x&&__boss.y===__boss.home.y')
+ page.click('#pause');page.click('#leave');page.click('#archive-open')
+ for name,text in [('동백','2.85초'),('넬리','7%'),('로쟈','0.5초마다 50'),('알리사','체력 수치와 관계없이'),('마튼','4.9'),('묘','장전 +60%'),('루돌프','2초마다1중첩')]:
+  page.fill('#roster-search',name);page.click('#roster-list button');expect(page.locator('#roster-detail')).to_contain_text(text)
+ page.click('[data-category=monsters]');expect(page.locator('#codex-content')).to_contain_text('9,750');expect(page.locator('#codex-content')).to_contain_text('패턴 완료 후 2초')
+ assert not errors,errors;b.close();print(json.dumps({'status':'passed','checks':['updated role recommendations','Dongbaek separate timed petals and disarm','Nelly two charges','level-ten coin probability','Alisa Q recast heal and full-HP automatic ultimate','Myo frenzy visuals','Rudolph timed stack loss','stationary boss shock/ground telegraphs and impacts','seven codex balance records','boss and buff-creep codex'],'page_errors':errors},ensure_ascii=False))
