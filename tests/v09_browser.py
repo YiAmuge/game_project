@@ -6,7 +6,7 @@ root=Path(__file__).resolve().parents[1];art=root/'artifacts';art.mkdir(exist_ok
 with sync_playwright()as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox']);page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.add_init_script('''window.__labels=new Set();const old=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(s,...args){__labels.add(String(s));return old.call(this,s,...args);};''')
- page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.9.0')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.9.1')
  def choose(name):
   if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
   if page.evaluate('__moba.mode')=='menu':page.click('#practice-open')

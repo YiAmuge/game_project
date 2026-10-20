@@ -1,10 +1,10 @@
-# 도시 경계 — 4vs4 MOBA v0.9.0
+# 도시 경계 — 4vs4 MOBA v0.9.1
 
 Project Moon 작품을 모티브로 한 비공식 팬 게임입니다. 첨부 기획서 두 종과 이후 사용자의 변경 요청을 기준으로 개발합니다. PC 브라우저에서 플레이어 1명과 봇 7명이 싸웁니다.
 
 ## ZIP 없이 수정하고 실행하기
 
-GitHub **`codex/city-border-v0.2` 브랜치**의 **Code → Codespaces → Create codespace on this branch**로 시작하세요. 브랜치 이름은 유지하며 현재 소스는 v0.9입니다. 기존 Codespace에서는 작업 내용을 Commit한 뒤 **Source Control → Pull**로 최신 코드를 받습니다.
+GitHub **`codex/city-border-v0.2` 브랜치**의 **Code → Codespaces → Create codespace on this branch**로 시작하세요. 기존 Codespace에서는 **`npm run update`**로 업데이트와 실행 확인을 함께 진행합니다. 최초 v0.9.1 적용은 먼저 `git pull --ff-only origin codex/city-border-v0.2`로 새 실행 도구를 받으세요.
 
 **Ports → 5173 → Open in Browser**로 게임을 엽니다. 파일은 800ms 후 자동 저장되고 약 1.2초 후 게임이 새로고침됩니다. 새로고침하면 경기는 초기화됩니다. GitHub에도 변경을 보관하려면 **Commit → Sync Changes / Push**가 필요합니다. [상세 개발 안내](docs/LIVE_DEVELOPMENT.md)를 참고하세요.
 
@@ -69,6 +69,8 @@ npm run dev
 ```
 
 기본 포트는 5173이며 `PORT=8080 npm run dev`로 변경할 수 있습니다. Codespaces 재연결 시 `node scripts/codespaces-start.mjs`가 서버를 재사용합니다.
+
+`npm start`는 게임 파일까지 확인하고, `npm run repair`는 소유권을 확인한 서버를 재시작합니다. `npm run doctor`는 내부 상태와 현재 Codespace 주소·외부 HTTP를 구분해 출력합니다. 내부 정상 메시지가 외부 접속 성공을 뜻하지는 않습니다. 구버전 서버의 소유권 조회가 차단된 경우에는 한 번 Codespace를 Stop → Start해야 할 수 있습니다. [실행·404 진단 안내](docs/LIVE_DEVELOPMENT.md)를 참고하세요.
 
 ```bash
 npm run check
