@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 import { mkdtemp, mkdir, copyFile, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { forwardedUrl, inspectRuntime, projectId } from '../scripts/runtime-health.mjs';
+import { forwardedUrl, inspectRuntime, projectId, inspectForwarded } from '../scripts/runtime-health.mjs';
 
 const execute = promisify(execFile), scripts = resolve('scripts');
 const pause = ms => new Promise(r => setTimeout(r, ms));
@@ -113,4 +113,41 @@ test('one-command update loads new startup code and preserves edits when Pull ca
   let result=await f.run([],'update.mjs');assert.equal(result.code,0,result.stderr);assert.match(result.stdout,/updated-startup-loaded/);assert.equal((await f.health()).version,'1.2.4');assert.equal(await readFile(join(f.root,'notes.txt'),'utf8'),'local unsaved-to-git work\n');
   await writeFile(join(writer,'notes.txt'),'remote edit\n');await git(writer,'add','.');await git(writer,'commit','-m','conflicting update');await git(writer,'push');
   result=await f.run([],'update.mjs');assert.notEqual(result.code,0);assert.match(result.stderr,/업데이트가 완료되지 않았습니다/);assert.equal(await readFile(join(f.root,'notes.txt'),'utf8'),'local unsaved-to-git work\n');assert.equal((await f.health()).ready,true);
+});
+
+test('external HTTP 200 login or error pages never count as a verified game',async t=>{
+  const server=createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});res.end('<title>Sign in to GitHub</title>');});
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+  const result=await inspectForwarded(`http://127.0.0.1:${server.address().port}`,{project:'expected'});
+  assert.equal(result.pageStatus,200);assert.equal(result.healthStatus,200);assert.equal(result.gameHtml,false);assert.equal(result.sameServer,false);assert.equal(result.verified,false);
+});
+
+test('external diagnosis verifies both game HTML and the actual project identity',async t=>{
+  let project='expected',ready=true;
+  const server=createServer((req,res)=>{
+    if(req.url==='/__dev/health'){res.writeHead(ready?200:503,{'Content-Type':'application/json'});res.end(JSON.stringify({service:'city-border',protocol:1,project,ready}));}
+    else res.end('<title>도시 경계 — 아레나</title><script src="./src/main.js"></script>');
+  });
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+  const url=`http://127.0.0.1:${server.address().port}`;
+  assert.equal((await inspectForwarded(url,{project:'expected'})).verified,true);
+  project='different';let result=await inspectForwarded(url,{project:'expected'});assert.equal(result.gameHtml,true);assert.equal(result.sameServer,false);assert.equal(result.verified,false);
+  project='expected';ready=false;result=await inspectForwarded(url,{project:'expected'});assert.equal(result.sameServer,true);assert.equal(result.ready,false);assert.equal(result.verified,false);
+});
+
+test('external diagnosis does not follow login redirects or send authentication',async t=>{
+  let logins=0;
+  const server=createServer((req,res)=>{
+    assert.equal(req.headers.authorization,undefined);assert.equal(req.headers.cookie,undefined);
+    if(req.url==='/login'){logins++;res.end('Login');return;}
+    res.writeHead(302,{Location:'/login'});res.end();
+  });
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+  const result=await inspectForwarded(`http://127.0.0.1:${server.address().port}`,{project:'expected'});
+  assert.equal(result.pageStatus,302);assert.equal(result.healthStatus,302);assert.equal(result.verified,false);assert.equal(logins,0);
+});
+
+test('external lookup failure stays unverified without hiding local readiness',async()=>{
+  const result=await inspectForwarded('https://unreachable.invalid/',{project:'expected'},async()=>{throw new Error('network blocked');});
+  assert.equal(result.pageStatus,null);assert.equal(result.healthStatus,null);assert.equal(result.verified,false);
 });

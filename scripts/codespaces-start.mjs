@@ -5,7 +5,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { inspectRuntime, serverFingerprint, projectId, forwardedUrl, SERVICE, PROTOCOL } from './runtime-health.mjs';
+import { inspectRuntime, serverFingerprint, projectId, forwardedUrl, inspectForwarded, SERVICE, PROTOCOL } from './runtime-health.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const port = Number(process.env.PORT || 5173);
@@ -91,12 +91,12 @@ async function main() {
     if (current() && state.health.ready) { await verifyFiles(state.health); console.log('게임 HTML·모듈·데이터: 정상'); }
     if (!expected.ready) console.error(expected.problems.join('\n'));
     if (url) {
-      try {
-        const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(6000) });
-        console.log(`외부 포트 연결(인증 정보 없이 확인): HTTP ${response.status}`);
-        await response.body?.cancel();
-      } catch { console.log('외부 포트 연결: 이 터미널에서 확인할 수 없음'); }
-      console.log('로컬이 정상인데 위 주소가 브라우저에서 404면 Codespaces 포트 연결·계정·브라우저 접근 문제입니다. Public 변경이나 코드 재설치로 해결됐다고 판단하지 마세요.');
+      const external=await inspectForwarded(url,state.health);
+      const status=code=>code===null?'확인 불가':`HTTP ${code}`;
+      console.log(`외부 페이지: ${status(external.pageStatus)} · ${external.gameHtml?'게임 HTML 확인':'게임 HTML 미확인'}`);
+      console.log(`외부 진단 주소: ${status(external.healthStatus)} · ${external.sameServer?'같은 프로젝트 응답 확인':'같은 프로젝트 응답 미확인'}`);
+      if(external.verified)console.log('터미널 경로에서 실제 게임 응답 확인. 같은 브라우저의 /__dev/health가 404라면 브라우저·네트워크 경로를 별도로 확인해야 합니다.');
+      else console.log('외부 게임 연결은 검증되지 않았습니다. HTTP 200만으로 접속 성공으로 판단하지 않습니다. 로그인 이동·권한 페이지·다른 응답일 수 있습니다.');
     }
     if (!current() || !state.health.ready || !expected.ready) process.exitCode = 1;
     return;

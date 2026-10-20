@@ -61,3 +61,18 @@ export function forwardedUrl(env, port) {
   if (!/^[a-z0-9-]+$/i.test(name) || !/^[a-z0-9.-]+$/i.test(domain)) return null;
   return `https://${name}-${port}.${domain}/`;
 }
+
+// A 200 login/error page is not proof that the forwarded port reached this game.
+export async function inspectForwarded(base, localHealth, fetcher=fetch) {
+  const request=async path=>{
+    try {
+      const response=await fetcher(new URL(path,base),{redirect:'manual',cache:'no-store',signal:AbortSignal.timeout(6000)});
+      const body=await response.text();let health;
+      try { health=JSON.parse(body); } catch {}
+      return {status:response.status,gameHtml:response.ok&&/<title>도시 경계/.test(body)&&body.includes('./src/main.js'),health};
+    } catch { return {status:null,gameHtml:false}; }
+  };
+  const [page,diagnostic]=await Promise.all([request('/'),request('/__dev/health')]);
+  const sameServer=Boolean(localHealth?.project&&diagnostic.health?.service===SERVICE&&diagnostic.health.protocol===PROTOCOL&&diagnostic.health.project===localHealth.project);
+  return {pageStatus:page.status,healthStatus:diagnostic.status,gameHtml:page.gameHtml,sameServer,ready:sameServer&&diagnostic.health.ready===true,verified:page.gameHtml&&diagnostic.status===200&&sameServer&&diagnostic.health.ready===true};
+}
