@@ -62,18 +62,20 @@ test('Dongrang grade two converts power into health and armor, never damage or i
 test('Dongrang passive power purchases apply health immediately and augment removal refreshes converted stats',()=>{
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);
 });
-test('natural healing and fountain/potion-style healing use distinct Dongrang growth accounting',()=>{
- const {g,p}=quiet('dongrang');p.hp-=1000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(null,p,800,false);assert.equal(ultGrowth(p).damage,430);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,430);
+test('natural healing is excluded while direct healing advances 1200-point Dongrang growth',()=>{
+ const {g,p}=quiet('dongrang');p.hp-=1000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(null,p,1200,false);assert.equal(ultGrowth(p).damage,230);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,230);
 });
+
 test('each desire tree converts at 350 actual damage, heals one for one, stops attacking and lasts ten more seconds',()=>{
  const {g,p,t}=quiet('dongrang');p.hp-=1000;p.lastAttackAt=0;g.cast(p,'q',t);run(g,2.6);const z=g.zones[0];assert.equal(z.dealt,175);close(p.totalHealingReceived,175);run(g,2.5);assert.ok(z.golden);close(z.dealt,350);close(z.until-g.time,9.9,.08);const hp=t.hp;run(g,1);close(t.hp,hp);g.time=z.until+.01;g.updateDelayed(0);assert.equal(g.zones.length,0);
 });
 test('basic harvest only consumes golden trees hit in the attack direction and heals seven percent each',()=>{
  const {g,p}=quiet('dongrang');p.hp-=1500;const make=(x,golden)=>({kind:'desireTree',source:p,x,y:7,r:2.5,until:10,golden,nextTick:100});g.zones=[make(41,true),make(39,true),make(41.5,false)];const hp=p.hp;g.attack(p,{x:45,y:7});assert.equal(g.zones.length,2);close(p.hp-hp,p.maxHp*.07);
 });
-test('Dongrang ultimate travels at visible speed to selected point, then consumes own trees for 2.5 percent each',()=>{
- const {g,p,t}=quiet('dongrang');t.x=60;p.hp-=2000;g.zones=[{kind:'desireTree',source:p,x:44,y:7,until:10,nextTick:100},{kind:'desireTree',source:p,x:43,y:7,until:10,nextTick:100,golden:true}];const hp=p.hp;assert.ok(skillTargeting(g,p,'r').confirm);g.cast(p,'r',{x:60,y:7});close(p.x,40);assert.equal(g.zones.length,2);run(g,.1);assert.ok(p.x>40&&p.x<42.5);run(g,.3);close(p.x,42.5);assert.equal(g.zones.length,0);close(p.hp-hp,p.maxHp*.05);
+test('Dongrang ultimate travels four units at visible speed and preserves its trees',()=>{
+ const {g,p,t}=quiet('dongrang');t.x=60;p.hp-=2000;p.lastDamageAt=100;g.zones=[{kind:'desireTree',source:p,x:44,y:7,until:10,nextTick:100},{kind:'desireTree',source:p,x:43,y:7,until:10,nextTick:100,golden:true}];const hp=p.hp;assert.ok(skillTargeting(g,p,'r').confirm);g.cast(p,'r',{x:60,y:7});close(p.x,40);run(g,.1);assert.ok(p.x>40&&p.x<44);run(g,.45);close(p.x,44);assert.equal(g.zones.length,2);close(p.hp,hp);
 });
+
 test('Ishmael basic power debuff caps at two and clears on target death',()=>{
  const {g,p,t}=quiet('ishmael');t.x=41;for(let i=0;i<3;i++){p.attackCd=0;g.attack(p,t);}close(g.powerWeak(t),.04);g.time=100;close(g.powerWeak(t),.04);g.kill(t,p);close(g.powerWeak(t),0);
 });

@@ -21,7 +21,7 @@ test('map expands 30 percent in each axis, old walls only 10 percent, entities k
 });
 test('35 percent additional reload reduction applies to all runtime and future roster champions',()=>{
  close(RULES.reloadEfficiency,.8*.65);const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),RULES.reload[grade]/.8/.65);}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),RULES.reload[grade]/.8/.65/(key==='ahab'?1.15:1));}
 });
 test('growth reaches level ten, caps there, and updates health and score growth',()=>{
  const {g,p}=quiet('meursault');g.award(p,RULES.xp[9],0);assert.equal(p.level,10);close(p.maxHp,4600*1.675);assert.equal(g.bonusStats(p).health,68);g.award(p,1e6,0);assert.equal(p.level,10);assert.ok(Number.isFinite(g.bonusStats(p).power));
@@ -30,7 +30,7 @@ test('matches continue past ten minutes and stop at twenty',()=>{
  const {g}=quiet();g.time=599.99;g.wave=23;g.step(.05);assert.equal(g.winner,null);assert.ok(g.time>600);g.time=1199.99;g.wave=48;g.step(.1);assert.notEqual(g.winner,null);close(g.time,1200);
 });
 test('waves are faster, base health is higher, and minion scaling stops at twelve minutes',()=>{
- const {g}=quiet();assert.equal(g.wave,1);run(g,24.9);assert.equal(g.wave,1);run(g,.1);assert.equal(g.wave,2);const first=g.units.find(u=>u.kind==='minion'&&!u.ranged&&!u.siege);assert.equal(first.maxHp,680);
+ const {g}=quiet();assert.equal(g.wave,0);run(g,3);assert.equal(g.wave,1);run(g,24.9);assert.equal(g.wave,1);run(g,.1);assert.equal(g.wave,2);const first=g.units.find(u=>u.kind==='minion'&&!u.ranged&&!u.siege);assert.equal(first.maxHp,680);
  const spawn=time=>{g.units=g.units.filter(e=>e.kind!=='minion');g.minionQueue=[];g.time=time;g.spawnWave();return g.units.filter(u=>u.kind==='minion').map(u=>({hp:u.maxHp,damage:u.damage,siege:u.siege}));};
  const mid=spawn(120);assert.ok(mid[0].hp>680);const capped=spawn(720),late=spawn(36000);close(capped[0].hp,680*1.36);close(capped[0].damage,58*1.3);close(late[0].hp,capped[0].hp);close(late[0].damage,capped[0].damage);assert.equal(MINIONS.maxGrowth,6);
 });
@@ -44,7 +44,7 @@ test('dashes respect a visible speed cap even with movement input, and stun inte
 });
 test('explicit Ryoshu teleport remains instant, while Sinclair leap travels before landing damage',()=>{
  const a=quiet('ryoshu');a.t.x=46;assert.ok(a.g.cast(a.p,'r',a.t));close(a.p.x,46);
- const {g,p,t}=quiet('sinclair');t.x=45;t.hp=t.maxHp=10000;g.cast(p,'r',t);close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<45);close(t.hp,10000);run(g,.3);close(t.hp,10000);run(g,.4);assert.ok(Math.abs(p.x-45)<.5);assert.ok(distance(p,t)>=p.radius+t.radius-.01);assert.ok(t.hp<10000);
+ const {g,p,t}=quiet('sinclair');t.x=45;t.hp=t.maxHp=10000;g.cast(p,'r',t);close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<45);close(t.hp,10000);run(g,.3);close(t.hp,10000);run(g,.4);assert.ok(Math.abs(p.x-45)<1.1);assert.ok(distance(p,t)>=p.radius+t.radius-.01);assert.ok(t.hp<10000);
 });
 test('Ryoshu dash invulnerability blocks forced movement and ends at wall collision',()=>{
  const {g,p}=quiet('ryoshu');Object.assign(p,{x:16.5,y:15});assert.ok(g.cast(p,'q',{x:22,y:15}));

@@ -14,7 +14,7 @@ function quiet(key='faust'){
 function ally(g,key='yi'){const a=g.makeChampion(key,0,5,'support');a.x=41;a.y=7;return a;}
 
 test('all ordinary and experimental champions have individual positive growth and defined attack animation',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,24);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,26);
+ assert.equal(Object.keys(CHAMPIONS).length,25);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,27);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
@@ -91,9 +91,10 @@ test('Nelly has two replenishing knife charges and a forced ultimate mark preser
  const {g,p,t}=quiet('nelly');assert.equal(p.state.knifeCharges,2);g.cast(p,'q',t);assert.equal(p.state.knifeCharges,1);assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,0);assert.equal(g.cast(p,'q',t),false);g.time=10.1;g.step(.01);assert.equal(p.state.knifeCharges,1);
  p.rCd=0;g.cast(p,'r',t);const mark=t.state.nellyMarks[p.id];assert.ok(mark.active);assert.equal(mark.hold,3);for(let i=0;i<3;i++)g.deal(p,t,1);assert.ok(mark.active);g.deal(p,t,1);assert.equal(mark.active,false);
 });
-test('Ahab guard stacks, cover rewards hits on harpooned enemies, and takedown support gets the bonus',()=>{
- const {g,p,t}=quiet('ahab'),a=ally(g);g.cast(p,'q',p);run(g,.1);assert.equal(a.state.guardStacks,1);close(g.armor(a),12);run(g,3);assert.equal(a.state.guardStacks,2);p.qCd=0;g.cast(p,'q',p);assert.equal(p.state.order,'cover');p.attackCd=0;g.attack(p,t);run(g,.2);assert.ok(t.state.harpoon);g.deal(a,t,1);assert.ok(g.buff(a,'ahabCover'));const xp=a.xp,gold=a.gold;g.deal(p,t,1000000,{fixed:true});close(a.xp-xp,150);close(a.gold-gold,90);
+test('Ahab cover rewards the captain and takedown support retains its bonus',()=>{
+ const {g,p,t}=quiet('ahab'),a=ally(g);assert.equal(p.state.order,'cover');p.attackCd=0;g.attack(p,t);run(g,.2);assert.ok(t.state.harpoon);g.deal(a,t,1);assert.ok(g.buff(p,'ahabCover'));assert.equal(g.buff(a,'ahabCover'),false);const xp=a.xp,gold=a.gold;g.deal(p,t,1000000,{fixed:true});close(a.xp-xp,150);close(a.gold-gold,90);
 });
+
 test('Ahab execution snapshots below ten percent and grants only one ultimate recast',()=>{
  const {g,p,t}=quiet('ahab');t.maxHp=100000;t.hp=9000;g.cast(p,'r',t);t.hp=90000;run(g,.9);assert.equal(t.alive,false);assert.ok(p.state.recastUntil>g.time);const next=g.makeChampion('yi',1,6);next.x=p.x+1;next.y=p.y;next.maxHp=100000;next.hp=9000;assert.ok(g.cast(p,'r',next));run(g,.8);assert.equal(next.alive,false);assert.ok(!p.state.recastUntil);assert.equal(g.cast(p,'r',p),false);
 });

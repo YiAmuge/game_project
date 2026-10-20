@@ -3,18 +3,18 @@ import { distance, direction, clearLine, blocked } from './geometry.js';
 import { area, dash } from './skills.js';
 
 export function init(g,e){if(e.key==='dongbaek'){e.state.petals=3;e.state.petalReady=Infinity;}if(e.key==='dongrang'){e.totalHealingReceived=0;}}
-export function ultGrowth(e){const n=Math.min(5,Math.floor((e.totalHealingReceived||0)/100));return {radius:3.2+n*.6,damage:180+n*50};}
+export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1200);return {radius:3.2,damage:180+n*50};}
 export function validate(g,e,slot,p){
  if(e.key==='myo'&&slot==='q')return e.ammo>=1&&!g.buff(e,'rabbitFrenzy');
  if(e.key==='dongrang'&&slot==='r')return !g.stat(e,'root')&&!blocked(p.x,p.y,e.radius);
- if(e.key==='dongrang'&&slot==='q')return !blocked(p.x,p.y,.15)&&!g.zones.some(z=>z.kind==='desireTree'&&z.source===e&&z.until>g.time);
+ if(e.key==='dongrang'&&slot==='q')return !blocked(p.x,p.y,.15);
  return true;
 }
 export function beforeBasic(g,e){
  if(e.key==='myo'&&g.stat(e,'root'))return false;
  if(e.key==='dongbaek'){
   e.state.usedPetal=false;
-  if(e.ammo<1){if((e.state.petals??3)<1)return false;e.state.petals=(e.state.petals??3)-1;e.state.usedPetal=true;if(!Number.isFinite(e.state.petalReady))e.state.petalReady=g.time+2.5;e.ammo=1;e.qCd+=2.5;e.rCd+=2.5;}
+  if(e.ammo<1){if((e.state.petals??3)<1)return false;e.state.petals=(e.state.petals??3)-1;e.state.usedPetal=true;if(!Number.isFinite(e.state.petalReady))e.state.petalReady=g.time+10;e.ammo=1;e.qCd+=2.5;e.rCd+=2.5;}
  }
  return true;
 }
@@ -50,12 +50,12 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='dongrang'){
   if(slot==='q'){
-   g.zones.push({kind:'desireTree',source:e,...p,r:2.5,until:g.time+8,nextTick:g.time+.5,tickEvery:.5,damage:35,fixed:true,lifesteal:1,dealt:0,golden:false,slow:.2});
+   g.zones.push({kind:'desireTree',source:e,...p,r:3.8,until:g.time+8,nextTick:g.time+.5,tickEvery:.5,damage:35,fixed:true,lifesteal:1,dealt:0,golden:false,slow:.2});
   }else{
-   const strike=()=>{const ult=ultGrowth(e),trees=g.zones.filter(z=>z.kind==='desireTree'&&z.source===e&&z.until>g.time&&distance(e,z)<=ult.radius);g.zones=g.zones.filter(z=>!trees.includes(z));g.heal(e,e,e.maxHp*.025*trees.length,false);
-   let dealt=0;area(g,e,e,ult.radius,0,t=>{dealt+=g.deal(e,t,ult.damage,{fixed:true});g.status(t,'root',1,.8,e);});g.heal(e,e,dealt*.3,false);
+   const strike=()=>{const ult=ultGrowth(e);
+   let dealt=0;area(g,e,e,ult.radius,0,t=>{dealt+=g.deal(e,t,ult.damage,{fixed:true});g.status(t,'root',1,1.2,e);});g.heal(e,e,dealt*.3,false);
    g.effects.push({type:'burst',x:e.x,y:e.y,r:ult.radius,theme:e.key,life:.7,maxLife:.7});};
-   dash(g,e,d,Math.min(2.5,distance(e,p)),0,()=>{},{onComplete:strike});
+   dash(g,e,d,Math.min(4,distance(e,p)),0,()=>{},{offensive:true,onComplete:strike});
   }return true;
  }
  return false;
@@ -65,5 +65,5 @@ export function takedown(g,e,victim,direct){
 }
 export function tick(g,e){
  if(e.key==='myo'){if(e.state.frenzyWas&&!g.buff(e,'rabbitFrenzy'))e.ammo=Math.min(e.ammo,g.ammoCap(e));e.state.frenzyWas=g.buff(e,'rabbitFrenzy');}
- if(e.key==='dongbaek'){const s=e.state;s.petals??=3;s.petalReady??=Infinity;while(s.petals<3&&g.time+1e-8>=s.petalReady){s.petals++;s.petalReady=s.petals<3?s.petalReady+2.5:Infinity;}}
+ if(e.key==='dongbaek'){const s=e.state;s.petals??=3;s.petalReady??=Infinity;if(s.petals<3&&g.time+1e-8>=s.petalReady){s.petals=3;s.petalReady=Infinity;}}
 }

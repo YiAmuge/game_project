@@ -13,9 +13,9 @@ function isolated(key='faust') {
 }
 function opponent(g) {return g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);}
 
-test('31 original champion records retain four named skills',()=>{
+test('32 champion records retain four named skills',()=>{
   const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));
-  assert.equal(roster.length,31);assert.equal(new Set(roster.map(c=>c.id)).size,31);
+  assert.equal(roster.length,32);assert.equal(new Set(roster.map(c=>c.id)).size,32);
   for(const c of roster){assert.equal(c.skills.length,4);assert.ok(c.skills.every(s=>s.name&&s.description.length>20));}
 });
 test('match starts with 4+4 champions, four towers, two cores and sixteen neutrals',()=>{
@@ -46,11 +46,10 @@ test('tower is invulnerable without invading units and reduces lone champion dam
 test('friendly damage is rejected',()=>{
   const g=isolated(),ally=g.champions(0)[1];g.deal(g.player,ally,1000);assert.equal(ally.hp,ally.maxHp);
 });
-test('wave starts at zero, both lanes, siege every third wave',()=>{
-  const g=isolated();assert.equal(g.wave,1);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,24);assert.equal(g.wave,1);run(g,1);assert.equal(g.wave,2);
-  g.units=g.units.filter(u=>u.kind!=='minion');g.minionQueue=[];g.time=49.99;g.wave=2;g.step(.01);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,1.5);
-  assert.equal(g.units.filter(u=>u.kind==='minion').length,20);assert.equal(g.units.filter(u=>u.siege).length,4);
+test('first wave starts at three seconds, both lanes, siege every third wave',()=>{
+ const g=isolated();assert.equal(g.wave,0);run(g,3);assert.equal(g.wave,1);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,24);assert.equal(g.wave,1);run(g,1);assert.equal(g.wave,2);g.units=g.units.filter(u=>u.kind!=='minion');g.minionQueue=[];g.time=52.99;g.wave=2;g.step(.01);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,1.5);assert.equal(g.units.filter(u=>u.kind==='minion').length,20);assert.equal(g.units.filter(u=>u.siege).length,4);
 });
+
 test('5:00 permanently removes central creeps, even pending respawns, and spawns one boss',()=>{
   const g=isolated(),central=g.units.filter(u=>u.camp==='central');central[0].alive=false;central[0].respawnAt=301;
   g.time=299.99;g.wave=9;g.step(.01);assert.equal(g.bossSpawned,true);
@@ -119,11 +118,6 @@ test('shop requires spawn and peace, charges progressive costs, enforces caps',(
   for(let i=0;i<4;i++)assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,2960);
   for(let i=0;i<3;i++)assert.ok(g.buy(p,'speed'));assert.equal(g.buy(p,'speed'),false);
 });
-test('one potion purchase grants two uses; healing continues through damage',()=>{
-  const g=isolated(),p=g.player;assert.ok(g.buy(p,'potion'));assert.equal(p.potion,2);assert.equal(g.buy(p,'potion'),false);
-  p.x=10;p.y=18;p.hp=1000;assert.ok(g.usePotion(p));assert.equal(g.usePotion(p),false);run(g,1);
-  assert.ok(p.hp>1000);g.deal(opponent(g),p,100,{fixed:true});const hp=p.hp;run(g,1);assert.ok(p.hp>hp);assert.equal(p.potion,1);
-});
 test('experience is personal, caps at level ten and increases max HP',()=>{
   const g=isolated(),p=g.player,other=g.champions(0)[1];g.award(p,10000,0);
   assert.equal(p.level,10);close(p.maxHp,3400*1.405);assert.equal(other.level,1);assert.equal(other.xp,0);
@@ -132,7 +126,7 @@ test('death grants kill/assist rewards and respawns with full health and ammo',(
   const g=isolated(),p=g.player,t=opponent(g),ally=g.champions(0)[1];t.hp=100;
   g.deal(ally,t,20,{fixed:true});g.deal(p,t,1000,{fixed:true});assert.equal(t.alive,false);assert.equal(g.kills[0],1);
   assert.equal(p.kills,1);assert.equal(t.deaths,1);close(ally.gold,290);
-  assert.equal(respawnTime(0,1),6);assert.equal(respawnTime(600,5),19);assert.equal(respawnTime(1200,5),20);
+  assert.equal(respawnTime(0,1),6);assert.equal(respawnTime(600,5),20);assert.equal(respawnTime(1200,5),20);
   run(g,6.1);assert.ok(t.alive);assert.equal(t.hp,t.maxHp);assert.equal(t.ammo,CHAMPIONS[t.key].ammo);
 });
 test('walls block movement, paths route around walls, diagonal input cannot speed up',()=>{

@@ -13,18 +13,18 @@ function quiet(key='faust'){
 }
 
 test('twenty ordinary champions retain four named abilities, and every team has four positions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,24);
+ assert.equal(Object.keys(CHAMPIONS).length,25);
  for(const key of Object.keys(CHAMPIONS))for(const position of Object.keys(POSITIONS)){
   const g=new Game(key,position);assert.equal(g.champions().length,8);assert.equal(g.player.position,position);
   for(const team of [0,1])assert.deepEqual(g.champions(team).map(c=>c.position).sort(),['bottom','jungle','support','top']);
  }
 });
-test('all 31 catalog champions and all runtime champions share the cumulative reload nerf',()=>{
+test('all 32 catalog champions and all runtime champions share the cumulative reload nerf',()=>{
  const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){
   const {g,p}=quiet(key);p.lastCombat=g.time;
   if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
-  close(g.reloadInterval(p),RULES.reload[grade]/RULES.reloadEfficiency);
+  close(g.reloadInterval(p),RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1));
  }
 });
 test('natural healing waits three seconds after attacks including missed attacks',()=>{

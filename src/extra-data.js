@@ -1,4 +1,3 @@
-// Champion definitions transcribed from the supplied balance proposal.
 export const EXTRA_CHAMPIONS = {
   "don": {
     "id": 4,
@@ -262,7 +261,7 @@ export const EXTRA_CHAMPIONS = {
     "speed": 2,
     "ammo": 100,
     "reload": 4,
-    "range": 9,
+    "range": 7.65,
     "damage": 48,
     "attackTime": 0.3333333333,
     "q": 10,
@@ -273,7 +272,7 @@ export const EXTRA_CHAMPIONS = {
     "ultimate": "정신 분쇄",
     "brief": "정신력 지팡이 · 정신채찍 받는 피해 중첩",
     "qText": "현재 체력의 10% 소비(체력 1 미만으로 내려가지 않음), 정신력 35 회복, 소비 체력과 같은 양의 보호막 3초. 쿨다운 10초.",
-    "rText": "전역 반경 5.25에 1.25초 집중 후 정신력을 전부 소비. 최대 정신력 대비 비율로 최대 450 피해. 적 챔피언에게 정신채찍 피해 +30% 약화 적용, 이동속도 −30% 1.5초. 속박 없음. 쿨다운 48초."
+    "rText": "전역 지점을 확대 지도에서 확정. 현재 정신력을 모두 소비해 1당 기본 피해 8.5를 반경 5.25에 적용. 집중 1.25초. 채찍 약화 3중첩·이동 −30% 1.5초. 쿨다운 48초."
   },
   "moses": {
     "id": 19,

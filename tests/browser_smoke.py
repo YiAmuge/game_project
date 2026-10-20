@@ -20,7 +20,7 @@ with sync_playwright() as p:
     expect(page.locator('.hud')).to_be_hidden()
     page.screenshot(path=str(artifacts / 'v03-menu.png'), full_page=True)
     page.click('#practice-open')
-    expect(page.locator('.champion-option')).to_have_count(24)
+    expect(page.locator('.champion-option')).to_have_count(25)
     expect(page.locator('.position-option')).to_have_count(4)
     page.click('[data-position=jungle]')
     page.get_by_role('button', name='료슈 선택').click()
@@ -31,7 +31,7 @@ with sync_playwright() as p:
     page.screenshot(path=str(artifacts / 'v03-practice.png'), full_page=True)
     page.click('#practice-back')
     page.click('#menu-codex')
-    expect(page.locator('#roster-list button')).to_have_count(31)
+    expect(page.locator('#roster-list button')).to_have_count(32)
     page.fill('#roster-search', '구보')
     page.click('#roster-list button')
     expect(page.locator('#roster-detail')).to_contain_text('21%')
@@ -40,9 +40,7 @@ with sync_playwright() as p:
     expect(page.locator('#roster-detail')).to_contain_text('자해')
     page.click('[data-category=monsters]')
     expect(page.locator('#codex-content article')).to_have_count(10)
-    page.click('[data-category=items]')
-    expect(page.locator('#codex-content article')).to_have_count(6)
-    expect(page.locator('#codex-content')).to_contain_text('상점에서 사용 가능')
+    expect(page.locator('#codex-tabs button')).to_have_count(3)
     page.click('[data-category=rules]')
     expect(page.locator('#codex-content')).to_contain_text('13%')
     expect(page.locator('#codex-content')).to_contain_text('1.538배')
@@ -61,8 +59,7 @@ with sync_playwright() as p:
     assert mini['x'] < 30 and mini['y'] < 100
     abilities = page.locator('.abilities').bounding_box()
     assert abilities['y'] > 780 and abilities['x'] > 500
-    inventory = page.locator('#inventory').bounding_box()
-    assert inventory['x'] < 30 and inventory['y'] > 790
+    expect(page.locator('#inventory, #potion-btn')).to_have_count(0)
     buffs = page.locator('#buff-tray').bounding_box()
     assert buffs['x'] > 1200 and buffs['y'] > 700
     page.keyboard.press('KeyB')
@@ -71,11 +68,9 @@ with sync_playwright() as p:
     expect(page.locator('#shop')).to_be_visible()
     page.click('#buy-power')
     assert page.evaluate('__moba.game.player.upgrades.power') == 1
-    page.click('#buy-potion')
-    assert page.evaluate('__moba.game.player.potion') == 2
     page.click('#shop-close')
     page.keyboard.press('Digit1')
-    assert page.evaluate('__moba.game.player.potion') == 1
+    assert page.evaluate('__moba.game.player.potion === undefined')
     page.keyboard.down('Tab')
     expect(page.locator('#scoreboard')).to_be_visible()
     expect(page.locator('#score-rows tr')).to_have_count(8)
@@ -233,4 +228,4 @@ with sync_playwright() as p:
     assert page.evaluate('document.body.scrollWidth <= innerWidth')
     assert not errors, errors
     browser.close()
-    print(json.dumps({'status':'passed','checks':['three-entry menu','24 champions and four positions','unrestricted recommendations','31 champion and three other codex categories','latest balance descriptions','viewport and centered camera','HUD quadrants and three latest buffs','G fountain-only shop and potion','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R bindings; B recall','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['three-entry menu','25 champions and four positions','unrestricted recommendations','32 champion and two other codex categories','latest balance descriptions','viewport and centered camera','HUD placement and three latest buffs','G fountain-only shop and consumable removal','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R bindings; B recall','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))

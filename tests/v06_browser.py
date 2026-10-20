@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.add_init_script('''(() => {window.__drawnLabels=new Set();const draw=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){if(window.__drawnLabels.size<4000)__drawnLabels.add(String(text));return draw.call(this,text,...args);};})();''')
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.champion-option')).to_have_count(24)
+    expect(page.locator('.champion-option')).to_have_count(25)
     page.wait_for_function('__moba.renderer.atlasV06.naturalWidth>0')
     def choose(name):
         if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
@@ -62,7 +62,7 @@ with sync_playwright() as pw:
             assert page.evaluate('__moba.game.zones.filter(z=>z.kind==="desireTree").length')==1
             page.wait_for_timeout(1600);assert page.evaluate('__moba.game.player.totalHealingReceived')>0
             page.screenshot(path=str(art/'v06-desire-tree.png'))
-            page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r';click(41,7);page.wait_for_timeout(400);assert page.evaluate('__moba.game.zones.length')==0
+            page.keyboard.press('Space');assert page.evaluate('__moba.targeting.slot')=='r';click(41,7);page.wait_for_timeout(400);assert page.evaluate('__moba.game.zones.length')==1
     # Test both creep warnings through their actual AI and real-time renderer.
     for camp in ['amplify','blessing']:
         choose('파우스트')
@@ -85,7 +85,7 @@ with sync_playwright() as pw:
     page.keyboard.down('Tab');expect(page.locator('#scoreboard')).to_be_visible();page.screenshot(path=str(art/'v06-whole-map.png'));page.keyboard.up('Tab')
     # Render marching minions after their staggered spawn, away from any fight.
     choose('파우스트');page.evaluate('''() => {const g=__moba.game;g.player.x=12;g.player.y=14;g.aiMinion=(e,dt)=>Object.getPrototypeOf(g).aiMinion.call(g,e,dt);}''')
-    page.wait_for_timeout(2700);page.screenshot(path=str(art/'v06-minion-column.png'))
+    page.wait_for_timeout(4300);page.screenshot(path=str(art/'v06-minion-column.png'))
     assert page.evaluate('__moba.game.units.filter(m=>m.kind==="minion"&&m.team===0&&m.lane===0).length')==4
     # One remaining tower unlocks its core and visibly shows the damage reduction.
     page.evaluate('''() => {const g=__moba.game;g.towers(1)[0].alive=false;const c=g.units.find(e=>e.kind==='core'&&e.team===1);g.player.x=c.x-3;g.player.y=c.y;}''')
@@ -99,4 +99,4 @@ with sync_playwright() as pw:
     page.click('#restart');page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(100)
     assert page.evaluate('document.body.scrollWidth<=innerWidth')
     assert not errors,errors
-    browser.close();print(json.dumps({'status':'passed','checks':['24 ordinary/five atlases','selective quickcast/coordinate confirmation','Gubo 35% timed gauge','Nelly single hit/4 ammo','Gahwan ground triple ultimate','Ahab teleport','four new sprites and skills','global map negative coordinates','two creep warnings/windup damage','moved rear wells/recall/shop','both two-unit flank rooms/minimap','minion column','core partial shield','20-minute result/frozen clock','mobile overflow'],'page_errors':errors},ensure_ascii=False))
+    browser.close();print(json.dumps({'status':'passed','checks':['25 ordinary/six atlases','selective quickcast/coordinate confirmation','Gubo 35% timed gauge','Nelly single hit/4 ammo','Gahwan ground triple ultimate','Ahab teleport','four new sprites and skills','global map negative coordinates','two creep warnings/windup damage','moved rear wells/recall/shop','both two-unit flank rooms/minimap','minion column','core partial shield','20-minute result/frozen clock','mobile overflow'],'page_errors':errors},ensure_ascii=False))

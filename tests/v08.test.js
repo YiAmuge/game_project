@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.js';
 import { CHAMPIONS, RUNTIME_CHAMPIONS, FOUNTAINS } from '../src/data.js';
-import { CONSUMABLES, refund } from '../src/items.js';
 import { distance } from '../src/geometry.js';
 import { separate } from '../src/collision.js';
 import { mentalWhip } from '../src/skills.js';
+import { ultGrowth } from '../src/v06-champions.js';
 const close=(a,b,t=1e-6)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.ceil(s*60);i++)g.step(1/60);};
 function quiet(key='faust'){
@@ -13,25 +13,16 @@ function quiet(key='faust'){
  const p=g.player,t=g.champions(1).find(e=>e.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 function ally(g,key='yi'){const e=g.makeChampion(key,0,5);Object.assign(e,{x:42,y:9});return e;}
-test('24 ordinary champions include all four additions; XP accrues at exactly one per second even while dead',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,24);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,26);
+test('25 ordinary champions include all four additions; XP accrues at exactly one per second even while dead',()=>{
+ assert.equal(Object.keys(CHAMPIONS).length,25);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,27);
  for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,1);g.kill(p,t);run(g,1);close(p.xp,2);}
 });
-test('four ordinary creeps or two buff creeps alone reach level two; buildings lose fifteen percent HP',()=>{
- for(const [camp,n]of [['side',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++){g.kill(g.makeNeutral(42,7,camp),p);if(i<n-1)assert.equal(p.level,1);}assert.equal(p.level,2);close(p.xp,250);}
- const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===6460));assert.equal(g.units.find(t=>t.kind==='core').maxHp,10200);
+test('four ordinary creeps or two buff creeps now give 225 XP; building HP stays reduced',()=>{
+ for(const [camp,n]of [['side',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++)g.kill(g.makeNeutral(42,7,camp),p);assert.equal(p.level,1);close(p.xp,225);}const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===6460));assert.equal(g.units.find(t=>t.kind==='core').maxHp,10200);
 });
-test('every consumable can be bought, used and sold; wards are absent and remaining charges determine refund',()=>{
- assert.equal(CONSUMABLES.length,6);assert.ok(!CONSUMABLES.some(i=>i.key==='ward'));
- for(const item of CONSUMABLES){const {g,p,t}=quiet();Object.assign(p,FOUNTAINS[0]);p.gold=10000;t.x=p.x+2;t.y=p.y;g.input.aim=t;assert.ok(g.buyConsumable(p,item.key));assert.equal(g.buy(p,'potion'),false);assert.equal(p.potion,item.uses);assert.ok(g.usePotion(p));assert.equal(p.potion,item.uses-1);if(p.potion){const gold=p.gold;const value=refund(p);assert.ok(g.sellConsumable(p));close(p.gold-gold,value);}assert.equal(g.buy(p,'ward'),false);}
-});
-test('cleanse removes crowd control and debuffs; weakness affects only the aimed enemy',()=>{
- const {g,p,t}=quiet();Object.assign(p,{potion:1,itemKey:'cleanse'});g.status(p,'stun',1,2);p.burn={};p.state.ishmaelWeak={9:2};assert.ok(g.usePotion(p));assert.equal(g.stat(p,'stun'),0);assert.equal(p.burn,undefined);g.status(p,'root',1,3);assert.equal(g.stat(p,'root'),0);run(g,1.1);p.itemKey='weakness';p.potion=1;g.input.aim=t;assert.ok(g.usePotion(p));close(g.stat(t,'slow'),.2);close(g.stat(t,'reloadWeak'),.2);
-});
-test('temporary magazine preserves extra ammunition after expiry and Rudolph converts all magazine bonuses into SP',()=>{
- const {g,p}=quiet('myo');p.itemKey='magazine';p.potion=1;g.usePotion(p);assert.equal(g.ammoCap(p),5);p.ammo=5;run(g,8.1);assert.equal(g.ammoCap(p),4);assert.equal(p.ammo,5);
- const r=quiet('rudolph');r.p.alive=false;r.p.upgrades.reload=3;r.p.gold=5000;assert.ok(r.g.buyAugment(r.p,'magazine2'));assert.equal(r.g.ammoCap(r.p),130);r.p.alive=true;r.p.itemKey='magazine';r.p.potion=1;r.g.usePotion(r.p);assert.equal(r.g.ammoCap(r.p),145);
-});
+
+test('Rudolph magazine augmentation grants thirty maximum SP',()=>{const {g,p}=quiet('rudolph');p.alive=false;p.upgrades.reload=3;p.gold=5000;assert.ok(g.buyAugment(p,'magazine2'));assert.equal(g.ammoCap(p),130);});
+
 test('Rudolph five-hit chains stack whip vulnerability to thirty percent without ammunition loss or CC',()=>{
  const {g,p,t}=quiet('rudolph');const ammo=t.ammo;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);assert.equal(t.ammo,ammo);assert.equal(g.stat(t,'slow'),0);const hp=t.hp;g.attack(p,t);close(hp-t.hp,48*1.3*.91*.9);p.rCd=0;g.cast(p,'r',t);run(g,1.3);close(g.stat(t,'slow'),.3);assert.equal(g.stat(t,'root'),0);
 });
@@ -41,9 +32,10 @@ test('Sinclair marks allow reload progress during continuous firing while other 
 test('Dongbaek third extra attack lands then applies exactly 2.85 seconds of basic-only disarm',()=>{
  const {g,p,t}=quiet('dongbaek');t.x=41;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;assert.ok(g.attack(p,t));}assert.equal(p.state.petals,0);close(p.status.disarm.until-g.time,2.85);p.ammo=3;p.attackCd=0;assert.equal(g.attack(p,t),false);p.qCd=0;assert.ok(g.cast(p,'q',p));run(g,2.9);assert.ok(g.attack(p,t));
 });
-test('Dongrang has one non-charge tree and all ultimate scaling caps after five hundred non-natural healing',()=>{
- const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),false);assert.equal(p.state.treeCharges,undefined);g.heal(null,p,500,false);close(g.cooldown(p,'r'),35);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,500);g.heal(null,p,1000,false);close(g.cooldown(p,'r'),35);
+test('Dongrang non-charge trees can coexist and only damage grows every 1200 healing',()=>{
+ const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);g.heal(null,p,1200,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1200);close(ultGrowth(p).damage,230);g.heal(null,p,1200,false);close(ultGrowth(p).damage,280);
 });
+
 test('Hohenheim death state lasts 2.5 seconds, cannot move, heal or ult, and only awards one kill',()=>{
  const {g,p,t}=quiet('hohenheim');g.deal(t,p,100000,{fixed:true});assert.ok(p.alive&&p.state.posthumous);close(p.hp,0);p.ammo=0;const x=p.x;g.input.x=1;assert.ok(g.cast(p,'q',t));assert.equal(g.cast(p,'r',t),false);g.heal(null,p,1000,false);close(p.hp,0);run(g,1);close(p.x,x);assert.ok(g.attack(p,t));assert.equal(t.kills,0);run(g,1.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.state.posthumous,undefined);close(p.ccImmuneUntil,0);
 });
@@ -66,7 +58,7 @@ test('Alisa tactical recast consumes heat to heal and her ultimate blocks CC unt
  const {g,p,t}=quiet('alisa');p.hp-=1000;p.state.heat=2;assert.ok(g.cast(p,'q',{x:48,y:7}));run(g,.4);assert.ok(g.cast(p,'q',p));assert.equal(p.state.heat,0);assert.ok(p.hp>p.maxHp-1000);p.state.heat=5;assert.ok(g.cast(p,'r',p));g.status(p,'stun',1,3);assert.equal(g.stat(p,'stun'),0);run(g,1);assert.ok(p.state.detonating);run(g,2.1);assert.equal(p.alive,false);assert.equal(p.ccImmuneUntil,0);
 });
 test('Ahab is invulnerable and immune until a visible return dash reaches the original position',()=>{
- const {g,p,t}=quiet('ahab');const start={x:p.x,y:p.y};assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.x,44);const hp=p.hp;g.deal(t,p,9999,{fixed:true});close(p.hp,hp);g.status(p,'stun',1,3);assert.equal(g.stat(p,'stun'),0);run(g,.5);assert.ok(p.motion&&p.state.ahabUlt);const x=p.x;run(g,.1);assert.ok(p.x<x&&x-p.x<=.81);run(g,1.5);close(distance(p,start),0);assert.equal(p.state.ahabUlt,undefined);g.deal(t,p,10,{fixed:true});assert.ok(p.hp<hp);
+ const {g,p,t}=quiet('ahab');const start={x:p.x,y:p.y};assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.x,44);const hp=p.hp;g.deal(t,p,9999,{fixed:true});close(p.hp,hp);g.status(p,'stun',1,3);assert.equal(g.stat(p,'stun'),0);run(g,.5);assert.ok(p.motion&&p.state.ahabUlt);const x=p.x;run(g,.1);assert.ok(p.x<x&&x-p.x<=1.21);run(g,1.5);close(distance(p,start),0);assert.equal(p.state.ahabUlt,undefined);g.deal(t,p,10,{fixed:true});assert.ok(p.hp<hp);
 });
 test('collision separates coincident champions and keeps them outside structures and walls',()=>{
  const {g,p,t}=quiet();t.x=p.x;t.y=p.y;separate(g);assert.ok(distance(p,t)>=p.radius+t.radius-.001);const tower=g.entity({kind:'tower',team:1,x:41,y:7,maxHp:1000,radius:.9});p.x=tower.x;p.y=tower.y;separate(g);assert.ok(distance(p,tower)>=p.radius+tower.radius-.001);
@@ -76,7 +68,4 @@ test('Hohenheim bots still fire in the stationary posthumous state and recall is
 });
 test('Queequeg retains earned endurance stacks when maximum health increases with level',()=>{
  const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.award(p,6900,0);g.deal(t,p,1,{fixed:true});assert.equal(p.state.endurance,2);
-});
-test('an expired battle potion does not discard excess ammo retained from a previous magazine potion',()=>{
- const {g,p}=quiet('faust');p.ammo=4;p.buffs.itemBattle=1;p.state.itemBattleWas=true;g.time=1.01;g.step(.01);assert.equal(p.ammo,4);
 });

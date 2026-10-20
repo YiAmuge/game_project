@@ -12,9 +12,10 @@ function quiet(key='faust'){
  const p=g.player,t=g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:43,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 function bossFight(){const {g,p,t}=quiet();g.units=[p];const boss=g.makeNeutral(40,7,'boss');g.aiNeutral=Game.prototype.aiNeutral;p.x=43.2;g.deal(p,boss,1,{fixed:true});return{g,p,t,boss};}
-test('Dongbaek petals recover individually every 2.5 seconds and normal ammo does not reset them',()=>{
- const {g,p,t}=quiet('dongbaek');for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;assert.ok(g.attack(p,t));}assert.equal(p.state.petals,0);close(p.qCd,7.5);close(p.rCd,7.5);close(p.status.disarm.until,2.85);p.ammo=3;run(g,2.49);assert.equal(p.state.petals,0);run(g,.02);assert.equal(p.state.petals,1);p.attackCd=0;assert.equal(g.attack(p,t),false);run(g,.4);assert.ok(g.attack(p,t));assert.equal(p.state.petals,1);run(g,2.1);assert.equal(p.state.petals,2);run(g,2.5);assert.equal(p.state.petals,3);assert.equal(p.state.petalReady,Infinity);
+test('Dongbaek petals recover as a full batch every ten seconds and real ammo does not reset them',()=>{
+ const {g,p,t}=quiet('dongbaek');for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;assert.ok(g.attack(p,t));}assert.equal(p.state.petals,0);close(p.qCd,7.5);close(p.rCd,7.5);close(p.status.disarm.until,2.85);p.ammo=3;run(g,2.8);assert.equal(p.state.petals,0);p.attackCd=0;assert.equal(g.attack(p,t),false);run(g,.1);assert.ok(g.attack(p,t));run(g,7.2);assert.equal(p.state.petals,3);assert.equal(p.state.petalReady,Infinity);
 });
+
 test('Dongbaek base damage is 165, and existing consecutive-hit damage scaling remains',()=>{
  const {g,p,t}=quiet('dongbaek');const hp=t.hp;g.attack(p,t);close(hp-t.hp,165*.9);p.attackCd=0;const before=t.hp;g.attack(p,t);close(before-t.hp,165*1.12*.9);
 });
@@ -59,7 +60,7 @@ test('Rudolph can damage minions, creeps and towers without champion-only debuff
 });
 test('position recommendations and seedable drafts cover varied champions without same-team duplicates',()=>{
  assert.deepEqual(POSITIONS.top.recommend,['보호','돌격']);assert.deepEqual(POSITIONS.jungle.recommend,['암살','돌격']);assert.deepEqual(POSITIONS.bottom.recommend,['저격','방해']);assert.deepEqual(POSITIONS.support.recommend,['지원','방해']);const keys=new Set();
- for(let seed=1;seed<=100;seed++){const g=new Game('faust','bottom',{seed});for(const team of [0,1]){const cs=g.champions(team);assert.equal(new Set(cs.map(c=>c.key)).size,4);for(const c of cs.filter(c=>!c.player)){assert.ok(POSITIONS[c.position].recommend.includes(CHAMPIONS[c.key].role));keys.add(c.key);}}}assert.equal(keys.size,24);assert.deepEqual(new Game('don','top',{seed:42}).champions().map(e=>e.key),new Game('don','top',{seed:42}).champions().map(e=>e.key));
+ for(let seed=1;seed<=100;seed++){const g=new Game('faust','bottom',{seed});for(const team of [0,1]){const cs=g.champions(team);assert.equal(new Set(cs.map(c=>c.key)).size,4);for(const c of cs.filter(c=>!c.player)){assert.ok(POSITIONS[c.position].recommend.includes(CHAMPIONS[c.key].role));keys.add(c.key);}}}assert.equal(keys.size,25);assert.deepEqual(new Game('don','top',{seed:42}).champions().map(e=>e.key),new Game('don','top',{seed:42}).champions().map(e=>e.key));
 });
 test('minions pass an allied tower with visible clearance instead of pushing into its center',()=>{
  const {g,p}=quiet();g.units=[];g.aiMinion=Game.prototype.aiMinion;const tower=g.entity({kind:'tower',team:0,x:44,y:7.15,maxHp:1000,radius:.9});const m=g.entity({kind:'minion',team:0,x:40,y:7.15,maxHp:1000,radius:.28,waypoint:2,lane:0,range:1.2,damage:58,interval:1,wave:1,formationIndex:0,path:[],pathAt:0});let detour=0;for(let i=0;i<360;i++){g.step(1/60);detour=Math.max(detour,Math.abs(m.y-7.15));assert.ok(distance(m,tower)>=m.radius+tower.radius-.01);assert.ok(!blocked(m.x,m.y,m.radius));}assert.ok(m.x>49&&detour>1.1);

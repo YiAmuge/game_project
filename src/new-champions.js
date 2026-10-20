@@ -2,7 +2,20 @@ import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance, direction, clearLine, blocked } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 
-export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}}
+export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}onRespawn(g,e);}
+export function onRespawn(g,e){if(e.key==='ahab'){e.state.order='cover';g.addBuff(e,'ahabOrder',36000,{copy:false});}}
+function coverCaptain(g,e,t){return e.kind==='champion'&&t.state?.harpoon?.until>g.time&&t.state.harpoon.team===e.team?g.champions(e.team).find(a=>a!==e&&a.id===t.state.harpoon.source&&a.alive&&a.state.order==='cover'&&distance(e,a)<=5):null;}
+export function coverMultiplier(g,e,t){
+ const captain=coverCaptain(g,e,t);if(!captain)return 1;
+ if((captain.state.coverReady||0)<=g.time){captain.state.coverReady=g.time+1.6;captain.state.coverStacks=g.buff(captain,'ahabCover')?Math.min(3,(captain.state.coverStacks||0)+1):1;g.addBuff(captain,'ahabCover',5,{copy:false});}e.supporters[captain.id]=g.time;return 1.3;
+}
+export function transfer(g,source,target,amount,kind){
+ if(target.key!=='ahab'||target.state.order!=='guard')return amount;
+ const ally=g.champions(target.team).filter(a=>a!==target&&a.alive&&!g.hidden(a)&&!(a.invulnerableUntil>g.time)&&a.hp>=a.maxHp*.3&&distance(a,target)<=5).sort((a,b)=>b.hp-a.hp)[0];
+ if(!ally)return amount;
+ const share=Math.min(amount*.3,Math.max(0,ally.hp-ally.maxHp*.2));
+ if(share>0)g.deal(source,ally,share,{fixed:true,proc:false,transferred:true,damageKind:kind,nonLethal:true});return amount-share;
+}
 export function validate(g,e,slot,p){
  if(e.key==='nelly'&&slot==='q')return (e.state.knifeCharges??2)>0;
  if(e.key==='nelly'&&slot==='r')return !g.stat(e,'root')&&Boolean(targetAt(g,e,p,7));
@@ -29,10 +42,6 @@ export function afterDamage(g,e,t,actual,proc){
  if(!proc||actual<=0||e.kind!=='champion'||t.kind!=='champion'||t.hp<=0)return;
  if(e.key==='gahwan')gaze(g,e,t);
  if(e.key==='nelly')nellyMark(g,e,t);
- if(t.state?.harpoon?.until>g.time&&t.state.harpoon.team===e.team&&e.key!=='ahab'){
-  const captain=g.units.find(a=>a.id===t.state.harpoon.source&&a.alive&&a.state.order==='cover'&&distance(e,a)<=5);
-  if(captain){e.state.coverStacks=g.buff(e,'ahabCover')?Math.min(2,(e.state.coverStacks||0)+1):1;g.addBuff(e,'ahabCover',3);e.supporters[captain.id]=g.time;}
- }
 }
 export function basic(g,e,p,d){
  switch(e.key){
@@ -85,7 +94,7 @@ export function cast(g,e,slot,p,d){
     g.schedule(e,.45,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&clearLine(e,t)){
      if(execute.has(t.id)){g.deal(e,t,t.hp+g.shield(t),{fixed:true});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+4;}
      else g.deal(e,t,300+(t.maxHp-t.hp)*.18);
-    }g.effects.push({type:'burst',x:e.x,y:e.y,r:2.5,theme:e.key,life:.7,maxLife:.7});const ult=s.ahabUlt;const done=()=>{e.ccImmuneUntil=ult.immune;e.invulnerableUntil=ult.invulnerable;delete s.ahabUlt;s.returnAnchorUntil=g.time+.05;};e.channelUntil=0;if(!g.startMotion(e,direction(e,ult.origin),distance(e,ult.origin),{speed:8,follow:{...ult.origin,alive:true},onComplete:done}))done();});
+    }g.effects.push({type:'burst',x:e.x,y:e.y,r:2.5,theme:e.key,life:.7,maxLife:.7});const ult=s.ahabUlt;const done=()=>{e.ccImmuneUntil=ult.immune;e.invulnerableUntil=ult.invulnerable;delete s.ahabUlt;s.returnAnchorUntil=g.time+.05;};e.channelUntil=0;if(!g.startMotion(e,direction(e,ult.origin),distance(e,ult.origin),{speed:12,maxSpeed:12,phaseEnemies:true,follow:{...ult.origin,alive:true},onComplete:done}))done();});
    }
   }return true;
  }
@@ -97,9 +106,5 @@ export function tick(g,e){
   s.knifeCharges??=2;s.knifeReady??=Infinity;
   if(s.knifeCharges<2&&g.time>=s.knifeReady){s.knifeCharges++;s.knifeReady=s.knifeCharges<2?g.time+g.cooldown(e,'q'):Infinity;}
   e.qCd=Math.max(0,(s.qDelayUntil||0)-g.time,s.knifeCharges>0?0:s.knifeReady-g.time);
- }
- if(e.key==='ahab'&&s.order==='guard'&&g.time>=(s.orderAt??0)){
-  s.orderAt=g.time+3;
-  for(const a of g.champions(e.team).filter(a=>a.alive&&distance(e,a)<=5)){a.state.guardStacks=g.buff(a,'ahabGuard')?Math.min(2,(a.state.guardStacks||0)+1):1;g.addBuff(a,'ahabGuard',3.1);if(a!==e)a.supporters[e.id]=g.time;}
  }
 }

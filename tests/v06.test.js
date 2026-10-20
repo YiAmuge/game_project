@@ -11,7 +11,7 @@ function quiet(key='faust'){
  const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 test('twenty-four ordinary and two experimental champions retain finite stats and complete unique growth definitions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,24);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,26);
+ assert.equal(Object.keys(CHAMPIONS).length,25);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,27);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const g=new Game(key);assert.ok(g.player.maxHp>0);assert.ok(Number.isFinite(g.speed(g.player)));assert.ok(CHAMPIONS[key]?.growth||RUNTIME_CHAMPIONS[key].growth);}
 });
 test('new rear wings and two flank rooms are walkable and connected; void corners stay blocked',()=>{
@@ -47,9 +47,9 @@ test('leash, death and stun cancel a telegraphed pattern instead of leaving a gh
 });
 test('wave creation spawns one minion per lane immediately and the rest at .35 second intervals',()=>{
  const g=new Game();g.aiMinion=()=>{};g.aiChampion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};
- assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,.3);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,.1);assert.equal(g.units.filter(u=>u.kind==='minion').length,8);run(g,.7);assert.equal(g.units.filter(u=>u.kind==='minion').length,16);
- const line=g.units.filter(u=>u.kind==='minion'&&u.team===0&&u.lane===0);assert.deepEqual(line.map(u=>u.formationIndex),[0,1,2,3]);assert.ok(line[3].ranged);line.forEach((m,i)=>close(m.spawnAt,i*.35));
- g.wave=2;g.spawnWave();run(g,1.5);const siege=g.units.filter(u=>u.kind==='minion'&&u.wave===3&&u.siege);assert.equal(siege.length,4);siege.forEach(m=>close(m.spawnAt,1.1+1.4));
+ assert.equal(g.units.filter(u=>u.kind==='minion').length,0);run(g,3);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,.3);assert.equal(g.units.filter(u=>u.kind==='minion').length,4);run(g,.1);assert.equal(g.units.filter(u=>u.kind==='minion').length,8);run(g,.7);assert.equal(g.units.filter(u=>u.kind==='minion').length,16);
+ const line=g.units.filter(u=>u.kind==='minion'&&u.team===0&&u.lane===0);assert.deepEqual(line.map(u=>u.formationIndex),[0,1,2,3]);assert.ok(line[3].ranged);line.forEach((m,i)=>close(m.spawnAt,3+i*.35));
+ g.wave=2;g.spawnWave();run(g,1.5);const siege=g.units.filter(u=>u.kind==='minion'&&u.wave===3&&u.siege);assert.equal(siege.length,4);siege.forEach(m=>close(m.spawnAt,3+1.1+1.4));
 });
 test('uncontested minions march along one centerline in spawn order with visible spacing',()=>{
  const g=new Game();g.aiChampion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};run(g,5);let ms=g.units.filter(m=>m.kind==='minion'&&m.team===0&&m.lane===0),path=lanePath(0,0);
@@ -93,7 +93,7 @@ test('Myo direct champion takedowns build only two four-second hunt stacks',()=>
  const {g,p}=quiet('myo');for(let i=0;i<3;i++){const t=g.makeChampion('yi',1,5);g.kill(t,p);}assert.equal(p.state.rabbitStacks,2);close(p.buffs.rabbitHunt-g.time,4);assert.ok(g.speed(p)>RULES.speed[5]);
 });
 test('Dongbaek extra attacks spend skill readiness and recover independently from real ammo',()=>{
- const {g,p,t}=quiet('dongbaek');p.ammo=0;for(let i=0;i<3;i++){p.attackCd=0;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);}close(p.qCd,7.5);close(p.rCd,7.5);p.attackCd=0;assert.equal(g.attack(p,t),false);p.ammo=1;run(g,2.9);p.attackCd=0;g.attack(p,t);assert.equal(p.state.petals,1);
+ const {g,p,t}=quiet('dongbaek');p.ammo=0;for(let i=0;i<3;i++){p.attackCd=0;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);}close(p.qCd,7.5);close(p.rCd,7.5);p.attackCd=0;assert.equal(g.attack(p,t),false);p.ammo=1;run(g,2.9);p.attackCd=0;g.attack(p,t);assert.equal(p.state.petals,0);
 });
 test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate hits at the selected point without fragrance stacks',()=>{
  const {g,p,t}=quiet('dongbaek');close(g.armor(p),20);const reload=g.reloadInterval(p);g.cast(p,'q',p);close(g.armor(p),0);assert.ok(g.reloadInterval(p)>reload);assert.ok(g.shield(p)>0);t.x=47;const hp=t.hp;g.cast(p,'r',t);assert.ok(t.hp<hp);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.buff(p,'flowerReload'));assert.equal(p.channelUntil,undefined);
@@ -101,6 +101,6 @@ test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate 
 test('Dongrang power affects health and armor rather than damage or incoming healing and counts deliberate overheal',()=>{
  const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,100);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
 });
-test('Dongrang has one tree, fixed damage and healing, and his ultimate consumes it',()=>{
- const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=430);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,0);
+test('Dongrang has one tree, fixed damage and healing, and his ultimate preserves it',()=>{
+ const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=480);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,1);
 });

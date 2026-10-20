@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.add_init_script('''(() => {window.__drawnLabels=new Set();const draw=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){if(window.__drawnLabels.size<3000)__drawnLabels.add(String(text));return draw.call(this,text,...args);};})();''')
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.champion-option')).to_have_count(24)
+    expect(page.locator('.champion-option')).to_have_count(25)
     page.wait_for_function('__moba.renderer.atlasV05.naturalWidth>0')
     def choose(name):
         if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
@@ -46,15 +46,15 @@ with sync_playwright() as pw:
     page.evaluate('''() => {const g=__moba.game;g.kill(g.player,g.champions(1)[0]);g.player.respawnAt=g.time+100;g.player.gold=10000;}''')
     page.keyboard.press('KeyG');expect(page.locator('#shop')).to_be_visible();expect(page.locator('#respawn')).to_be_visible()
     box=page.locator('#shop').bounding_box();assert box['y']>=0 and box['y']+box['height']<=900
-    for i in range(3):page.click('#buy-power')
-    expect(page.locator('#buy-power')).to_contain_text('3 / 5')
-    page.click('#augment-power15');page.click('#augment-range7');page.click('#augment-finalBullet')
+    for i in range(3):page.click('#buy-power');page.wait_for_timeout(400)
+    expect(page.locator('#upgrade-info-power')).to_contain_text('3 / 5')
+    page.click('#augment-power15');page.wait_for_timeout(400);page.click('#augment-range7');page.wait_for_timeout(400);page.click('#augment-finalBullet');page.wait_for_timeout(400)
     assert page.evaluate('__moba.game.player.augments.length')==3
     expect(page.locator('#augment-reloadStacks')).to_be_disabled()
-    gold=page.evaluate('__moba.game.player.gold');page.click('#augment-power15');assert page.evaluate('__moba.game.player.augments.length')==3;page.click('#shop-sell');assert page.evaluate('__moba.game.player.gold')>=gold+350
-    page.click('#augment-reloadStacks');assert page.evaluate('__moba.game.player.augments.length')==3
+    gold=page.evaluate('__moba.game.player.gold');page.click('#select-augment-power15');assert page.evaluate('__moba.game.player.augments.length')==3;page.click('#shop-sell');assert page.evaluate('__moba.game.player.gold')>=gold+350
+    page.wait_for_timeout(400);page.click('#augment-reloadStacks');assert page.evaluate('__moba.game.player.augments.length')==3
     assert page.evaluate('__moba.game.player.hp')==0
-    expect(page.locator('#buy-potion')).to_be_disabled()
+    expect(page.locator('#buy-potion')).to_have_count(0)
     page.screenshot(path=str(art/'v05-dead-augments.png'))
     page.click('#shop-close')
     for name,key in [('구보','gubo'),('가환','gahwan'),('넬리','nelly'),('에이해브','ahab')]:
@@ -83,4 +83,4 @@ with sync_playwright() as pw:
     page.screenshot(path=str(art/'v05-mobile-shop.png'),full_page=True)
     assert not errors,errors
     browser.close()
-    print(json.dumps({'status':'passed','checks':['24 ordinary/five atlases','range preview and cancel without cost','LMB confirm without basic fire','ground teleport confirmation','quick dash','dead shop and caps','three augment slots/sale/replacement','four new sprites/skills','Don directional moving barrage','enemy corpse','separate semicircular well','mobile scrollable shop'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['25 ordinary/six atlases','range preview and cancel without cost','LMB confirm without basic fire','ground teleport confirmation','quick dash','dead shop and caps','three augment slots/sale/replacement','four new sprites/skills','Don directional moving barrage','enemy corpse','separate semicircular well','mobile scrollable shop'],'page_errors':errors},ensure_ascii=False))

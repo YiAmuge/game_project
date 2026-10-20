@@ -9,7 +9,7 @@ export function stackInfo(e,g){
  if(e.key==='dongbaek')return {label:'추가 꽃잎'+(Number.isFinite(e.state.petalReady)?' '+Math.max(0,e.state.petalReady-g.time).toFixed(1)+'s':''),value:e.state.petals??3,max:3,color:'#efda98',shape:'leaf'};
  if(e.key==='myo'&&g.buff(e,'rabbitHunt'))return {label:'토끼 시술',value:e.state.rabbitStacks||0,max:2,color:'#c7a6e7',shape:'mirror'};
  if(e.key==='nelly')return {label:'비도',value:e.state.knifeCharges??2,max:2,color:'#d8e0ed',shape:'mirror'};
- if(e.key==='ahab'&&e.state.order)return {label:e.state.order==='guard'?'방어 명령':'엄호 명령',value:2,max:2,color:'#d9c587',shape:'mirror'};
+ if(e.key==='ahab'&&e.state.order)return e.state.order==='guard'?{label:'피해 전가 30%',textOnly:true,color:'#d9c587'}:{label:'엄호 장전',value:g.buff(e,'ahabCover')?e.state.coverStacks||0:0,max:3,color:'#d9c587',shape:'mirror'};
  const gaze=Object.values(e.state.gaze||{}).find(m=>m.until>g.time&&m.n>0);if(gaze)return {label:'시선',value:gaze.n,max:5,color:'#efbdb9',shape:'mirror'};
  if(e.key==='sinclair')return {label:g.buff(e,'marks')?'표지 발동':'어느 표지',value:e.marks,max:3,color:'#eddb83',shape:'leaf'};
  if(e.key==='gregor')return {label:g.buff(e,'mutant')?'변이 발동':'이형발작',value:e.state.mutations||0,max:12,color:'#bddb7d',shape:'claw'};
@@ -58,6 +58,7 @@ function star(r,x,y,size,color){
 }
 export function championEffects(r,e,g){
  const c=r.ctx,theme=THEMES[e.key]||THEMES.faust;
+ if(g.buff(e,'tetherResistance'))r.text(`매듭 저항 ${(e.state.tetherResistance||0)*5}%`,e.x,e.y+1.3,'#a2dfd4',.27);
  c.save();
  const villain=g.champions(1-e.team).some(a=>a.alive&&a.key==='don'&&a.state.villain===e.id);
  if(villain){
@@ -111,7 +112,7 @@ export function championEffects(r,e,g){
  if(g.stat(e,'stun'))for(let i=0;i<3;i++){const a=g.time*5+i*Math.PI*2/3;star(r,e.x+Math.cos(a)*.63,e.y-4.35+Math.sin(a)*.18,.17,'#f6d97d');}
  if(g.stat(e,'root')){const t=THEMES[e.status.root.theme]||theme;for(let i=0;i<3;i++){const a=i*2.1;r.chain({x:e.x+Math.cos(a)*.8,y:e.y+Math.sin(a)*.3},{x:e.x+Math.cos(a+2)*.8,y:e.y+Math.sin(a+2)*.3},t.accent);}}
  if(g.stat(e,'disarm')){r.text('무장해제',e.x,e.y-4.6,'#efbb98',.26);r.line([{x:e.x-.35,y:e.y-4.25},{x:e.x+.35,y:e.y-3.8}],'#ed9f89',.09);}
- if(g.stat(e,'captured')){r.circle(e.x,e.y,.85,null,'#81c6c9',.065);for(let i=0;i<3;i++)r.line([{x:e.x-.65+i*.65,y:e.y+.4},{x:e.x-.65+i*.65,y:e.y-1.8}],'#78a6a799',.06);r.text('포획',e.x,e.y-4.5,'#b5e9e5',.27);}
+ if(g.stat(e,'captured')){r.circle(e.x,e.y,.85,null,'#81c6c9',.065);for(let i=0;i<3;i++)r.line([{x:e.x-.65+i*.65,y:e.y+.4},{x:e.x-.65+i*.65,y:e.y-1.8}],'#78a6a799',.06);r.text('결박',e.x,e.y-4.5,'#b5e9e5',.27);}
  if(e.state.tether){const t=g.units.find(t=>t.id===e.state.tether.target&&t.alive);if(t)r.chain({x:e.x,y:e.y-.5},{x:t.x,y:t.y-.5},'#afd8cd');}
  if(e.state.posthumous){r.circle(e.x,e.y,1.2,'#91f4e922','#a5fff0',.09);for(let i=0;i<3;i++)r.shard(e.x+Math.sin(g.time*8+i)*.6,e.y-1-i*.5,.17,g.time,'#acffec');}
  if(e.key==='myo'&&g.buff(e,'rabbitFrenzy')&&e.motion?.actionKind==='basic')r.circle(e.x,e.y-.5,1.15,'#bba1ef22','#e7d4ffcc',.1);
