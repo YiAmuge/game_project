@@ -9,7 +9,7 @@ with sync_playwright() as pw:
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
  expect(page.locator('.build-tag')).to_contain_text('0.13.0')
  expect(page.locator('#inventory,#potion-btn,#consumable-list,[data-category=items]')).to_have_count(0)
- page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(28)
+ page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(29)
  def choose(name):
   if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
   page.get_by_role('button',name=name+' 선택').click();page.click('#start')
@@ -74,7 +74,7 @@ with sync_playwright() as pw:
  page.keyboard.press('Space');click(44,7);page.wait_for_function('__moba.game.player.motion?.speed===12')
  assert page.evaluate('__moba.game.player.motion?.speed')==12
  page.wait_for_timeout(400)
- page.click('#pause');page.click('#leave');page.click('#archive-open');expect(page.locator('#roster-list button')).to_have_count(33)
+ page.click('#pause');page.click('#leave');page.click('#archive-open');expect(page.locator('#roster-list button')).to_have_count(34)
  page.fill('#roster-search','스타벅');page.click('#roster-list button');expect(page.locator('#roster-detail')).to_contain_text('일등 항해사의 노련함')
  expect(page.locator('#codex-tabs button')).to_have_count(4)
  assert not errors,errors;b.close()

@@ -88,7 +88,7 @@ test('Kim half-second ultimate fires 450 or four sequential 338 waves at HP one'
  const f=quiet('kim');f.g.cast(f.p,'r',f.t);run(f.g,.51);const normal=f.g.projectiles.filter(b=>b.theme==='kim');assert.equal(normal.length,1);close(normal[0].damage,450);
 });
 test('new ordinary champions and augment codex share the gameplay definitions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,28);assert.ok(CHAMPIONS.kim&&CHAMPIONS.ppui);const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8'),html=readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/data-category="augments"/);assert.match(main,/AUGMENTS\.map/);
+ assert.equal(Object.keys(CHAMPIONS).length,29);assert.ok(CHAMPIONS.kim&&CHAMPIONS.ppui);const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8'),html=readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/data-category="augments"/);assert.match(main,/AUGMENTS\.map/);
 });
 
 test('capture respects status resistance and a full cleanse releases the arena immediately',()=>{

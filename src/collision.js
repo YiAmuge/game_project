@@ -4,6 +4,7 @@ import { distance,segmentDistance } from './geometry.js';
 
 const structure=e=>['tower','core'].includes(e.kind);
 export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||false}={}){
+ if(e.kind==='summon'||other.kind==='summon')return false;
  if(e===other||!other.alive||g.hidden(other)||other.state?.posthumous)return false;
  if(structure(other))return true;
  if(paired(g,e,other))return false;
@@ -47,7 +48,7 @@ export function settleBody(g,e,fallback){
 export function separate(g){
  const moved=e=>Boolean(e.bodyMoved)||e.bodyOrigin&&distance(e,e.bodyOrigin)>1e-6;
  for(const e of [...g.units].sort((a,b)=>Number(Boolean(moved(b)))-Number(Boolean(moved(a)))||b.id-a.id)){
-  if(!e.alive||structure(e)||e.camp==='boss'||g.hidden(e)||e.state?.posthumous||e.motion?.phaseEnemies)continue;
+  if(!e.alive||e.kind==='summon'||structure(e)||e.camp==='boss'||g.hidden(e)||e.state?.posthumous||e.motion?.phaseEnemies)continue;
   if(!canOccupy(g,e,e))settleBody(g,e,e.bodySafe);
   if(canOccupy(g,e,e))e.bodySafe={x:e.x,y:e.y};delete e.bodyMoved;
  }

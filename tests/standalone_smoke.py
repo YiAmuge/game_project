@@ -30,15 +30,15 @@ with sync_playwright() as p:
     expect(frame.locator('#main-menu .menu-action')).to_have_count(4)
     expect(frame.locator('#online')).to_be_disabled()
     frame.locator('#practice-open').click()
-    expect(frame.locator('.champion-option')).to_have_count(28)
+    expect(frame.locator('.champion-option')).to_have_count(29)
     expect(frame.locator('.position-option')).to_have_count(4)
     expect(frame.locator('body')).to_have_css('background-color', 'rgb(16, 22, 23)')
     assert frame.locator('script[type="module"], script[src], link[rel="stylesheet"]').count() == 0
     frame.get_by_role('button', name='홍루 선택').click()
     expect(frame.locator('#selected-name')).to_have_text('홍루')
-    assert frame.locator('script[id^=sprite-data]').count() == 8
+    assert frame.locator('script[id^=sprite-data]').count() == 9
     frame.locator('#archive-open').click()
-    expect(frame.locator('#roster-list button')).to_have_count(33)
+    expect(frame.locator('#roster-list button')).to_have_count(34)
     frame.locator('#roster-search').fill('료슈')
     expect(frame.locator('#roster-list button')).to_have_count(1)
     frame.locator('#roster-list button').click()
@@ -107,4 +107,4 @@ with sync_playwright() as p:
     page.evaluate('(html) => document.querySelector("iframe").srcdoc = html', html)
     expect(page.frame_locator('#preview').locator('noscript p')).to_be_visible()
     browser.close()
-    print('Standalone passed: four-entry menu, 28 champions/four positions, eight embedded sprite atlases, codex, match controls, training entry/map/options/death/revive/champion change, no-script fallback. External requests: 0. JS errors: 0.')
+    print('Standalone passed: four-entry menu, 29 champions/four positions, nine embedded sprite atlases, codex, match controls, training entry/map/options/death/revive/champion change, no-script fallback. External requests: 0. JS errors: 0.')

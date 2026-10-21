@@ -11,7 +11,7 @@ with sync_playwright() as pw:
     errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.16.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.17.0')
     expect(page.locator('#main-menu .menu-action')).to_have_count(4)
     expect(page.get_by_role('button',name='연습장으로 이동')).to_be_visible()
     page.screenshot(path=str(art/'v15-menu-training-entry.png'))
@@ -55,7 +55,7 @@ with sync_playwright() as pw:
     assert page.evaluate('__moba.game.player.key')=='rudolph'
     page.evaluate('__moba.game.player.ammo=0')
     page.wait_for_function('__moba.game.player.ammo===__moba.game.ammoCap(__moba.game.player)')
-    expect(page.locator('#training-champion option')).to_have_count(30)
+    expect(page.locator('#training-champion option')).to_have_count(31)
     page.screenshot(path=str(art/'v15-training-champion-change.png'))
     # Every zone can be reached through the real map overlay.
     for name,x,y in [('hazard',19,38),('camps',65,42),('duel',17,27),('moving-target',55,26),('lane',40,11)]:

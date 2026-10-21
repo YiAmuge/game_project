@@ -33,7 +33,7 @@ export async function inspectRuntime(root) {
       if (/\.(js|json|html|css)$/.test(path)) {
         const source = await readFile(absolute, 'utf8');
         if (path === 'src/main.js' && source.includes('./src/roster.json')) files.add('src/roster.json');
-        if (path === 'src/art.js') for (const name of ['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13']) files.add(`src/assets/${name}.png`);
+        if (path === 'src/art.js') for (const name of ['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17']) files.add(`src/assets/${name}.png`);
         if (path.endsWith('.json')) JSON.parse(source);
         if (path.endsWith('.js')) {
           // Skip comments and string literals so a commented-out import cannot block startup.

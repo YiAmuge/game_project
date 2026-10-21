@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { release as releaseYan } from '../src/yan.js';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.js';
 import { CHAMPIONS, RUNTIME_CHAMPIONS, RULES, UPGRADES, FOUNTAINS, WELL_ROOMS, CORE_POSITIONS } from '../src/data.js';
@@ -14,11 +15,11 @@ function quiet(key='faust'){
 function ally(g,key='yi'){const a=g.makeChampion(key,0,5,'support');a.x=41;a.y=7;return a;}
 
 test('all ordinary and experimental champions have individual positive growth and defined attack animation',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,28);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,30);
+ assert.equal(Object.keys(CHAMPIONS).length,29);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,31);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));close(p.attackCd,c.attackTime*(c.attackTime<=.4?1:1.3));}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));if(key==='yan')releaseYan(g,p,t);close(p.attackCd,key==='yan'?.85:c.attackTime*(c.attackTime<=.4?1:1.3));}
 });
 test('reload pauses throughout ammo consumption, preserving partial progress, and resumes after firing',()=>{
  const {g,p,t}=quiet();p.ammo=2;p.reloadProgress=.25;g.attack(p,t);run(g,.2);close(p.reloadProgress,.25);run(g,.7);assert.ok(p.reloadProgress>.25);

@@ -7,8 +7,8 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.16.0')
- page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(28)
+ expect(page.locator('.build-tag')).to_contain_text('0.17.0')
+ page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(29)
  for name in ['김삿갓','뿌이']:
   page.get_by_role('button',name=name+' 선택').click();expect(page.locator('#selected-name')).to_have_text(name)
   assert page.locator('.champion-option[aria-pressed=true] canvas').evaluate('(c)=>Array.from(c.getContext("2d").getImageData(0,0,c.width,c.height).data).some((n,i)=>i%4===3&&n>0)')
@@ -43,4 +43,4 @@ with sync_playwright() as pw:
  choose('돈키호테');click(46,7,button='right');page.wait_for_function('__moba.game.player.state.donBarrage');page.wait_for_timeout(500);click(46,7,button='right');page.wait_for_function('!__moba.game.player.state.donBarrage');assert page.evaluate('__moba.game.player.qCd')>10
  page.keyboard.press('Space');assert page.evaluate('__moba.game.targeting.slot')=='r';click(46,7);page.wait_for_function('__moba.game.player.motion');assert page.evaluate('__moba.game.player.buffs.donLifesteal-__moba.game.time')>6
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(200);assert page.evaluate('document.body.scrollWidth<=innerWidth');page.screenshot(path=str(art/'v12-mobile.png'))
- assert not errors,errors;b.close();print(json.dumps({'status':'passed','checks':['28 selectable champions and rendered new portraits','12 shared augment definitions with price/refund/unlock rules','real RMB Kim grab/recast, Space counter with four 338 waves','Ppui ally empowerment one nonlethal nail and 8-range cleanse','Ppui half-side sprite and nail storm','Starbuck capture net and unconditional refill/reset','Don barrage cancellation and coordinate dash','mobile layout'],'page_errors':errors},ensure_ascii=False))
+ assert not errors,errors;b.close();print(json.dumps({'status':'passed','checks':['29 selectable champions and rendered new portraits','12 shared augment definitions with price/refund/unlock rules','real RMB Kim grab/recast, Space counter with four 338 waves','Ppui ally empowerment one nonlethal nail and 8-range cleanse','Ppui half-side sprite and nail storm','Starbuck capture net and unconditional refill/reset','Don barrage cancellation and coordinate dash','mobile layout'],'page_errors':errors},ensure_ascii=False))

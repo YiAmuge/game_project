@@ -12,7 +12,7 @@ function enemy(g,x=42,y=7,key='faust'){const t=g.makeChampion(key,1,9);Object.as
 function creep(g,x=42,y=7,camp='side'){const t=g.makeNeutral(x,y,camp);t.maxHp=t.hp=1000;return t;}
 function transform(g,p){p.state.unlock=5;assert.ok(g.cast(p,'r',p));}
 test('Sora is an ordinary assassin with requested grades and default two-ammo reload rules',()=>{
- const {g,p}=quiet(),c=CHAMPIONS.sora;assert.equal(Object.keys(CHAMPIONS).length,28);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,30);assert.deepEqual([c.role,c.power,c.health,c.speed,c.ammo,c.reload],['암살',3,2,3,2,3]);close(g.reloadInterval(p),.56/.52);assert.ok(c.growth.power>0);
+ const {g,p}=quiet(),c=CHAMPIONS.sora;assert.equal(Object.keys(CHAMPIONS).length,29);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,31);assert.deepEqual([c.role,c.power,c.health,c.speed,c.ammo,c.reload],['암살',3,2,3,2,3]);close(g.reloadInterval(p),.56/.52);assert.ok(c.growth.power>0);
 });
 test('passive marks once per three seconds, excludes boss, and maintains two six-second marks',()=>{
  const {g,p}=quiet(),a=creep(g,42,7),b=creep(g,43,8),c=creep(g,44,6);creep(g,41,7,'boss');run(g,2.99);assert.equal(Sora.orders(g,p).length,0);run(g,.02);assert.ok(Sora.marked(g,p,a));assert.equal(a.hostile,undefined);run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.marked(g,p,b));run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.orders(g,p).every(m=>m.target!==g.units.find(e=>e.camp==='boss').id));
