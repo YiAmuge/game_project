@@ -11,7 +11,7 @@ export const AUGMENTS=[
  {key:'reloadRetaliation',group:'survival',name:'제압 외피',text:'나를 공격한 적 챔피언에게 장전 −15%를 1.25초 부여'},
  {key:'battleHaste',group:'tech',name:'전장 적응',text:'3초 이상 교전 유지 시 스킬 가속 +8.5% · 비전투 시 해제'},
  {key:'cooldown15',group:'tech',name:'정밀 회로',text:'전술기·궁극기 기본 재사용 대기시간 −15%'},
- {key:'magazine2',group:'tech',name:'확장 탄창',text:'최대 탄창 +2 · 루돌프 정신력 +30 · 얀 공격 피해 +20%'},
+ {key:'magazine2',group:'tech',name:'확장 탄창',text:'최대 탄창 +2 · 루돌프 정신력 +30 · 얀 공격 피해 +20% · 호엔하임 피해 +10%/사거리 +1.5'},
  {key:'adaptiveSpeed',group:'tech',name:'가변 추진',text:'비전투 이동속도 +15% · 전투 중 +7%'},
 ];
 export const has=(e,key)=>e.augments?.includes(key)||false;

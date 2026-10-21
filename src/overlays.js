@@ -1,8 +1,9 @@
 import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import * as Yan from './yan.js';
+import * as Hohenheim from './hohenheim.js';
 import { endurance } from './v08-champions.js';
 import { trap } from './confinement.js';
-import { RULES } from './data.js';
+import { RULES,AHAB } from './data.js';
 import { THEMES } from './art.js';
 import { heathCharge,guardAlly } from './skills.js';
 
@@ -40,7 +41,10 @@ export function championHud(r,e,g){
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
  if(e.trainingDummy){r.text(e.name,e.x,e.y-3.05,e.team===0?'#a7d8df':'#edb2a4',.29);c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);
- if(e.key==='yan'){
+ if(e.key==='hohenheim'){
+  const shape=Hohenheim.chargeShape(g,e,e.player?g.input.aim:e.state.hohenCharge?.aim||{x:e.x+1,y:e.y});
+  c.fillStyle='#173439';c.fillRect(x,resourceY,width,.24);c.fillStyle=shape.progress>=1?'#d3ffff':'#82d9df';c.fillRect(x,resourceY,width*shape.progress,.24);r.text(`${e.state.posthumous?'최대 전류':'충전 '+Math.round(shape.progress*100)+'%'} · ${shape.hits}타`,e.x,resourceY+.12,'#e0ffff',.205);
+ }else if(e.key==='yan'){
   const progress=Yan.chargeShape(g,e,e.player?g.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}).progress;
   c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);r.text(Yan.distorted(g,e)?'손 조종':`검 충전 ${Math.round(progress*100)}%`,e.x,resourceY+.12,'#e7f7ff',.205);
  }else if(e.key==='rudolph'){
@@ -89,7 +93,7 @@ function directiveFlower(r,e,g,remaining,muted,offset){const c=r.ctx;
 export function championEffects(r,e,g){
  const c=r.ctx,theme=THEMES[e.key]||THEMES.faust;
  if(e.key==='ahab'){
-  if(e.player)r.circle(e.x,e.y,5,'#c7b77c08','#c7b77c44',.035);
+  if(e.player)r.circle(e.x,e.y,AHAB.orderRadius,'#c7b77c08','#c7b77c44',.035);
   const ally=guardAlly(g,e);if(ally){r.line([{x:e.x,y:e.y-.5},{x:ally.x,y:ally.y-.5}],'#d5bc7988',.065,[.15,.13]);r.circle(ally.x,ally.y,.75,'#d5bc7911','#e5ce8b88',.055);}
  }
  if(g.yiShield(e)){const y=e.y-1.35+Math.sin(g.time*3)*.08;for(const x of [e.x-.8,e.x+.8]){r.line([{x:x-.1,y},{x:x+.1,y}],'#bfe8ad',.045);r.line([{x,y:y-.1},{x,y:y+.1}],'#bfe8ad',.045);}}

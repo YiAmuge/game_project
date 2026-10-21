@@ -173,3 +173,5 @@ body.in-game .shop-heading{position:sticky;top:-20px;padding:14px 0 10px;backgro
 .training-panel .training-actions button,.training-panel .training-change button{padding:8px 7px;font-size:11px}.training-panel .training-change{flex-direction:row;gap:6px;margin:6px 0 8px}.training-panel .training-change select{padding:7px 6px;font-size:11px}.training-panel label[for=training-champion]{font-size:11px}
 body.in-game.training-mode .event-feed{right:324px;max-width:250px}
 @media(max-width:600px){.training-panel{top:62px;right:10px;width:min(270px,calc(100vw - 20px))}.training-panel.collapsed{width:174px}.training-panel .training-options{max-height:min(330px,45dvh)}body.in-game.training-mode .event-feed{top:150px;left:10px;right:auto;max-width:140px;text-align:left}}
+
+.ability.can-recast{border-color:#94dadb;box-shadow:inset 0 0 0 1px #94dadb44}.ability.can-recast .cooldown{color:#b7f9ff}

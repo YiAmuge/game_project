@@ -2,6 +2,7 @@ import * as Infestation from './infestation.js';
 import * as Gregor from './gregor.js';
 import * as Sora from './sora.js';
 import * as Yan from './yan.js';
+import * as Hohenheim from './hohenheim.js';
 import * as V12 from './v12-champions.js';
 import { trapPoint } from './confinement.js';
 import * as V08 from './v08-champions.js';
@@ -56,6 +57,7 @@ function guboTarget(g,e,p,allyOnly=false){
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','ezra','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(e.key==='hohenheim'&&slot==='r'&&Hohenheim.activeZone(g,e))return true;
  if(slot==='r'&&(Sora.ready(g,e)||Yan.ready(g,e)))return true;
  if(V12.recast(g,e,slot)||e.key==='don'&&slot==='q'&&e.state.donBarrage?.until>g.time)return true;
  if(New.recast(g,e,slot))return true;
@@ -68,7 +70,7 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
- if(!Sora.validate(g,e,slot,p)||!Yan.validate(g,e,slot))return false;
+ if(!Hohenheim.validate(g,e,slot,p)||!Sora.validate(g,e,slot,p)||!Yan.validate(g,e,slot))return false;
  if(!V12.validate(g,e,slot,p))return false;
  if(!V10.validate(g,e,slot,p))return false;
  if(!V08.validate(g,e,slot,p))return false;
@@ -276,7 +278,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
- const s=e.state;decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);Sora.tick(g,e);Yan.tick(g,e,dt);
+ const s=e.state;decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);Sora.tick(g,e);Yan.tick(g,e,dt);Hohenheim.tick(g,e,dt);
  if(s.donBarrage){if(s.donBarrage.until<=g.time||g.stat(e,'stun')||g.stat(e,'silence')){delete s.donBarrage;delete e.buffs.donGuard;}else if(g.time+1e-8>=s.donBarrage.next){s.donBarrage.next+=.25;g.action(e,'skill',()=>g.cone(e,s.donBarrage.d,6,1.8,45));e.lastAttackAt=g.time;}}
  if(e.burn?.until>g.time&&e.burn.next<=g.time){e.burn.next+=.5;g.deal(e.burn.source,e,27.5);if(!e.alive)return;}
  if(e.key==='alisa'){

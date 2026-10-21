@@ -1,5 +1,6 @@
 import { NEW_DATA } from './new-data.js';
 import { EXTRA_CHAMPIONS } from './extra-data.js';
+export const AHAB={orderRadius:8};
 export const RULES = {
   passiveXpPerSecond:3, timeLimit:1200, bossAt: 300, firstWaveAt:3, waveEvery: 25, width: 83.2, height: 46.8, maxLevel: 10,
   health: [0, 2200, 2800, 3400, 4000, 4600], power: [0, .82, .91, 1, 1.12, 1.25],

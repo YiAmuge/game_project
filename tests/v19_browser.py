@@ -8,12 +8,12 @@ with sync_playwright() as pw:
     page=b.new_page(viewport={'width':1440,'height':900});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.19.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.20.0')
     page.click('#training-open');page.get_by_role('button',name='얀 선택',exact=True).click();page.click('#start')
     def fixture():
         page.evaluate('''() => {const g=__moba.game,p=g.player;for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};g.map={bounds:g.bounds,walls:[]};Object.assign(p,{x:40,y:20,qCd:0,rCd:0,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.events=[];g.pending=[];g.projectiles=[];g.minionQueue=[];g.practice.lineStopped=true;const t=g.makeChampion('faust',1,9);Object.assign(t,{x:44,y:20,maxHp:10000,hp:10000,lastAttackAt:100,lastDamageAt:100});window.__target=t;}''')
     def aim(x,y):
-        pos=page.evaluate('([x,y])=>{__moba.renderer.follow(__moba.game,true);return __moba.renderer.camera.worldToScreen({x,y});}',[x,y]);page.mouse.move(pos['x'],pos['y'])
+        pos=page.evaluate('([x,y])=>{const r=__moba.renderer;r.resize();r.follow(__moba.game,true);const s=r.camera.worldToScreen({x,y}),b=r.canvas.getBoundingClientRect();return {x:s.x+b.left,y:s.y+b.top};}',[x,y]);page.mouse.move(pos['x'],pos['y'])
     def change(key):
         page.select_option('#training-champion',key);page.click('#training-change-champion');fixture()
     fixture();aim(45,20)

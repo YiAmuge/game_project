@@ -1,4 +1,5 @@
 import * as Yan from './yan.js';
+import * as Hohenheim from './hohenheim.js';
 import * as Training from './training.js';
 import { ego as soraEgo,basicImpact as soraImpact } from './sora.js';
 import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, WORLD, TERRAIN, worldPoint, RUNTIME_CHAMPIONS as CHAMPIONS, lanePath } from './data.js';
@@ -154,6 +155,12 @@ export class Renderer {
     // Fixed-radius haze drifts gently; it never expands or restarts on an attack.
     for(let i=0;i<9;i++){const a=i*2.4+game.time*.1,rad=r*(.38+(i%3)*.18);this.circle(e.x+Math.cos(a)*rad,e.y+Math.sin(a)*rad,.12+Math.sin(game.time*.8+i)*.025,'#77628322');}
   }
+  hohenheimChargePreview(e,game){
+    const shape=Hohenheim.chargeShape(game,e,game.input.aim),d=shape.d,side={x:-d.y*shape.width,y:d.x*shape.width},end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range};
+    this.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],'#84edee22','#b5f6faaa');
+    this.text(`전류 ${Math.round(shape.progress*100)}% · ${shape.hits}회`,e.x,e.y+1.1,'#b5f6fa',.3);
+    for(let i=0;i<3;i++){const a=game.time*5+i*Math.PI*2/3;this.shard(e.x+Math.cos(a)*(.45+shape.progress*.3),e.y-.5+Math.sin(a)*.4,.06+shape.progress*.09,a,'#a8fbff');}
+  }
   yanChargePreview(e,game){
     const shape=Yan.chargeShape(game,e,e.player?game.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}),d=shape.d,side={x:-d.y*shape.width/2,y:d.x*shape.width/2},end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range};
     this.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],e.state.yanCharge?'#a6d5f12a':'#a6d5f107',e.state.yanCharge?'#b3e1ffbb':'#b3e1ff33');
@@ -167,7 +174,7 @@ export class Renderer {
     this.floor(game);this.camps(game);for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
     for(const h of game.units.filter(e=>e.alive&&e.kind==='summon'&&e.key==='yanHand'&&game.visibleTo(0,e)))this.yanAura(h,game);
     if(!game.training&&!game.bossSpawned){this.text('CENTRAL CAMP',MAP_CENTER.x,MAP_CENTER.y,'#b8ae7766',.4);this.text('05:00',MAP_CENTER.x,MAP_CENTER.y+.7,'#a5a58b66',.48);}
-    for(const z of game.zones){if(z.kind==='desireTree'){this.line([{x:z.x,y:z.y+.25},{x:z.x,y:z.y-1.1}],'#9c855b',.18);for(let i=0;i<5;i++){const a=i*1.25;this.shard(z.x+Math.cos(a)*.45,z.y-1+Math.sin(a)*.4,.3,a,'#b8bf77');}if(z.golden){this.line([{x:z.x,y:z.y+.25},{x:z.x,y:z.y-1.1}],'#ffda66',.2);for(let i=0;i<5;i++){const a=i*1.25;this.shard(z.x+Math.cos(a)*.45,z.y-1+Math.sin(a)*.4,.32,a,'#f4cc52');}for(let i=0;i<7;i++){const a=game.time*1.5+i*2.4,x=z.x+Math.cos(a)*(.65+(i%2)*.2),y=z.y-.8+Math.sin(a*1.3)*.8;this.line([{x:x-.1,y},{x:x+.1,y}],'#fff2bc',.045);this.line([{x,y:y-.1},{x,y:y+.1}],'#fff2bc',.045);}}this.text((z.golden?'빛나는 욕망 · ':`${Math.floor(z.dealt||0)}/350 · `)+Math.ceil(z.until-game.time)+'s',z.x,z.y+.6,z.golden?'#ffe08b':'#c4ca8d',.24);}const tone=z.kind==='desireTree'?(z.golden?'#f4cf61':'#abbc78'):z.kind==='electricDevice'?'#91efec':z.kind==='waterfall'?'#8febd7':z.kind==='ice'?'#a5d6ff':'#c8dfe5';this.circle(z.x,z.y,z.r,`${tone}22`,tone,.05);for(let i=0;i<12;i++){const a=i*2.4+game.time*.25,r=z.r*.7*(.3+(i%3)/3);if(z.kind==='waterfall')this.line([{x:z.x+Math.cos(a)*r,y:z.y+Math.sin(a)*r},{x:z.x+Math.cos(a)*r,y:z.y+Math.sin(a)*r-.8}],`${tone}88`,.1);else this.shard(z.x+Math.cos(a)*r,z.y+Math.sin(a)*r,.13,a,tone);}}
+    for(const z of game.zones){if(z.kind==='desireTree'){this.line([{x:z.x,y:z.y+.25},{x:z.x,y:z.y-1.1}],'#9c855b',.18);for(let i=0;i<5;i++){const a=i*1.25;this.shard(z.x+Math.cos(a)*.45,z.y-1+Math.sin(a)*.4,.3,a,'#b8bf77');}if(z.golden){this.line([{x:z.x,y:z.y+.25},{x:z.x,y:z.y-1.1}],'#ffda66',.2);for(let i=0;i<5;i++){const a=i*1.25;this.shard(z.x+Math.cos(a)*.45,z.y-1+Math.sin(a)*.4,.32,a,'#f4cc52');}for(let i=0;i<7;i++){const a=game.time*1.5+i*2.4,x=z.x+Math.cos(a)*(.65+(i%2)*.2),y=z.y-.8+Math.sin(a*1.3)*.8;this.line([{x:x-.1,y},{x:x+.1,y}],'#fff2bc',.045);this.line([{x,y:y-.1},{x,y:y+.1}],'#fff2bc',.045);}}this.text((z.golden?'빛나는 욕망 · ':`${Math.floor(z.dealt||0)}/350 · `)+Math.ceil(z.until-game.time)+'s',z.x,z.y+.6,z.golden?'#ffe08b':'#c4ca8d',.24);}if(z.kind==='electricDevice'){const t=game.units.find(t=>t.id===z.targetId);if(t){this.line([{x:z.x,y:z.y},{x:t.x,y:t.y}],'#a1eff977',.055,[.12,.18]);this.circle(t.x,t.y,.7,null,'#b7f9ff99',.05);}this.text(`추적 전류 · ${(z.until-game.time).toFixed(1)}s`,z.x,z.y-z.r-.35,'#b7f9ff',.3);}const tone=z.kind==='desireTree'?(z.golden?'#f4cf61':'#abbc78'):z.kind==='electricDevice'?'#91efec':z.kind==='waterfall'?'#8febd7':z.kind==='ice'?'#a5d6ff':'#c8dfe5';this.circle(z.x,z.y,z.r,`${tone}22`,tone,.05);for(let i=0;i<12;i++){const a=i*2.4+game.time*.25,r=z.r*.7*(.3+(i%3)/3);if(z.kind==='waterfall')this.line([{x:z.x+Math.cos(a)*r,y:z.y+Math.sin(a)*r},{x:z.x+Math.cos(a)*r,y:z.y+Math.sin(a)*r-.8}],`${tone}88`,.1);else this.shard(z.x+Math.cos(a)*r,z.y+Math.sin(a)*r,.13,a,tone);}}
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo(0,e))chargePreview(this,e,game);
     for(const e of game.units.filter(e=>e.kind==='core'||e.kind==='tower'))this.structure(e,game);
@@ -184,6 +191,7 @@ export class Renderer {
       }
       this.circle(aim.x,aim.y,.22,null,'#d8c9a177',.04);
     }
+    if(playing&&game.player.alive&&game.player.key==='hohenheim'&&(game.player.state.hohenCharge||game.player.state.posthumous))this.hohenheimChargePreview(game.player,game);
     targetingPreview(this,game);
     for(const e of game.units.filter(e=>!['core','tower'].includes(e.kind)).sort((a,b)=>a.y-b.y))this.unit(e,game);
     if(!game.training)for(const b of BUSHES)this.bush(b,true);

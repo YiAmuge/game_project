@@ -1,3 +1,4 @@
+import * as Hohenheim from './hohenheim.js';
 import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 
@@ -13,14 +14,6 @@ export function validate(g,e,slot,p){
  return true;
 }
 export function basic(g,e,p,d){
- if(e.key==='hohenheim'){
-  for(let i=0;i<3;i++)g.schedule(e,i*.12,()=>{
-   const end={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};
-   const targets=g.units.filter(t=>g.hostile(e,t)&&g.clearLine(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius).filter(t=>{const v=direction(e,t);return v.x*d.x+v.y*d.y>0&&Math.abs((t.x-e.x)*d.y-(t.y-e.y)*d.x)<=.2+t.radius;}).sort((a,b)=>distance(e,a)-distance(e,b));
-   targets.forEach((t,j)=>g.deal(e,t,125*(j? .8:1)*(t.state?.electricWeak?.[e.id]>g.time?1.2:1)));
-   g.effects.push({type:'line',x:e.x,y:e.y,to:end,color:'#84edee',theme:e.key,life:.19,maxLife:.19});
-  });return true;
- }
  if(e.key==='marton'){
   const len=Math.min(g.attackRange(e),distance(e,p)),point={x:e.x+d.x*len,y:e.y+d.y*len};
   area(g,e,point,2.2,180,t=>{if(t.kind==='champion')g.addBuff(e,'martonStride',2.5);});g.effects.push({type:'burst',...point,r:2.2,theme:e.key,life:.4,maxLife:.4});return true;
@@ -34,9 +27,10 @@ export function basic(g,e,p,d){
 }
 export function cast(g,e,slot,p,d){
  if(e.key==='hohenheim'){
+  Hohenheim.cancelCharge(e);
   if(slot==='q'){
    g.addBuff(e,'hohenheimStride',1);if(!e.state.posthumous)dash(g,e,d,2.5,180,t=>{if(t.kind==='champion'){g.status(t,'stun',1,.6,e);g.addBuff(e,'hohenheimHitStride',1);}});
-  }else g.zones.push({kind:'electricDevice',source:e,...p,r:4.2,until:g.time+4,nextTick:g.time,tickEvery:.5,damage:40});return true;
+  }else Hohenheim.cast(g,e,p);return true;
  }
  if(e.key==='marton'){
   if(slot==='q'){g.addBuff(e,'martonDrain',4);e.state.drainTick=g.time;}
@@ -81,7 +75,7 @@ export function afterDamage(g,source,target,actual){
 }
 export function interceptDeath(g,e,killer){
  if(e.key!=='hohenheim'||e.state.posthumous)return false;
- e.hp=0;e.state.posthumous={until:g.time+2.5,killer};e.qCd=0;e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.status={};delete e.motion;delete e.recall;e.channelUntil=0;return true;
+ Hohenheim.cancelCharge(e);e.hp=0;e.state.posthumous={until:g.time+2.5,killer};e.qCd=0;e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.status={};delete e.motion;delete e.recall;e.channelUntil=0;return true;
 }
 export function onDeath(g,e){
  if(e.kind!=='champion')return;

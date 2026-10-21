@@ -1,3 +1,4 @@
+import * as Hohenheim from '../src/hohenheim.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.js';
@@ -40,7 +41,7 @@ test('Hohenheim death state lasts 2.5 seconds, cannot move, heal or ult, and onl
  const {g,p,t}=quiet('hohenheim');g.deal(t,p,100000,{fixed:true});assert.ok(p.alive&&p.state.posthumous);close(p.hp,0);p.ammo=0;const x=p.x;g.input.x=1;assert.ok(g.cast(p,'q',t));assert.equal(g.cast(p,'r',t),false);g.heal(null,p,1000,false);close(p.hp,0);run(g,1);close(p.x,x);assert.ok(g.attack(p,t));assert.equal(t.kills,0);run(g,1.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.state.posthumous,undefined);close(p.ccImmuneUntil,0);
 });
 test('Hohenheim beam strikes three times and second and later targets each take exactly twenty percent less',()=>{
- const {g,p,t}=quiet('hohenheim');t.x=43;const b=g.makeChampion('faust',1,6),c=g.makeChampion('faust',1,7);Object.assign(b,{x:45,y:7,hp:100000,maxHp:100000});Object.assign(c,{x:47,y:7,hp:100000,maxHp:100000});g.attack(p,t);run(g,.3);close((100000-b.hp)/(100000-t.hp),.8);close(100000-b.hp,100000-c.hp);
+ const {g,p,t}=quiet('hohenheim');t.x=43;const b=g.makeChampion('faust',1,6),c=g.makeChampion('faust',1,7);Object.assign(b,{x:45,y:7,hp:100000,maxHp:100000});Object.assign(c,{x:47,y:7,hp:100000,maxHp:100000});g.attack(p,t);run(g,1.5);Hohenheim.release(g,p,t);run(g,.3);close((100000-b.hp)/(100000-t.hp),.8);close(100000-b.hp,100000-c.hp);
 });
 test('Marton lifesteals, drains without healing theft and leaves a destructible 500HP bait that enemies attack',()=>{
  const {g,p,t}=quiet('marton');p.hp-=1000;p.lastAttackAt=0;const hp=p.hp;g.attack(p,t);assert.ok(p.hp>hp);assert.ok(g.cast(p,'q',p));run(g,.5);assert.ok(g.buff(p,'martonDrain'));assert.equal(g.stat(t,'healingWeak'),0);g.kill(p,t);const bait=g.units.find(e=>e.kind==='bait');assert.equal(bait.hp,500);t.attackCd=0;t.ammo=3;run(g,1.2);assert.ok(bait.hp<500||!bait.alive);assert.ok(t.state.tauntedBy===bait.id||!bait.alive);

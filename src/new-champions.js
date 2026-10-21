@@ -1,19 +1,19 @@
 import { trapPoint } from './confinement.js';
-import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
+import { AHAB, RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 
 export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}onRespawn(g,e);}
-export function onRespawn(g,e){if(e.key==='ahab'){e.state.order='cover';g.addBuff(e,'ahabOrder',36000,{copy:false});}}
+export function onRespawn(g,e){if(e.key==='ahab'){e.state.order='cover';g.addBuff(e,'ahabOrder',Infinity,{copy:false});}}
 function harpoonMark(g,t,captain){const mark=t.state?.harpoons?.[captain.id]||t.state?.harpoon;return mark?.source===captain.id&&mark.team===captain.team&&mark.until>g.time;}
-function coverCaptain(g,e,t){return e.kind==='champion'&&e.alive&&e.team!==t.team?g.champions(e.team).find(a=>a!==e&&a.key==='ahab'&&a.alive&&a.state.order==='cover'&&distance(e,a)<=5&&harpoonMark(g,t,a)):null;}
+function coverCaptain(g,e,t){return e.kind==='champion'&&e.alive&&e.team!==t.team?g.champions(e.team).find(a=>a!==e&&a.key==='ahab'&&a.alive&&a.state.order==='cover'&&distance(e,a)<=AHAB.orderRadius&&harpoonMark(g,t,a)):null;}
 export function coverMultiplier(g,e,t){
  const captain=coverCaptain(g,e,t);if(!captain)return 1;
  if((captain.state.coverReady||0)<=g.time){captain.state.coverReady=g.time+1.6;captain.state.coverStacks=g.buff(captain,'ahabCover')?Math.min(3,(captain.state.coverStacks||0)+1):1;g.addBuff(captain,'ahabCover',5,{copy:false});}e.supporters[captain.id]=g.time;return 1.3;
 }
 export function guardAlly(g,target){
  if(target.key!=='ahab'||target.state.order!=='guard')return null;
- return g.champions(target.team).filter(a=>a!==target&&a.alive&&!a.returning&&!a.state.posthumous&&!g.hidden(a)&&!(a.invulnerableUntil>g.time)&&!(g.training&&a===g.player&&g.practice.invincible)&&a.hp>=a.maxHp*.3&&distance(a,target)<=5).sort((a,b)=>b.hp-a.hp||a.id-b.id)[0]||null;
+ return g.champions(target.team).filter(a=>a!==target&&a.alive&&!a.returning&&!a.state.posthumous&&!g.hidden(a)&&!(a.invulnerableUntil>g.time)&&!(g.training&&a===g.player&&g.practice.invincible)&&a.hp>=a.maxHp*.3&&distance(a,target)<=AHAB.orderRadius).sort((a,b)=>b.hp-a.hp||a.id-b.id)[0]||null;
 }
 export function transfer(g,source,target,amount,kind){
  if(source.team===target.team)return amount;
@@ -97,7 +97,7 @@ export function cast(g,e,slot,p,d){
   }return true;
  }
  if(e.key==='ahab'){
-  if(slot==='q'){s.order=s.order==='guard'?'cover':'guard';s.orderAt=g.time;g.addBuff(e,'ahabOrder',36000,{copy:false});}
+  if(slot==='q'){s.order=s.order==='guard'?'cover':'guard';s.orderAt=g.time;g.addBuff(e,'ahabOrder',Infinity,{copy:false});}
   else{
    const isRecast=recast(g,e,slot);s.recastSpent=isRecast;s.recastUntil=0;
    const len=Math.min(6.5,distance(e,p)),dest=trapPoint(g,e,{x:e.x+d.x*len,y:e.y+d.y*len}),execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));

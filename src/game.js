@@ -9,6 +9,7 @@ import * as CreepPatterns from './creep-patterns.js';
 import * as Augments from './augments.js';
 import * as Sora from './sora.js';
 import * as Yan from './yan.js';
+import * as Hohenheim from './hohenheim.js';
 import * as V12 from './v12-champions.js';
 import { withinTrap,trapPoint } from './confinement.js';
 import * as V08 from './v08-champions.js';
@@ -129,7 +130,7 @@ export class Game {
     if(e.kind!=='champion'||!e.alive||e.state.posthumous||e.motion||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||this.winner!==null)return false;
     if(e.recall){this.cancelRecall(e);return true;}
     if(e.state.chargeAt!==undefined){delete e.state.chargeAt;delete e.status.slow;}
-    Yan.cancelCharge(e);e.recall={startedAt:this.time,until:this.time+RULES.recallTime,x:e.x,y:e.y};
+    Yan.cancelCharge(e);Hohenheim.cancelCharge(e);e.recall={startedAt:this.time,until:this.time+RULES.recallTime,x:e.x,y:e.y};
     if(e.player){this.input.fire=false;this.input.x=0;this.input.y=0;}return true;
   }
   cancelRecall(e){if(e.recall){delete e.recall;if(e.player)this.log('귀환 취소', 'system');}}
@@ -171,7 +172,7 @@ export class Game {
   attackInterval(e){const c=CHAMPIONS[e.key];return c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier);}
   reloadPaused(e){if(e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(Sora.ego(this,e))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||e.state.donBarrage?.until>this.time||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
   ammoCap(e){return Skills.ammoCap(this,e);}
-  attackRange(e){return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='ryoshu'&&this.buff(e,'amplify')?1.2:1)*(e.key==='faust'&&e.level===RULES.maxLevel?1.2:1)*(Augments.has(e,'range7')?1.07:1)*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1);}
+  attackRange(e){if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='ryoshu'&&this.buff(e,'amplify')?1.2:1)*(e.key==='faust'&&e.level===RULES.maxLevel?1.2:1)*(Augments.has(e,'range7')?1.07:1)*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1);}
   bonusStats(e){
     const power=this.powerScale(e)*Skills.damageBonus(this,e,{hp:e.hp,maxHp:e.maxHp})*(this.buff(e,'marks')?1.12:1)*(1-this.powerWeak(e));
     return {power:Math.round((power-1)*100),health:Math.round((e.maxHp/RULES.health[CHAMPIONS[e.key].health]-1)*100+1e-8),speed:Math.round((this.speed(e)/RULES.speed[CHAMPIONS[e.key].speed]-1)*100),haste:Math.round(this.haste(e)*100),reload:Math.round((RULES.reload[Skills.reloadGrade(e)]/this.reloadInterval(e)-1)*100)};
@@ -207,7 +208,7 @@ export class Game {
     if(e.buffs.ogamdo>this.time) mult+=.25*(e.buffs.ogamdo-this.time)/4;
     mult*=1-Math.min(.5,Math.max(this.stat(e,'slow'),this.stat(e,'yanLock')));
     const minimum=e.status.slow?.theme==='yan'&&this.stat(e,'slow')>=.5?.5:.65;
-    return clamp(Math.max(this.buff(e,'rabbitFrenzy')?4:0,base*mult+(c.role==='암살'&&this.time-e.lastCombat>3?.45:0)),base*minimum,base*1.6)*(e.key==='kim'&&carried(this,e)?.9:1)*(e.key==='yan'&&e.state.yanCharge?.9:1);
+    return clamp(Math.max(this.buff(e,'rabbitFrenzy')?4:0,base*mult+(c.role==='암살'&&this.time-e.lastCombat>3?.45:0)),base*minimum,base*1.6)*(e.key==='kim'&&carried(this,e)?.9:1)*(e.key==='yan'&&e.state.yanCharge?.9:1)*(e.key==='hohenheim'&&e.state.hohenCharge?.8:1);
   }
   discipline(e){return this.shield(e)>0&&e.shields.some(s=>s.value>0&&s.until>this.time&&s.source.startsWith('sword-'));}
   haste(e) { return Math.max(0,e.upgrades.haste*.05+(e.supportUntil>this.time?e.supportStacks*.05:0)+(this.buff(e,'blessing')?.12:0)+(this.buff(e,'faustUlt')?(e.ultStacks||0)*.1:0)+this.extraRate(e)+(this.discipline(e)?.12:0)+(this.buff(e,'augBattleHaste')?.085:0)-this.stat(e,'hasteWeak')); }
@@ -342,7 +343,7 @@ export class Game {
   }
   kill(e,killer) {
     if(!e.alive||e.trainingDummy?.infinite)return;
-    Infestation.clear(this,e);Yan.onDeath(this,e);Sora.onDeath(this,e);V12.onDeath(this,e);V08.onDeath(this,e);e.exposedUntil=0;e.alive=false;e.hp=0;delete e.motion;delete e.recall;if(e.kind==='neutral'){CreepPatterns.cancel(e);if(e.camp==='boss')BossPatterns.cancel(e);}
+    Infestation.clear(this,e);Yan.onDeath(this,e);Hohenheim.cancelCharge(e);Sora.onDeath(this,e);V12.onDeath(this,e);V08.onDeath(this,e);e.exposedUntil=0;e.alive=false;e.hp=0;delete e.motion;delete e.recall;if(e.kind==='neutral'){CreepPatterns.cancel(e);if(e.camp==='boss')BossPatterns.cancel(e);}
     if(this.training&&Training.onDeath(this,e))return;
     if(e.kind==='champion') {
       if(!e.trainingDummy)this.corpses.push({key:e.key,form:Sora.ego(this,e)?'soraEgo':Yan.form(this,e),team:e.team,x:e.x,y:e.y,facing:e.facing||0,at:this.time,until:this.time+12,visible:this.visibleTo(0,e)});this.corpses=this.corpses.slice(-32);
@@ -457,6 +458,7 @@ export class Game {
     if(e.key==='kim'&&carried(this,e))return false;
     if(e.state.ahabUlt||this.stat(e,'disarm')||e.state.donBarrage?.until>this.time||e.motion||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||e.attackCd>0)return false;
     if(e.key==='yan')return Yan.attack(this,e,point);
+    if(e.key==='hohenheim')return Hohenheim.attack(this,e,point);
     if(!Skills.beforeBasic(this,e,point,options))return false;
     if(!e.alive||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||e.attackCd>0||e.ammo<1||this.winner!==null)return false;
     this.cancelRecall(e);const c=CHAMPIONS[e.key],d=this.aim(e,point);e.state.fullAmmo=e.ammo>=this.ammoCap(e);if(!e.state.posthumous)e.ammo--;e.attackCd=this.attackInterval(e);e.attackSerial=(e.attackSerial||0)+1;e.attackFacing=Math.atan2(d.y,d.x);e.facing=Math.atan2(d.y,d.x);e.attackAt=this.time;e.lastAttackAt=this.time;e.revealedUntil=this.time+1.25;
@@ -648,6 +650,7 @@ export class Game {
     for(const z of this.zones) {
       if(z.until<=this.time)continue;
       if(z.kind&&z.kind!=='mirror'){
+        if(z.kind==='electricDevice')Hohenheim.updateZone(this,z,dt);
         if(z.follow){z.x=z.source.x;z.y=z.source.y;}
         if(z.kind==='desireTree'&&z.golden)continue;
         if(this.time>=z.nextTick){
@@ -701,7 +704,7 @@ export class Game {
         if(e.player&&e.recall&&(this.input.x||this.input.y||this.input.fire))this.cancelRecall(e);
         this.updateRecall(e);
         const cap=this.ammoCap(e);
-        if(!['rudolph','yan'].includes(e.key)&&!this.reloadPaused(e)&&!this.buff(e,'ezraUlt')&&e.ammo<cap) {e.reloadProgress+=dt;const gap=this.reloadInterval(e);while(e.reloadProgress>=gap&&e.ammo<cap){e.ammo=Math.min(cap,e.ammo+1);e.reloadProgress-=gap;}}
+        if(!['rudolph','yan','hohenheim'].includes(e.key)&&!this.reloadPaused(e)&&!this.buff(e,'ezraUlt')&&e.ammo<cap) {e.reloadProgress+=dt;const gap=this.reloadInterval(e);while(e.reloadProgress>=gap&&e.ammo<cap){e.ammo=Math.min(cap,e.ammo+1);e.reloadProgress-=gap;}}
         if(e.ammo>=cap)e.reloadProgress=0;
         const natural=this.canNaturalHeal(e);e.naturalHealing=natural&&e.hp<e.maxHp;
         if(natural&&e.hp<e.maxHp)this.heal(null,e,e.maxHp*RULES.naturalHealRate*dt,false,{natural:true});
