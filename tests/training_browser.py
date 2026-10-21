@@ -11,7 +11,7 @@ with sync_playwright() as pw:
     errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.15.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.16.0')
     expect(page.locator('#main-menu .menu-action')).to_have_count(4)
     expect(page.get_by_role('button',name='연습장으로 이동')).to_be_visible()
     page.screenshot(path=str(art/'v15-menu-training-entry.png'))

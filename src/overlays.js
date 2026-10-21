@@ -64,7 +64,17 @@ function star(r,x,y,size,color){
 }
 export function orderMark(r,e,g){const c=r.ctx;
  const directives=g.champions().filter(a=>a.alive&&a.team!==e.team&&soraMarked(g,a,e));
- if(directives.length){const mark=directives.map(a=>a.state.orders[e.id]).sort((a,b)=>b.damage-a.damage)[0],progress=Math.min(1,mark.damage/(e.maxHp*.2)),y=e.y-(e.kind==='champion'?4.8:2.2);r.polygon([[e.x-.28,y-.36],[e.x+.28,y-.36],[e.x+.28,y+.3],[e.x-.28,y+.3]],'#27262b','#e6c778');for(let i=0;i<3;i++)r.line([{x:e.x-.17,y:y-.2+i*.14},{x:e.x+.17,y:y-.2+i*.14}],'#efd993',.04);c.fillStyle='#211e22';c.fillRect(e.x-.5,y+.45,1,.1);c.fillStyle='#f0cf7e';c.fillRect(e.x-.5,y+.45,progress,.1);r.text(`지령 ${Math.ceil(mark.until-g.time)}s`,e.x,y-.65,'#ecd8a0',.24);}
+ if(!directives.length)return;
+ const remaining=Math.max(...directives.map(a=>a.state.orders[e.id].until-g.time));
+ // Original six-petal canvas design. The reference image is never embedded or traced.
+ c.save();c.translate(e.x,e.y-(e.kind==='champion'?.7:.25));c.scale(1+Math.sin(g.time*4)*.045,1+Math.sin(g.time*4)*.045);
+ r.circle(0,0,.56,'#0c315d55','#3aa5ee99',.035);
+ for(let i=0;i<6;i++){
+  c.save();c.rotate(i*Math.PI/3+.16);c.beginPath();c.moveTo(-.11,-.1);c.bezierCurveTo(-.34,-.31,-.19,-.59,0,-.49);c.bezierCurveTo(.23,-.52,.29,-.27,.11,-.1);c.closePath();c.fillStyle=i%2?'#249fe9':'#46d5f1';c.fill();c.strokeStyle='#154bb0';c.lineWidth=.055;c.stroke();
+  c.beginPath();c.moveTo(0,-.13);c.quadraticCurveTo(-.055,-.25,0,-.37);c.strokeStyle='#a4f1ff';c.lineWidth=.035;c.stroke();c.restore();
+ }
+ r.circle(0,0,.16,'#123d88','#9deeff',.035);r.circle(0,0,.055,'#b9f8ff');
+ c.beginPath();c.arc(0,0,.62,-Math.PI/2,-Math.PI/2+Math.min(1,remaining/SORA.markDuration)*Math.PI*2);c.strokeStyle='#62d9ffbb';c.lineWidth=.03;c.stroke();c.restore();
 }
 export function championEffects(r,e,g){
  const c=r.ctx,theme=THEMES[e.key]||THEMES.faust;

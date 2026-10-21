@@ -17,19 +17,19 @@ test('Sora is an ordinary assassin with requested grades and default two-ammo re
 test('passive marks once per three seconds, excludes boss, and maintains two six-second marks',()=>{
  const {g,p}=quiet(),a=creep(g,42,7),b=creep(g,43,8),c=creep(g,44,6);creep(g,41,7,'boss');run(g,2.99);assert.equal(Sora.orders(g,p).length,0);run(g,.02);assert.ok(Sora.marked(g,p,a));assert.equal(a.hostile,undefined);run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.marked(g,p,b));run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.orders(g,p).every(m=>m.target!==g.units.find(e=>e.camp==='boss').id));
 });
-test('twenty percent cumulative own damage consumes the mark and awards one unlock, never per extra hit',()=>{
- const {g,p}=quiet(),t=creep(g);Sora.mark(g,p,t);g.deal(p,t,150,{fixed:true});close(p.state.unlock,0);close(p.state.orders[t.id].damage,150);g.deal(p,t,50,{fixed:true});close(p.state.unlock,1);assert.equal(Sora.marked(g,p,t),false);g.deal(p,t,400,{fixed:true});close(p.state.unlock,1);
+test('the first own hit consumes the mark and awards one unlock, never per extra hit',()=>{
+ const {g,p}=quiet(),t=creep(g);Sora.mark(g,p,t);g.deal(p,t,1,{fixed:true});close(p.state.unlock,1);assert.equal(Sora.marked(g,p,t),false);g.deal(p,t,400,{fixed:true});close(p.state.unlock,1);
 });
 test('foreign damage and expired/returning marks cannot award unlock; absorbed damage does count',()=>{
- const {g,p}=quiet(),t=creep(g),a=g.makeChampion('faust',0,3);Sora.mark(g,p,t);g.deal(a,t,100,{fixed:true});close(p.state.orders[t.id].damage,0);g.time=6;g.deal(p,t,200,{fixed:true});close(p.state.unlock,0);assert.equal(Sora.orders(g,p).length,0);
+ const {g,p}=quiet(),t=creep(g),a=g.makeChampion('faust',0,3);Sora.mark(g,p,t);g.deal(a,t,100,{fixed:true});assert.equal(Sora.marked(g,p,t),true);g.time=6;g.deal(p,t,200,{fixed:true});close(p.state.unlock,0);assert.equal(Sora.orders(g,p).length,0);
  const e=enemy(g);Sora.mark(g,p,e,'ultimate');g.addShield(e,500,'test');const hp=e.hp;g.deal(p,e,2000,{fixed:true});assert.equal(p.state.unlock,1);assert.ok(e.hp<hp);
  const returning=creep(g);Sora.mark(g,p,returning);returning.returning=true;assert.equal(Sora.orders(g,p).some(m=>m.target===returning.id),false);
 });
 test('ultimate prioritizes nearby ordinary creeps over buffs then lowest current champion HP',()=>{
  const {g,p}=quiet(),n=creep(g,47,7),b=creep(g,42,7,'blessing'),e=enemy(g,43,8),f=enemy(g,45,7);e.hp=900;f.hp=1000;assert.equal(Sora.ultimateTarget(g,p),n);n.alive=false;assert.equal(Sora.ultimateTarget(g,p),b);b.alive=false;assert.equal(Sora.ultimateTarget(g,p),e);creep(g,41,7,'boss');assert.equal(Sora.ultimateTarget(g,p),e);e.x=60;assert.equal(Sora.ultimateTarget(g,p),f);
 });
-test('ultimate refresh preserves accumulated damage, allows a third mark and does not wake neutral creeps',()=>{
- const {g,p}=quiet(),a=creep(g,43,7),b=creep(g,44,8),c=creep(g,42,7);Sora.mark(g,p,a);Sora.mark(g,p,b);g.deal(p,a,50,{fixed:true});g.time=1;assert.ok(g.cast(p,'r',p));assert.equal(Sora.orders(g,p).length,3);close(p.state.orders[a.id].until,7);close(p.state.orders[a.id].damage,50);assert.equal(p.state.orders[c.id].origin,'ultimate');assert.equal(c.hostile,undefined);close(p.rCd,10);
+test('ultimate refresh keeps active marks, allows a third mark and does not wake neutral creeps',()=>{
+ const {g,p}=quiet(),a=creep(g,43,7),b=creep(g,44,8),c=creep(g,42,7);Sora.mark(g,p,a);Sora.mark(g,p,b);g.time=1;assert.ok(g.cast(p,'r',p));assert.equal(Sora.orders(g,p).length,3);close(p.state.orders[a.id].until,7);assert.equal(p.state.orders[c.id].origin,'ultimate');assert.equal(c.hostile,undefined);close(p.rCd,10);
 });
 test('empty normal ultimate cannot spend cooldown, but an existing distant mark can be refreshed',()=>{
  const {g,p}=quiet();assert.equal(g.cast(p,'r',p),false);close(p.rCd,0);const t=creep(g);Sora.mark(g,p,t);t.x=60;assert.ok(g.cast(p,'r',p));close(p.state.orders[t.id].until,6);
@@ -38,7 +38,7 @@ test('normal basic gets ten percent bonus only against its own directive',()=>{
  const {g,p}=quiet(),t=enemy(g);const hp=t.hp;g.attack(p,t);close(hp-t.hp,220*.9);p.attackCd=0;p.ammo=1;Sora.mark(g,p,t,'ultimate');const before=t.hp;g.attack(p,t);close(before-t.hp,220*.9*1.1);
 });
 test('normal dash contacts only first enemy, stuns, refills a consumed directive and never pushes the victim',()=>{
- const {g,p}=quiet(),t=creep(g),behind=enemy(g,44,7);Sora.mark(g,p,t);g.deal(p,t,50,{fixed:true});p.ammo=0;assert.equal(skillTargeting(g,p,'q').confirm,true);g.cast(p,'q',{x:44.5,y:7});assert.ok(p.motion);run(g,.35);assert.equal(p.motion,undefined);assert.equal(g.stat(t,'stun'),1);close(t.x,42);close(behind.hp,10000);close(p.ammo,2);close(p.state.unlock,1);assert.ok(distance(p,t)>=p.radius+t.radius);
+ const {g,p}=quiet(),t=creep(g),behind=enemy(g,44,7);Sora.mark(g,p,t);p.ammo=0;assert.equal(skillTargeting(g,p,'q').confirm,true);g.cast(p,'q',{x:44.5,y:7});assert.ok(p.motion);run(g,.35);assert.equal(p.motion,undefined);assert.equal(g.stat(t,'stun'),1);close(t.x,42);close(behind.hp,10000);close(p.ammo,2);close(p.state.unlock,1);assert.ok(distance(p,t)>=p.radius+t.radius);
 });
 for(const cc of ['root','captured'])test(`${cc} rejects either form of dash without spending cooldown`,()=>{
  const {g,p}=quiet();g.status(p,cc,1,3);assert.equal(g.cast(p,'q',{x:45,y:7}),false);close(p.qCd,0);delete p.status[cc];transform(g,p);g.status(p,cc,1,3);assert.equal(g.cast(p,'q',{x:45,y:7}),false);assert.equal(p.invulnerableUntil,undefined);
@@ -53,7 +53,7 @@ test('EGO basic hits in all directions, permits reload during attacking, and gra
  const {g,p}=quiet(),front=enemy(g,42,7),back=enemy(g,38,7);transform(g,p);const speed=g.speed(p);g.attack(p,front);assert.ok(front.hp<10000&&back.hp<10000);close(10000-front.hp,260*.9*1.25);close(g.speed(p)-speed,3.8*.05);assert.equal(g.reloadPaused(p),false);p.ammo=0;p.reloadProgress=0;g.input.fire=true;run(g,.15);assert.ok(p.reloadProgress>0);g.input.fire=false;run(g,.25);close(g.speed(p),speed);
 });
 test('EGO dash is invulnerable only while moving, passes enemies and leaves six nonstacking-slow cuts',()=>{
- const {g,p}=quiet(),t=enemy(g);transform(g,p);const hits=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)hits.push(n);return deal(a,b,n,o);};g.cast(p,'q',{x:44.5,y:7});assert.ok(p.motion);assert.equal(g.deal(t,p,1000,{fixed:true}),0);run(g,.58);close(p.x,44.5);assert.equal(p.state.soraGuard,undefined);assert.ok(p.invulnerableUntil<=g.time);run(g,1.2);assert.deepEqual(hits,[240,45,45,45,45,45,45]);close(g.stat(t,'slow'),.3);const hp=p.hp;g.deal(t,p,100,{fixed:true});close(hp-p.hp,100);
+ const {g,p}=quiet(),t=enemy(g);transform(g,p);const hits=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)hits.push(n);return deal(a,b,n,o);};g.cast(p,'q',{x:44.5,y:7});assert.ok(p.motion);assert.equal(g.deal(t,p,1000,{fixed:true}),0);run(g,.2);close(p.x,44.5);assert.equal(p.state.soraGuard,undefined);assert.ok(p.invulnerableUntil<=g.time);run(g,1.2);assert.deepEqual(hits,[240,45,45,45,45,45,45]);close(g.stat(t,'slow'),.3);const hp=p.hp;g.deal(t,p,100,{fixed:true});close(hp-p.hp,100);
 });
 test('wall and capture boundaries truncate the actual trail without leaving permanent immunity or overlaps',()=>{
  const {g,p}=quiet(),w=WALLS[0];Object.assign(p,{x:w.x-1.5,y:w.y+w.h/2});transform(g,p);g.cast(p,'q',{x:w.x+4,y:p.y});run(g,.7);assert.equal(blocked(p.x,p.y,p.radius),false);assert.ok(p.x<w.x);assert.equal(p.state.soraGuard,undefined);const trail=g.effects.find(f=>f.type==='soraTrail');assert.ok(trail.to.x<w.x);

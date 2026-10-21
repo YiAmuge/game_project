@@ -21,9 +21,9 @@ function champ(g,team=1,x=42,y=7,key='faust'){
 }
 function grab(){const {g,p}=quiet(),t=champ(g);g.cast(p,'q',t);run(g,.2);assert.equal(carried(g,p),t);return {g,p,t};}
 
-test('Sora normal head smash gains range and width, while EGO scratches retain radius 2.7',()=>{
+test('Sora normal head smash uses a small forward circle, while EGO scratches retain radius 2.7',()=>{
  const {g,p}=quiet('sora'),far=champ(g,1,44.5,7),wide=champ(g,1,40.5,10),back=champ(g,1,38,7);
- g.attack(p,{x:48,y:7});assert.ok(far.hp<10000&&wide.hp<10000);close(back.hp,10000);close(g.attackRange(p),4.62);
+ g.attack(p,{x:48,y:7});close(far.hp,10000);close(wide.hp,10000);close(back.hp,10000);close(g.attackRange(p),1.33);
  p.state.unlock=5;g.cast(p,'r',p);p.attackCd=0;p.ammo=2;const hp=far.hp;g.attack(p,{x:48,y:7});close(far.hp,hp);assert.ok(back.hp<10000);close(g.attackRange(p),2.7);
 });
 test('Sora becomes ready at exactly five unlocks and HUD exposes five slots',()=>{

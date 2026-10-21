@@ -1,5 +1,5 @@
 import * as Training from './training.js';
-import { ego as soraEgo } from './sora.js';
+import { ego as soraEgo,basicImpact as soraImpact } from './sora.js';
 import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, WORLD, TERRAIN, worldPoint, RUNTIME_CHAMPIONS as CHAMPIONS, lanePath } from './data.js';
 import { distance } from './geometry.js';
 import { Camera } from './camera.js';
@@ -154,8 +154,12 @@ export class Renderer {
     for(const e of game.units.filter(e=>e.kind==='core'||e.kind==='tower'))this.structure(e,game);
     if(playing&&game.player.alive&&!game.hidden(game.player)) {
       const p=game.player,aim=game.input.aim,theta=Math.atan2(aim.y-p.y,aim.x-p.x);
-      c.setLineDash([.1,.24]);this.circle(p.x,p.y,game.attackRange(p),null,'#b7d3c727',.035);c.setLineDash([]);
-      this.line([{x:p.x+Math.cos(theta),y:p.y+Math.sin(theta)},{x:p.x+Math.cos(theta)*game.attackRange(p),y:p.y+Math.sin(theta)*game.attackRange(p)}],'#dfcfaa50',.04,[.18,.2]);
+      if(p.key==='sora'&&!soraEgo(game,p)){
+        const impact=soraImpact(game,p,{x:Math.cos(theta),y:Math.sin(theta)});this.circle(impact.x,impact.y,impact.r,'#9ddce80b','#b7d3c766',.035);this.line([{x:p.x,y:p.y},impact],'#dfcfaa50',.04,[.18,.2]);
+      }else{
+        c.setLineDash([.1,.24]);this.circle(p.x,p.y,game.attackRange(p),null,'#b7d3c727',.035);c.setLineDash([]);
+        this.line([{x:p.x+Math.cos(theta),y:p.y+Math.sin(theta)},{x:p.x+Math.cos(theta)*game.attackRange(p),y:p.y+Math.sin(theta)*game.attackRange(p)}],'#dfcfaa50',.04,[.18,.2]);
+      }
       this.circle(aim.x,aim.y,.22,null,'#d8c9a177',.04);
     }
     targetingPreview(this,game);
@@ -176,6 +180,16 @@ export class Renderer {
       if(fx.type==='line'){this.line([{x:fx.x,y:fx.y},fx.to],fx.color,.1);if(fx.theme==='rudolph'){this.line([{x:fx.x,y:fx.y-.45},fx.to],'#ffb65f',.18);for(let i=1;i<5;i++)this.shard(fx.x+(fx.to.x-fx.x)*i/5,fx.y+(fx.to.y-fx.y)*i/5,.13,game.time*8+i,'#ffd09b');}if(fx.theme==='sinclair')this.line([{x:fx.x,y:fx.y-.2},{x:fx.to.x,y:fx.to.y-.2}],'#f5e997',.08);}
       if(fx.type==='nailVolley'){const travel=(1-fx.life/fx.maxLife)*fx.r;for(let i=0;i<11;i++){const a=fx.angle+(i-5)*.135,x=fx.x+Math.cos(a)*travel,y=fx.y+Math.sin(a)*travel;this.line([{x:x-Math.cos(a)*.45,y:y-Math.sin(a)*.45},{x,y}],'#a43251',.11);this.shard(x,y,.18,a,'#ffd3dc');}}
       if(fx.type==='soraTrail'){const dx=fx.to.x-fx.x,dy=fx.to.y-fx.y,n=Math.hypot(dx,dy)||1,sx=-dy/n*fx.width,sy=dx/n*fx.width;this.polygon([[fx.x+sx,fx.y+sy],[fx.to.x+sx,fx.to.y+sy],[fx.to.x-sx,fx.to.y-sy],[fx.x-sx,fx.y-sy]],'#34283944','#c0a8bb77');this.line([{x:fx.x,y:fx.y},fx.to],'#b49ac2',.08);}
+      if(fx.type==='soraShockwave'){
+        const age=1-fx.life/fx.maxLife;this.circle(fx.x,fx.y,fx.r,null,'#c3e5ed55',.035);
+        for(let i=0;i<2;i++){const spread=Math.max(0,Math.min(1,(age-i*.16)/.72));if(spread>0)this.circle(fx.x,fx.y,fx.r*spread,null,i?'#b5eaffaa':'#f0fcff',.12*(1-age)+.025);}
+        if(age<.3)this.circle(fx.x,fx.y,fx.r*.18*(1-age/.3),'#f4fcff');
+      }
+      if(fx.type==='soraCracks'){
+        const age=1-fx.life/fx.maxLife,spread=Math.min(1,age/.12);c.save();c.translate(fx.x,fx.y);
+        for(let i=0;i<7;i++){const a=i*Math.PI*2/7+.18;const point=(n,turn=0)=>({x:Math.cos(a+turn)*fx.r*n*spread,y:Math.sin(a+turn)*fx.r*n*spread}),path=[point(.08),point(.35,.11),point(.57,-.09),point(.88,.04)];this.line(path,'#07121ddd',.09);this.line(path,'#b6d4df99',.025);this.line([path[2],point(.77,.3)],'#102332cc',.045);}
+        c.restore();
+      }
       if(fx.type==='soraClaw'){const age=1-fx.life/fx.maxLife;for(let i=0;i<(fx.circle?8:3);i++){const a=fx.circle?i*Math.PI/4+age*.6:fx.angle+(i-1)*.28;this.line([{x:fx.x+Math.cos(a)*fx.r*.35,y:fx.y+Math.sin(a)*fx.r*.35},{x:fx.x+Math.cos(a+.12)*fx.r,y:fx.y+Math.sin(a+.12)*fx.r}],'#d9c5e4',.09*(1-age)+.03);}}
       if(fx.type==='ring'){this.circle(fx.x,fx.y,fx.r*(1-fx.life/fx.maxLife*.3),`${fx.color}11`,fx.color,.1);}
       if(fx.type==='number')this.text(fx.text,fx.x,fx.y-(1-fx.life/fx.maxLife),fx.color,.48);
