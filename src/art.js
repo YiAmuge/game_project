@@ -1,7 +1,7 @@
 // Generated fan-art atlas; each frame is read from the unchanged transparent PNG.
 export const FRAMES = {
-  sora:{x:142,y:92,w:500,h:784,sheet:7},soraEgo:{x:1139,y:47,w:553,h:829,sheet:7},
-  kim:{x:196,y:105,w:602,h:771,sheet:6},ppui:{x:1091,y:42,w:478,h:834,sheet:6},
+  sora:{x:190,y:225,w:464,h:640,sheet:7},soraEgo:{x:1124,y:155,w:576,h:709,sheet:7},
+  kim:{x:196,y:105,w:602,h:771,sheet:6,mirror:true},ppui:{x:1091,y:42,w:478,h:834,sheet:6},
   starbuck:{x:323,y:168,w:660,h:973,sheet:5},
   hohenheim:{x:47,y:33,w:416,h:675,sheet:4},alisa:{x:520,y:52,w:560,h:644,sheet:4},marton:{x:1157,y:17,w:405,h:687,sheet:4},queequeg:{x:1674,y:58,w:405,h:644,sheet:4},
   rudolph:{x:58,y:9,w:454,h:715,sheet:3},
@@ -65,5 +65,5 @@ export function portrait(canvas,key,image,extraImage,v05Image,v06Image,v08Image,
   const c=canvas.getContext('2d'),f=FRAMES[key];c.clearRect(0,0,canvas.width,canvas.height);c.imageSmoothingEnabled=false;
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}
   const crop=f.h*.66;
-  c.drawImage(image,f.x,f.y,f.w,crop,0,0,canvas.width,canvas.height);
+  c.save();if(f.mirror){c.translate(canvas.width,0);c.scale(-1,1);}c.drawImage(image,f.x,f.y,f.w,crop,0,0,canvas.width,canvas.height);c.restore();
 }

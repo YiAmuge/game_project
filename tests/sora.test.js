@@ -10,7 +10,7 @@ const run=(g,s)=>{for(let i=0;i<Math.round(s*60);i++)g.step(1/60);};
 function quiet(){const g=new Game('sora','jungle',{seed:42});for(const fn of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[fn]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,lastCombat:0,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];return {g,p};}
 function enemy(g,x=42,y=7,key='faust'){const t=g.makeChampion(key,1,9);Object.assign(t,{x,y,maxHp:10000,hp:10000,lastDamageAt:100,lastAttackAt:100});return t;}
 function creep(g,x=42,y=7,camp='side'){const t=g.makeNeutral(x,y,camp);t.maxHp=t.hp=1000;return t;}
-function transform(g,p){p.state.unlock=9;assert.ok(g.cast(p,'r',p));}
+function transform(g,p){p.state.unlock=5;assert.ok(g.cast(p,'r',p));}
 test('Sora is an ordinary assassin with requested grades and default two-ammo reload rules',()=>{
  const {g,p}=quiet(),c=CHAMPIONS.sora;assert.equal(Object.keys(CHAMPIONS).length,28);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,30);assert.deepEqual([c.role,c.power,c.health,c.speed,c.ammo,c.reload],['암살',3,2,3,2,3]);close(g.reloadInterval(p),.56/.52);assert.ok(c.growth.power>0);
 });
@@ -43,11 +43,11 @@ test('normal dash contacts only first enemy, stuns, refills a consumed directive
 for(const cc of ['root','captured'])test(`${cc} rejects either form of dash without spending cooldown`,()=>{
  const {g,p}=quiet();g.status(p,cc,1,3);assert.equal(g.cast(p,'q',{x:45,y:7}),false);close(p.qCd,0);delete p.status[cc];transform(g,p);g.status(p,cc,1,3);assert.equal(g.cast(p,'q',{x:45,y:7}),false);assert.equal(p.invulnerableUntil,undefined);
 });
-test('nine unlocks override an existing normal-ultimate cooldown and consume exactly nine',()=>{
- const {g,p}=quiet();p.state.unlock=9;p.rCd=8;assert.equal(skillTargeting(g,p,'r').confirm,false);assert.equal(Sora.abilityInfo(g,p).ultimate,'개화 E.G.O::대행');assert.ok(g.cast(p,'r',p));assert.equal(Sora.ego(g,p),true);close(p.state.unlock,0);close(p.rCd,0);assert.equal(g.cast(p,'r',p),false);
+test('five unlocks override an existing normal-ultimate cooldown and consume exactly five',()=>{
+ const {g,p}=quiet();p.state.unlock=5;p.rCd=8;assert.equal(skillTargeting(g,p,'r').confirm,false);assert.equal(Sora.abilityInfo(g,p).ultimate,'개화 E.G.O::대행');assert.ok(g.cast(p,'r',p));assert.equal(Sora.ego(g,p),true);close(p.state.unlock,0);close(p.rCd,0);assert.equal(g.cast(p,'r',p),false);
 });
-test('transformation lasts five seconds, applies requested stats and restores original HP ratio and names',()=>{
- const {g,p}=quiet();p.hp=p.maxHp*.4;const hp=p.maxHp,power=g.powerScale(p),reload=g.reloadInterval(p),speed=g.speed(p);transform(g,p);close(p.maxHp,hp*.8);close(p.hp/p.maxHp,.4);close(g.powerScale(p)/power,1.25);close(g.reloadInterval(p),reload/1.3);close(g.speed(p)/speed,1.1);assert.equal(Sora.abilityInfo(g,p).basic,'대행: 새기기');run(g,5.02);assert.equal(Sora.ego(g,p),false);close(p.maxHp,hp);close(p.hp/p.maxHp,.4);assert.equal(Sora.abilityInfo(g,p).ultimate,'단말기로 정해진 지령');close(g.powerScale(p),power);
+test('transformation lasts twenty seconds, applies requested stats and restores original HP ratio and names',()=>{
+ const {g,p}=quiet();p.hp=p.maxHp*.4;const hp=p.maxHp,power=g.powerScale(p),reload=g.reloadInterval(p),speed=g.speed(p);transform(g,p);close(p.maxHp,hp*.8);close(p.hp/p.maxHp,.4);close(g.powerScale(p)/power,1.25);close(g.reloadInterval(p),reload/1.3);close(g.speed(p)/speed,1.1);assert.equal(Sora.abilityInfo(g,p).basic,'대행: 새기기');run(g,19.9);assert.equal(Sora.ego(g,p),true);run(g,.12);assert.equal(Sora.ego(g,p),false);close(p.maxHp,hp);close(p.hp/p.maxHp,.4);assert.equal(Sora.abilityInfo(g,p).ultimate,'단말기로 정해진 지령');close(g.powerScale(p),power);
 });
 test('EGO basic hits in all directions, permits reload during attacking, and grants temporary five percent stride',()=>{
  const {g,p}=quiet(),front=enemy(g,42,7),back=enemy(g,38,7);transform(g,p);const speed=g.speed(p);g.attack(p,front);assert.ok(front.hp<10000&&back.hp<10000);close(10000-front.hp,260*.9*1.25);close(g.speed(p)-speed,3.8*.05);assert.equal(g.reloadPaused(p),false);p.ammo=0;p.reloadProgress=0;g.input.fire=true;run(g,.15);assert.ok(p.reloadProgress>0);g.input.fire=false;run(g,.25);close(g.speed(p),speed);
@@ -66,8 +66,8 @@ test('forced motion cancellation and zero-length EGO casts release immunity reli
 test('equipment and level growth use transformed max HP, and death resets unlock but preserves transformed corpse',()=>{
  const {g,p}=quiet();transform(g,p);g.award(p,250,0);const hp=g.maxHp(p);p.state.unlock=4;g.kill(p,enemy(g));assert.equal(g.corpses.at(-1).form,'soraEgo');assert.ok(p.maxHp>hp);assert.equal(p.state.unlock,undefined);g.time=p.respawnAt;g.step(.01);assert.ok(p.alive);assert.equal(p.state.unlock,0);assert.equal(Sora.ego(g,p),false);close(p.state.orderAt-g.time,3);
 });
-test('two Sora owners track separate marks and cap their own unlocks at nine',()=>{
- const {g,p}=quiet(),a=g.makeChampion('sora',0,2),t=creep(g);Object.assign(a,{x:40,y:8});Sora.mark(g,p,t);Sora.mark(g,a,t);p.state.unlock=8;g.deal(p,t,250,{fixed:true});close(p.state.unlock,9);close(a.state.unlock,0);assert.equal(Sora.marked(g,a,t),true);Sora.mark(g,p,t);g.deal(p,t,250,{fixed:true});close(p.state.unlock,9);
+test('two Sora owners track separate marks and cap their own unlocks at five',()=>{
+ const {g,p}=quiet(),a=g.makeChampion('sora',0,2),t=creep(g);Object.assign(a,{x:40,y:8});Sora.mark(g,p,t);Sora.mark(g,a,t);p.state.unlock=4;g.deal(p,t,250,{fixed:true});close(p.state.unlock,5);close(a.state.unlock,0);assert.equal(Sora.marked(g,a,t),true);Sora.mark(g,p,t);g.deal(p,t,250,{fixed:true});close(p.state.unlock,5);
 });
 
 test('normal Q really stops a jungle creep attacking for its stun, and minion stuns cannot fire early',()=>{

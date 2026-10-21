@@ -1,5 +1,6 @@
 import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS, UPGRADES, BUSHES, POSITIONS, POSITION_ORDER, lanePath, worldPoint, MAP_CENTER, FOUNTAINS, MINIONS, CAMP_RULES, CORE_POSITIONS, inWell, WORLD } from './data.js';
 import { clamp, distance, direction, clearLine, slide, findPath, segmentDistance, blocked } from './geometry.js';
+import { shiftCarried } from './attachments.js';
 import * as Skills from './skills.js';
 import * as CreepPatterns from './creep-patterns.js';
 import * as Augments from './augments.js';
@@ -91,6 +92,7 @@ export class Game {
     const forced=kind==='knock';
     if(forced&&(e.invulnerableUntil>this.time||e.ccImmuneUntil>this.time))return false;
     if(!forced&&(this.stat(e,'root')||this.stat(e,'stun')||this.stat(e,'captured')||e.state?.posthumous||e.motion))return false;
+    if(forced&&e.state?.swordHeldBy){const owner=this.units.find(a=>a.id===e.state.swordHeldBy);if(owner)V12.releaseGrab(this,owner);}
     const actionKind=e.actionKind||'skill',wrap=fn=>fn&&((...args)=>this.action(e,actionKind,()=>fn(...args)));
     onStep=wrap(onStep);onComplete=wrap(onComplete);onCollision=wrap(onCollision);
     this.cancelRecall(e);e.motion={actionKind,phaseEnemies:!forced&&phaseEnemies,lastClear:{x:e.x,y:e.y},dx:d.x,dy:d.y,remaining:len,total:len,speed:Math.min(speed,forced?RULES.knockSpeed:maxSpeed),kind,forced,onStep,onComplete,onCollision,ignoreWalls,startedAt:this.time,elapsed:0,minDuration,follow,stopDistance};
@@ -106,7 +108,7 @@ export class Game {
       const from={x:e.x,y:e.y},next={x:e.x+m.dx*length/n,y:e.y+m.dy*length/n};
       if(!withinTrap(this,e,next)||!m.ignoreWalls&&!canOccupy(this,e,next,{phaseEnemies:m.phaseEnemies})){collided=true;break;}
       e.x=clamp(next.x,WORLD.x+e.radius,WORLD.x+WORLD.w-e.radius);e.y=clamp(next.y,WORLD.y+e.radius,WORLD.y+WORLD.h-e.radius);m.remaining-=length/n;
-      m.onStep?.(from,{x:e.x,y:e.y});
+      shiftCarried(this,e,from,e);m.onStep?.(from,{x:e.x,y:e.y});
       if(canOccupy(this,e,e,{phaseEnemies:false}))m.lastClear={x:e.x,y:e.y};
     }
     if(!e.alive||e.motion!==m)return;
@@ -228,9 +230,9 @@ export class Game {
     e.status[key]={amount,until:this.time+seconds,theme:source?.key};
     if(source?.kind==='champion'&&CHAMPIONS[source.key].role==='방해'&&e.kind==='champion'&&e.team!==source.team&&(source.state.disruptReady||0)<=this.time){source.state.disruptReady=this.time+2.5;source.state.disruptStacks=this.buff(source,'disrupt')?Math.min(3,(source.state.disruptStacks||0)+1):1;this.addBuff(source,'disrupt',4);this.deal(source,e,30,{fixed:true,proc:false});}
   }
-  award(e,xp,gold,{passive=false,assist=false}={}) {
+  award(e,xp,gold,{passive=false,assist=false,sharedMinion=false}={}) {
     if(!e||e.kind!=='champion') return;
-    e.gold+=gold; e.xp+=xp*(e.key==='faust'&&!passive?1.15:1)*(e.key==='ppui'&&assist?1.15:1);
+    e.gold+=gold; e.xp+=xp*(e.key==='faust'&&!passive?1.15:1)*(e.key==='ppui'&&(assist||sharedMinion)?1.15:1);
     const level=1+RULES.xp.slice(1).filter(n=>e.xp>=n).length;
     if(level>e.level) {
       const old=e.maxHp;e.level=level;e.maxHp=this.maxHp(e);if(e.alive)e.hp+=e.maxHp-old;
@@ -346,7 +348,7 @@ export class Game {
       const xp=e.siege?45:e.ranged?26:24,gold=e.siege?30:e.ranged?18:15;
       const allies=this.champions(killer.team).filter(c=>c!==killer&&c.alive&&distance(c,e)<=7),share=allies.length?RULES.shareFraction:0;
       this.award(killer,xp*(1-share),gold*(1-share));
-      allies.forEach(c=>this.award(c,xp*share/allies.length,gold*share/allies.length));
+      allies.forEach(c=>this.award(c,xp*share/allies.length,gold*share/allies.length,{sharedMinion:true}));
     } else if(e.kind==='neutral') {
       Skills.takedown(this,killer,e,true);
       if(e.camp==='boss') {
@@ -508,7 +510,7 @@ export class Game {
       const anchor=e.position==='support'?BotAI.supportAnchor(this,e):null;
       if(anchor&&distance(e,anchor)<2.5)this.moveToward(e,BotAI.formation(this,e,anchor,near),dt);
       else if(d>this.attackRange(e)*.88)this.moveToward(e,near,dt);
-      if(d<=this.attackRange(e)+near.radius){const ally=e.key==='ppui'?this.champions(e.team).filter(a=>a!==e&&a.alive&&distance(e,a)<=6).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0]:null;this.attack(e,ally||near);}
+      if(d<=this.attackRange(e)+near.radius){const ally=e.key==='ppui'?this.champions(e.team).filter(a=>a!==e&&a.alive&&distance(e,a)<=this.attackRange(e)).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0]:null;this.attack(e,ally||near);}
       if(near.kind==='champion') {
         BotAI.combatSkills(this,e,near);
       }

@@ -117,7 +117,7 @@ export class Renderer {
     if(Math.sin(angle)<-.2)this.weapon(e,game);
     const visual=soraEgo(game,e)?'soraEgo':e.key,f=FRAMES[visual],h=(soraEgo(game,e)?2.22:2.1)*(game.buff(e,'mutant')?1.15:1),w=f?h*f.w/f.h:1.25,bob=Math.sin(game.time*3+e.id)*.025,atlas=this.atlasFor(visual);
     const lift=e.motion?.kind==='leap'?Math.sin(Math.PI*Math.min(1,e.motion.elapsed/Math.max(.01,e.motion.minDuration)))*1.1:0;
-    c.save();if(e.hitFlashUntil>game.time)c.filter='brightness(2.4) saturate(.4)';c.translate(e.x,e.y+.3+bob-lift);if(Math.cos(angle)<0)c.scale(-1,1);
+    c.save();if(e.hitFlashUntil>game.time)c.filter='brightness(2.4) saturate(.4)';c.translate(e.x,e.y+.3+bob-lift);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h,w,h);}
     else {c.fillStyle=def.color;c.fillRect(-.42,-1.8,.84,.8);c.fillStyle='#273642';c.fillRect(-.38,-1,.76,1);}
     c.restore();
@@ -128,7 +128,7 @@ export class Renderer {
     if(e.player&&inBush)this.text(e.revealedUntil>game.time?'노출 중':'수풀 은닉',e.x,e.y+.8,'#a9d890',.32);
   }
   atlasFor(key){return FRAMES[key]?.sheet===7?this.atlasV13:FRAMES[key]?.sheet===6?this.atlasV12:FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
-  corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.form||e.key],atlas=this.atlasFor(e.form||e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=1.7,w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
+  corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.form||e.key],atlas=this.atlasFor(e.form||e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=1.7,w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(f.mirror?-1:1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
   draw(game,playing) {
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);

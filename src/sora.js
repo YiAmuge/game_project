@@ -3,7 +3,7 @@ import { settleBody } from './collision.js';
 import { dash,area } from './skills.js';
 
 // Unspecified distances/damage are prototype values, mirrored in the encyclopedia.
-export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,threshold:.2,maxUnlock:9,ultimateRange:8,egoDuration:5,basicDamage:220,basicRange:2.1,egoDamage:260,egoRadius:2.7,qRange:4.5,qDamage:210,egoQDamage:240,trailDamage:45,trailWidth:.8,trailEvery:.2,trailDuration:1.2};
+export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,threshold:.2,maxUnlock:5,ultimateRange:8,egoDuration:20,basicDamage:220,basicRange:4.62,basicAngle:3.3,egoDamage:260,egoRadius:2.7,qRange:7,egoQRange:6.5,qWidth:(.48+.08)*1.7,qDamage:210,egoQDamage:240,trailDamage:45,trailWidth:.8,trailEvery:.2,trailDuration:1.2};
 export const ego=(g,e)=>e.key==='sora'&&g.buff(e,'soraEgo');
 export const ready=(g,e)=>e.key==='sora'&&!ego(g,e)&&(e.state.unlock||0)>=SORA.maxUnlock;
 export function init(g,e){if(e.key==='sora'){e.state.unlock=0;e.state.orders={};e.state.orderAt=g.time+SORA.markEvery;}}
@@ -43,7 +43,7 @@ function endTransform(g,e){
 export function basic(g,e,p,d){
  if(e.key!=='sora')return false;
  if(ego(g,e)){g.addBuff(e,'soraScratch',.35,{copy:false});area(g,e,e,g.attackRange(e),0,t=>g.deal(e,t,SORA.egoDamage));g.effects.push({type:'soraClaw',x:e.x,y:e.y,r:g.attackRange(e),angle:Math.atan2(d.y,d.x),circle:true,life:.3,maxLife:.3});}
- else g.cone(e,d,g.attackRange(e),1.5,SORA.basicDamage);
+ else g.cone(e,d,g.attackRange(e),SORA.basicAngle,SORA.basicDamage);
  return true;
 }
 function trail(g,e,origin){
@@ -63,7 +63,7 @@ export function cast(g,e,slot,p,d){
   else{for(const m of orders(g,e))m.until=g.time+SORA.markDuration;mark(g,e,ultimateTarget(g,e),'ultimate');}
   return true;
  }
- const origin={x:e.x,y:e.y},length=Math.min(SORA.qRange,distance(e,p));
+ const origin={x:e.x,y:e.y},length=Math.min(ego(g,e)?SORA.egoQRange:SORA.qRange,distance(e,p));
  if(ego(g,e)){
   const previous=e.invulnerableUntil||0;
   if(dash(g,e,d,length,SORA.egoQDamage,()=>{},{hitWidth:SORA.trailWidth,onComplete:()=>{restoreGuard(e);trail(g,e,origin);}})&&e.motion){e.state.soraGuard={previous,motion:e.motion};e.invulnerableUntil=Infinity;}
@@ -71,7 +71,7 @@ export function cast(g,e,slot,p,d){
   // Sweep only the first contacted enemy; no teleport and no pushing through terrain.
   const stopped=new Set();
   g.startMotion(e,d,length,{phaseEnemies:true,onStep:(from,to)=>{
-   const target=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=e.radius+t.radius+.08&&clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
+   const target=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=SORA.qWidth+t.radius&&clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
    if(!target||stopped.size)return;stopped.add(target.id);const refill=marked(g,e,target),fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);
    g.deal(e,target,SORA.qDamage);g.status(target,'stun',1,1,e);if(refill)e.ammo=Math.min(g.ammoCap(e),e.ammo+1);
    g.effects.push({type:'impact',x:target.x,y:target.y,angle:Math.atan2(d.y,d.x),theme:'sora',life:.3,maxLife:.3});
@@ -83,7 +83,7 @@ export function afterDamage(g,e,t,actual,absorbed=0){
  if(e.key!=='sora'||!e.alive||actual+absorbed<=0)return;
  const m=e.state.orders?.[t.id];if(!m||m.until<=g.time)return;
  m.damage+=actual+absorbed;
- if(m.damage+1e-8>=t.maxHp*SORA.threshold){delete e.state.orders[t.id];e.state.unlock=Math.min(SORA.maxUnlock,(e.state.unlock||0)+1);if(ready(g,e))e.rCd=0;g.effects.push({type:'number',x:e.x,y:e.y-2,text:`해금 ${e.state.unlock}/9`,color:'#f3d98b',life:1,maxLife:1});}
+ if(m.damage+1e-8>=t.maxHp*SORA.threshold){delete e.state.orders[t.id];e.state.unlock=Math.min(SORA.maxUnlock,(e.state.unlock||0)+1);if(ready(g,e))e.rCd=0;g.effects.push({type:'number',x:e.x,y:e.y-2,text:`해금 ${e.state.unlock}/${SORA.maxUnlock}`,color:'#f3d98b',life:1,maxLife:1});}
 }
 export function tick(g,e){
  if(e.key!=='sora')return;
@@ -101,5 +101,5 @@ export function onDeath(g,e){if(e.key==='sora')restoreGuard(e);}
 export function abilityInfo(g,e){
  if(e.key!=='sora')return {};
  const transformed=ego(g,e),unlocked=ready(g,e);
- return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?'지정 좌표로 무적 돌진·240 피해. 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.':'사거리 4.5 좌표로 돌진, 처음 닿은 적에게 210 피해·기절 1초. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 9 소모, 5초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
+ return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?'사거리 6.5 좌표로 무적 돌진·240 피해. 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.':'사거리 7 좌표로 돌진, 처음 닿은 적에게 210 피해·기절 1초. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
 }

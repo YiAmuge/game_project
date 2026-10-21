@@ -50,7 +50,7 @@ export const ATTACK_STYLES={faust:'slash',yi:'shot',sinclair:'slash',meursault:'
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
 CHAMPIONS.don.rText='사거리 6.5 좌표 지정 논타겟 돌진 · 경로 300 피해 · 적중 시 회복 · 7초간 흡혈 25%';
 CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.brief='짧은 돌진 도끼와 동전의 도박사';
-CHAMPIONS.don.qText='재사용으로 취소·남은 시간 비례 쿨다운 반환. 2.5초 동안 사거리 6의 반투명 노란 범위로 방향을 고정해 랜스 연속 찌르기 · 이동 가능 · 정면 피해 50% 감소';
+CHAMPIONS.don.qText='재사용으로 조기 취소 가능·쿨다운 반환 없음. 2.5초 동안 사거리 6의 반투명 노란 범위로 방향을 고정해 랜스 연속 찌르기 · 이동 가능 · 정면 피해 50% 감소';
 CHAMPIONS.heathcliff.rText='반경 7.5의 시체자루 · 피해·흡혈·처치 연장';
 CHAMPIONS.yi.qText='장판 0.1초마다 침묵 0.25초·장전 −10%. 최초 피해에 탄창 1개 소모, 매 피해마다 감속 3.5% 누적';
 CHAMPIONS.outis.rText='2.5거리 후퇴 후 사거리18 투사체로450피해. 명중 또는 사거리 끝에 반경3.5 폭발로250피해. 체력50%미만 대상에게 각각30% 추가피해.';

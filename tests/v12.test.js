@@ -47,8 +47,8 @@ for(const key of ['ryoshu','ahab','sinclair','starbuck'])test(`capture also conf
 test('Queequeg stats follow missing health immediately, including healing and max-HP growth',()=>{
  const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),48);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),12);g.award(p,6900,0);close(g.armor(p),0);close(g.attackRange(p),4.1);
 });
-test('Don tactical recasts once, returns proportional cooldown and can restart only when ready',()=>{
- const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,12);run(g,1);close(p.qCd,11);assert.ok(g.cast(p,'q',p));close(p.qCd,3.8,.02);assert.equal(p.state.donBarrage,undefined);assert.equal(g.buff(p,'donGuard'),false);assert.equal(g.cast(p,'q',p),false);
+test('Don tactical recasts once, keeps the original cooldown and can restart only when ready',()=>{
+ const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,12);run(g,1);close(p.qCd,11);assert.ok(g.cast(p,'q',p));close(p.qCd,11,.02);assert.equal(p.state.donBarrage,undefined);assert.equal(g.buff(p,'donGuard'),false);assert.equal(g.cast(p,'q',p),false);
 });
 test('Don ultimate accepts an empty coordinate and applies seven-second lifesteal',()=>{
  const {g,p}=quiet('don');g.units=[p];assert.equal(skillTargeting(g,p,'r').confirm,true);assert.ok(g.cast(p,'r',{x:45,y:7}));close(p.motion.total,5);close(p.buffs.donLifesteal,7);run(g,.7);close(p.x,45);
@@ -73,15 +73,15 @@ test('Ppui replacement removes previous healing target and Q reaches eight units
  const {g,p}=quiet('ppui');g.units=[p];const a=ally(g,'faust',42,7),b=ally(g,'yi',43,9);a.hp-=500;b.hp-=500;a.lastDamageAt=100;b.lastDamageAt=100;g.attack(p,a);p.attackCd=0;p.ammo=1;g.attack(p,b);const before=a.hp;run(g,.5);close(a.hp,before);assert.ok(b.hp>b.maxHp-500);
  Object.assign(b,{x:48,y:7});g.status(b,'stun',1,1);p.qCd=0;assert.ok(g.cast(p,'q',b));assert.equal(g.stat(b,'stun'),0);assert.ok(b.ccImmuneUntil>g.time);assert.equal(skillTargeting(g,p,'q').range,8);
 });
-test('Ppui ultimate deals five waves totaling six hundred before scaling',()=>{
- const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,5);close(amounts.reduce((a,b)=>a+b,0),600);
+test('Ppui ultimate deals five waves totaling seven hundred twenty before scaling',()=>{
+ const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,5);close(amounts.reduce((a,b)=>a+b,0),720);
 });
 test('Kim hitting a champion gives 120 shields to nearby allies with reload/haste benefit',()=>{
  const {g,p,t}=quiet('kim'),a=ally(g,'yi');g.attack(p,t);run(g,.02);close(g.shield(p),120);close(g.shield(a),120);close(g.haste(p),.12);const shields=g.shield(p);run(g,.3);close(g.shield(p),shields);
 });
 test('Kim Q stabs and grabs, recast throws without a new cooldown and cleans up on death',()=>{
- const {g,p,t}=quiet('kim');assert.ok(g.cast(p,'q',t));run(g,.2);assert.equal(p.state.swordGrab.target,t);assert.equal(g.stat(t,'root'),1);run(g,.2);const cd=p.qCd;assert.ok(g.cast(p,'q',{x:48,y:7}));close(p.qCd,cd);assert.equal(p.state.swordGrab,undefined);assert.equal(g.stat(t,'root'),0);assert.ok(t.motion?.forced);
- const f=quiet('kim');f.g.cast(f.p,'q',f.t);run(f.g,.2);f.g.kill(f.p,f.t);assert.equal(f.g.stat(f.t,'root'),0);
+ const {g,p,t}=quiet('kim');assert.ok(g.cast(p,'q',t));run(g,.2);assert.equal(p.state.swordGrab.target,t);assert.equal(g.stat(t,'stun'),1);run(g,.2);const cd=p.qCd;assert.ok(g.cast(p,'q',{x:48,y:7}));close(p.qCd,cd);assert.equal(p.state.swordGrab,undefined);assert.equal(g.stat(t,'stun'),0);assert.ok(t.motion?.forced);
+ const f=quiet('kim');f.g.cast(f.p,'q',f.t);run(f.g,.2);f.g.kill(f.p,f.t);assert.equal(f.g.stat(f.t,'stun'),0);
 });
 test('Kim normal ult fires 450, incoming lethal damage triggers four 338 waves at HP one',()=>{
  const {g,p,t}=quiet('kim');g.cast(p,'r',t);assert.ok(p.ccImmuneUntil>g.time);g.deal(t,p,1e6,{fixed:true});assert.ok(p.alive&&p.hp===1);assert.equal(p.state.counter,undefined);const waves=g.projectiles.filter(b=>b.theme==='kim');assert.equal(waves.length,4);assert.ok(waves.every(b=>b.damage===338));

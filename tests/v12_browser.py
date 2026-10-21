@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.13.0')
+ expect(page.locator('.build-tag')).to_contain_text('0.14.0')
  page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(28)
  for name in ['김삿갓','뿌이']:
   page.get_by_role('button',name=name+' 선택').click();expect(page.locator('#selected-name')).to_have_text(name)
@@ -38,7 +38,7 @@ with sync_playwright() as pw:
  choose('스타벅');page.evaluate('''() => {Object.assign(__target,{x:46,y:7,hp:4000});__moba.game.player.ammo=0;__moba.game.player.qCd=5;}''')
  page.keyboard.press('Space');assert page.evaluate('__moba.game.targeting.slot')=='r';click(46,7);page.wait_for_function('__target.state.netTrap');assert page.evaluate('__moba.game.player.ammo')==2;assert page.evaluate('__moba.game.player.qCd')==0
  page.screenshot(path=str(art/'v12-starbuck-capture-net.png'))
- choose('돈키호테');click(46,7,button='right');page.wait_for_function('__moba.game.player.state.donBarrage');page.wait_for_timeout(500);click(46,7,button='right');page.wait_for_function('!__moba.game.player.state.donBarrage');assert page.evaluate('__moba.game.player.qCd')<5
+ choose('돈키호테');click(46,7,button='right');page.wait_for_function('__moba.game.player.state.donBarrage');page.wait_for_timeout(500);click(46,7,button='right');page.wait_for_function('!__moba.game.player.state.donBarrage');assert page.evaluate('__moba.game.player.qCd')>10
  page.keyboard.press('Space');assert page.evaluate('__moba.game.targeting.slot')=='r';click(46,7);page.wait_for_function('__moba.game.player.motion');assert page.evaluate('__moba.game.player.buffs.donLifesteal-__moba.game.time')>6
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(200);assert page.evaluate('document.body.scrollWidth<=innerWidth');page.screenshot(path=str(art/'v12-mobile.png'))
- assert not errors,errors;b.close();print(json.dumps({'status':'passed','checks':['27 selectable champions and rendered new portraits','12 shared augment definitions with price/refund/unlock rules','real RMB Kim grab/recast, Space counter with four 338 waves','Ppui ally empowerment one nonlethal nail and 8-range cleanse','Ppui half-side sprite and nail storm','Starbuck capture net and unconditional refill/reset','Don barrage cancellation and coordinate dash','mobile layout'],'page_errors':errors},ensure_ascii=False))
+ assert not errors,errors;b.close();print(json.dumps({'status':'passed','checks':['28 selectable champions and rendered new portraits','12 shared augment definitions with price/refund/unlock rules','real RMB Kim grab/recast, Space counter with four 338 waves','Ppui ally empowerment one nonlethal nail and 8-range cleanse','Ppui half-side sprite and nail storm','Starbuck capture net and unconditional refill/reset','Don barrage cancellation and coordinate dash','mobile layout'],'page_errors':errors},ensure_ascii=False))

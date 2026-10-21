@@ -1,28 +1,31 @@
+import { RULES,RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
+import { carried } from './attachments.js';
 import { distance,direction,clearLine } from './geometry.js';
 import { settleBody } from './collision.js';
 import { dash,targetAt } from './skills.js';
 
-export const KIM={shield:120,qRange:2.8,qDamage:250,grab:1.2,throwDamage:100,rDamage:450,counterDamage:338};
-export function recast(g,e,slot){return e.key==='kim'&&slot==='q'&&e.state.swordGrab?.until>g.time&&e.state.swordGrab.target.alive&&g.stat(e.state.swordGrab.target,'root')&&e.state.swordGrab.target.status.root.grabOwner===e.id;}
+export const KIM={shield:120,qRange:2.8,qDamage:250,grab:1.8,throwDamage:100,rDamage:450,counterDamage:338};
+export function recast(g,e,slot){return e.key==='kim'&&slot==='q'&&e.state.swordGrab?.until>g.time&&Boolean(carried(g,e));}
 export function validate(g,e,slot,p){
  if(e.key==='kim'&&slot==='q'&&!recast(g,e,slot)&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
  return true;
 }
 export function basic(g,e,p,d){
  if(e.key==='kim'){
-  if(e.state.followSlashUntil>g.time){delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e),1.9,190);g.addShield(e,70,`draw-${e.id}`,3);}
-  else{e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2,75));}return true;
+  if(e.state.followSlashUntil>g.time){delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e)*1.2,1.9*1.3*1.2,190);g.addShield(e,70,`draw-${e.id}`,3);}
+  else{e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2*1.3,75));}return true;
  }
  if(e.key==='ppui'){
-  const ally=targetAt(g,e,p,6,e.team,a=>a!==e);
+  const ally=targetAt(g,e,p,7,e.team,a=>a!==e);
   if(ally){const old=g.units.find(a=>a.id===e.state.empower?.target);if(old)delete old.buffs.redEncouragement;e.state.empower={target:ally.id,until:g.time+4,healUntil:g.time+3};g.support(e);g.addBuff(ally,'redEncouragement',4,{copy:false});ally.supporters[e.id]=g.time;}
   else g.bullet(e,d,150,g.attackRange(e),{theme:'ppui',width:.2});
   return true;
  }return false;
 }
-function releaseGrab(g,e,throwDirection){
+export function releaseGrab(g,e,throwDirection){
  const grab=e.state.swordGrab;if(!grab)return;delete e.state.swordGrab;
- const t=grab.target;if(t.status.root?.grabOwner===e.id)delete t.status.root;
+ const t=grab.target;if(t.status.stun?.grabOwner===e.id)delete t.status.stun;if(t.state.swordHeldBy===e.id)delete t.state.swordHeldBy;
+ settleBody(g,t,t.bodySafe);
  if(throwDirection&&t.alive){g.deal(e,t,KIM.throwDamage);g.startMotion(t,throwDirection,2.5,{kind:'knock'});}
 }
 function counterWave(g,e,counter){
@@ -35,20 +38,28 @@ export function cast(g,e,slot,p,d){
  if(e.key==='kim'){
   if(slot==='q'){
    if(recast(g,e,slot)){releaseGrab(g,e,d);return true;}
-   let grabbed=false;dash(g,e,d,KIM.qRange,KIM.qDamage,t=>{if(!grabbed&&t.kind==='champion'&&t.alive){grabbed=true;g.status(t,'root',1,KIM.grab,e);if(g.stat(t,'root')){const fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);t.status.root.grabOwner=e.id;e.state.swordGrab={target:t,until:t.status.root.until};}}});
+   let grabbed=false;dash(g,e,d,KIM.qRange,KIM.qDamage,t=>{
+    if(grabbed||t.kind!=='champion'||!t.alive)return;grabbed=true;
+    const previous=t.status.stun;g.status(t,'stun',1,KIM.grab,e);
+    if(!g.stat(t,'stun')||t.status.stun===previous)return;
+    const fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);
+    if(t.state.swordHeldBy){const owner=g.units.find(a=>a.id===t.state.swordHeldBy);if(owner)releaseGrab(g,owner);}
+    if(t.state.swordGrab)releaseGrab(g,t);
+    delete t.motion;t.status.stun.grabOwner=e.id;t.state.swordHeldBy=e.id;e.state.swordGrab={target:t,until:t.status.stun.until};
+   });
   }else{e.state.counter={until:g.time+1.5,angle:Math.atan2(d.y,d.x),immune:e.ccImmuneUntil||0};e.channelUntil=g.time+1.5;e.ccImmuneUntil=g.time+1.5;g.schedule(e,1.5,()=>counterWave(g,e,false));}
   return true;
  }
  if(e.key==='ppui'){
   if(slot==='q'){
-   const allies=g.champions(e.team).filter(a=>a.alive&&distance(a,p)<=3.5&&clearLine(p,a)).sort((a,b)=>a.maxHp-b.maxHp||a.hp-b.hp),t=allies[0];
-   if(t){const cc=g.stat(t,'netCapture')||['stun','root','silence','disarm','taunt','captured','slow'].some(k=>g.stat(t,k))||t.motion?.forced;if(cc){t.status={};delete t.state.netTrap;if(t.motion?.forced)delete t.motion;t.ccImmuneUntil=Math.max(t.ccImmuneUntil||0,g.time+1);}e.state.helping={target:t.id,until:g.time+2};t.supporters[e.id]=g.time;g.support(e);}
+   const allies=g.champions(e.team).filter(a=>a.alive&&distance(a,p)<=3.5&&clearLine(p,a));
+   e.state.helping={targets:[],until:g.time+2};for(const t of allies){const cc=g.stat(t,'netCapture')||['stun','root','silence','disarm','taunt','captured','slow'].some(k=>g.stat(t,k))||t.motion?.forced;if(cc){t.status={};delete t.state.netTrap;if(t.motion?.forced)delete t.motion;t.ccImmuneUntil=Math.max(t.ccImmuneUntil||0,g.time+1);}e.state.helping.targets.push(t.id);t.supporters[e.id]=g.time;g.support(e);}
    g.effects.push({type:'ring',...p,r:3.5,color:'#efadb5',life:.6,maxLife:.6});
   }else{
-   e.channelUntil=g.time+2;e.state.nailStorm={d:{...d},until:g.time+2};
+   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.qCd=0;e.state.nailStorm={d:{...d},until:g.time+2};
    for(let i=0;i<5;i++)g.schedule(e,i*.4,()=>{
-    if(g.stat(e,'stun')||g.stat(e,'silence')){delete e.state.nailStorm;e.channelUntil=0;return;}
-    if(!e.state.nailStorm)return;g.effects.push({type:'nailVolley',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:7,life:.36,maxLife:.36});g.cone(e,d,7,1.5,120,t=>{if((t.state?.nailPushReady||0)<=g.time){if(t.state)t.state.nailPushReady=g.time+.6;g.startMotion(t,d,.5,{kind:'knock'});}});
+    if(g.stat(e,'stun')||g.stat(e,'silence')){delete e.state.nailStorm;return;}
+    if(!e.state.nailStorm)return;g.effects.push({type:'nailVolley',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:7,life:.36,maxLife:.36});g.cone(e,d,7,1.5,144,t=>{if((t.state?.nailPushReady||0)<=g.time){if(t.state)t.state.nailPushReady=g.time+.6;g.startMotion(t,d,.5,{kind:'knock'});}});
    });
   }return true;
  }return false;
@@ -61,19 +72,29 @@ export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
  if(!proc||actual+absorbed<=0||t.kind!=='champion'||e.kind!=='champion'||e.team===t.team)return;
  for(const owner of g.champions(e.team).filter(a=>a.alive&&a.key==='ppui')){
   const buff=owner.state.empower,token=kind==='basic'?`b${e.attackSerial}`:`s${e.castAt}`;
-  if(buff?.target!==e.id||buff.until<=g.time||distance(owner,t)>6||buff.lastToken===token)continue;
+  if(buff?.target!==e.id||buff.until<=g.time||distance(owner,t)>g.attackRange(owner)||buff.lastToken===token)continue;
   buff.lastToken=token;t.contributors[owner.id]=g.time;
   g.bullet(owner,direction(owner,t),150,4,{homing:true,target:t,speed:18,theme:'ppui',nonLethal:true,proc:false,damageKind:'skill'});
  }
 }
 export function tick(g,e,dt){
- if(e.key==='kim'&&e.state.swordGrab&&(e.state.swordGrab.until<=g.time||!e.state.swordGrab.target.alive||!g.stat(e.state.swordGrab.target,'root')||e.state.swordGrab.target.status.root.grabOwner!==e.id||g.stat(e,'stun')))releaseGrab(g,e);
+ if(e.key==='kim'&&e.state.swordGrab&&(!carried(g,e)||g.stat(e,'stun')))releaseGrab(g,e);
  if(e.key!=='ppui')return;
- for(const [key,rate] of [['empower',50],['helping',150]]){
-  const s=e.state[key];if(!s)continue;const target=g.champions(e.team).find(a=>a.id===s.target&&a.alive),until=s.healUntil??s.until;
-  if(target){if(until>g.time-dt)g.heal(e,target,rate*Math.min(dt,Math.max(0,until-(g.time-dt))));if(s.until>g.time)target.supporters[e.id]=g.time;}
-  if(!target||s.until<=g.time)delete e.state[key];
+ const empower=e.state.empower;
+ if(empower){
+  const t=g.champions(e.team).find(a=>a.id===empower.target&&a.alive),span=Math.min(dt,Math.max(0,empower.healUntil-(g.time-dt)));
+  if(t){
+   if(span>0){
+    // Integrate the missing-HP term over this frame, retaining normal healing power scaling.
+    const scale=g.powerScale(e)*.9*RULES.power[CHAMPIONS[e.key].power],missing=t.maxHp-t.hp;
+    g.heal(e,t,(150+.025*missing)*-Math.expm1(-.025*scale*span)/.025,false);
+   }
+   if(empower.until>g.time)t.supporters[e.id]=g.time;
+  }
+  if(!t||empower.until<=g.time)delete e.state.empower;
  }
+ const help=e.state.helping;
+ if(help){const span=Math.min(dt,Math.max(0,help.until-(g.time-dt)));for(const id of help.targets){const t=g.champions(e.team).find(a=>a.id===id&&a.alive);if(t&&span>0){g.heal(e,t,150*span);t.supporters[e.id]=g.time;}}if(help.until<=g.time)delete e.state.helping;}
  if(e.state.nailStorm?.until<=g.time)delete e.state.nailStorm;
 }
 export function onDeath(g,e){

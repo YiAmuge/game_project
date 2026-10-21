@@ -1,4 +1,4 @@
-import { ego as soraEgo,marked as soraMarked } from './sora.js';
+import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import { endurance } from './v08-champions.js';
 import { trap } from './confinement.js';
 import { RULES } from './data.js';
@@ -6,7 +6,7 @@ import { THEMES } from './art.js';
 import { heathCharge } from './skills.js';
 
 export function stackInfo(e,g){
- if(e.key==='sora')return {label:soraEgo(g,e)?`대행 ${(e.buffs.soraEgo-g.time).toFixed(1)}s · 해금`:'해금'+((e.state.unlock||0)>=9?' · E.G.O 준비':''),value:e.state.unlock||0,max:9,color:'#e7cb80',shape:'mirror'};
+ if(e.key==='sora')return {label:soraEgo(g,e)?`대행 ${(e.buffs.soraEgo-g.time).toFixed(1)}s · 해금`:'해금'+((e.state.unlock||0)>=SORA.maxUnlock?' · E.G.O 준비':''),value:e.state.unlock||0,max:SORA.maxUnlock,color:'#e7cb80',shape:'mirror'};
  if(e.key==='dongrang')return {label:'양분 '+Math.floor(e.totalHealingReceived||0),textOnly:true,color:'#d8d48b'};
  if(e.key==='queequeg')return {label:'헤집어진 문신',value:endurance(e),max:5,color:'#a0dfd9',shape:'claw'};
  if(e.key==='hohenheim'&&e.state.posthumous)return {label:'사후 '+Math.max(0,e.state.posthumous.until-g.time).toFixed(1)+'s',textOnly:true,color:'#9ff6f0'};

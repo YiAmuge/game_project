@@ -152,7 +152,7 @@ export function cast(g,e,slot,p,d,options={}){
  switch(e.key){
  case 'don':
   if(slot==='q'){
-   if(state.donBarrage?.until>g.time){const remaining=state.donBarrage.until-g.time;e.qCd=Math.max(0,e.qCd-state.donBarrage.cooldown*remaining/2.5);delete state.donBarrage;delete e.buffs.donGuard;}else{state.donBarrage={d:{...d},until:g.time+2.5,next:g.time,cooldown:e.qCd};g.addBuff(e,'donGuard',2.5);}
+   if(state.donBarrage?.until>g.time){delete state.donBarrage;delete e.buffs.donGuard;}else{state.donBarrage={d:{...d},until:g.time+2.5,next:g.time};g.addBuff(e,'donGuard',2.5);}
   }else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
   return true;
  case 'ryoshu':
