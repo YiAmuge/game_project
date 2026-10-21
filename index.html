@@ -10,8 +10,8 @@
 <body>
   <header class="masthead">
     <a id="home" class="brand" href="#" aria-label="도시 경계 처음으로"><span class="brand-mark">◈</span><span>도시 경계<small>CITY BORDER</small></span></a>
-    <nav><span class="nav-active">아레나</span><button id="archive-open">도감 <span>33</span></button><button id="help-open">플레이 가이드 ↗</button></nav>
-    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.17.0</b></span>
+    <nav><span class="nav-active">아레나</span><button id="archive-open">도감 <span>34</span></button><button id="help-open">플레이 가이드 ↗</button></nav>
+    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.18.0</b></span>
   </header>
   <main>
     <section class="match-bar" aria-label="경기 상태">
@@ -31,7 +31,7 @@
       <section id="lobby" class="lobby">
         <div class="lobby-copy"><span class="eyebrow">UNOFFICIAL FAN PROJECT / TACTICAL ARENA</span><h1>도시는,<br>다시 격돌한다.</h1><p>두 개의 전선. 여덟 명의 전투원.<br>당신의 선택으로 경계를 무너뜨리세요.</p><div class="lobby-meta"><span><b>4 : 4</b>팀 전투</span><span><b>CORE</b>본진 파괴 승리</span><span><b>2 LANES</b>대칭 전장</span></div></div>
         <div id="main-menu" class="menu-card"><span class="eyebrow">CHOOSE YOUR OPERATION</span><h2>어디로 향하시겠습니까?</h2><button id="online" class="menu-action" disabled><span>01</span><b>온라인 대전</b><small>준비중</small></button><button id="practice-open" class="menu-action"><span>02</span><b>혼자서 AI와 연습전</b><small>포지션과 챔피언 선택 →</small></button><button id="training-open" class="menu-action"><span>03</span><b>연습장으로 이동</b><small>챔피언 선택 · 허수아비 · 무료 상점 →</small></button><button id="menu-codex" class="menu-action"><span>04</span><b>도감</b><small>챔피언 · 몹 · 증강 · 게임 규칙 →</small></button></div>
-        <div id="practice-panel" class="practice-panel hidden"><div class="practice-heading"><div><span class="eyebrow">PRACTICE DEPLOYMENT</span><h2>포지션과 전투원을 선택하세요.</h2></div><button id="practice-back">← 메뉴</button></div><div class="practice-layout"><aside><div class="panel-label">01 / 포지션</div><div id="position-select"></div><p id="position-description"></p></aside><div><div class="panel-label"><span>02 / 전투원</span><span>28명 플레이 가능</span></div><div id="champion-select" class="champion-select"></div><div class="selected-detail"><span id="selected-role">저격</span><h2 id="selected-name">파우스트</h2><p id="selected-brief"></p><div id="selected-stats" class="stat-dots"></div></div><button id="start" class="primary">연습전 시작 <span>→</span></button><p class="deploy-note">탑 1 · 정글 1 · 바텀 1 · 서포터 1 / 추천 역할군과 관계없이 선택 가능</p></div></div></div>
+        <div id="practice-panel" class="practice-panel hidden"><div class="practice-heading"><div><span class="eyebrow">PRACTICE DEPLOYMENT</span><h2>포지션과 전투원을 선택하세요.</h2></div><button id="practice-back">← 메뉴</button></div><div class="practice-layout"><aside><div class="panel-label">01 / 포지션</div><div id="position-select"></div><p id="position-description"></p></aside><div><div class="panel-label"><span>02 / 전투원</span><span>29명 플레이 가능</span></div><div id="champion-select" class="champion-select"></div><div class="selected-detail"><span id="selected-role">저격</span><h2 id="selected-name">파우스트</h2><p id="selected-brief"></p><div id="selected-stats" class="stat-dots"></div></div><button id="start" class="primary">연습전 시작 <span>→</span></button><p class="deploy-note">탑 1 · 정글 1 · 바텀 1 · 서포터 1 / 추천 역할군과 관계없이 선택 가능</p></div></div></div>
       </section>
       <section id="result" class="result hidden" aria-live="polite"><span class="eyebrow">OPERATION COMPLETE</span><h1 id="result-title"></h1><p id="result-reason"></p><div id="result-stats"></div><button id="restart" class="primary">다시 출격 준비 <span>→</span></button></section>
     </section>
@@ -45,11 +45,14 @@
     <button id="score-toggle" class="score-toggle hidden">확대 지도 · 점수 <kbd>TAB</kbd></button>
     <aside id="shop" class="shop hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
       <div class="shop-heading"><div><span class="eyebrow">SUPPLY STATION</span><h2 id="shop-title">부활소 보급</h2></div><button id="shop-close" aria-label="상점 닫기">×</button></div><p id="shop-status"></p>
-      <nav id="shop-tabs" class="shop-tabs hidden"><button id="shop-supply-tab" aria-pressed="true">능력치 · 증강</button><button id="shop-training-tab" aria-pressed="false">연습장 옵션</button></nav><div id="shop-supply">
+      <div id="shop-supply">
       <div class="shop-catalog"><section><h3>증강 <small id="augment-count"></small></h3><div id="augment-list"></div></section></div>
       <section class="shop-upgrades"><h3>능력치 업그레이드</h3><div id="upgrade-list"></div></section>
       <div class="shop-inventory"><div><h3>보유 증강 · 선택 후 판매</h3><div id="owned-list"></div><p id="shop-selected-info">판매할 증강을 선택하세요.</p></div><div class="shop-sales"><button id="shop-sell" disabled>판매</button><button id="training-sell-all" class="hidden">모두 판매</button></div></div></div>
-      <section id="training-options" class="training-options hidden"><h3>연습장 옵션</h3><p>옵션은 현재 연습장에만 적용됩니다.</p><div class="training-toggles"><label><input id="training-invincible" type="checkbox"> 상시 무적</label><label><input id="training-no-cooldown" type="checkbox"> 모든 스킬의 쿨타임 제거</label><label><input id="training-infinite-ammo" type="checkbox"> 무한 탄창 · 루돌프 무한 정신력</label></div><div class="training-actions"><button id="training-life">즉시 사망</button><button id="training-reset-lane">미니언 &amp; 포탑 초기화</button><button id="training-teleport">해당 지점으로 이동</button></div><label for="training-champion">챔피언 변경</label><div class="training-change"><select id="training-champion" aria-label="변경할 챔피언"></select><button id="training-change-champion">챔피언 변경</button></div><small>변경 시 레벨·업그레이드·증강을 유지하고 체력과 탄창을 회복합니다.</small></section>
+    </aside>
+    <aside id="training-panel" class="training-panel hidden" aria-label="연습장 옵션">
+      <div class="training-panel-heading"><h2>연습장 옵션</h2><button id="training-panel-toggle" aria-controls="training-options" aria-expanded="true">접기 ▴</button></div>
+      <section id="training-options" class="training-options"><p>옵션은 현재 연습장에만 적용됩니다.</p><div class="training-toggles"><label><input id="training-invincible" type="checkbox"> 상시 무적</label><label><input id="training-no-cooldown" type="checkbox"> 스킬 쿨타임 제거</label><label><input id="training-infinite-ammo" type="checkbox"> 무한 탄창 · 정신력</label></div><div class="training-actions"><button id="training-life">즉시 사망</button><button id="training-reset-lane">미니언 &amp; 포탑 초기화</button><button id="training-teleport">해당 지점으로 이동</button></div><label for="training-champion">챔피언 변경</label><div class="training-change"><select id="training-champion" aria-label="변경할 챔피언"></select><button id="training-change-champion">챔피언 변경</button></div><small>변경 시 레벨·업그레이드·증강을 유지하고 체력과 탄창을 회복합니다.</small></section>
     </aside>
   </main>
   <footer><span>PROJECT MOON UNOFFICIAL FAN GAME</span><span>기획서 v1.0 기반 · 팬 아트 / 밸런스 검증용</span><span>CITY BORDER © FAN PROJECT</span></footer>

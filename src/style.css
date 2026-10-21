@@ -157,7 +157,19 @@ body.in-game .shop-heading{position:sticky;top:-20px;padding:14px 0 10px;backgro
 
 /* Training uses the same champion selection and shop layout as practice matches. */
 .training-selection .practice-layout>aside{display:none}.training-selection .practice-layout{grid-template-columns:1fr}
-.shop-tabs{display:flex;gap:10px;margin:8px 0 18px}.shop-tabs button{padding:12px 20px;background:#1c302f;color:#c6d4c2;border:1px solid #52645b}.shop-tabs button[aria-pressed=true]{border-color:#d2bd80;color:#f2dba5}
 .training-options{padding:10px 6px 24px}.training-options p,.training-options small{color:#a7b9ab}.training-toggles{display:grid;gap:14px;margin:22px 0}.training-toggles label{display:flex;align-items:center;gap:12px;padding:15px;background:#203430;border:1px solid #40584c}.training-toggles input{accent-color:#d6bd7e;width:20px;height:20px}
 .training-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px}.training-actions button,.training-change button,.shop-sales button{padding:13px 20px;background:#29433b;border:1px solid #758467;color:#e7dbb7}.training-change{display:flex;gap:12px;margin:10px 0 14px}.training-change select{flex:1;min-width:0;padding:12px;background:#182e2b;color:#ecdeb9;border:1px solid #71836c;font:inherit}.shop-sales{display:flex;gap:8px;flex-wrap:wrap;align-self:end}
-@media(max-width:600px){.training-actions{display:grid;grid-template-columns:1fr}.training-change{flex-direction:column}.shop-tabs button{flex:1;padding:10px}.shop-sales{justify-content:flex-end}}
+@media(max-width:600px){.training-actions{display:grid;grid-template-columns:1fr}.training-change{flex-direction:column}.shop-sales{justify-content:flex-end}}
+
+/* Persistent training controls sit below the field toolbar and below modal overlays. */
+.training-panel{position:fixed;top:76px;right:16px;width:292px;z-index:10;background:#142326f2;border:1px solid #72847777;box-shadow:0 8px 24px #0005;color:#d7dfd1}
+.training-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:9px 12px;border-bottom:1px solid #6c817444}
+.training-panel-heading h2{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em}.training-panel-heading button{font-size:11px;color:#dfcc9b;padding:4px;white-space:nowrap}
+.training-panel.collapsed{width:192px}.training-panel.collapsed .training-panel-heading{border-bottom:0}
+.training-panel .training-options{padding:8px 12px 12px;max-height:min(420px,calc(100dvh - 170px));overflow-y:auto;overscroll-behavior:contain}
+.training-panel .training-options p{margin:0 0 8px;font-size:10px}.training-panel .training-options small{display:block;font-size:10px;line-height:1.5}
+.training-panel .training-toggles{gap:6px;margin:8px 0 10px}.training-panel .training-toggles label{gap:8px;padding:6px 8px;font-size:11px}.training-panel .training-toggles input{width:15px;height:15px;margin:0}
+.training-panel .training-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}.training-panel .training-actions button:last-child{grid-column:1/-1}
+.training-panel .training-actions button,.training-panel .training-change button{padding:8px 7px;font-size:11px}.training-panel .training-change{flex-direction:row;gap:6px;margin:6px 0 8px}.training-panel .training-change select{padding:7px 6px;font-size:11px}.training-panel label[for=training-champion]{font-size:11px}
+body.in-game.training-mode .event-feed{right:324px;max-width:250px}
+@media(max-width:600px){.training-panel{top:62px;right:10px;width:min(270px,calc(100vw - 20px))}.training-panel.collapsed{width:174px}.training-panel .training-options{max-height:min(330px,45dvh)}body.in-game.training-mode .event-feed{top:150px;left:10px;right:auto;max-width:140px;text-align:left}}

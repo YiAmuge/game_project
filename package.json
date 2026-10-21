@@ -1,6 +1,6 @@
 {
   "name": "city-border-moba",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "private": true,
   "type": "module",
   "description": "Document-driven, offline 4v4 MOBA fan-game prototype",

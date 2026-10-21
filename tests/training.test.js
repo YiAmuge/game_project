@@ -20,7 +20,7 @@ test('training terrain is independent of the match walls and keeps its rectangul
  assert.equal(blocked(w.x+w.w/2,w.y+w.h/2),true);
 });
 test('zone one fountain and hazard are separate, spawning is safe, and the hazard deals one percent per second',()=>{
- const g=training(),p=g.player,h=T.HAZARD;assert.ok(T.SPAWN.x<h.x-2.5);run(g,1);close(p.hp,p.maxHp);
+ const g=training(),p=g.player,h=T.HAZARD;assert.ok(T.SPAWN.x<h.x-2.5);assert.ok(h.w<=5&&h.h<=5);assert.ok(g.champions().filter(e=>e.trainingDummy?.infinite).every(e=>e.x+e.radius<h.x));run(g,1);close(p.hp,p.maxHp);
  Object.assign(p,{x:h.x+2,y:h.y+2});p.lastDamageAt=100;p.lastAttackAt=100;const hp=p.hp;run(g,1);close(hp-p.hp,p.maxHp*.01);
  g.recall(p);run(g,3);assert.equal(p.recall,undefined); // The damaging floor cancels recall.
  Object.assign(p,{x:10,y:34});g.recall(p);run(g,3.05);close(p.x,T.SPAWN.x);close(p.y,T.SPAWN.y);

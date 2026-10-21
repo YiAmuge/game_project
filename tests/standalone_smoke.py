@@ -87,8 +87,8 @@ with sync_playwright() as p:
     frame.get_by_role('button', name='소라 선택').click()
     frame.locator('#start').click()
     expect(frame.locator('#phase')).to_contain_text('시간 제한 없음')
-    frame.locator('#shop-toggle').click()
-    frame.locator('#shop-training-tab').click()
+    expect(frame.locator('#training-panel')).to_be_visible()
+    expect(frame.locator('#shop')).to_be_hidden()
     frame.locator('#training-infinite-ammo').check()
     frame.locator('#training-life').click()
     expect(frame.locator('#training-life')).to_have_text('즉시 부활')
@@ -96,7 +96,8 @@ with sync_playwright() as p:
     frame.locator('#training-champion').select_option('rudolph')
     frame.locator('#training-change-champion').click()
     expect(frame.locator('#player-name')).to_contain_text('루돌프')
-    frame.locator('#shop-close').click()
+    frame.locator('#training-panel-toggle').click()
+    expect(frame.locator('#training-options')).to_be_hidden()
     assert not requests, f'Unexpected network dependencies: {requests}'
     assert not errors, errors
     (root / 'artifacts').mkdir(exist_ok=True)

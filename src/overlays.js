@@ -91,7 +91,7 @@ export function championEffects(r,e,g){
  if(g.buff(e,'tetherResistance'))r.text(`매듭 저항 ${(e.state.tetherResistance||0)*5}%`,e.x,e.y+1.3,'#a2dfd4',.27);
  c.save();
  if(e.state.yanBarrage?.until>g.time){const q=e.state.yanBarrage,a=Math.atan2(q.d.y,q.d.x);c.beginPath();c.moveTo(e.x,e.y);c.arc(e.x,e.y,5,a-Math.PI/2,a+Math.PI/2);c.closePath();c.fillStyle='#7db9ed33';c.fill();c.strokeStyle='#b4dcff99';c.lineWidth=.06;c.stroke();}
- if(g.stat(e,'yanLock')){const x=e.x,y=e.y-4.5;c.beginPath();c.arc(x,y-.14,.2,Math.PI,0);c.strokeStyle='#79bdff';c.lineWidth=.1;c.stroke();c.fillStyle='#f2fbff';c.fillRect(x-.29,y-.1,.58,.45);c.strokeStyle='#70b5ff';c.lineWidth=.055;c.strokeRect(x-.29,y-.1,.58,.45);r.circle(x,y+.07,.045,'#4d92db');}
+ if(g.stat(e,'yanLock')){const x=e.x,y=e.y-4.5;c.beginPath();c.arc(x,y-.14,.2,Math.PI,0);c.strokeStyle='#8fabbf';c.lineWidth=.1;c.stroke();c.fillStyle='#d2d7dc';c.fillRect(x-.29,y-.1,.58,.45);c.strokeStyle='#8aa6bb';c.lineWidth=.055;c.strokeRect(x-.29,y-.1,.58,.45);r.circle(x,y+.07,.045,'#6b859b');}
  const net=trap(g,e);if(net){
   r.circle(net.x,net.y,net.r,'#a3c9b512','#c4e2c0aa',.06);
   for(let i=0;i<6;i++){const x=e.x-.65+i*.26;r.line([{x,y:e.y-.75},{x:x+.4,y:e.y+.25}],'#c5dfb9cc',.045);r.line([{x,y:e.y+.25},{x:x+.4,y:e.y-.75}],'#c5dfb9cc',.045);}

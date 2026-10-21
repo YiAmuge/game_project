@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     page=b.new_page(viewport={'width':1440,'height':900});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.17.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.18.0')
     page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(29)
     page.get_by_role('button',name='얀 선택',exact=True).click();expect(page.locator('#selected-role')).to_have_text('방해')
     page.wait_for_function('__moba.renderer.atlasV17.naturalWidth>0')
@@ -21,7 +21,7 @@ with sync_playwright() as pw:
     page.screenshot(path=str(art/'v17-yan-codex.png'));page.click('#archive .close-dialog');page.click('#start')
     page.evaluate('''() => {const g=__moba.game,p=g.player;for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];const t=g.makeChampion('faust',1,9);Object.assign(t,{x:42,y:7,hp:10000,maxHp:10000,lastAttackAt:100,lastDamageAt:100});window.__target=t;window.__normalMax=p.maxHp;}''')
     def aim(x,y):
-        s=page.evaluate('([x,y])=>__moba.renderer.camera.worldToScreen({x,y})',[x,y]);page.mouse.move(s['x'],s['y'])
+        s=page.evaluate('([x,y])=>{__moba.renderer.follow(__moba.game,true);return __moba.renderer.camera.worldToScreen({x,y});}',[x,y]);page.mouse.move(s['x'],s['y'])
     def click(x,y,button='left'):
         aim(x,y);page.mouse.down(button=button);page.mouse.up(button=button)
     aim(42,7);page.mouse.down();page.wait_for_function('__moba.game.player.state.yanCharge')
@@ -52,12 +52,22 @@ with sync_playwright() as pw:
     click(46,7);page.wait_for_function('__moba.game.units.some(h=>h.kind==="summon"&&h.targetId===__target.id)')
     page.wait_for_function('__moba.game.stat(__target,"yanLock")===.3')
     assert page.evaluate('__moba.game.player.state.ominous===0')
+    # A persistent floor aura must darken its full area between attack frames too.
+    page.evaluate('''() => {const r=__moba.renderer;window.__aura=r.yanAura.bind(r);r.yanAura=()=>{};}''')
+    page.wait_for_timeout(80)
+    sample='''() => {const r=__moba.renderer,h=__moba.game.units.find(h=>h.kind==='summon'),s=r.camera.worldToScreen({x:h.x,y:h.y+2.5}),p=r.ctx.getImageData(Math.round(s.x*r.dpr),Math.round(s.y*r.dpr),1,1).data;return p[0]+p[1]+p[2];}'''
+    without=page.evaluate(sample)
+    page.evaluate('() => {__moba.renderer.yanAura=__aura;}')
+    page.wait_for_timeout(80)
+    assert page.evaluate(sample)<without
+    assert page.evaluate('!__moba.game.effects.some(f=>f.type==="ring"&&f.color==="#9dcfe4")')
     page.screenshot(path=str(art/'v17-yan-distorted-hand-lock.png'))
     click(40,7);page.wait_for_function('__moba.game.units.some(h=>h.kind==="summon"&&h.attached&&Math.hypot(h.x-40,h.y-7)<2)')
     page.screenshot(path=str(art/'v17-yan-hand-recalled.png'))
     click(45,7,button='right');assert page.evaluate('__moba.game.targeting?.slot')=='q'
     page.screenshot(path=str(art/'v17-yan-distorted-sword-preview.png'));click(45,7)
     page.wait_for_function('__moba.game.effects.some(f=>f.type==="yanSwordWarning")')
+    assert page.evaluate('__moba.game.effects.find(f=>f.type==="yanSwordWarning").r')==7.5
     page.wait_for_function('__moba.game.stat(__target,"stun")>0')
     page.screenshot(path=str(art/'v17-yan-distorted-sword-impact.png'))
     assert page.evaluate('__moba.game.player.state.ominous===0')

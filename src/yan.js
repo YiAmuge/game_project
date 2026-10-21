@@ -3,7 +3,7 @@ import { RULES, WORLD } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
 
 // Unspecified tuning is documented in the codex: Q 9s, R radius 7.5, distorted Q 360 damage.
-export const YAN={maxPower:10,markDuration:3,reapply:3,weak:.15,duration:20,radius:7.5,chargeTime:1.5,basicRange:3,fullRange:6.5,width:1.8,basicDamage:50,fullDamage:200,qRange:5,qDuration:1.8,qEvery:.3,qDamage:30,distortedQRange:9,distortedQRadius:10,distortedQDamage:360,distortedQDelay:1.75,handDamage:55,handEvery:.5,handRadius:7.5,handLeash:10,handSpeed:18,lockDuration:1};
+export const YAN={maxPower:10,markDuration:3,reapply:3,weak:.15,duration:20,radius:7.5,chargeTime:1.5,basicRange:3,fullRange:6.5,width:1.8,basicDamage:50,fullDamage:200,qRange:5,qDuration:1.8,qEvery:.3,qDamage:30,distortedQRange:9,distortedQRadius:7.5,distortedQDamage:360,distortedQDelay:1.75,handDamage:55,handEvery:.5,handRadius:3.5,handLeash:10,handSpeed:18,lockDuration:1};
 export const distorted=(g,e)=>e.key==='yan'&&g.buff(e,'yanDistorted');
 export const ready=(g,e)=>e.key==='yan'&&!distorted(g,e)&&(e.state.ominous||0)>=YAN.maxPower;
 export const form=(g,e)=>distorted(g,e)?'yanDistorted':e.key;
@@ -116,7 +116,6 @@ export function tickHand(g,h,dt){
   g.action(e,'skill',()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(h,t)<=YAN.handRadius+t.radius&&g.clearLine(h,t)){
    g.deal(e,t,YAN.handDamage*ammoBonus(g,e));if(t.id===h.targetId)g.status(t,'yanLock',.3,YAN.lockDuration,e);
   }});
-  g.effects.push({type:'ring',x:h.x,y:h.y,r:YAN.handRadius,color:'#9dcfe4',life:.25,maxLife:.25});
  }
 }
 export function tick(g,e,dt){
@@ -139,5 +138,5 @@ export function tick(g,e,dt){
 export function onDeath(g,e){if(e.key==='yan'){cancelCharge(e);removeHand(g,e);}}
 export function abilityInfo(g,e){
  if(e.key!=='yan')return {};
- return {basic:distorted(g,e)?'잠금':'의지의 검',tactical:distorted(g,e)?'뒤틀린 검':'맹목적인 신념',ultimate:distorted(g,e)?'뒤틀림 전개 중':ready(g,e)?'enlxmfflsdis':'도시의 의지',qText:distorted(g,e)?'사거리 9 좌표 선택, 1.75초 뒤 반경 10에 360 피해·1.5초 기절. 쿨다운 5초.':'반월 사거리 5, 1.8초 동안 0.3초마다 30 피해(6회). 전부 적중 시 감속 50% 1.5초. 이동 가능, 쿨다운 9초.',rText:distorted(g,e)?'변신 중 궁극기 비활성화·불길한 힘 획득 중지.':ready(g,e)?'불길한 힘 10 소모, 20초 뒤틀림. 전투력 −10%, 최대 체력·방어 효율 +12%. 무적 손 소환.':'반경 7.5의 모든 적 챔피언에게 가짜 지령 6초, 기존 표식 갱신. 재부여 제한 무시, 쿨다운 10초.'};
+ return {basic:distorted(g,e)?'잠금':'의지의 검',tactical:distorted(g,e)?'뒤틀린 검':'맹목적인 신념',ultimate:distorted(g,e)?'뒤틀림 전개 중':ready(g,e)?'enlxmfflsdis':'도시의 의지',qText:distorted(g,e)?'사거리 9 좌표 선택, 1.75초 뒤 반경 7.5에 360 피해·1.5초 기절. 쿨다운 5초.':'반월 사거리 5, 1.8초 동안 0.3초마다 30 피해(6회). 전부 적중 시 감속 50% 1.5초. 이동 가능, 쿨다운 9초.',rText:distorted(g,e)?'변신 중 궁극기 비활성화·불길한 힘 획득 중지.':ready(g,e)?'불길한 힘 10 소모, 20초 뒤틀림. 전투력 −10%, 최대 체력·방어 효율 +12%. 무적 손 소환.':'반경 7.5의 모든 적 챔피언에게 가짜 지령 6초, 기존 표식 갱신. 재부여 제한 무시, 쿨다운 10초.'};
 }

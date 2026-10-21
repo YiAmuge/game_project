@@ -30,9 +30,9 @@ export class Renderer {
     for(let y=0;y<b.h;y+=2)this.line([{x:0,y},{x:b.w,y}],'#96bba60a',.03);
     for(const w of game.map.walls){c.fillStyle='#53665b';c.fillRect(w.x,w.y,w.w,w.h);c.strokeStyle='#9caf90';c.lineWidth=.04;c.strokeRect(w.x,w.y,w.w,w.h);}
     const h=Training.HAZARD;c.fillStyle='#a554472d';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle='#d09370';c.lineWidth=.08;c.strokeRect(h.x,h.y,h.w,h.h);
-    this.text('피해 장판 · 초당 최대 체력 1%',h.x+h.w/2,h.y+.7,'#e3ab88',.34);
+    this.text('피해 장판',h.x+h.w/2,h.y+h.h/2-.25,'#e3ab88',.3);this.text('초당 최대 체력 1%',h.x+h.w/2,h.y+h.h/2+.3,'#e3ab88',.23);
     const f=Training.SPAWN;this.circle(f.x,f.y,2.5,'#7ed3d21a','#a4ded8',.08);this.circle(f.x,f.y,1.6,null,'#a4ded855',.06);this.text('부활소',f.x,f.y+3,'#b7e4db',.4);
-    this.line(Training.lanePath(0),'#ab9c6644',2.5);this.text(game.practice.lineStopped?'라인 정지 · 상점에서 초기화':'미니언 · 포탑 실험 라인',41.5,12,'#d4bf89',.43);
+    this.line(Training.lanePath(0),'#ab9c6644',2.5);this.text(game.practice.lineStopped?'라인 정지 · 우측 상단 옵션에서 초기화':'미니언 · 포탑 실험 라인',41.5,12,'#d4bf89',.43);
   }
   floor(game) {
     if(game.training){this.trainingFloor(game);return;}
@@ -146,7 +146,13 @@ export class Renderer {
   yanHand(e,game){
     const c=this.ctx,f=FRAMES.yanHand,a=this.atlasV17;if(!a.complete||!a.naturalWidth)return;
     c.save();c.translate(e.x,e.y-.5);c.rotate((e.facing||0)+Math.PI);const pulse=Math.max(0,1-(game.time-(e.struckAt??-99))/.18);c.scale(1+pulse*.12,1+pulse*.12);c.imageSmoothingEnabled=false;c.drawImage(a,f.x,f.y,f.w,f.h,-1.6,-1.13,3.2,2.27);c.restore();
-    const owner=game.units.find(a=>a.id===e.owner);if(owner?.player)this.circle(e.x,e.y,Yan.YAN.handRadius,null,'#aacfe623',.035);
+  }
+  yanAura(e,game){
+    const c=this.ctx,r=Yan.YAN.handRadius,shade=c.createRadialGradient(e.x,e.y,0,e.x,e.y,r);
+    shade.addColorStop(0,'#100d1c58');shade.addColorStop(.65,'#17102070');shade.addColorStop(.9,'#21182c44');shade.addColorStop(1,'#21182c00');
+    this.circle(e.x,e.y,r,shade);this.circle(e.x,e.y,r,null,'#91809d33',.035);
+    // Fixed-radius haze drifts gently; it never expands or restarts on an attack.
+    for(let i=0;i<9;i++){const a=i*2.4+game.time*.1,rad=r*(.38+(i%3)*.18);this.circle(e.x+Math.cos(a)*rad,e.y+Math.sin(a)*rad,.12+Math.sin(game.time*.8+i)*.025,'#77628322');}
   }
   yanChargePreview(e,game){
     const shape=Yan.chargeShape(game,e,e.player?game.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}),d=shape.d,side={x:-d.y*shape.width/2,y:d.x*shape.width/2},end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range};
@@ -159,6 +165,7 @@ export class Renderer {
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);
     this.floor(game);this.camps(game);for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
+    for(const h of game.units.filter(e=>e.alive&&e.kind==='summon'&&e.key==='yanHand'&&game.visibleTo(0,e)))this.yanAura(h,game);
     if(!game.training&&!game.bossSpawned){this.text('CENTRAL CAMP',MAP_CENTER.x,MAP_CENTER.y,'#b8ae7766',.4);this.text('05:00',MAP_CENTER.x,MAP_CENTER.y+.7,'#a5a58b66',.48);}
     for(const z of game.zones){if(z.kind==='desireTree'){this.line([{x:z.x,y:z.y+.25},{x:z.x,y:z.y-1.1}],'#9c855b',.18);for(let i=0;i<5;i++){const a=i*1.25;this.shard(z.x+Math.cos(a)*.45,z.y-1+Math.sin(a)*.4,.3,a,'#b8bf77');}if(z.golden){this.line([{x:z.x,y:z.y+.25},{x:z.x,y:z.y-1.1}],'#ffda66',.2);for(let i=0;i<5;i++){const a=i*1.25;this.shard(z.x+Math.cos(a)*.45,z.y-1+Math.sin(a)*.4,.32,a,'#f4cc52');}for(let i=0;i<7;i++){const a=game.time*1.5+i*2.4,x=z.x+Math.cos(a)*(.65+(i%2)*.2),y=z.y-.8+Math.sin(a*1.3)*.8;this.line([{x:x-.1,y},{x:x+.1,y}],'#fff2bc',.045);this.line([{x,y:y-.1},{x,y:y+.1}],'#fff2bc',.045);}}this.text((z.golden?'빛나는 욕망 · ':`${Math.floor(z.dealt||0)}/350 · `)+Math.ceil(z.until-game.time)+'s',z.x,z.y+.6,z.golden?'#ffe08b':'#c4ca8d',.24);}const tone=z.kind==='desireTree'?(z.golden?'#f4cf61':'#abbc78'):z.kind==='electricDevice'?'#91efec':z.kind==='waterfall'?'#8febd7':z.kind==='ice'?'#a5d6ff':'#c8dfe5';this.circle(z.x,z.y,z.r,`${tone}22`,tone,.05);for(let i=0;i<12;i++){const a=i*2.4+game.time*.25,r=z.r*.7*(.3+(i%3)/3);if(z.kind==='waterfall')this.line([{x:z.x+Math.cos(a)*r,y:z.y+Math.sin(a)*r},{x:z.x+Math.cos(a)*r,y:z.y+Math.sin(a)*r-.8}],`${tone}88`,.1);else this.shard(z.x+Math.cos(a)*r,z.y+Math.sin(a)*r,.13,a,tone);}}
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}

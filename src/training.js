@@ -6,7 +6,7 @@ import * as Sora from './sora.js';
 import { releaseGrab } from './v12-champions.js';
 
 export const SPAWN={x:8,y:40};
-export const HAZARD={x:17,y:35,w:20,h:9};
+export const HAZARD={x:34,y:38.5,w:4,h:4};
 export const AREAS=[
  {id:1,x:1,y:32,w:39,h:13,name:'회복 · 피해 실험',color:'#688c79'},
  {id:2,x:43,y:32,w:39,h:13,name:'크립 캠프',color:'#9b8866'},
@@ -38,7 +38,7 @@ export function init(g,key,position){
  const center={x:58.5,y:36.5};
  for(const [x,y] of [[57,35],[60,35],[57,38],[60,38]]){const n=g.makeNeutral(x,y,'central');n.campCenter={...center};n.campId='training-central';}
  for(const [x,y,kind] of [[68,35,'amplify'],[75,35,'blessing'],[72,42,'boss']]){const n=g.makeNeutral(x,y,kind);n.respawnDelay=kind==='boss'?10:n.respawnDelay;}
- resetLane(g);g.log('연습장 · G 무료 상점 · 연습장 옵션에서 환경을 조절하세요.');
+ resetLane(g);g.log('연습장 · 우측 상단 옵션 · G 무료 상점');
 }
 export function resetLane(g){
  if(!g.training)return false;

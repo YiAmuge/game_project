@@ -75,9 +75,19 @@ test('hand never exceeds its ten-unit leash after a command or owner relocation 
  Object.assign(p,{x:60,y:10});run(g,.02);assert.ok(distance(Yan.hand(g,p),p)<=10+1e-6);
 });
 test('hand damage gains ten percent per extra ammo and reload upgrades shorten its attack interval',()=>{
- const {g,p}=quiet(),t=target(g,44);p.augments=['magazine2'];p.upgrades.reload=3;transform(g,p);const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};run(g,1.4);assert.ok(amounts.filter(n=>Math.abs(n-66)<1e-8).length>=3);close(p.state.ominous,0);
+ const {g,p}=quiet(),t=target(g,44);g.input.aim={x:48,y:7};p.augments=['magazine2'];p.upgrades.reload=3;transform(g,p);const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};run(g,1.4);assert.ok(amounts.filter(n=>Math.abs(n-66)<1e-8).length>=3);close(p.state.ominous,0);
 });
-test('distorted Q confirms coordinates, waits 1.75 seconds, and hits a ten-radius area with stun',()=>{
+test('the hand hits target body edges inside radius 3.5 and leaves nearby targets beyond that radius untouched',()=>{
+ const {g,p}=quiet();transform(g,p);const h=Yan.hand(g,p);Object.assign(h,{x:40,y:7,attached:false,goal:{x:40,y:7}});
+ const inside=target(g,43.97),outside=target(g,43.99),oldRange=target(g,46);run(g,.55);
+ assert.ok(inside.hp<10000);close(outside.hp,10000);close(oldRange.hp,10000);
+});
+test('distorted sword preview and actual damage share radius 7.5 including target body edges',()=>{
+ const {g,p}=quiet(),inside=target(g,51.97),outside=target(g,51.99);transform(g,p);close(skillTargeting(g,p,'q').radius,7.5);
+ g.cast(p,'q',{x:44,y:7});run(g,1.7);close(inside.hp,10000);close(outside.hp,10000);run(g,.06);
+ assert.ok(inside.hp<10000);assert.ok(g.stat(inside,'stun'));close(outside.hp,10000);close(g.stat(outside,'stun'),0);
+});
+test('distorted Q confirms coordinates, waits 1.75 seconds, and hits a 7.5-radius area with stun',()=>{
  const {g,p}=quiet(),t=target(g,49,7);transform(g,p);assert.equal(skillTargeting(g,p,'q').confirm,true);g.cast(p,'q',{x:45,y:7});close(p.qCd,5);run(g,1.7);assert.equal(g.stat(t,'stun'),0);run(g,.06);assert.ok(g.stat(t,'stun'));assert.ok(t.hp<10000);
 });
 test('twenty-second expiry restores size, stats, abilities and removes the hand',()=>{
