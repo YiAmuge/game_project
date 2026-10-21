@@ -236,6 +236,13 @@ export class Renderer {
         const t=1-fx.life/fx.maxLife,color=THEMES[fx.theme]?.light||fx.color,d={x:Math.cos(fx.angle),y:Math.sin(fx.angle)},len=fx.r*(.45+.5*t);
         this.line([{x:fx.x+d.x*.6,y:fx.y+d.y*.6-.35},{x:fx.x+d.x*len,y:fx.y+d.y*len-.35}],color,.12*(1-t)+.035);this.shard(fx.x+d.x*len,fx.y+d.y*len-.35,.2,fx.angle,color);
       }
+      if(fx.type==='gregorPierce'){
+        const age=1-fx.life/fx.maxLife,reach=fx.r*Math.min(1,age/.25,(1-age)/.5),w=fx.width;c.save();c.translate(fx.x,fx.y);c.rotate(fx.angle);
+        this.polygon([[0,-w],[fx.r,-w],[fx.r,w],[0,w]],'#a8784e16','#c49a7355');
+        this.line([{x:0,y:0},{x:reach*.55,y:.1},{x:reach,y:0}],'#65452f',.38);
+        for(let i=-1;i<=1;i++)this.line([{x:reach*.68,y:0},{x:reach*.88,y:i*w*.7},{x:reach,y:i*w*.3}],'#c49a73',.14);
+        c.restore();
+      }
       if(fx.type==='impact'){
         const t=1-fx.life/fx.maxLife,color=THEMES[fx.theme]?.accent||fx.color;
         for(let i=0;i<6;i++){const a=fx.angle+(i-2.5)*.86,r=.2+t*.65;this.line([{x:fx.x+Math.cos(a)*r*.5,y:fx.y-.45+Math.sin(a)*r*.5},{x:fx.x+Math.cos(a)*r,y:fx.y-.45+Math.sin(a)*r}],color,.08*(1-t)+.02);}if(t<.4)this.circle(fx.x,fx.y-.45,.18,'#fff6da');
@@ -318,7 +325,7 @@ export class Renderer {
       }else if(e.key==='rudolph'){
         this.line([{x:-.25,y:0},{x:1.65,y:0}],'#62442b',.15);this.line([{x:-.2,y:-.035},{x:1.6,y:-.035}],'#d7a260',.045);this.circle(1.58,0,.18,'#ff9c3e','#ffe4ab');for(const side of [-1,1]){this.line([{x:1.55,y:side*.1},{x:1.7,y:side*.35},{x:1.54,y:side*.62},{x:1.75,y:side*.82}],'#d7b47f',.09);this.line([{x:1.67,y:side*.38},{x:1.98,y:side*.48}],'#edcf99',.07);this.line([{x:1.58,y:side*.59},{x:1.31,y:side*.72}],'#edcf99',.07);}
       }else if(e.key==='gregor'){
-        this.polygon([[0,-.14],[.65,-.26],[1.25,-.12],[1.55,-.4],[1.37,.06],[.72,.25],[0,.15]],'#5f7640','#acbd79');
+        this.polygon([[0,-.14],[.65,-.26],[1.25,-.12],[1.55,-.4],[1.37,.06],[.72,.25],[0,.15]],theme.dark,theme.light);
         for(let i=0;i<3;i++)this.line([{x:.65+i*.2,y:.1},{x:.75+i*.3,y:.45}],theme.accent,.09);
       }else if(e.key==='moses'){
         this.line([{x:-.1,y:0},{x:1,y:0}],'#886044',.13);this.circle(1,.1,.18,'#8a5b48',theme.light);this.shard(1.1,-.25,.14,game.time,theme.light);

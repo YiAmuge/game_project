@@ -5,7 +5,7 @@ export const AUGMENTS=[
  {key:'power15',group:'combat',name:'격화',text:'전투력 +15%'},
  {key:'range7',group:'combat',name:'긴 전선',text:'기본 공격 사거리 +7%'},
  {key:'reloadStacks',group:'combat',name:'교전 장전',text:'공격 적중 시 장전 +5% 중첩, 최대 3. 중첩은 1.5초마다 하나씩 감소'},
- {key:'armorHealth',group:'survival',name:'중갑 외피',text:'체력 +5% · 방어 계수 +17.5%'},
+ {key:'armorHealth',group:'survival',name:'중갑 외피',text:'체력 +5% · 방어력 +17.5%'},
  {key:'emergencyHeal',group:'survival',name:'비상 수복',text:'체력 50% 미만에서 적 챔피언 피격 시 최대 체력 30% 회복 · 30초 대기'},
  {key:'health15',group:'survival',name:'생존 본능',text:'체력 +15%'},
  {key:'reloadRetaliation',group:'survival',name:'제압 외피',text:'나를 공격한 적 챔피언에게 장전 −15%를 1.25초 부여'},

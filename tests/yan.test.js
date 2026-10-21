@@ -10,7 +10,7 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
 function quiet(){const g=new Game('yan','bottom',{seed:101});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];return {g,p};}
 function target(g,x=42,y=7,team=1,key='faust'){const t=g.makeChampion(key,team,9);Object.assign(t,{x,y,maxHp:10000,hp:10000,lastAttackAt:100,lastDamageAt:100});return t;}
-function transform(g,p){p.state.ominous=10;assert.ok(g.cast(p,'r',p));}
+function transform(g,p){p.state.ominous=6;assert.ok(g.cast(p,'r',p));}
 
 test('Yan has requested grades, no ammunition, and a charge resource instead',()=>{
  const {g,p}=quiet(),c=CHAMPIONS.yan;assert.deepEqual([c.role,c.power,c.health,c.speed,c.ammo,c.reload],['방해',2,3,3,0,2]);close(g.ammoCap(p),0);assert.ok(g.attack(p,{x:44,y:7}));assert.ok(p.state.yanCharge);close(p.ammo,0);
@@ -58,7 +58,7 @@ test('stun cancels charge and death or a new champion cannot retain it',()=>{
 test('six moving semicircle waves deal six thirty-damage hits and only full attendance earns the long slow',()=>{
  const {g,p}=quiet(),t=target(g,44),outside=target(g,37);const hits=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t&&n===30&&o?.proc!==false)hits.push(n);return deal(a,b,n,o);};g.cast(p,'q',{x:48,y:7});run(g,1.55);assert.equal(hits.length,6);close(g.stat(t,'slow'),.5);close(outside.hp,10000);close(p.channelUntil||0,0);assert.equal(skillTargeting(g,p,'q').confirm,false);
 });
-test('ten stacks bypass normal R cooldown and transformation preserves health ratio with all requested changes',()=>{
+test('six stacks bypass normal R cooldown and transformation preserves health ratio with all requested changes',()=>{
  const {g,p}=quiet(),hp=p.maxHp,power=g.powerScale(p),armor=g.armor(p);p.hp=hp*.4;p.rCd=8;transform(g,p);close(p.hp/p.maxHp,.4);close(p.maxHp,hp*1.12);close(g.powerScale(p),power*.9);close((g.armor(p)+100)/(armor+100),1.12);close(p.radius,.48*1.1);close(p.state.ominous,0);assert.ok(Yan.hand(g,p)?.attached);assert.equal(Yan.abilityInfo(g,p).basic,'잠금');
 });
 test('while distorted R is rejected and mark consumption still weakens without gaining any stacks',()=>{

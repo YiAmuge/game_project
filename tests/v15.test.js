@@ -49,8 +49,8 @@ test('Gregor infestation hits radius 5.5 and reduces max health up to fifteen pe
  const {g,p}=quiet('gregor'),t=target(g,45.3,7),hp=t.maxHp;gregorStack(g,p,12);run(g,2.51);assert.equal(t.plague.stacks,5);close(t.maxHp,hp*.85);assert.ok(t.hp<=t.maxHp);
  p.x=30;run(g,3.02);assert.equal(t.plague,undefined);close(t.maxHp,hp);
 });
-test('Gregor tactical sends near and far enemies to the same maximum range using visible motion',()=>{
- for(const x of [41.3,44]){const {g,p}=quiet('gregor'),t=target(g,x,7);g.cast(p,'q',{x:48,y:7});assert.ok(t.motion?.forced);assert.equal(t.x,x);run(g,1);close(t.x,45);}
+test('Gregor tactical now pulls near and far enemies to the same front position using visible motion',()=>{
+ for(const x of [41.3,44]){const {g,p}=quiet('gregor'),t=target(g,x,7);g.cast(p,'q',{x:48,y:7});assert.ok(t.motion?.forced);assert.equal(t.x,x);run(g,1);close(t.x,41.11);}
 });
 test('Gregor ultimate uses two doubled cones and two 250 base heals',()=>{
  const {g,p}=quiet('gregor'),t=target(g,46,7);p.hp-=1500;const hp=p.hp;g.cast(p,'r',{x:48,y:7});run(g,.4);assert.ok(t.hp<t.maxHp);close(p.hp-hp,500*.82*.9);assert.ok(g.effects.filter(e=>e.type==='slash').every(e=>e.r===7&&e.spread===3.6));

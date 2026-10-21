@@ -80,7 +80,7 @@ test('Ishmael basic power debuff caps at two and clears on target death',()=>{
  const {g,p,t}=quiet('ishmael');t.x=41;for(let i=0;i<3;i++){p.attackCd=0;g.attack(p,t);}close(g.powerWeak(t),.04);g.time=100;close(g.powerWeak(t),.04);g.kill(t,p);close(g.powerWeak(t),0);
 });
 test('Ishmael survival shield is 25 percent and shock hits farther enemies, reducing R by five per champion',()=>{
- const {g,p,t}=quiet('ishmael');p.hp=p.maxHp*.29;g.deal(t,p,1,{fixed:true});close(g.shield(p),p.maxHp*.25);p.shields=[];g.cast(p,'q',p);p.rCd=25;const b=enemy(g,40,11);g.cast(p,'q',p);assert.ok(t.hp<10000&&b.hp<10000);close(p.rCd,15);
+ const {g,p,t}=quiet('ishmael');p.hp=p.maxHp*.29;g.deal(t,p,1,{fixed:true});close(g.shield(p),p.maxHp*.25);p.shields=[];g.cast(p,'q',p);p.rCd=25;const b=enemy(g,40,11);g.cast(p,'q',p);assert.ok(t.hp<10000&&b.hp<10000);close(p.rCd,25*.875-10);
 });
 test('Ishmael wider harpoon pulls even a distant champion all the way in front with no teleport',()=>{
  const {g,p,t}=quiet('ishmael');t.x=54;g.cast(p,'r',t);close(p.rCd,25);close(g.projectiles[0].width,.585);run(g,.9);close(t.x,54);run(g,.15);assert.ok(t.motion);assert.ok(t.x>53);run(g,2.5);close(t.x,p.x+p.radius+t.radius+.15);

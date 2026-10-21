@@ -1,4 +1,5 @@
 import * as Infestation from './infestation.js';
+import * as Gregor from './gregor.js';
 import * as Sora from './sora.js';
 import * as Yan from './yan.js';
 import * as V12 from './v12-champions.js';
@@ -63,6 +64,7 @@ export function canRecast(g,e,slot){
 export function init(g,e){New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
 export function onRespawn(g,e){New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
 export const coverMultiplier=New.coverMultiplier;
+export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
@@ -108,7 +110,7 @@ export function basic(g,e,p,d,options={}){
  case 'ryoshu':cone(g.attackRange(e),1.7,220*(e.state.fullAmmo?1.35:1));return true;
  case 'honglu':area(g,e,e,g.attackRange(e),190);g.addBuff(e,'hongluStride',1);return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
- case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive){t.state.ishmaelWeak??={};t.state.ishmaelWeak[e.id]=Math.min(2,(t.state.ishmaelWeak[e.id]||0)+1);}});return true;
+ case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive&&!(t.invulnerableUntil>g.time)&&!(t.ccImmuneUntil>g.time)&&!(g.training&&t===g.player&&g.practice.invincible)){t.state.ishmaelWeak??={};const old=t.state.ishmaelWeak[e.id]||0;t.state.ishmaelWeak[e.id]=Math.min(2,old+1);if(old<2)g.triggerDisrupt(e,t);}});return true;
  case 'rodya':{const hit=t=>{if((t.rodyaSlowUntil||0)<=g.time){g.status(t,'slow',.18,2,e);g.status(t,'weak',.1,2,e);t.rodyaSlowUntil=g.time+2.5;}};dash(g,e,d,2.4,220,hit,{onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8,220,hit,{exclude:hitIds})});return true;}
  case 'outis':
   g.bullet(e,d,150,g.attackRange(e),{width:.16,onHit:(t,b)=>{const dist=distance(b.origin,t);const wanted=dist<2?150:dist<5?150+(dist-2)*30:dist<7?240+(dist-5)*45:330;g.deal(e,t,wanted-150);}});return true;
@@ -192,13 +194,7 @@ export function cast(g,e,slot,p,d,options={}){
    const follow=(p)=>{g.effects.push({type:'cast',x:p.x,y:p.y,r:3,angle:Math.atan2(d.y,d.x),theme:e.key,slot:'r',life:.5,maxLife:.5});for(const t of [...g.units])if(g.hostile(e,t)&&distance(t,p)<=3.5&&g.clearLine(p,t))g.deal(e,t,250*(t.hp/t.maxHp<.5?1.3:1));};
    dash(g,e,{x:-d.x,y:-d.y},2.5,0,()=>{},{offensive:true,onComplete:()=>g.bullet(e,d,450,18,{width:.3,bonusLowHp:.3,onHit:(t)=>follow(t),onEnd:follow})});
   }return true;
- case 'gregor':
-  if(slot==='q'){
-   const end={x:e.x+d.x*5,y:e.y+d.y*5};for(const t of [...g.units])if(g.hostile(e,t)&&segmentDistance(t,e,end)<.8+t.radius&&g.clearLine(e,t)){
-    g.deal(e,t,250);pushTarget(g,t,d.x*Math.max(0,5-((t.x-e.x)*d.x+(t.y-e.y)*d.y)),d.y*Math.max(0,5-((t.x-e.x)*d.x+(t.y-e.y)*d.y)),{onCollision:()=>{g.deal(e,t,180);g.status(t,'stun',1,1,e);}});
-   }
-  }else for(let i=0;i<2;i++)g.schedule(e,i*.35,()=>{g.cone(e,d,7,3.6,270,t=>{if(t.kind==='champion')gregorStack(g,e,2);pushTarget(g,t,d.x*1.5,d.y*1.5);});g.heal(e,e,250);});
-  return true;
+ case 'gregor':return Gregor.cast(g,e,slot,d,()=>gregorStack(g,e,2));
  case 'rudolph':
   if(slot==='q'){const spend=Math.min(e.hp-1,e.hp*.1);e.hp-=spend;e.ammo=Math.min(ammoCap(g,e),e.ammo+35);g.addShield(e,spend,`focus-${e.id}`);}
   else{const spent=e.ammo;e.ammo=0;e.channelUntil=g.time+1.25;g.pending.push({type:'global',source:e,x:p.x,y:p.y,r:5.25,at:g.time+1.25,damage:8.5*spent,ignoreWalls:true,onHit:t=>{if(t.kind==='champion'){t.state.mentalWhip??={};t.state.mentalWhip[e.id]={hits:0,stage:3,at:g.time,decayAt:g.time+2};}g.status(t,'slow',.3,1.5,e);}});}

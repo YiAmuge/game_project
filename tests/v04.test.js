@@ -56,7 +56,7 @@ test('Ishmael pulls over time at the forced movement speed cap',()=>{
 });
 test('Gregor knockback triggers extra damage and stun at wall contact, not at cast time',()=>{
  const {g,p,t}=quiet('gregor');Object.assign(p,{x:13,y:15});Object.assign(t,{x:16.2,y:15,hp:10000,maxHp:10000});assert.ok(!blocked(t.x,t.y,t.radius));
- g.cast(p,'q',t);close(t.x,16.2);const hp=t.hp;assert.equal(g.stat(t,'stun'),0);run(g,.2);assert.ok(t.x>16.2&&t.x<17.1);assert.ok(t.hp<hp);assert.ok(g.stat(t,'stun')>0);assert.ok(!blocked(t.x,t.y,t.radius));
+ g.cast(p,'r',t);close(t.x,16.2);const hp=t.hp;assert.equal(g.stat(t,'stun'),0);run(g,.2);assert.ok(t.x>16.2&&t.x<17.1);assert.ok(t.hp<hp);assert.ok(g.stat(t,'stun')>0);assert.ok(!blocked(t.x,t.y,t.radius));
 });
 test('Heathcliff preview and actual landing share progressive charge range and wall constraints',()=>{
  const {g,p,t}=quiet('heathcliff');t.y=10;const aim={x:50,y:7};g.cast(p,'q',aim);g.time=1.2;close(heathCharge(g,p,aim).range,5);g.time=1.8;close(heathCharge(g,p,aim).range,6);g.time=2.4;const charged=heathCharge(g,p,aim);close(charged.range,7);g.cast(p,'q',aim);close(p.x,40);run(g,1);close(p.x,charged.landing.x);close(p.y,charged.landing.y);

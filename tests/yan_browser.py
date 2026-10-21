@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     page=b.new_page(viewport={'width':1440,'height':900});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.18.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.19.0')
     page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(29)
     page.get_by_role('button',name='얀 선택',exact=True).click();expect(page.locator('#selected-role')).to_have_text('방해')
     page.wait_for_function('__moba.renderer.atlasV17.naturalWidth>0')
@@ -38,7 +38,7 @@ with sync_playwright() as pw:
     page.keyboard.press('Space');page.wait_for_function('__moba.game.player.rCd>0')
     assert page.evaluate('__moba.game.player.state.falseOrders[__target.id].until-__moba.game.time>5')
     # The tenth actual consumption makes transformation available despite previous R cooldown.
-    page.evaluate('const g=__moba.game;g.player.state.ominous=9;g.deal(g.player,__target,1,{fixed:true})')
+    page.evaluate('const g=__moba.game;g.player.state.ominous=5;g.deal(g.player,__target,1,{fixed:true})')
     expect(page.locator('#r-btn span')).to_have_text('enlxmfflsdis')
     normal=page.locator('#hud-face').evaluate('(c)=>c.toDataURL()')
     page.keyboard.press('Space');page.wait_for_function('__moba.game.player.state.yanActive')
@@ -81,4 +81,4 @@ with sync_playwright() as pw:
     page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(150);assert page.evaluate('document.body.scrollWidth<=innerWidth')
     page.screenshot(path=str(art/'v17-yan-mobile.png'))
     assert not errors,errors;b.close()
-    print(json.dumps({'status':'passed','checks':['selection and original generated atlas','codex and explicit prototype values','LMB charge and release without ammo','muted false flower and second-hit consumption','six-second normal R mark bypass','tenth-stack transformation','disabled R, zero stacks during transformation and enlarged hitbox','generated hand targeting, lock and self-click recall','coordinate-confirm delayed giant sword','expiry restores size/form/skills','Escape cancels charge','mobile layout'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['selection and original generated atlas','codex and explicit prototype values','LMB charge and release without ammo','muted false flower and second-hit consumption','six-second normal R mark bypass','sixth-stack transformation','disabled R, zero stacks during transformation and enlarged hitbox','generated hand targeting, lock and self-click recall','coordinate-confirm delayed giant sword','expiry restores size/form/skills','Escape cancels charge','mobile layout'],'page_errors':errors},ensure_ascii=False))

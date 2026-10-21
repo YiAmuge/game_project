@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.18.0');page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(29)
+ expect(page.locator('.build-tag')).to_contain_text('0.19.0');page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(29)
  page.get_by_role('button',name='소라 선택').click();expect(page.locator('#selected-role')).to_have_text('암살');page.wait_for_function('__moba.renderer.atlasV13.naturalWidth>0')
  page.screenshot(path=str(art/'sora-selection-round-glasses.png'));page.click('#archive-open');expect(page.locator('#roster-list button')).to_have_count(34);page.fill('#roster-search','소라');page.click('#roster-list button')
  for text in ['해금','20%','20초','동그란 안경','0.2초','전투력 +25%']:
