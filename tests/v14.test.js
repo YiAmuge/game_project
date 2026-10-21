@@ -36,11 +36,11 @@ test('Sora coordinate previews and actual dash lengths distinguish normal seven 
 test('Sora normal dash hits enemies in its seventy percent wider contact area',()=>{
  const {g,p}=quiet('sora'),t=champ(g,1,43,8.3);g.cast(p,'q',{x:47,y:7});run(g,.5);assert.ok(t.hp<10000);assert.equal(g.stat(t,'stun'),1);close(t.y,8.3);
 });
-test('Kim initial and follow-up slash areas increase independently without changing their damage',()=>{
+test('Kim initial and follow-up slash areas increase independently with stronger follow-up damage',()=>{
  const {g,p}=quiet(),first=champ(g,1,43.4,7),wide=champ(g,1,40+3*Math.cos(1.2),7+3*Math.sin(1.2));
  g.attack(p,{x:48,y:7});run(g,.22);close(10000-first.hp,225*.9);close(wide.hp,10000);
- p.attackCd=0;p.ammo=1;g.attack(p,{x:48,y:7});close(10000-wide.hp,190*.9);
- const fx=g.effects.findLast(e=>e.type==='slash');close(fx.r,3.744);close(fx.spread,2.964);
+ p.attackCd=0;p.ammo=1;g.attack(p,{x:48,y:7});close(10000-wide.hp,210*.9);
+ const fx=g.effects.findLast(e=>e.type==='slash');close(fx.r,3.744*1.08);close(fx.spread,2.964*1.08);
 });
 test('Kim holds with a 1.8-second stun and carries the victim atomically while walking',()=>{
  const {g,p,t}=grab(),offset={x:t.x-p.x,y:t.y-p.y},before={x:t.x,y:t.y};close(t.status.stun.until-.1,1.8,.1);assert.equal(g.stat(t,'root'),0);

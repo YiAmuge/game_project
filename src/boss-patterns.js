@@ -1,10 +1,10 @@
-import { distance, direction, clearLine } from './geometry.js';
+import { distance,direction } from './geometry.js';
 
 export const BOSS_RULES={health:9750,attack:297.5,aggroRange:8.5,cleaveRadius:1.15,shockEvery:5,shockWindup:1.15,shockRange:7,shockWidth:.7,shockSpeed:10,shockDamage:240,knock:2,marksEvery:7,markWindup:2.15,markRadius:1.25,markDamage:180,root:.8};
 export function engage(g,e){if(!e.hostile){e.bossShockReady=g.time+BOSS_RULES.shockEvery;e.bossMarksReady=g.time+BOSS_RULES.marksEvery;}e.hostile=true;}
 export function cancel(e){delete e.bossPattern;e.bossMarkers=[];delete e.bossShockReady;delete e.bossMarksReady;delete e.bossIdleSince;}
 export function basic(g,e,t){
- for(const u of [...g.units])if(g.hostile(e,u)&&distance(t,u)<=BOSS_RULES.cleaveRadius+u.radius&&clearLine(t,u))g.deal(e,u,e.damage);
+ for(const u of [...g.units])if(g.hostile(e,u)&&distance(t,u)<=BOSS_RULES.cleaveRadius+u.radius&&g.clearLine(t,u))g.deal(e,u,e.damage);
  g.effects.push({type:'burst',x:t.x,y:t.y,r:BOSS_RULES.cleaveRadius,theme:'boss',life:.3,maxLife:.3});
 }
 export function update(g,e,dt=1/30){
@@ -12,9 +12,9 @@ export function update(g,e,dt=1/30){
  Object.assign(e,e.home);e.returning=false;
  if(!e.hostile){if(g.time-e.lastCombat>5)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.15*dt);return;}
  e.bossShockReady??=g.time+BOSS_RULES.shockEvery;e.bossMarksReady??=g.time+BOSS_RULES.marksEvery;e.bossMarkers??=[];
- for(const m of e.bossMarkers)if(g.time+1e-8>=m.at&&!m.done){m.done=true;for(const t of [...g.units])if(g.hostile(e,t)&&distance(m,t)<=m.r+t.radius&&clearLine(m,t)){g.deal(e,t,BOSS_RULES.markDamage);g.status(t,'root',1,BOSS_RULES.root,e);}g.effects.push({type:'burst',x:m.x,y:m.y,r:m.r,theme:'boss',life:.5,maxLife:.5});}
+ for(const m of e.bossMarkers)if(g.time+1e-8>=m.at&&!m.done){m.done=true;for(const t of [...g.units])if(g.hostile(e,t)&&distance(m,t)<=m.r+t.radius&&g.clearLine(m,t)){g.deal(e,t,BOSS_RULES.markDamage);g.status(t,'root',1,BOSS_RULES.root,e);}g.effects.push({type:'burst',x:m.x,y:m.y,r:m.r,theme:'boss',life:.5,maxLife:.5});}
  e.bossMarkers=e.bossMarkers.filter(m=>!m.done);
- const possible=g.units.filter(t=>['champion','minion'].includes(t.kind)&&t.alive&&!g.hidden(t)&&distance(e,t)<=BOSS_RULES.aggroRange&&clearLine(e,t));
+ const possible=g.units.filter(t=>['champion','minion'].includes(t.kind)&&t.alive&&!g.hidden(t)&&distance(e,t)<=BOSS_RULES.aggroRange&&g.clearLine(e,t));
  const target=possible.find(t=>t.id===e.aggro)||possible.sort((a,b)=>distance(e,a)-distance(e,b))[0];
  if(target)delete e.bossIdleSince;else e.bossIdleSince??=g.time;
  if(!target&&g.time-e.bossIdleSince>3){e.hostile=false;e.aggro=null;cancel(e);return;}

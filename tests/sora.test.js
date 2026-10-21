@@ -38,7 +38,7 @@ test('normal basic gets ten percent bonus only against its own directive',()=>{
  const {g,p}=quiet(),t=enemy(g);const hp=t.hp;g.attack(p,t);close(hp-t.hp,220*.9);p.attackCd=0;p.ammo=1;Sora.mark(g,p,t,'ultimate');const before=t.hp;g.attack(p,t);close(before-t.hp,220*.9*1.1);
 });
 test('normal dash contacts only first enemy, stuns, refills a consumed directive and never pushes the victim',()=>{
- const {g,p}=quiet(),t=creep(g),behind=enemy(g,44,7);Sora.mark(g,p,t);g.deal(p,t,50,{fixed:true});p.ammo=0;assert.equal(skillTargeting(g,p,'q').confirm,true);g.cast(p,'q',{x:44.5,y:7});assert.ok(p.motion);run(g,.35);assert.equal(p.motion,undefined);assert.equal(g.stat(t,'stun'),1);close(t.x,42);close(behind.hp,10000);close(p.ammo,1);close(p.state.unlock,1);assert.ok(distance(p,t)>=p.radius+t.radius);
+ const {g,p}=quiet(),t=creep(g),behind=enemy(g,44,7);Sora.mark(g,p,t);g.deal(p,t,50,{fixed:true});p.ammo=0;assert.equal(skillTargeting(g,p,'q').confirm,true);g.cast(p,'q',{x:44.5,y:7});assert.ok(p.motion);run(g,.35);assert.equal(p.motion,undefined);assert.equal(g.stat(t,'stun'),1);close(t.x,42);close(behind.hp,10000);close(p.ammo,2);close(p.state.unlock,1);assert.ok(distance(p,t)>=p.radius+t.radius);
 });
 for(const cc of ['root','captured'])test(`${cc} rejects either form of dash without spending cooldown`,()=>{
  const {g,p}=quiet();g.status(p,cc,1,3);assert.equal(g.cast(p,'q',{x:45,y:7}),false);close(p.qCd,0);delete p.status[cc];transform(g,p);g.status(p,cc,1,3);assert.equal(g.cast(p,'q',{x:45,y:7}),false);assert.equal(p.invulnerableUntil,undefined);
@@ -71,6 +71,6 @@ test('two Sora owners track separate marks and cap their own unlocks at five',()
 });
 
 test('normal Q really stops a jungle creep attacking for its stun, and minion stuns cannot fire early',()=>{
- const {g,p}=quiet(),t=creep(g);g.cast(p,'q',{x:44.5,y:7});run(g,.2);assert.equal(g.stat(t,'stun'),1);g.aiNeutral=Game.prototype.aiNeutral;const hp=p.hp;run(g,.5);close(p.hp,hp);run(g,.7);assert.ok(p.hp<hp);
+ const {g,p}=quiet(),t=creep(g);g.cast(p,'q',{x:44.5,y:7});run(g,.2);assert.equal(g.stat(t,'stun'),1);g.aiNeutral=Game.prototype.aiNeutral;const hp=p.hp;run(g,.5);close(p.hp,hp);run(g,2.2);assert.ok(p.hp<hp);
  const f=quiet(),m=f.g.entity({kind:'minion',team:1,x:41,y:7,maxHp:1000,range:2,damage:50,interval:1,radius:.3,waypoint:1,lane:0});f.g.aiMinion=Game.prototype.aiMinion;f.g.status(m,'stun',1,1,f.p);const before=f.p.hp;run(f.g,.5);close(f.p.hp,before);run(f.g,.6);assert.ok(f.p.hp<before);
 });

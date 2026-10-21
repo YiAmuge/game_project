@@ -1,5 +1,5 @@
 import { CAMP_RULES } from './data.js';
-import { distance, direction, clearLine } from './geometry.js';
+import { distance,direction } from './geometry.js';
 
 export function engage(g,e){if(!e.hostile){e.patternReady=g.time+CAMP_RULES.firstPattern;}e.hostile=true;}
 export function cancel(e){delete e.pattern;delete e.channelUntil;}
@@ -13,7 +13,7 @@ export function update(g,e,target){
    for(const t of [...g.units]){
     if(!g.hostile(e,t))continue;
     const inside=distance(p,t)<=p.r+t.radius&&(()=>{const d=direction(p,t);return d.x*p.dx+d.y*p.dy>=Math.cos(p.spread/2);})();
-    if(inside&&clearLine(p,t))g.deal(e,t,p.damage);
+    if(inside&&g.clearLine(p,t))g.deal(e,t,p.damage);
    }
    g.effects.push({type:'slash',x:p.x,y:p.y,r:p.r,angle:Math.atan2(p.dy,p.dx),spread:p.spread,color:'#9be2df',life:.4,maxLife:.4});
   }

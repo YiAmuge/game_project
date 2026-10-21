@@ -1,6 +1,6 @@
 import { carried,paired,shiftCarried } from './attachments.js';
 import { withinTrap } from './confinement.js';
-import { blocked,clearLine,distance,segmentDistance } from './geometry.js';
+import { distance,segmentDistance } from './geometry.js';
 
 const structure=e=>['tower','core'].includes(e.kind);
 export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||false}={}){
@@ -14,15 +14,15 @@ export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||false}={})
 export function carryFits(g,e,p){
  const t=carried(g,e);if(!t)return true;
  const to={x:t.x+p.x-e.x,y:t.y+p.y-e.y};
- return clearLine(t,to,t.radius)&&canOccupy(g,t,to,{includeCarry:false,phaseEnemies:false})&&g.units.every(other=>
+ return g.clearLine(t,to,t.radius)&&canOccupy(g,t,to,{includeCarry:false,phaseEnemies:false})&&g.units.every(other=>
   !solid(g,t,other,{phaseEnemies:false})||segmentDistance(other,t,to)>=t.radius+other.radius-.001);
 }
 export function canOccupy(g,e,p,options={}){
- return (options.includeCarry===false||carryFits(g,e,p))&&withinTrap(g,e,p)&&!blocked(p.x,p.y,e.radius)&&g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6);
+ return (options.includeCarry===false||carryFits(g,e,p))&&(options.ignoreTrap||withinTrap(g,e,p))&&!g.blocked(p.x,p.y,e.radius)&&g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6);
 }
 export function moveBody(g,e,dx,dy,options={}){
  const n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.12));
- const safe=p=>carryFits(g,e,p)&&withinTrap(g,e,p)&&!blocked(p.x,p.y,e.radius)&&g.units.every(t=>{
+ const safe=p=>carryFits(g,e,p)&&withinTrap(g,e,p)&&!g.blocked(p.x,p.y,e.radius)&&g.units.every(t=>{
   if(!solid(g,e,t,options))return true;
   const before=distance(e,t),after=distance(p,t),gap=e.radius+t.radius+.006;
   return after>=gap-1e-6||before<gap&&after>before+1e-7;
@@ -36,7 +36,7 @@ export function moveBody(g,e,dx,dy,options={}){
 export function settleBody(g,e,fallback){
  if(canOccupy(g,e,e,{phaseEnemies:false}))return true;
  const origin={x:e.x,y:e.y};
- const reachable=p=>clearLine(origin,p,e.radius)&&g.units.every(t=>!t.alive||!structure(t)||segmentDistance(t,origin,p)>=e.radius+t.radius-.001||distance(p,t)>distance(origin,t)&&distance(origin,t)<e.radius+t.radius);
+ const reachable=p=>g.clearLine(origin,p,e.radius)&&g.units.every(t=>!t.alive||!structure(t)||segmentDistance(t,origin,p)>=e.radius+t.radius-.001||distance(p,t)>distance(origin,t)&&distance(origin,t)<e.radius+t.radius);
  for(let radius=.08;radius<=3.2;radius+=.08)for(let i=0;i<32;i++){
   const a=i*Math.PI/16,p={x:origin.x+Math.cos(a)*radius,y:origin.y+Math.sin(a)*radius};
   if(canOccupy(g,e,p,{phaseEnemies:false})&&reachable(p)){shiftCarried(g,e,e,p);Object.assign(e,p);return true;}

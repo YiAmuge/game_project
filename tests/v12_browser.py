@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.14.0')
+ expect(page.locator('.build-tag')).to_contain_text('0.15.0')
  page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(28)
  for name in ['김삿갓','뿌이']:
   page.get_by_role('button',name=name+' 선택').click();expect(page.locator('#selected-name')).to_have_text(name)
@@ -27,11 +27,13 @@ with sync_playwright() as pw:
  choose('김삿갓');click(42,7,button='right');page.wait_for_function('__moba.game.player.state.swordGrab');page.wait_for_timeout(150)
  page.screenshot(path=str(art/'v12-kim-sword-grab.png'));click(48,7,button='right');page.wait_for_function('!__moba.game.player.state.swordGrab');assert page.evaluate('__target.motion?.forced||__target.x>42')
  page.keyboard.press('Space');page.wait_for_function('__moba.game.player.state.counter')
- counter=page.evaluate('''() => {const g=__moba.game,p=g.player;g.deal(__target,p,100000,{fixed:true});return {hp:p.hp,waves:g.projectiles.filter(b=>b.theme==='kim').map(b=>b.damage)};}''');assert counter=={'hp':1,'waves':[338,338,338,338]}
+ page.evaluate("window.__shots=[];const g=__moba.game,bullet=g.bullet.bind(g);g.bullet=(...a)=>{if(a[0]===g.player)__shots.push(a[2]);return bullet(...a);};g.deal(__target,g.player,100000,{fixed:true})")
+ page.wait_for_function('__shots.length===4');assert page.evaluate('__moba.game.player.hp')==1;assert page.evaluate('__shots')==[338,338,338,338]
  page.screenshot(path=str(art/'v12-kim-counter.png'))
  choose('뿌이');page.evaluate('''() => {const g=__moba.game,a=g.makeChampion('meursault',0,9);Object.assign(a,{x:41,y:8.5,hp:3000,lastDamageAt:1000});window.__ally=a;}''')
  click(41,8.5);page.wait_for_function('__moba.game.player.state.empower?.target===__ally.id')
- nail=page.evaluate('''() => {const g=__moba.game;__ally.attackCd=0;g.attack(__ally,__target);return g.projectiles.filter(b=>b.theme==='ppui').map(b=>({damage:b.damage,nonLethal:b.nonLethal}));}''');assert nail==[{'damage':150,'nonLethal':True}]
+ page.evaluate("window.__nails=[];const g=__moba.game,bullet=g.bullet.bind(g);g.bullet=(...a)=>{if(a[0]===g.player)__nails.push({damage:a[2],nonLethal:a[4].nonLethal});return bullet(...a);};__ally.attackCd=0;g.attack(__ally,__target)")
+ page.wait_for_function('__nails.length===3');assert page.evaluate('__nails')==[{'damage':65,'nonLethal':True}]*3
  page.screenshot(path=str(art/'v12-ppui-half-side.png'))
  page.evaluate('''() => {const g=__moba.game;Object.assign(__ally,{x:47.5,y:7});g.status(__ally,'stun',1,2,__target);}''');click(47.5,7,button='right');assert page.evaluate('__moba.game.targeting?.slot')=='q';click(47.5,7);page.wait_for_function('__moba.game.stat(__ally,"stun")===0')
  page.keyboard.press('Space');page.wait_for_function('__moba.game.player.state.nailStorm');page.screenshot(path=str(art/'v12-ppui-nail-storm.png'))

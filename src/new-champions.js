@@ -1,6 +1,6 @@
 import { trapPoint } from './confinement.js';
 import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
-import { distance, direction, clearLine, blocked } from './geometry.js';
+import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 
 export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}onRespawn(g,e);}
@@ -20,7 +20,7 @@ export function transfer(g,source,target,amount,kind){
 export function validate(g,e,slot,p){
  if(e.key==='nelly'&&slot==='q')return (e.state.knifeCharges??2)>0;
  if(e.key==='nelly'&&slot==='r')return !g.stat(e,'root')&&Boolean(targetAt(g,e,p,7));
- if(e.key==='ahab'&&slot==='r')return !g.stat(e,'root')&&!blocked(p.x,p.y,e.radius);
+ if(e.key==='ahab'&&slot==='r')return !g.stat(e,'root')&&!g.blocked(p.x,p.y,e.radius);
  return true;
 }
 export function recast(g,e,slot){return e.key==='ahab'&&slot==='r'&&e.state.recastUntil>g.time&&!e.state.recastSpent;}
@@ -48,7 +48,7 @@ export function basic(g,e,p,d){
  switch(e.key){
  case 'gahwan':
   for(let i=0;i<2;i++)g.schedule(e,i*.12,()=>g.cone(e,d,g.attackRange(e),.85,43.5));
-  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=3.25+t.radius&&clearLine(e,t)){const v=direction(e,t);if(v.x*d.x+v.y*d.y>.5){g.deal(e,t,28.5);e.state.knockReady??={};if(t.kind!=='champion'||(e.state.knockReady[t.id]||0)<=g.time){e.state.knockReady[t.id]=g.time+2;g.startMotion(t,v,2.5,{kind:'knock'});}}}
+  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=3.25+t.radius&&g.clearLine(e,t)){const v=direction(e,t);if(v.x*d.x+v.y*d.y>.5){g.deal(e,t,28.5);e.state.knockReady??={};if(t.kind!=='champion'||(e.state.knockReady[t.id]||0)<=g.time){e.state.knockReady[t.id]=g.time+2;g.startMotion(t,v,2.5,{kind:'knock'});}}}
   return true;
  case 'nelly':g.cone(e,d,g.attackRange(e),1.2,210);return true;
  case 'ahab':
@@ -78,7 +78,7 @@ export function cast(g,e,slot,p,d){
    for(const off of [-.28,-.14,0,.14,.28])g.bullet(e,{x:Math.cos(e.facing+off),y:Math.sin(e.facing+off)},70,7,{speed:18,pierce:Infinity,beforeHit:t=>{e.state.knifeRefundCast=true;if(!refunded&&t.state?.nellyMarks?.[e.id]?.active){refunded=true;refundKnife(g,e);}},onHit:()=>{delete e.state.knifeRefundCast;}});
   }else{
    e.ammo=Math.min(g.ammoCap(e),e.ammo+2);const t=targetAt(g,e,p,7),behind=direction(e,t),dest=trapPoint(g,e,{x:t.x+behind.x*.9,y:t.y+behind.y*.9});
-   if(!blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}else{const back=trapPoint(g,e,{x:t.x-behind.x*.9,y:t.y-behind.y*.9});if(!blocked(back.x,back.y,e.radius)){e.x=back.x;e.y=back.y;}}
+   if(!g.blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}else{const back=trapPoint(g,e,{x:t.x-behind.x*.9,y:t.y-behind.y*.9});if(!g.blocked(back.x,back.y,e.radius)){e.x=back.x;e.y=back.y;}}
    // Apply the forced mark after the opening strike so the following three hits preserve it.
    g.deal(e,t,300);if(t.alive){g.status(t,'root',1,.7,e);nellyMark(g,e,t,true);}g.effects.push({type:'slash',x:e.x,y:e.y,r:2,angle:e.facing,spread:2.8,theme:e.key,life:.5,maxLife:.5});
   }return true;
@@ -91,8 +91,8 @@ export function cast(g,e,slot,p,d){
    s.ahabUlt={origin:{x:e.x,y:e.y},immune:e.ccImmuneUntil||0,invulnerable:e.invulnerableUntil||0};e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.channelUntil=g.time+.45;
    e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
    {
-    for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&clearLine(e,t))g.deal(e,t,180,{nonLethal:execute.has(t.id)});});
-    g.schedule(e,.45,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&clearLine(e,t)){
+    for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t))g.deal(e,t,180,{nonLethal:execute.has(t.id)});});
+    g.schedule(e,.45,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){
      if(execute.has(t.id)){g.deal(e,t,t.hp+g.shield(t),{fixed:true});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+4;}
      else g.deal(e,t,300+(t.maxHp-t.hp)*.18);
     }g.effects.push({type:'burst',x:e.x,y:e.y,r:2.5,theme:e.key,life:.7,maxLife:.7});const ult=s.ahabUlt;const done=()=>{e.ccImmuneUntil=ult.immune;e.invulnerableUntil=ult.invulnerable;delete s.ahabUlt;s.returnAnchorUntil=g.time+.05;};e.channelUntil=0;if(!g.startMotion(e,direction(e,ult.origin),distance(e,ult.origin),{speed:12,maxSpeed:12,phaseEnemies:true,follow:{...ult.origin,alive:true},onComplete:done}))done();});

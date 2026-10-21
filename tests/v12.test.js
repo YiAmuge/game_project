@@ -66,8 +66,8 @@ test('Ppui gains fifteen percent assist XP, without changing kill XP or ally rew
  const {g,p,t}=quiet('ppui'),a=ally(g);g.deal(p,t,1,{fixed:true});g.deal(a,t,1e6,{fixed:true});close(p.xp,80.5);close(a.xp,120);close(p.gold,250+40*4/3);
  const next=g.makeChampion('faust',1,20);Object.assign(next,{x:42,y:7});g.kill(next,p);close(p.xp,200.5);
 });
-test('Ppui empowering an ally emits exactly one nonlethal 150-damage nail per attack',()=>{
- const {g,p,t}=quiet('ppui'),a=ally(g,'meursault',41,7);g.attack(p,a);assert.equal(p.state.empower.target,a.id);g.attack(a,t);const nails=g.projectiles.filter(b=>b.theme==='ppui');assert.equal(nails.length,1);close(nails[0].damage,150);assert.equal(nails[0].nonLethal,true);t.hp=1;run(g,.3);assert.equal(t.alive,true);close(t.hp,1);assert.equal(g.projectiles.filter(b=>b.theme==='ppui').length,0);
+test('Ppui empowering an ally starts a nonlethal three-nail burst per attack',()=>{
+ const {g,p,t}=quiet('ppui'),a=ally(g,'meursault',41,7);g.attack(p,a);assert.equal(p.state.empower.target,a.id);g.attack(a,t);run(g,.02);const nails=g.projectiles.filter(b=>b.theme==='ppui');assert.equal(nails.length,1);close(nails[0].damage,65);assert.equal(nails[0].nonLethal,true);t.hp=1;run(g,.3);assert.equal(t.alive,true);close(t.hp,1);assert.equal(g.projectiles.filter(b=>b.theme==='ppui').length,0);
 });
 test('Ppui replacement removes previous healing target and Q reaches eight units to cleanse',()=>{
  const {g,p}=quiet('ppui');g.units=[p];const a=ally(g,'faust',42,7),b=ally(g,'yi',43,9);a.hp-=500;b.hp-=500;a.lastDamageAt=100;b.lastDamageAt=100;g.attack(p,a);p.attackCd=0;p.ammo=1;g.attack(p,b);const before=a.hp;run(g,.5);close(a.hp,before);assert.ok(b.hp>b.maxHp-500);
@@ -83,9 +83,9 @@ test('Kim Q stabs and grabs, recast throws without a new cooldown and cleans up 
  const {g,p,t}=quiet('kim');assert.ok(g.cast(p,'q',t));run(g,.2);assert.equal(p.state.swordGrab.target,t);assert.equal(g.stat(t,'stun'),1);run(g,.2);const cd=p.qCd;assert.ok(g.cast(p,'q',{x:48,y:7}));close(p.qCd,cd);assert.equal(p.state.swordGrab,undefined);assert.equal(g.stat(t,'stun'),0);assert.ok(t.motion?.forced);
  const f=quiet('kim');f.g.cast(f.p,'q',f.t);run(f.g,.2);f.g.kill(f.p,f.t);assert.equal(f.g.stat(f.t,'stun'),0);
 });
-test('Kim normal ult fires 450, incoming lethal damage triggers four 338 waves at HP one',()=>{
- const {g,p,t}=quiet('kim');g.cast(p,'r',t);assert.ok(p.ccImmuneUntil>g.time);g.deal(t,p,1e6,{fixed:true});assert.ok(p.alive&&p.hp===1);assert.equal(p.state.counter,undefined);const waves=g.projectiles.filter(b=>b.theme==='kim');assert.equal(waves.length,4);assert.ok(waves.every(b=>b.damage===338));
- const f=quiet('kim');f.g.cast(f.p,'r',f.t);run(f.g,1.51);const normal=f.g.projectiles.filter(b=>b.theme==='kim');assert.equal(normal.length,1);close(normal[0].damage,450);
+test('Kim half-second ultimate fires 450 or four sequential 338 waves at HP one',()=>{
+ const {g,p,t}=quiet('kim'),shots=[],bullet=g.bullet.bind(g);g.bullet=(...args)=>{shots.push({at:g.time,damage:args[2]});return bullet(...args);};g.cast(p,'r',t);assert.ok(p.ccImmuneUntil>g.time);g.deal(t,p,1e6,{fixed:true});assert.ok(p.alive&&p.hp===1);assert.equal(p.state.counter,undefined);assert.equal(shots.length,1);run(g,.4);assert.deepEqual(shots.map(s=>s.damage),[338,338,338,338]);
+ const f=quiet('kim');f.g.cast(f.p,'r',f.t);run(f.g,.51);const normal=f.g.projectiles.filter(b=>b.theme==='kim');assert.equal(normal.length,1);close(normal[0].damage,450);
 });
 test('new ordinary champions and augment codex share the gameplay definitions',()=>{
  assert.equal(Object.keys(CHAMPIONS).length,28);assert.ok(CHAMPIONS.kim&&CHAMPIONS.ppui);const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8'),html=readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/data-category="augments"/);assert.match(main,/AUGMENTS\.map/);
@@ -98,5 +98,5 @@ test('capture respects status resistance and a full cleanse releases the arena i
 
 test('new champion hit passives work against shields and a cleansed sword grab releases immediately',()=>{
  const {g,p,t}=quiet('kim');g.addShield(t,1000,'test');g.attack(p,t);run(g,.02);close(g.shield(p),120);p.qCd=0;run(g,.3);g.cast(p,'q',t);run(g,.2);assert.ok(p.state.swordGrab);t.status={};run(g,.02);assert.equal(p.state.swordGrab,undefined);
- const f=quiet('ppui'),a=ally(f.g,'meursault',41,7);f.g.attack(f.p,a);f.g.addShield(f.t,1000,'test');f.g.attack(a,f.t);assert.equal(f.g.projectiles.filter(b=>b.theme==='ppui').length,1);
+ const f=quiet('ppui'),a=ally(f.g,'meursault',41,7);f.g.attack(f.p,a);f.g.addShield(f.t,1000,'test');f.g.attack(a,f.t);run(f.g,.02);assert.equal(f.g.projectiles.filter(b=>b.theme==='ppui').length,1);
 });

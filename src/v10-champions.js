@@ -1,10 +1,10 @@
-import { distance,blocked } from './geometry.js';
+import { distance } from './geometry.js';
 import { dash,area } from './skills.js';
 import { canOccupy,settleBody } from './collision.js';
 import { trapPoint } from './confinement.js';
 
 export const STARBUCK={basicRange:3.38,basicDash:2.875,qDamage:150,qRange:2.782,qAngle:1.6478,qInterval:.3,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320,trapDuration:2.5};
-export function validate(g,e,slot,p){return e.key!=='starbuck'||slot!=='r'||!blocked(p.x,p.y,e.radius)&&canOccupy(g,e,trapPoint(g,e,p),{phaseEnemies:true});}
+export function validate(g,e,slot,p){return e.key!=='starbuck'||slot!=='r'||!g.blocked(p.x,p.y,e.radius)&&canOccupy(g,e,trapPoint(g,e,p),{phaseEnemies:true});}
 export function basic(g,e,p,d){
  if(e.key!=='starbuck')return false;
  g.cone(e,d,g.attackRange(e),.975,218.5);dash(g,e,d,STARBUCK.basicDash,0,()=>{},{offensive:true});return true;
@@ -30,7 +30,7 @@ export function cast(g,e,slot,p,d){
   g.schedule(e,.7,()=>{
    e.untargetableUntil=0;e.channelUntil=0;
    const landing=trapPoint(g,e,destination);
-   if(!blocked(landing.x,landing.y,e.radius)&&canOccupy(g,e,landing,{phaseEnemies:true})){Object.assign(e,landing);settleBody(g,e,origin);}
+   if(!g.blocked(landing.x,landing.y,e.radius)&&canOccupy(g,e,landing,{phaseEnemies:true})){Object.assign(e,landing);settleBody(g,e,origin);}
    const candidates=[];area(g,e,e,STARBUCK.rRadius,0,t=>{const before=t.hp+g.shield(t);g.deal(e,t,STARBUCK.rDamage);if(t.kind==='champion'&&t.alive&&t.hp+g.shield(t)<before)candidates.push(t);});
    const target=candidates.sort((a,b)=>a.hp-b.hp||a.id-b.id)[0];
    if(target&&!(target.ccImmuneUntil>g.time)&&!(target.invulnerableUntil>g.time)){

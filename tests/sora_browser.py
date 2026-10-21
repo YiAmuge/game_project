@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.14.0');page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(28)
+ expect(page.locator('.build-tag')).to_contain_text('0.15.0');page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(28)
  page.get_by_role('button',name='소라 선택').click();expect(page.locator('#selected-role')).to_have_text('암살');page.wait_for_function('__moba.renderer.atlasV13.naturalWidth>0')
  page.screenshot(path=str(art/'sora-selection-round-glasses.png'));page.click('#archive-open');expect(page.locator('#roster-list button')).to_have_count(33);page.fill('#roster-search','소라');page.click('#roster-list button')
  for text in ['해금','20%','20초','동그란 안경','0.2초','전투력 +25%']:
@@ -27,7 +27,7 @@ with sync_playwright() as pw:
  # Earn fifth stack through the actual damage/mark hook, despite remaining R cooldown.
  page.evaluate('''() => {const g=__moba.game,p=g.player;p.state.unlock=4;p.rCd=0;g.cast(p,'r',p);g.deal(p,__creep,220,{fixed:true});p.hp=p.maxHp*.5;p.lastAttackAt=100;p.lastDamageAt=100;window.__normalMax=p.maxHp;}''')
  page.wait_for_function('__moba.game.player.state.unlock===5');expect(page.locator('#r-btn span')).to_have_text('개화 E.G.O::대행');normal_face=page.locator('#hud-face').evaluate('(c)=>c.toDataURL()')
- page.keyboard.press('Space');page.wait_for_function('__moba.game.player.state.egoActive');expect(page.locator('#basic-btn span')).to_have_text('대행: 새기기');expect(page.locator('#q-btn span')).to_have_text('대행: 말살');expect(page.locator('#r-btn span')).to_have_text('대행 전개 중')
+ page.keyboard.press('Space');page.wait_for_function('__moba.game.player.state.egoActive');expect(page.locator('#basic-btn span')).to_have_text('대행: 새기기');expect(page.locator('#q-btn span')).to_contain_text('대행: 말살');expect(page.locator('#r-btn span')).to_have_text('대행 전개 중')
  assert abs(page.evaluate('__moba.game.player.maxHp/__normalMax')-.8)<1e-6;assert page.evaluate('__moba.game.player.state.unlock')==0
  page.wait_for_function('document.querySelector("#hud-face").dataset.form==="soraEgo"');assert page.locator('#hud-face').evaluate('(c)=>c.toDataURL()')!=normal_face
  page.evaluate('''() => {const g=__moba.game,p=g.player,t=g.makeChampion('faust',1,9),back=g.makeChampion('faust',1,10);Object.assign(t,{x:p.x+1.6,y:p.y,hp:10000,maxHp:10000,lastDamageAt:100});Object.assign(back,{x:p.x-1.5,y:p.y,hp:10000,maxHp:10000,lastDamageAt:100});g.units=[p,t,back];window.__target=t;window.__back=back;p.attackCd=0;p.ammo=2;}''')

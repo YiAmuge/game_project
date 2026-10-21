@@ -1,4 +1,4 @@
-import { distance, direction, clearLine } from './geometry.js';
+import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 
 export function endurance(e){return Math.max(0,Math.min(5,Math.floor((1-e.hp/e.maxHp+1e-8)/.1)));}
@@ -16,7 +16,7 @@ export function basic(g,e,p,d){
  if(e.key==='hohenheim'){
   for(let i=0;i<3;i++)g.schedule(e,i*.12,()=>{
    const end={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};
-   const targets=g.units.filter(t=>g.hostile(e,t)&&clearLine(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius).filter(t=>{const v=direction(e,t);return v.x*d.x+v.y*d.y>0&&Math.abs((t.x-e.x)*d.y-(t.y-e.y)*d.x)<=.2+t.radius;}).sort((a,b)=>distance(e,a)-distance(e,b));
+   const targets=g.units.filter(t=>g.hostile(e,t)&&g.clearLine(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius).filter(t=>{const v=direction(e,t);return v.x*d.x+v.y*d.y>0&&Math.abs((t.x-e.x)*d.y-(t.y-e.y)*d.x)<=.2+t.radius;}).sort((a,b)=>distance(e,a)-distance(e,b));
    targets.forEach((t,j)=>g.deal(e,t,125*(j? .8:1)*(t.state?.electricWeak?.[e.id]>g.time?1.2:1)));
    g.effects.push({type:'line',x:e.x,y:e.y,to:end,color:'#84edee',theme:e.key,life:.19,maxLife:.19});
   });return true;

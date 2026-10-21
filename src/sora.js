@@ -1,9 +1,9 @@
-import { distance,clearLine,segmentDistance } from './geometry.js';
+import { distance,segmentDistance } from './geometry.js';
 import { settleBody } from './collision.js';
 import { dash,area } from './skills.js';
 
 // Unspecified distances/damage are prototype values, mirrored in the encyclopedia.
-export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,threshold:.2,maxUnlock:5,ultimateRange:8,egoDuration:20,basicDamage:220,basicRange:4.62,basicAngle:3.3,egoDamage:260,egoRadius:2.7,qRange:7,egoQRange:6.5,qWidth:(.48+.08)*1.7,qDamage:210,egoQDamage:240,trailDamage:45,trailWidth:.8,trailEvery:.2,trailDuration:1.2};
+export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,threshold:.2,maxUnlock:5,ultimateRange:8,egoDuration:20,basicDamage:220,basicRange:4.62,basicAngle:3.3,egoDamage:260,egoRadius:2.7,qRange:7,egoQRange:6.5,qWidth:(.48+.08)*1.7*1.2,qDamage:210,qShield:250,egoQDamage:240,egoQCharges:2,egoQCooldown:5,trailDamage:45,trailWidth:.8,trailEvery:.2,trailDuration:1.2};
 export const ego=(g,e)=>e.key==='sora'&&g.buff(e,'soraEgo');
 export const ready=(g,e)=>e.key==='sora'&&!ego(g,e)&&(e.state.unlock||0)>=SORA.maxUnlock;
 export function init(g,e){if(e.key==='sora'){e.state.unlock=0;e.state.orders={};e.state.orderAt=g.time+SORA.markEvery;}}
@@ -21,23 +21,25 @@ export function mark(g,e,t,origin='passive'){
  g.effects.push({type:'ring',x:t.x,y:t.y,r:1,color:'#e9ce79',life:.4,maxLife:.4});return true;
 }
 export function ultimateTarget(g,e){
- const targets=g.units.filter(t=>g.hostile(e,t)&&!t.returning&&g.visibleTo(e.team,t)&&distance(e,t)<=SORA.ultimateRange+t.radius&&clearLine(e,t));
+ const targets=g.units.filter(t=>g.hostile(e,t)&&!t.returning&&g.visibleTo(e.team,t)&&distance(e,t)<=SORA.ultimateRange+t.radius&&g.clearLine(e,t));
  const nearest=list=>list.sort((a,b)=>distance(e,a)-distance(e,b)||a.id-b.id)[0];
  return nearest(targets.filter(t=>t.kind==='neutral'&&['central','side'].includes(t.camp)))||nearest(targets.filter(t=>t.kind==='neutral'&&['amplify','blessing'].includes(t.camp)))||targets.filter(t=>t.kind==='champion').sort((a,b)=>a.hp-b.hp||distance(e,a)-distance(e,b))[0];
 }
 export function validate(g,e,slot){
  if(e.key!=='sora')return true;
- if(slot==='q')return !g.stat(e,'root')&&!g.stat(e,'captured');
+ if(slot==='q')return (!ego(g,e)||(e.state.egoQCharges||0)>0)&&!g.stat(e,'root')&&!g.stat(e,'captured');
  return !ego(g,e)&&(ready(g,e)||Boolean(ultimateTarget(g,e))||orders(g,e).length>0);
 }
 function restoreGuard(e){const s=e.state.soraGuard;if(!s)return;delete e.state.soraGuard;e.invulnerableUntil=s.previous;}
 function transform(g,e){
  const fraction=e.hp/e.maxHp;e.state.unlock=0;e.rCd=0;e.state.egoActive=true;
  g.addBuff(e,'soraEgo',SORA.egoDuration,{copy:false});e.maxHp=g.maxHp(e);e.hp=e.maxHp*fraction;
+ e.state.egoQCharges=SORA.egoQCharges;e.state.egoQReady=Infinity;e.qCd=0;
  g.effects.push({type:'burst',x:e.x,y:e.y,r:3.2,theme:'sora',life:.75,maxLife:.75});
 }
 function endTransform(g,e){
  const fraction=e.hp/e.maxHp;delete e.buffs.soraEgo;delete e.buffs.soraScratch;e.state.egoActive=false;e.maxHp=g.maxHp(e);e.hp=Math.min(e.maxHp,e.maxHp*fraction);e.rCd=0;
+ delete e.state.egoQCharges;delete e.state.egoQReady;e.qCd=0;
  g.effects.push({type:'ring',x:e.x,y:e.y,r:1.6,color:'#f2e4b6',life:.5,maxLife:.5});
 }
 export function basic(g,e,p,d){
@@ -50,7 +52,7 @@ function trail(g,e,origin){
  const end={x:e.x,y:e.y};if(distance(origin,end)<.05)return;
  g.effects.push({type:'soraTrail',...origin,to:end,width:SORA.trailWidth,life:SORA.trailDuration,maxLife:SORA.trailDuration});
  for(let i=0;i<6;i++)g.schedule(e,i*SORA.trailEvery,()=>{
-  for(const t of [...g.units])if(g.hostile(e,t)&&segmentDistance(t,origin,end)<=SORA.trailWidth+t.radius&&clearLine(origin,t)&&clearLine(end,t)){
+  for(const t of [...g.units])if(g.hostile(e,t)&&segmentDistance(t,origin,end)<=SORA.trailWidth+t.radius&&g.clearLine(origin,t)&&g.clearLine(end,t)){
    g.deal(e,t,SORA.trailDamage);g.status(t,'slow',.3,1,e);
   }
   g.effects.push({type:'soraClaw',x:(origin.x+end.x)/2,y:(origin.y+end.y)/2,r:Math.max(.6,distance(origin,end)/2),angle:Math.atan2(end.y-origin.y,end.x-origin.x),life:.18,maxLife:.18});
@@ -65,15 +67,17 @@ export function cast(g,e,slot,p,d){
  }
  const origin={x:e.x,y:e.y},length=Math.min(ego(g,e)?SORA.egoQRange:SORA.qRange,distance(e,p));
  if(ego(g,e)){
+  e.state.egoQCharges--;if(!Number.isFinite(e.state.egoQReady))e.state.egoQReady=g.time+g.cooldown(e,'q');
+  e.qCd=e.state.egoQCharges>0?0:Math.max(0,e.state.egoQReady-g.time);
   const previous=e.invulnerableUntil||0;
   if(dash(g,e,d,length,SORA.egoQDamage,()=>{},{hitWidth:SORA.trailWidth,onComplete:()=>{restoreGuard(e);trail(g,e,origin);}})&&e.motion){e.state.soraGuard={previous,motion:e.motion};e.invulnerableUntil=Infinity;}
  }else{
   // Sweep only the first contacted enemy; no teleport and no pushing through terrain.
   const stopped=new Set();
   g.startMotion(e,d,length,{phaseEnemies:true,onStep:(from,to)=>{
-   const target=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=SORA.qWidth+t.radius&&clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
+   const target=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=SORA.qWidth+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
    if(!target||stopped.size)return;stopped.add(target.id);const refill=marked(g,e,target),fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);
-   g.deal(e,target,SORA.qDamage);g.status(target,'stun',1,1,e);if(refill)e.ammo=Math.min(g.ammoCap(e),e.ammo+1);
+   g.deal(e,target,SORA.qDamage);g.status(target,'stun',1,1,e);g.addShield(e,SORA.qShield,`sora-dash-${e.id}`,2);if(refill)e.ammo=Math.min(g.ammoCap(e),e.ammo+1);
    g.effects.push({type:'impact',x:target.x,y:target.y,angle:Math.atan2(d.y,d.x),theme:'sora',life:.3,maxLife:.3});
   }});
  }
@@ -83,17 +87,21 @@ export function afterDamage(g,e,t,actual,absorbed=0){
  if(e.key!=='sora'||!e.alive||actual+absorbed<=0)return;
  const m=e.state.orders?.[t.id];if(!m||m.until<=g.time)return;
  m.damage+=actual+absorbed;
- if(m.damage+1e-8>=t.maxHp*SORA.threshold){delete e.state.orders[t.id];e.state.unlock=Math.min(SORA.maxUnlock,(e.state.unlock||0)+1);if(ready(g,e))e.rCd=0;g.effects.push({type:'number',x:e.x,y:e.y-2,text:`해금 ${e.state.unlock}/${SORA.maxUnlock}`,color:'#f3d98b',life:1,maxLife:1});}
+ if(m.damage+1e-8>=t.maxHp*SORA.threshold){delete e.state.orders[t.id];e.state.unlock=Math.min(SORA.maxUnlock,(e.state.unlock||0)+1);if(!ego(g,e))e.ammo=Math.min(g.ammoCap(e),e.ammo+1);if(ready(g,e))e.rCd=0;g.effects.push({type:'number',x:e.x,y:e.y-2,text:`해금 ${e.state.unlock}/${SORA.maxUnlock}`,color:'#f3d98b',life:1,maxLife:1});}
 }
 export function tick(g,e){
  if(e.key!=='sora')return;
  if(e.state.soraGuard&&e.state.soraGuard.motion!==e.motion)restoreGuard(e);
  if(e.state.egoActive&&!ego(g,e))endTransform(g,e);
+ if(ego(g,e)){
+  while(e.state.egoQCharges<SORA.egoQCharges&&g.time+1e-8>=e.state.egoQReady){e.state.egoQCharges++;e.state.egoQReady=e.state.egoQCharges<SORA.egoQCharges?e.state.egoQReady+g.cooldown(e,'q'):Infinity;}
+  e.qCd=e.state.egoQCharges>0?0:Math.max(0,e.state.egoQReady-g.time);
+ }
  const active=orders(g,e);
  if(g.time+1e-8<(e.state.orderAt??g.time+SORA.markEvery))return;
  e.state.orderAt=g.time+SORA.markEvery;
  if(active.filter(m=>m.origin==='passive').length>=SORA.passiveCap)return;
- const target=g.units.filter(t=>t.kind==='neutral'&&t.camp!=='boss'&&t.alive&&!t.returning&&!marked(g,e,t)&&distance(e,t)<=SORA.passiveRange+t.radius&&clearLine(e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];
+ const target=g.units.filter(t=>t.kind==='neutral'&&t.camp!=='boss'&&t.alive&&!t.returning&&!marked(g,e,t)&&distance(e,t)<=SORA.passiveRange+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];
  mark(g,e,target);
 }
 export function onRespawn(g,e){if(e.key==='sora')init(g,e);}
@@ -101,5 +109,5 @@ export function onDeath(g,e){if(e.key==='sora')restoreGuard(e);}
 export function abilityInfo(g,e){
  if(e.key!=='sora')return {};
  const transformed=ego(g,e),unlocked=ready(g,e);
- return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?'사거리 6.5 좌표로 무적 돌진·240 피해. 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.':'사거리 7 좌표로 돌진, 처음 닿은 적에게 210 피해·기절 1초. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
+ return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?`충전 ${e.state.egoQCharges}/2 · 1회 충전 5초. 사거리 6.5 좌표로 무적 돌진·240 피해. 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.`:'사거리 7 좌표로 돌진, 처음 닿은 적에게 210 피해·기절 1초. 적중 시 250 보호막 2초·판정 폭 +20%. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
 }

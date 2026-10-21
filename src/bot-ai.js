@@ -1,5 +1,5 @@
 import { CHAMPIONS, POSITIONS, CORE_POSITIONS } from './data.js';
-import { distance, direction, clearLine } from './geometry.js';
+import { distance,direction } from './geometry.js';
 import { DRAG_KEYS } from './skills.js';
 
 export function draft(g,position,used=[]){
@@ -27,7 +27,7 @@ export function bossObjective(g,e,dt){
  const radius=Math.max(2.1,Math.min(6,g.attackRange(e)*.8+boss.radius)),a=(e.team?0:Math.PI)+(e.index-1.5)*.38;
  const point={x:boss.x+Math.cos(a)*radius,y:boss.y+Math.sin(a)*radius};
  e.objective='boss';
- if(distance(e,boss)>g.attackRange(e)+boss.radius||!clearLine(e,boss))g.moveToward(e,point,dt);
+ if(distance(e,boss)>g.attackRange(e)+boss.radius||!g.clearLine(e,boss))g.moveToward(e,point,dt);
  else {g.attack(e,boss);combatSkills(g,e,boss);}
  return true;
 }

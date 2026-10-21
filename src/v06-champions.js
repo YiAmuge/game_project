@@ -1,13 +1,13 @@
 import { RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
-import { distance, direction, clearLine, blocked } from './geometry.js';
+import { distance,direction } from './geometry.js';
 import { area, dash } from './skills.js';
 
 export function init(g,e){if(e.key==='dongbaek'){e.state.petals=3;e.state.petalReady=Infinity;}if(e.key==='dongrang'){e.totalHealingReceived=0;}}
 export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1200);return {radius:3.2,damage:180+n*50};}
 export function validate(g,e,slot,p){
  if(e.key==='myo'&&slot==='q')return e.ammo>=1&&!g.buff(e,'rabbitFrenzy');
- if(e.key==='dongrang'&&slot==='r')return !g.stat(e,'root')&&!blocked(p.x,p.y,e.radius);
- if(e.key==='dongrang'&&slot==='q')return !blocked(p.x,p.y,.15);
+ if(e.key==='dongrang'&&slot==='r')return !g.stat(e,'root')&&!g.blocked(p.x,p.y,e.radius);
+ if(e.key==='dongrang'&&slot==='q')return !g.blocked(p.x,p.y,.15);
  return true;
 }
 export function beforeBasic(g,e){
@@ -24,7 +24,7 @@ export function basic(g,e,p,d){
  }
  if(e.key==='dongbaek'){
   e.state.flowerHits??={};
-  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&clearLine(e,t)){
+  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t)){
    const td=direction(e,t);if(td.x*d.x+td.y*d.y<Math.cos(.65))continue;
    let hits=e.state.flowerHits[t.id];if(!hits||hits.at<g.time-4)hits=e.state.flowerHits[t.id]={n:0,at:g.time};
    g.deal(e,t,165*(1+.12*Math.min(4,hits.n)));hits.n++;hits.at=g.time;
@@ -32,7 +32,7 @@ export function basic(g,e,p,d){
   if(e.state.usedPetal&&e.state.petals===0)e.status.disarm={amount:1,until:g.time+2.85,theme:e.key};
   g.effects.push({type:'slash',x:e.x,y:e.y,angle:e.facing,spread:1.3,r:g.attackRange(e),theme:e.key,life:.4,maxLife:.4});return true;
  }
- if(e.key==='dongrang'){for(const z of g.zones)if(z.kind==='desireTree'&&z.source===e&&z.golden&&z.until>g.time&&distance(e,z)<=g.attackRange(e)&&clearLine(e,z)){const v=direction(e,z);if(v.x*d.x+v.y*d.y>=Math.cos(.95)){z.until=g.time;g.heal(e,e,e.maxHp*.07,false);}}g.zones=g.zones.filter(z=>z.until>g.time);g.cone(e,d,g.attackRange(e),1.9,260);return true;}
+ if(e.key==='dongrang'){for(const z of g.zones)if(z.kind==='desireTree'&&z.source===e&&z.golden&&z.until>g.time&&distance(e,z)<=g.attackRange(e)&&g.clearLine(e,z)){const v=direction(e,z);if(v.x*d.x+v.y*d.y>=Math.cos(.95)){z.until=g.time;g.heal(e,e,e.maxHp*.07,false);}}g.zones=g.zones.filter(z=>z.until>g.time);g.cone(e,d,g.attackRange(e),1.9,260);return true;}
  return false;
 }
 export function cast(g,e,slot,p,d){

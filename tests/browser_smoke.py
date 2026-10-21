@@ -14,7 +14,7 @@ with sync_playwright() as p:
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(base + '/?debug=1', wait_until='networkidle')
-    expect(page.locator('#main-menu .menu-action')).to_have_count(3)
+    expect(page.locator('#main-menu .menu-action')).to_have_count(4)
     expect(page.locator('#online')).to_be_disabled()
     expect(page.locator('#online')).to_contain_text('준비중')
     expect(page.locator('.hud')).to_be_hidden()
@@ -228,4 +228,4 @@ with sync_playwright() as p:
     assert page.evaluate('document.body.scrollWidth <= innerWidth')
     assert not errors, errors
     browser.close()
-    print(json.dumps({'status':'passed','checks':['three-entry menu','25 champions and four positions','unrestricted recommendations','32 champion and two other codex categories','latest balance descriptions','viewport and centered camera','HUD placement and three latest buffs','G fountain-only shop and consumable removal','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R bindings; B recall','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))
+    print(json.dumps({'status':'passed','checks':['four-entry menu','25 champions and four positions','unrestricted recommendations','32 champion and two other codex categories','latest balance descriptions','viewport and centered camera','HUD placement and three latest buffs','G fountain-only shop and consumable removal','Tab enlarged map and 8-row KDA/growth','movement and manual projectile damage','RMB/Space and removed Q/R bindings; B recall','pause/modal/fullscreen','boss/result/restart','Rudolph global cancel and commit','Moses/Ezra drag cancel and commit','eight new sprites in matches','mobile overflow'],'page_errors':errors},ensure_ascii=False))
