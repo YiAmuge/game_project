@@ -1,3 +1,4 @@
+import * as Sora from './sora.js';
 import * as V12 from './v12-champions.js';
 import { trapPoint } from './confinement.js';
 import * as V08 from './v08-champions.js';
@@ -52,16 +53,18 @@ function guboTarget(g,e,p,allyOnly=false){
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','ezra','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(slot==='r'&&Sora.ready(g,e))return true;
  if(V12.recast(g,e,slot)||e.key==='don'&&slot==='q'&&e.state.donBarrage?.until>g.time)return true;
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='heathcliff'&&e.state.chargeAt!==undefined)||(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')))||slot==='r'&&e.key==='ezra'&&g.buff(e,'ezraUlt');
 }
-export function init(g,e){New.init(g,e);V06.init(g,e);V08.init(g,e);}
-export const onRespawn=New.onRespawn;
+export function init(g,e){New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);}
+export function onRespawn(g,e){New.onRespawn(g,e);Sora.onRespawn(g,e);}
 export const coverMultiplier=New.coverMultiplier;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(!Sora.validate(g,e,slot,p))return false;
  if(!V12.validate(g,e,slot,p))return false;
  if(!V10.validate(g,e,slot,p))return false;
  if(!V08.validate(g,e,slot,p))return false;
@@ -96,7 +99,7 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
- if(V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
+ if(Sora.basic(g,e,p,d)||V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
  case 'don':dash(g,e,d,2*g.attackRange(e)/e.range,230,()=>{},{hitWidth:.72});return true;
@@ -145,7 +148,7 @@ function shockIshmael(g,e){
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
  const state=e.state;
- if(V12.cast(g,e,slot,p,d,options)||V10.cast(g,e,slot,p,d,options)||V08.cast(g,e,slot,p,d,options)||New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;
+ if(Sora.cast(g,e,slot,p,d)||V12.cast(g,e,slot,p,d,options)||V10.cast(g,e,slot,p,d,options)||V08.cast(g,e,slot,p,d,options)||New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;
  switch(e.key){
  case 'don':
   if(slot==='q'){
@@ -220,6 +223,7 @@ export function cast(g,e,slot,p,d,options={}){
 export function damageBonus(g,e,t){
  if(!e.key)return 1;
  let b=1;
+ if(e.key==='sora'&&e.actionKind==='basic'&&!Sora.ego(g,e)&&Sora.marked(g,e,t))b*=1.1;
  if(e.key==='heathcliff'&&t.hp/t.maxHp>e.hp/e.maxHp)b*=1.18;
  if(g.buff(e,'mutant'))b*=1.2;
  if(g.buff(e,'power'))b*=1.12;
@@ -227,7 +231,7 @@ export function damageBonus(g,e,t){
  return b;
 }
 export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
- V12.afterDamage(g,e,t,actual,proc,kind,absorbed);
+ Sora.afterDamage(g,e,t,actual,absorbed);V12.afterDamage(g,e,t,actual,proc,kind,absorbed);
  New.afterDamage(g,e,t,actual,proc,kind);
  if(!proc)return;
  if(e.kind==='champion'){
@@ -274,7 +278,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
- const s=e.state;decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);
+ const s=e.state;decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);Sora.tick(g,e);
  if(s.donBarrage){if(s.donBarrage.until<=g.time||g.stat(e,'stun')||g.stat(e,'silence')){delete s.donBarrage;delete e.buffs.donGuard;}else if(g.time+1e-8>=s.donBarrage.next){s.donBarrage.next+=.25;g.action(e,'skill',()=>g.cone(e,s.donBarrage.d,6,1.8,45));e.lastAttackAt=g.time;}}
  if(e.burn?.until>g.time&&e.burn.next<=g.time){e.burn.next+=.5;g.deal(e.burn.source,e,27.5);if(!e.alive)return;}
  if(e.key==='alisa'){

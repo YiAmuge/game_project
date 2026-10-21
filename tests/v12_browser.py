@@ -7,8 +7,8 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.12.0')
- page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(27)
+ expect(page.locator('.build-tag')).to_contain_text('0.13.0')
+ page.click('#practice-open');expect(page.locator('.champion-option')).to_have_count(28)
  for name in ['김삿갓','뿌이']:
   page.get_by_role('button',name=name+' 선택').click();expect(page.locator('#selected-name')).to_have_text(name)
   assert page.locator('.champion-option[aria-pressed=true] canvas').evaluate('(c)=>Array.from(c.getContext("2d").getImageData(0,0,c.width,c.height).data).some((n,i)=>i%4===3&&n>0)')

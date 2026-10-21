@@ -1,5 +1,6 @@
 // Generated fan-art atlas; each frame is read from the unchanged transparent PNG.
 export const FRAMES = {
+  sora:{x:142,y:92,w:500,h:784,sheet:7},soraEgo:{x:1139,y:47,w:553,h:829,sheet:7},
   kim:{x:196,y:105,w:602,h:771,sheet:6},ppui:{x:1091,y:42,w:478,h:834,sheet:6},
   starbuck:{x:323,y:168,w:660,h:973,sheet:5},
   hohenheim:{x:47,y:33,w:416,h:675,sheet:4},alisa:{x:520,y:52,w:560,h:644,sheet:4},marton:{x:1157,y:17,w:405,h:687,sheet:4},queequeg:{x:1674,y:58,w:405,h:644,sheet:4},
@@ -23,6 +24,7 @@ export const FRAMES = {
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
 export const THEMES = {
+  sora:{light:'#f2d697',dark:'#32313d',accent:'#f0ba5b',weapon:'restraint'},
   kim:{light:'#90cbff',dark:'#243d69',accent:'#5f9dff',weapon:'katana'},ppui:{light:'#ffd1d6',dark:'#94364e',accent:'#dc536e',weapon:'nail'},
   starbuck:{light:'#b7d8c8',dark:'#425b51',accent:'#d9c69a',weapon:'harpoon'},
   boss:{light:'#ddb2f0',dark:'#624177',accent:'#efc5ff',weapon:'none'},
@@ -54,11 +56,11 @@ export const THEMES = {
 export function loadAtlas(sheet=0){
   sheet=Number(sheet);
   const image=new Image();
-  const id=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12'][sheet];image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12'][sheet]}.png`;
+  const id=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13'][sheet];image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13'][sheet]}.png`;
   return image;
 }
-export function portrait(canvas,key,image,extraImage,v05Image,v06Image,v08Image,v10Image,v12Image){
-  if(FRAMES[key]?.sheet===6)image=v12Image;if(FRAMES[key]?.sheet===5)image=v10Image;if(FRAMES[key]?.sheet===4)image=v08Image;if(FRAMES[key]?.sheet===1)image=extraImage;if(FRAMES[key]?.sheet===2)image=v05Image;if(FRAMES[key]?.sheet===3)image=v06Image;
+export function portrait(canvas,key,image,extraImage,v05Image,v06Image,v08Image,v10Image,v12Image,v13Image){
+  if(FRAMES[key]?.sheet===7)image=v13Image;if(FRAMES[key]?.sheet===6)image=v12Image;if(FRAMES[key]?.sheet===5)image=v10Image;if(FRAMES[key]?.sheet===4)image=v08Image;if(FRAMES[key]?.sheet===1)image=extraImage;if(FRAMES[key]?.sheet===2)image=v05Image;if(FRAMES[key]?.sheet===3)image=v06Image;
   if(!canvas||!image||!image.complete||!image.naturalWidth)return;
   const c=canvas.getContext('2d'),f=FRAMES[key];c.clearRect(0,0,canvas.width,canvas.height);c.imageSmoothingEnabled=false;
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}

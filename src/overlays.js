@@ -1,3 +1,4 @@
+import { ego as soraEgo,marked as soraMarked } from './sora.js';
 import { endurance } from './v08-champions.js';
 import { trap } from './confinement.js';
 import { RULES } from './data.js';
@@ -5,6 +6,7 @@ import { THEMES } from './art.js';
 import { heathCharge } from './skills.js';
 
 export function stackInfo(e,g){
+ if(e.key==='sora')return {label:soraEgo(g,e)?`대행 ${(e.buffs.soraEgo-g.time).toFixed(1)}s · 해금`:'해금'+((e.state.unlock||0)>=9?' · E.G.O 준비':''),value:e.state.unlock||0,max:9,color:'#e7cb80',shape:'mirror'};
  if(e.key==='dongrang')return {label:'양분 '+Math.floor(e.totalHealingReceived||0),textOnly:true,color:'#d8d48b'};
  if(e.key==='queequeg')return {label:'헤집어진 문신',value:endurance(e),max:5,color:'#a0dfd9',shape:'claw'};
  if(e.key==='hohenheim'&&e.state.posthumous)return {label:'사후 '+Math.max(0,e.state.posthumous.until-g.time).toFixed(1)+'s',textOnly:true,color:'#9ff6f0'};
@@ -58,6 +60,10 @@ export function championHud(r,e,g){
 function star(r,x,y,size,color){
  const points=[];for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,rad=i%2?size*.43:size;points.push([x+Math.cos(a)*rad,y+Math.sin(a)*rad]);}r.polygon(points,color,'#6a522c');
 }
+export function orderMark(r,e,g){const c=r.ctx;
+ const directives=g.champions().filter(a=>a.alive&&a.team!==e.team&&soraMarked(g,a,e));
+ if(directives.length){const mark=directives.map(a=>a.state.orders[e.id]).sort((a,b)=>b.damage-a.damage)[0],progress=Math.min(1,mark.damage/(e.maxHp*.2)),y=e.y-(e.kind==='champion'?4.8:2.2);r.polygon([[e.x-.28,y-.36],[e.x+.28,y-.36],[e.x+.28,y+.3],[e.x-.28,y+.3]],'#27262b','#e6c778');for(let i=0;i<3;i++)r.line([{x:e.x-.17,y:y-.2+i*.14},{x:e.x+.17,y:y-.2+i*.14}],'#efd993',.04);c.fillStyle='#211e22';c.fillRect(e.x-.5,y+.45,1,.1);c.fillStyle='#f0cf7e';c.fillRect(e.x-.5,y+.45,progress,.1);r.text(`지령 ${Math.ceil(mark.until-g.time)}s`,e.x,y-.65,'#ecd8a0',.24);}
+}
 export function championEffects(r,e,g){
  const c=r.ctx,theme=THEMES[e.key]||THEMES.faust;
  if(g.yiShield(e)){const y=e.y-1.35+Math.sin(g.time*3)*.08;for(const x of [e.x-.8,e.x+.8]){r.line([{x:x-.1,y},{x:x+.1,y}],'#bfe8ad',.045);r.line([{x,y:y-.1},{x,y:y+.1}],'#bfe8ad',.045);}}
@@ -73,6 +79,8 @@ export function championEffects(r,e,g){
  if(e.state.counter){r.circle(e.x,e.y,1.3,'#5199e61c','#81bdff99',.08);r.text('육참골단 · 반격 대기',e.x,e.y-4.3,'#97ccff',.28);}
  if(e.state.empower?.until>g.time){const t=g.units.find(a=>a.id===e.state.empower.target&&a.alive);if(t){r.line([{x:e.x,y:e.y-.5},{x:t.x,y:t.y-.5}],'#d94b6966',.055,[.12,.2]);r.circle(t.x,t.y,1,'#d85b7514','#ee96a999',.05);}}
  if(e.state.nailStorm?.until>g.time){const s=e.state.nailStorm,a=Math.atan2(s.d.y,s.d.x);c.beginPath();c.moveTo(e.x,e.y);c.arc(e.x,e.y,7,a-.75,a+.75);c.closePath();c.fillStyle='#d9516a20';c.fill();c.strokeStyle='#eea5b2aa';c.lineWidth=.05;c.stroke();}
+ orderMark(r,e,g);
+ if(soraEgo(g,e)){r.circle(e.x,e.y,1.05,'#31273522','#c5a0d677',.055);for(let i=0;i<4;i++){const a=g.time*2+i*Math.PI/2;r.shard(e.x+Math.cos(a),e.y-.5+Math.sin(a)*.4,.11,a,'#b49cc0');}}
  const villain=g.champions(1-e.team).some(a=>a.alive&&a.key==='don'&&a.state.villain===e.id);
  if(villain){
   const y=e.y-4.45,lines=[[{x:e.x-.28,y:y-.3},{x:e.x+.28,y:y+.3}],[{x:e.x+.28,y:y-.3},{x:e.x-.28,y:y+.3}]];

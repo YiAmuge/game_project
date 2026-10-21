@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5173')+'/?debug=1',wait_until='networkidle')
- expect(page.locator('.build-tag')).to_contain_text('0.12.0')
+ expect(page.locator('.build-tag')).to_contain_text('0.13.0')
  def choose(name):
   if page.evaluate('__moba.mode')=='playing':page.click('#pause');page.click('#leave')
   if page.evaluate('__moba.mode')=='menu':page.click('#practice-open')
