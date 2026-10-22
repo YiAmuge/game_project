@@ -42,8 +42,8 @@ test('Ppui tactical heals its complete group for 450 plus thirty percent current
 test('Ppui ultimate heals exactly forty percent of actual health damage across its five waves',()=>{
  const {g,p}=quiet('ppui'),t=target(g,43,7);p.hp-=1000;const hp=p.hp;g.cast(p,'r',t);run(g,2.1);close(p.hp-hp,(t.maxHp-t.hp)*.4);
 });
-test('Gregor mutation expands range and stride, grants one-second attack stride and has a fifteen-second gate',()=>{
- const {g,p}=quiet('gregor'),range=g.attackRange(p),speed=g.speed(p);gregorStack(g,p,12);close(g.attackRange(p)/range,1.3);close(g.speed(p)-speed,speed*.1);close(p.state.mutateReady,15);g.attack(p,{x:48,y:7});close(g.speed(p)-speed,speed*.2);run(g,1.01);close(g.speed(p)-speed,speed*.1);run(g,4);gregorStack(g,p,12);assert.equal(g.buff(p,'mutant'),false);run(g,10);gregorStack(g,p,12);assert.ok(g.buff(p,'mutant'));
+test('Gregor mutation expands range, has fixed stride and a fifteen-second gate',()=>{
+ const {g,p}=quiet('gregor'),range=g.attackRange(p),speed=g.speed(p);gregorStack(g,p,12);close(g.attackRange(p)/range,1.3);close(g.speed(p)-speed,speed*.1);close(p.state.mutateReady,15);g.attack(p,{x:48,y:7});close(g.speed(p)-speed,speed*.1);run(g,1.01);close(g.speed(p)-speed,speed*.1);run(g,4);gregorStack(g,p,12);assert.equal(g.buff(p,'mutant'),false);run(g,10);gregorStack(g,p,12);assert.ok(g.buff(p,'mutant'));
 });
 test('Gregor infestation hits radius 5.5 and reduces max health up to fifteen percent, restoring after three seconds',()=>{
  const {g,p}=quiet('gregor'),t=target(g,45.3,7),hp=t.maxHp;gregorStack(g,p,12);run(g,2.51);assert.equal(t.plague.stacks,5);close(t.maxHp,hp*.85);assert.ok(t.hp<=t.maxHp);

@@ -60,9 +60,9 @@ test('Ezra changes and reloads weapons on left/right drag and restores from ulti
  const {g,p}=quiet('ezra');assert.equal(ammoCap(g,p),1);assert.ok(g.cast(p,'q',p,{direction:'right'}));assert.equal(p.state.weapon,1);assert.equal(p.ammo,3);
  assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,4);assert.equal(g.cast(p,'q',p,{direction:'right'}),false);assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,3);assert.equal(g.buff(p,'ezraUlt'),false);
 });
-test('Rudolph ultimate is global, delayed, costs SP at commitment, and SP recovers after exhaustion',()=>{
- const {g,p,t}=quiet('rudolph');t.x=56;t.y=30;t.hp=t.maxHp=5000;
- assert.equal(p.ammo,100);assert.ok(g.cast(p,'r',{x:56,y:30}));assert.equal(p.ammo,0);const hp=t.hp;run(g,1);assert.equal(t.hp,hp);run(g,.4);assert.ok(t.hp<hp);assert.ok(g.stat(t,'slow')>0);run(g,1.5);assert.equal(p.ammo,100);
+test('Rudolph ultimate is ranged, delayed, spends SP at commitment and recharges',()=>{
+ const {g,p,t}=quiet('rudolph');t.x=p.x+8;t.y=p.y;t.hp=t.maxHp=5000;
+ assert.equal(p.ammo,100);assert.ok(g.cast(p,'r',t));assert.equal(p.ammo,0);const hp=t.hp;run(g,1);assert.equal(t.hp,hp);run(g,.4);assert.ok(t.hp<hp);assert.ok(g.stat(t,'slow')>0);run(g,1.5);assert.equal(p.ammo,100);
 });
 test('new eight basic attacks and abilities execute without NaN state',()=>{
  for(const key of ['don','ryoshu','honglu','heathcliff','ishmael','rodya','outis','gregor']){
@@ -77,7 +77,7 @@ test('new eight basic attacks and abilities execute without NaN state',()=>{
  }
 });
 test('Heathcliff held charge releases at full strength after 1.5 seconds',()=>{
- const {g,p,t}=quiet('heathcliff');t.x=35;g.cast(p,'q',t);run(g,1.5);assert.ok(releaseHeath(g,p,t));assert.equal(p.state.chargeAt,undefined);run(g,1);assert.ok(p.x>34);assert.ok(t.hp<t.maxHp);
+ const {g,p,t}=quiet('heathcliff');t.x=35;g.cast(p,'q',t);run(g,1.5);assert.ok(releaseHeath(g,p,t));assert.equal(p.state.chargeAt,undefined);run(g,1);assert.ok(p.x>33);assert.ok(t.hp<t.maxHp);
 });
 test('Ishmael shield detonates on recast and on expiry, and low-health passive has cooldown',()=>{
  const {g,p,t}=quiet('ishmael');g.cast(p,'q',t);assert.ok(g.shield(p)>0);assert.ok(g.cast(p,'q',t));assert.ok(t.hp<t.maxHp);assert.ok(g.stat(t,'stun')>0);
@@ -90,7 +90,7 @@ test('Hong Lu buff copying has a six-second gate and does not recursively copy',
 });
 test('Hong Lu receives and copies Yi Sang ultimate before the following shield uses the gate',()=>{
  const {g,p}=quiet('honglu');const yi=g.makeChampion('yi',0,4,'support'),ally=g.makeChampion('faust',0,5,'bottom');yi.x=p.x-5;yi.y=p.y;ally.x=p.x+3;ally.y=p.y;
- assert.ok(g.cast(yi,'r',p));assert.ok(g.buff(p,'ogamdo'));assert.ok(g.buff(ally,'ogamdo'));assert.equal(g.shield(ally),0);
+ assert.ok(g.cast(yi,'r',p));assert.ok(g.buff(p,'ogamdo'));assert.ok(g.buff(ally,'ogamdo'));assert.ok(g.shield(ally)>0);
 });
 test('Don Quixote lethal marked hit records positive actual damage and only one takedown',()=>{
  const {g,p,t}=quiet('don');t.hp=100;p.state.villain=t.id;g.attack(p,t);run(g,.4);
@@ -98,7 +98,7 @@ test('Don Quixote lethal marked hit records positive actual damage and only one 
 });
 test('Gregor transforms at 12 hits and restores max health after five seconds',()=>{
  const {g,p,t}=quiet('gregor');t.hp=t.maxHp=100000;const base=p.maxHp;
- for(let i=0;i<12;i++)g.deal(p,t,1);assert.ok(g.buff(p,'mutant'));close(p.maxHp,base*1.15);run(g,5.2);close(p.maxHp,base);assert.ok(p.hp<=p.maxHp);
+ for(let i=0;i<12;i++)g.deal(p,t,1);assert.ok(g.buff(p,'mutant'));close(p.maxHp,base*1.15);t.x+=30;run(g,5.2);close(p.maxHp,base);assert.ok(p.hp<=p.maxHp);
 });
 test('structures cannot be displaced by Gregor or Ezra area attacks',()=>{
  for(const key of ['gregor','ezra']){const {g,p}=quiet(key);const tower=g.entity({kind:'tower',team:1,x:31,y:5.5,maxHp:7600,range:8.5});const x=tower.x,y=tower.y;g.cast(p,'q',tower,key==='ezra'?{direction:'left'}:{});if(key==='ezra'){p.attackCd=0;g.attack(p,tower);}run(g,.5);close(tower.x,x);close(tower.y,y);}

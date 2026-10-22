@@ -28,3 +28,5 @@ export function sceneryOutline(camera,{x,y,w,h,height}){
  const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x),half=items=>{const out=[];for(const p of items){while(out.length>1&&cross(out.at(-2),out.at(-1),p)<=0)out.pop();out.push(p);}return out;};
  const lower=half(points),upper=half([...points].reverse());return [...lower.slice(0,-1),...upper.slice(0,-1)];
 }
+
+export function leapLift(e){const m=e.motion;if(m?.kind!=='leap')return 0;const duration=Math.max(.01,m.minDuration||m.total/m.speed);return Math.sin(Math.PI*Math.min(1,m.elapsed/duration))*(m.arcHeight||1.1);}

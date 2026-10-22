@@ -186,3 +186,6 @@ body.in-game.training-mode .event-feed{right:324px;max-width:250px}
 body.in-game.training-25d #arena{z-index:1;background:transparent;image-rendering:auto}
 body.in-game.training-25d .arena-shell{background:#101e2a}
 #training-25d-open{border-color:#74969a66;background:linear-gradient(110deg,#29484955,#20333c44)}
+
+.ability.passive{cursor:help;background:linear-gradient(140deg,#34434b,#18282e);border-color:#7f9ba0;position:relative}.ability.passive kbd{color:#a9c9ce}.ability.passive:focus{outline:2px solid #d6d9aa}.abilities{align-items:stretch}
+@media(max-width:540px){body.in-game .hud .abilities{gap:4px}body.in-game .hud .ability{width:76px}body.in-game .hud .ability.passive{width:67px}.ability.passive span{font-size:9px}}

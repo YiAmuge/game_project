@@ -93,7 +93,7 @@ test('new ordinary champions and augment codex share the gameplay definitions',(
 
 test('capture respects status resistance and a full cleanse releases the arena immediately',()=>{
  const {g,t}=capture();assert.ok(trap(g,t));t.status={};g.units=[t];assert.equal(trap(g,t),null);g.moveToward(t,{x:60,y:7},1);assert.ok(t.x>48);
- const f=capture('kim');assert.ok(trap(f.g,f.t));close(f.t.state.netTrap.until-(f.g.time-.05),2.5*.85,.02);
+ const f=capture('kim');assert.ok(trap(f.g,f.t));close(f.t.state.netTrap.until-(f.g.time-.05),2.5,.02);
 });
 
 test('new champion hit passives work against shields and a cleansed sword grab releases immediately',()=>{

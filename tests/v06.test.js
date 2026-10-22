@@ -15,10 +15,10 @@ test('twenty-four ordinary and two experimental champions retain finite stats an
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const g=new Game(key);assert.ok(g.player.maxHp>0);assert.ok(Number.isFinite(g.speed(g.player)));assert.ok(CHAMPIONS[key]?.growth||RUNTIME_CHAMPIONS[key].growth);}
 });
 test('new rear wings and two flank rooms are walkable and connected; void corners stay blocked',()=>{
- close(WORLD.w,103.2);close(WORLD.h,62.8);
+ close(WORLD.w,87.72);close(WORLD.h,62.8);
  for(const p of [...FOUNTAINS,{x:41.6,y:-4},{x:41.6,y:50.6}]){assert.ok(!blocked(p.x,p.y,.48));assert.ok(findPath({x:40,y:7},p).length);}
  assert.ok(blocked(-8,-4));assert.ok(blocked(70,-4));assert.ok(blocked(20,51));
- for(const team of [0,1]){assert.ok(distance(FOUNTAINS[team],CORE_POSITIONS[team])>16);const g=new Game();assert.ok(g.inSpawn({...FOUNTAINS[team],team}));assert.ok(!g.inSpawn({...CORE_POSITIONS[team],team}));}
+ for(const team of [0,1]){assert.ok(distance(FOUNTAINS[team],CORE_POSITIONS[team])>14);const g=new Game();assert.ok(g.inSpawn({...FOUNTAINS[team],team}));assert.ok(!g.inSpawn({...CORE_POSITIONS[team],team}));}
  assert.ok(BUSHES.some(b=>b.y<0));assert.ok(BUSHES.some(b=>b.y>RULES.height));
 });
 test('four two-unit neutral camps and buff health/respawn data match the new rules',()=>{
@@ -55,8 +55,8 @@ test('uncontested minions march along one centerline in spawn order with visible
  const g=new Game();g.aiChampion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};run(g,5);let ms=g.units.filter(m=>m.kind==='minion'&&m.team===0&&m.lane===0),path=lanePath(0,0);
  assert.equal(ms.length,4);for(const m of ms)assert.ok(segmentDistance(m,path[0],path[1])<.4);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],path[1])<distance(ms[i],path[1]));run(g,5);for(const m of ms){assert.ok(Math.abs(m.y-path[1].y)<2);assert.ok(!blocked(m.x,m.y,m.radius));}for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],ms[i])>=ms[i-1].radius+ms[i].radius);
 });
-test('one destroyed tower unlocks the core with half damage; destroying the second removes the shield',()=>{
- const g=new Game(),p=g.player,core=g.units.find(e=>e.kind==='core'&&e.team===1);p.x=core.x-2;p.y=core.y;assert.ok(g.locked(core));g.towers(1)[0].alive=false;assert.equal(g.locked(core),false);let hp=core.hp;g.deal(p,core,1000,{fixed:true});const half=hp-core.hp;g.towers(1)[0].alive=false;hp=core.hp;g.deal(p,core,1000,{fixed:true});close((hp-core.hp)/half,2);
+test('one destroyed tower opens the core with identical damage at either tower count',()=>{
+ const g=new Game(),p=g.player,core=g.units.find(e=>e.kind==='core'&&e.team===1);p.x=core.x-2;p.y=core.y;assert.ok(g.locked(core));g.towers(1)[0].alive=false;assert.equal(g.locked(core),false);let hp=core.hp;g.deal(p,core,1000,{fixed:true});const half=hp-core.hp;g.towers(1)[0].alive=false;hp=core.hp;g.deal(p,core,1000,{fixed:true});close((hp-core.hp)/half,1);
 });
 test('20-minute verdict restores tower count, tower HP, core HP and exact ties in order',()=>{
  const g=new Game();g.towers(0)[0].hp=1;g.towers(1)[0].alive=false;assert.equal(g.timeDecision().team,0);
@@ -86,8 +86,8 @@ test('Gahwan ultimate channels then hits the selected distant area three times i
 test('Ahab power drops twelve percent and his ultimate teleports before the original attack sequence',()=>{
  const {g,p,t}=quiet('ahab');close(g.powerScale(p),.88);g.cast(p,'r',t);close(p.x,42);assert.equal(p.motion,undefined);const hp=t.hp;run(g,.1);assert.ok(t.hp<hp);run(g,.5);assert.ok(t.hp<hp-500);
 });
-test('Myo grazing travels at the visible movement cap, Q spends one ammo, frenzy blocks Q',()=>{
- const {g,p,t}=quiet('myo');assert.ok(g.attack(p,t));close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<41);run(g,.3);assert.ok(t.hp<100000);p.ammo=4;assert.ok(g.cast(p,'q',t));assert.equal(p.ammo,3);run(g,.3);assert.ok(t.state.rabbitMark[p.id]>g.time);assert.ok(g.cast(p,'r',p));assert.ok(g.buff(p,'rabbitFrenzy'));assert.equal(g.cast(p,'q',t),false);close(g.attackRange(p),2.4);
+test('Myo basic dashes at 10.4, Q spends one ammo and frenzy blocks Q',()=>{
+ const {g,p,t}=quiet('myo');assert.ok(g.attack(p,t));close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<41.1);run(g,.3);assert.ok(t.hp<100000);p.ammo=4;assert.ok(g.cast(p,'q',t));assert.equal(p.ammo,3);run(g,.3);assert.ok(t.state.rabbitMark[p.id]>g.time);assert.ok(g.cast(p,'r',p));assert.ok(g.buff(p,'rabbitFrenzy'));assert.equal(g.cast(p,'q',t),false);close(g.attackRange(p),2.4);
 });
 test('Myo direct champion takedowns build only two four-second hunt stacks',()=>{
  const {g,p}=quiet('myo');for(let i=0;i<3;i++){const t=g.makeChampion('yi',1,5);g.kill(t,p);}assert.equal(p.state.rabbitStacks,2);close(p.buffs.rabbitHunt-g.time,4);assert.ok(g.speed(p)>RULES.speed[5]);
@@ -102,5 +102,5 @@ test('Dongrang power affects health and armor rather than damage or incoming hea
  const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,100);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
 });
 test('Dongrang has one tree, fixed damage and healing, and his ultimate preserves it',()=>{
- const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=480);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,1);
+ const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=430);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,1);
 });

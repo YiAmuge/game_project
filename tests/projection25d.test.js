@@ -32,3 +32,5 @@ test('floor-effect masks include the full projected wall volume',()=>{
   const p=c.worldToScreen({x,y},z);const sides=hull.map((a,i)=>cross(a,hull[(i+1)%hull.length],p));assert.ok(sides.every(v=>v>=-1e-6)||sides.every(v=>v<=1e-6));
  }
 });
+
+test('leap lift matches the visual height at launch, apex and landing',async()=>{const {leapLift}=await import('../src/projection-25d.js');for(const height of [3,5]){const e={motion:{kind:'leap',minDuration:.7,elapsed:0,arcHeight:height}};assert.equal(leapLift(e),0);e.motion.elapsed=.35;assert.equal(leapLift(e),height);e.motion.elapsed=.7;assert.ok(Math.abs(leapLift(e))<1e-9);}});

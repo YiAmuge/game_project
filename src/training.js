@@ -12,26 +12,14 @@ import * as Sora from './sora.js';
 import { releaseGrab } from './v12-champions.js';
 import { TRAINING_25D } from './training-25d-map.js';
 
-export const SPAWN={x:8,y:40};
-export const HAZARD={x:34,y:38.5,w:4,h:4};
-export const AREAS=[
- {id:1,x:1,y:32,w:39,h:13,name:'회복 · 피해 실험',color:'#688c79'},
- {id:2,x:43,y:32,w:39,h:13,name:'크립 캠프',color:'#9b8866'},
- {id:3,x:1,y:17,w:39,h:13,name:'대치 · 지원 실험',color:'#718eac'},
- {id:4,x:43,y:17,w:39,h:13,name:'이동 표적',color:'#9179a7'},
- {id:5,x:1,y:1,w:81,h:14,name:'미니언 · 포탑 라인',color:'#9b8763'},
-];
-export const MAP={bounds:{x:0,y:0,w:RULES.width,h:RULES.height},walls:[
- {x:0,y:15.4,w:34,h:.6},{x:49,y:15.4,w:RULES.width-49,h:.6},
- {x:0,y:30.8,w:34,h:.6},{x:49,y:30.8,w:RULES.width-49,h:.6},
- {x:41.2,y:17,w:.6,h:4},{x:41.2,y:26,w:.6,h:4.8},
- {x:41.2,y:31.4,w:.6,h:4.6},{x:41.2,y:42,w:.6,h:RULES.height-42},
- {x:61,y:22,w:2,h:1.4},
-]};
-export function spawn(g){return g.training25d?TRAINING_25D.spawn:SPAWN;}
-export function hazard(g){return g.training25d?TRAINING_25D.hazard:HAZARD;}
-export function areas(g){return g.training25d?TRAINING_25D.areas:AREAS;}
-export function lanePath(team,g){const p=(g?.training25d?TRAINING_25D.lane:[{x:9,y:8.5},{x:40,y:8.5},{x:74,y:8.5}]).map(p=>({...p}));return team?p.reverse():p;}
+export const SPAWN=TRAINING_25D.spawn;
+export const HAZARD=TRAINING_25D.hazard;
+export const AREAS=TRAINING_25D.areas;
+export const MAP={bounds:TRAINING_25D.bounds,walls:TRAINING_25D.walls};
+export const spawn=()=>SPAWN;
+export const hazard=()=>HAZARD;
+export const areas=()=>AREAS;
+export function lanePath(team){const p=TRAINING_25D.lane.map(p=>({...p}));return team?p.reverse():p;}
 function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아비'}={}){
  const e=g.makeChampion('faust',team,10+g.champions().length,'bottom');
  Object.assign(e,{x,y,player:false,name,maxHp:hp,hp,range:10.5,damage:100,interval:1.3});
@@ -40,7 +28,7 @@ function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아�
 export function init(g,key,position){
  g.practice={invincible:false,noCooldown:false,infiniteAmmo:false,lineStopped:false,championAI:false};
  g.makeChampion(key,0,0,position);g.player=g.units.find(u=>u.player);Object.assign(g.player,spawn(g));
- const layout=g.training25d?TRAINING_25D:null;
+ const layout=TRAINING_25D;
  for(const p of layout?.infinite||[{team:0,x:23,y:40},{team:1,x:29,y:40}])dummy(g,p.team,p.x,p.y,{infinite:true,hp:10000,name:p.team?'적 무한 허수아비':'아군 무한 허수아비'});
  const [pa,pb]=layout?.duel||[{team:0,x:12,y:23},{team:1,x:22,y:23}];
  const a=dummy(g,0,pa.x,pa.y,{mode:'duel',name:'아군 대치 허수아비'}),b=dummy(g,1,pb.x,pb.y,{mode:'duel',name:'적 대치 허수아비'});
@@ -57,14 +45,14 @@ export function resetLane(g){
  const removed=new Set(g.units.filter(u=>u.trainingLane).map(u=>u.id));
  g.units=g.units.filter(u=>!u.trainingLane);g.projectiles=g.projectiles.filter(p=>!removed.has(p.source.id)&&!removed.has(p.target?.id));
  g.events=g.events.filter(e=>!removed.has(e.source.id));g.minionQueue=[];g.wave=0;g.practice.lineStopped=false;g.practice.nextWave=g.time+3;
- for(const team of [0,1])g.entity({kind:'tower',trainingLane:true,team,lane:0,...lanePath(team,g)[0],maxHp:6460,armor:120,range:8.5,damage:280,interval:1.05,radius:.9,name:'연습 포탑'});
+ for(const team of [0,1])g.entity({kind:'tower',trainingLane:true,team,lane:0,...lanePath(team,g)[0],maxHp:5168,armor:120,range:8.5,damage:280,interval:1.05,radius:.9,name:'연습 포탑'});
  return true;
 }
 export function tickDummy(g,e,dt){
  const d=e.trainingDummy;
  if(!e.alive){if(g.time>=e.respawnAt)respawnDummy(g,e);return;}
  if(distance(e,d.home)>d.leash)resetDummyPosition(g,e);
- if(d.infinite){e.hp=e.maxHp;const yi=g.yiShield(e),owner=yi&&g.champions(e.team).find(c=>c.key==='yi'&&yi.source===`yi-${c.id}`);if(owner)g.heal(owner,e,(7+e.maxHp*.015)*dt,false,{healingKey:`yi-${owner.id}-${yi.until}`,startedAt:yi.until-3});if(g.buff(e,'blessingHeal'))g.heal(null,e,30*dt,false,{healingKey:'blessing'});if(g.buff(e,'mosesHeal'))g.heal(null,e,35*dt,false,{healingKey:'moses'});}
+ if(d.infinite){e.hp=e.maxHp;if(g.buff(e,'blessingHeal'))g.heal(null,e,30*dt,false,{healingKey:'blessing'});if(g.buff(e,'mosesHeal'))g.heal(null,e,35*dt,false,{healingKey:'moses'});}
  if(e.motion)g.updateMotion(e,dt);
  if(g.stat(e,'stun')||g.stat(e,'root')||e.motion||e.state.swordHeldBy)return;
  if(d.mode==='patrol'){
@@ -112,7 +100,7 @@ export function afterStep(g){
  for(const e of g.champions().filter(e=>e.trainingDummy&&e.alive)){if(e.trainingDummy.infinite)e.hp=e.maxHp;if(distance(e,e.trainingDummy.home)>e.trainingDummy.leash)resetDummyPosition(g,e);}
 }
 export function sellAll(g){
- if(!g.training)return false;const p=g.player;p.augments=[];for(const u of UPGRADES)p.upgrades[u.key]=0;
+ if(!g.training)return false;const p=g.player;p.augments=[];p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
  for(const k of ['augReloadStacks','augCombatAt'])delete p.state[k];for(const k of ['augReload','augBattleHaste'])delete p.buffs[k];
  g.refreshEquipment(p);return true;
 }

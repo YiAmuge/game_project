@@ -3,7 +3,7 @@ import { distance,direction } from './geometry.js';
 import { DRAG_KEYS } from './skills.js';
 
 export function draft(g,position,used=[]){
- const pool=Object.keys(CHAMPIONS).filter(key=>!used.includes(key)&&POSITIONS[position].recommend.includes(CHAMPIONS[key].role));
+ const pool=Object.keys(CHAMPIONS).filter(key=>!used.includes(key)&&CHAMPIONS[key].recommendedPosition===position);
  const choices=pool.length?pool:Object.keys(CHAMPIONS).filter(key=>!used.includes(key));return choices[Math.floor(g.random()*choices.length)];
 }
 export function combatSkills(g,e,target){

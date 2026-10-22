@@ -21,7 +21,7 @@ for(const [seconds,hits] of [[0,1],[.44,1],[.45,2],[.89,2],[.9,3],[1.35,3],[1.5,
  const {g,p}=quiet(),t=target(g),beams=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)beams.push(n);return deal(a,b,n,o);};g.attack(p,t);run(g,seconds);close(t.hp,100000);H.release(g,p,t);run(g,.3);assert.equal(beams.length,hits);beams.forEach(n=>close(n,100+50*Math.min(1,(Math.round(seconds*120)/120)/1.5)));
 });
 test('full charge reaches nine, deals 150 three times, and reduces movement twenty percent while held',()=>{
- const {g,p}=quiet(),t=target(g,49),speed=g.speed(p);g.attack(p,t);close(g.speed(p),speed*.8);run(g,1.6);close(H.chargeShape(g,p,t).range,9);close(t.hp,100000);H.release(g,p,t);close(g.speed(p),speed);run(g,.3);assert.ok(t.hp<100000);close(100000-t.hp,damageFormula(150,5,1)*3.18);
+ const {g,p}=quiet(),t=target(g,49),speed=g.speed(p);g.attack(p,t);close(g.speed(p),speed*.8);run(g,1.6);close(H.chargeShape(g,p,t).range,9);close(t.hp,100000);H.release(g,p,t);close(g.speed(p),speed);run(g,.3);assert.ok(t.hp<100000);close(100000-t.hp,damageFormula(150,5,1)*3);
 });
 test('reload upgrades accelerate charge and extra ammo converts to damage and range without ammo consumption',()=>{
  const {g,p}=quiet(),t=target(g);p.upgrades.reload=3;p.augments=['magazine2'];g.attack(p,t);run(g,1.31);const s=H.chargeShape(g,p,t);close(s.progress,1);close(s.damage,165);close(s.range,10.5);H.release(g,p,t);close(p.ammo,0);
@@ -39,19 +39,17 @@ test('posthumous attacks always fire maximum charge and holding attack cannot ex
 test('normal Hohenheim bots finish charges instead of repeatedly canceling them with combat skills',()=>{
  const {g,p}=quiet(),t=target(g);p.player=false;g.aiChampion=Game.prototype.aiChampion;run(g,2);assert.ok(t.hp<100000);assert.ok(p.attackSerial>=1);
 });
-test('ultimate first ticks at .4 seconds, deals twenty per tick, and lasts exactly seven seconds',()=>{
- const {g,p}=quiet(),t=target(g),hits=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)hits.push({n,at:g.time});return deal(a,b,n,o);};g.cast(p,'r',t);run(g,.39);assert.equal(hits.length,0);run(g,.02);assert.equal(hits.length,1);close(hits[0].n,20);run(g,6.6);assert.equal(hits.length,17);assert.equal(H.activeZone(g,p),undefined);assert.ok(hits.every(h=>h.n===20));
+test('electric bloom ticks seven times then bursts three times',()=>{
+ const {g,p}=quiet(),t=target(g,44);const hits=[];const deal=g.deal.bind(g);g.deal=(s,a,b,o)=>{if(s===p&&a===t)hits.push(b);return deal(s,a,b,o);};g.cast(p,'r',t);run(g,.24);assert.equal(hits.length,0);run(g,.02);assert.deepEqual(hits,[15]);run(g,1.8);assert.equal(hits.filter(x=>x===15).length,7);assert.equal(hits.filter(x=>x===150).length,3);assert.ok(g.stat(t,'stun'));
 });
-test('ultimate follows the nearest champion, supports manual retargeting without resetting its duration or cooldown, and waits for retargeting on death',()=>{
- const {g,p}=quiet(),a=target(g,45),b=target(g,47.5,9);g.cast(p,'r',{x:44,y:7});const z=H.activeZone(g,p);run(g,.1);assert.equal(z.targetId,a.id);assert.ok(z.x>44&&z.x<=44.61);const cd=p.rCd,until=z.until;assert.equal(skillTargeting(g,p,'r').kind,'target');
- assert.ok(g.cast(p,'r',b));close(p.rCd,cd);close(z.until,until);assert.equal(z.manualTargetId,b.id);run(g,.2);assert.equal(z.targetId,b.id);const n=distance(z,b);run(g,.1);assert.ok(distance(z,b)<n);
- g.kill(b,p);const x=z.x;run(g,.01);assert.equal(z.targetId,b.id);assert.ok(z.waitingForTarget);close(z.x,x);assert.ok(g.cast(p,'r',a));run(g,.01);assert.equal(z.targetId,a.id);
+test('electric bloom expands in place while its target moves',()=>{
+ const {g,p}=quiet(),t=target(g,44);g.cast(p,'r',t);const z=H.activeZone(g,p),x=z.x,y=z.y;t.x+=4;run(g,.5);close(z.x,x);close(z.y,y);close(z.r,5);assert.equal(g.cast(p,'r',t),false);
 });
-test('invalid retarget keeps the current target, expiry, and cooldown intact',()=>{
- const {g,p}=quiet(),t=target(g);g.cast(p,'r',t);const z=H.activeZone(g,p),cd=p.rCd;run(g,.1);const targetId=z.targetId;assert.equal(g.cast(p,'r',{x:35,y:10}),false);close(z.until,7);assert.equal(z.targetId,targetId);close(p.rCd,cd-.1);
+test('active electric bloom cannot spend cooldown on another cast',()=>{
+ const {g,p}=quiet(),t=target(g,44);g.cast(p,'r',t);const z=H.activeZone(g,p),cd=p.rCd;assert.equal(g.cast(p,'r',{x:70,y:7}),false);close(p.rCd,cd);close(z.until,2.1);
 });
-test('an empty electric field remains active and follows a champion that appears later; walls still block damage',()=>{
- const {g,p}=quiet();g.cast(p,'r',{x:42,y:7});const z=H.activeZone(g,p);run(g,.2);close(z.x,42);const t=target(g,46);g.map.walls=[{x:44,y:4,w:1,h:6}];run(g,.2);assert.equal(z.targetId,t.id);close(t.hp,100000);assert.ok(z.x>42);
+test('enemies entering an expanding electric bloom take damage',()=>{
+ const {g,p}=quiet(),t=target(g,44);t.alive=false;t.respawnAt=Infinity;g.cast(p,'r',{x:44,y:7});const z=H.activeZone(g,p);run(g,.5);t.alive=true;t.x=44;t.y=7;const hp=t.hp;run(g,.5);assert.ok(t.hp<hp);close(z.x,44);
 });
 test('Ahab cover and guard both include allies within eight units and reject allies just outside eight',()=>{
  for(const x of [47.99,48.01]){const {g,p}=quiet('ahab'),t=target(g,44),a=target(g,x,7,0);t.state.harpoon={source:p.id,team:0,until:10};const hp=t.hp;g.deal(a,t,100,{fixed:true,proc:false});close(hp-t.hp,x<48?130:100);close(skillTargeting(g,p,'q').radius,8);p.qCd=0;g.cast(p,'q',p);assert.equal(guardAlly(g,p),x<48?a:null);}

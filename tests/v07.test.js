@@ -62,8 +62,8 @@ test('Dongrang grade two converts power into health and armor, never damage or i
 test('Dongrang passive power purchases apply health immediately and augment removal refreshes converted stats',()=>{
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);
 });
-test('natural healing is excluded while direct healing advances 1200-point Dongrang growth',()=>{
- const {g,p}=quiet('dongrang');p.hp-=1000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(null,p,1200,false);assert.equal(ultGrowth(p).damage,230);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,230);
+test('natural healing is excluded while direct healing advances 1500-point Dongrang growth',()=>{
+ const {g,p}=quiet('dongrang');p.hp-=1000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(null,p,1500,false);assert.equal(ultGrowth(p).damage,230);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,230);
 });
 
 test('each desire tree converts at 350 actual damage, heals one for one, stops attacking and lasts ten more seconds',()=>{
@@ -73,14 +73,14 @@ test('basic harvest only consumes golden trees hit in the attack direction and h
  const {g,p}=quiet('dongrang');p.hp-=1500;const make=(x,golden)=>({kind:'desireTree',source:p,x,y:7,r:2.5,until:10,golden,nextTick:100});g.zones=[make(41,true),make(39,true),make(41.5,false)];const hp=p.hp;g.attack(p,{x:45,y:7});assert.equal(g.zones.length,2);close(p.hp-hp,p.maxHp*.07);
 });
 test('Dongrang ultimate travels four units at visible speed and preserves its trees',()=>{
- const {g,p,t}=quiet('dongrang');t.x=60;p.hp-=2000;p.lastDamageAt=100;g.zones=[{kind:'desireTree',source:p,x:44,y:7,until:10,nextTick:100},{kind:'desireTree',source:p,x:43,y:7,until:10,nextTick:100,golden:true}];const hp=p.hp;assert.ok(skillTargeting(g,p,'r').confirm);g.cast(p,'r',{x:60,y:7});close(p.x,40);run(g,.1);assert.ok(p.x>40&&p.x<44);run(g,.45);close(p.x,44);assert.equal(g.zones.length,2);close(p.hp,hp);
+ const {g,p,t}=quiet('dongrang');t.x=60;p.hp-=2000;p.lastDamageAt=100;g.zones=[{kind:'desireTree',source:p,x:44,y:7,until:10,nextTick:100},{kind:'desireTree',source:p,x:43,y:7,until:10,nextTick:100,golden:true}];const hp=p.hp;assert.ok(skillTargeting(g,p,'r').confirm);g.cast(p,'r',{x:60,y:7});close(p.x,40);run(g,.1);assert.ok(p.x>40&&p.x<44);run(g,1);close(p.x,48.5);assert.equal(g.zones.length,2);close(p.hp,hp);
 });
 
 test('Ishmael basic power debuff caps at two and clears on target death',()=>{
  const {g,p,t}=quiet('ishmael');t.x=41;for(let i=0;i<3;i++){p.attackCd=0;g.attack(p,t);}close(g.powerWeak(t),.04);g.time=100;close(g.powerWeak(t),.04);g.kill(t,p);close(g.powerWeak(t),0);
 });
 test('Ishmael survival shield is 25 percent and shock hits farther enemies, reducing R by five per champion',()=>{
- const {g,p,t}=quiet('ishmael');p.hp=p.maxHp*.29;g.deal(t,p,1,{fixed:true});close(g.shield(p),p.maxHp*.25);p.shields=[];g.cast(p,'q',p);p.rCd=25;const b=enemy(g,40,11);g.cast(p,'q',p);assert.ok(t.hp<10000&&b.hp<10000);close(p.rCd,25*.875-10);
+ const {g,p,t}=quiet('ishmael');p.hp=p.maxHp*.29;g.deal(t,p,1,{fixed:true});close(g.shield(p),p.maxHp*.25);p.shields=[];g.cast(p,'q',p);p.rCd=25;const b=enemy(g,40,11);g.cast(p,'q',p);assert.ok(t.hp<10000&&b.hp<10000);close(p.rCd,25-10);
 });
 test('Ishmael wider harpoon pulls even a distant champion all the way in front with no teleport',()=>{
  const {g,p,t}=quiet('ishmael');t.x=54;g.cast(p,'r',t);close(p.rCd,25);assert.equal(g.projectiles.length,0);run(g,.25);close(g.projectiles[0].width,.585);run(g,.43);close(t.x,54);run(g,.08);assert.ok(t.motion);assert.ok(t.x>50&&t.x<54);run(g,2.5);close(t.x,p.x+p.radius+t.radius+.15);
@@ -89,7 +89,7 @@ test('Rodya three-head jackpot applies tails benefits too and completely reloads
  const {g,p}=quiet('rodya');g.random=()=>.1;p.ammo=0;p.rCd=30;g.cast(p,'q',p);assert.ok(p.state.jackpot);assert.equal(p.state.coinHeads,3);assert.equal(p.state.coinTails,3);assert.equal(p.ammo,g.ammoCap(p));assert.ok(g.buff(p,'coinSpeed'));close(p.rCd,24);close(p.qCd,6);
 });
 test('Rodya ultimate creates ice on a miss at max range; its dot and reload debuff apply only to enemy champions',()=>{
- const {g,p,t}=quiet('rodya');t.y=15;g.cast(p,'r',{x:50,y:7});run(g,1);assert.equal(g.zones.length,1);const z=g.zones[0];close(z.x,48);Object.assign(t,{x:48,y:7});const n=g.entity({kind:'neutral',team:2,x:48,y:7,maxHp:1000});const hp=t.hp;z.nextTick=g.time;g.updateDelayed(0);assert.ok(t.hp<hp);close(g.stat(t,'reloadWeak'),.2);close(n.hp,1000);const after=t.hp;g.time+=.5;g.updateDelayed(0);close(after-t.hp,50*RULES.power[CHAMPIONS.rodya.power]*.9);g.zones=[];g.time+=.8;close(g.stat(t,'reloadWeak'),0);
+ const {g,p,t}=quiet('rodya');t.y=15;g.cast(p,'r',{x:50,y:7});run(g,1);assert.equal(g.zones.length,1);const z=g.zones[0];close(z.x,48);Object.assign(t,{x:48,y:7});const n=g.entity({kind:'neutral',team:2,x:48,y:7,maxHp:1000});const hp=t.hp;z.nextTick=g.time;g.updateDelayed(0);assert.ok(t.hp<hp);close(g.stat(t,'reloadWeak'),.5);close(n.hp,1000);const after=t.hp;g.time+=.5;g.updateDelayed(0);close(after-t.hp,50*RULES.power[CHAMPIONS.rodya.power]*.9);g.zones=[];g.time+=.81;close(g.stat(t,'reloadWeak'),0);
 });
 
 test('Ishmael pull follows the moving caster instead of ending at her previous location',()=>{

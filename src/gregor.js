@@ -3,15 +3,15 @@ import { distance,direction } from './geometry.js';
 export const GREGOR={range:6,halfWidth:1.2,pullDamage:250,knock:6,collisionDamage:120,collisionStun:1.5};
 
 export function cast(g,e,slot,d,onChampionHit=()=>{}){
- if(slot==='q'){
+ if(slot==='q'){const range=GREGOR.range+(g.buff(e,'mutant')?2.5:0);
   for(const t of [...g.units])if(g.hostile(e,t)&&g.clearLine(e,t)){
    const dx=t.x-e.x,dy=t.y-e.y,along=dx*d.x+dy*d.y,side=Math.abs(dy*d.x-dx*d.y);
-   if(Math.hypot(Math.max(0,-along,along-GREGOR.range),Math.max(0,side-GREGOR.halfWidth))>t.radius)continue;
+   if(Math.hypot(Math.max(0,-along,along-range),Math.max(0,side-GREGOR.halfWidth))>t.radius)continue;
    g.deal(e,t,GREGOR.pullDamage);
    const front=e.radius+t.radius+.15;
    if(g.startMotion(t,direction(t,e),Math.max(0,distance(t,e)-front),{kind:'knock',source:e,follow:e,stopDistance:front,speed:12,forcedMaxSpeed:12})){e.state.gregorPulls??=[];e.state.gregorPulls.push(t.id);}
   }
-  g.effects.push({type:'gregorPierce',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:GREGOR.range,width:GREGOR.halfWidth,theme:'gregor',life:.4,maxLife:.4});
+  g.effects.push({type:'gregorPierce',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:range,width:GREGOR.halfWidth,theme:'gregor',life:.4,maxLife:.4});
  }else{
   // The two swings share one displacement and collision bonus per target.
   const knocked=new Set();

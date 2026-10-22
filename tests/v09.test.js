@@ -25,8 +25,8 @@ test('Nelly marks deal exactly seven percent max HP fixed damage and Q has two i
 test('Rodya attack radius grows twenty percent; coin probability changes at levels five and ten',()=>{
  const {g,p,t}=quiet('rodya');close(g.attackRange(p),2.4);for(const [level,heads]of [[1,0],[4,0],[5,3],[9,3],[10,3]]){p.level=level;p.qCd=0;g.random=()=>.55;g.cast(p,'q',p);assert.equal(p.state.coinHeads,heads);close(p.state.coinChance,.5+Math.floor(level/5)*.1);}p.level=10;p.qCd=0;g.random=()=>.69;g.cast(p,'q',p);assert.equal(p.state.coinHeads,3);p.qCd=0;g.random=()=>.71;g.cast(p,'q',p);assert.equal(p.state.coinHeads,0);
 });
-test('Rodya ice ticks fifty every half second and continuously weakens enemy champion power thirty percent',()=>{
- const {g,p,t}=quiet('rodya');t.x=46;g.cast(p,'r',{x:48,y:7});run(g,.3);const z=g.zones.find(z=>z.kind==='ice');assert.ok(z);close(z.damage,50);close(z.tickEvery,.5);const hp=t.hp;run(g,.5);close(hp-t.hp,50*.91*.9);close(g.powerWeak(t),.3);const baseline=g.deal(t,p,100);delete t.status.weak;const without=g.deal(t,p,100);close(baseline/without,.7);t.y=13;run(g,.8);assert.equal(g.powerWeak(t),0);
+test('Rodya ice ticks fifty per half second with a fifty-percent initial power debuff',()=>{
+ const {g,p,t}=quiet('rodya');t.x=46;g.cast(p,'r',{x:48,y:7});run(g,.3);const z=g.zones.find(z=>z.kind==='ice');assert.ok(z);close(z.damage,50);close(z.tickEvery,.5);const hp=t.hp;run(g,.5);close(hp-t.hp,50*.91*.9);close(g.powerWeak(t),.5);const baseline=g.deal(t,p,100);delete t.status.weak;const without=g.deal(t,p,100);close(baseline/without,.5);t.y=13;run(g,.8);assert.equal(g.powerWeak(t),0);
 });
 test('Alisa Q gains three heat after its dash, grants reload thirty percent and can recast to heal without dashing',()=>{
  const {g,p,t}=quiet('alisa');p.hp=p.maxHp/2;p.state.heat=1;const reload=g.reloadInterval(p);assert.ok(g.cast(p,'q',{x:48,y:7}));assert.equal(p.state.heat,1);run(g,.4);assert.equal(p.state.heat,4);assert.ok(g.buff(p,'alisaReload'));close(g.reloadInterval(p),reload/1.3);g.status(p,'captured',1,2);const x=p.x,hp=p.hp;assert.ok(g.cast(p,'q',p));assert.equal(p.motion,undefined);close(p.x,x);assert.equal(p.state.heat,0);close(p.hp-hp,p.maxHp*.19);assert.equal(g.buff(p,'alisaReload'),false);assert.equal(g.cast(p,'q',t),false);
@@ -35,7 +35,7 @@ test('Alisa Q expiration consumes current heat and heals five plus 3.5 percent p
  const {g,p,t}=quiet('alisa');p.hp=p.maxHp*.3;g.cast(p,'q',{x:48,y:7});run(g,.4);p.state.heat=5;p.lastDamageAt=10;const until=p.buffs.alisaReload;g.time=until-.01;const hp=p.hp;g.step(.02);assert.equal(p.state.heat,0);close(p.hp-hp,p.maxHp*.225);const after=p.hp;g.step(.02);close(p.hp,after);assert.equal(p.state.alisaReloadActive,undefined);
 });
 test('Alisa ultimate detonates automatically at full HP after focus and two-second countdown, without external damage',()=>{
- const {g,p,t}=quiet('alisa');p.state.heat=5;p.lastAttackAt=0;t.x=43;const hp=t.hp;assert.ok(g.cast(p,'r',p));run(g,.75);assert.ok(!p.state.detonating);run(g,.1);assert.ok(p.state.detonating&&p.hp>p.maxHp*.9);g.status(p,'stun',1,1);assert.equal(g.stat(p,'stun'),0);run(g,1.9);assert.ok(p.alive);run(g,.1);assert.equal(p.alive,false);assert.ok(t.hp<hp);assert.ok(t.burn);close(p.respawnAt-g.time,3,.1);
+ const {g,p,t}=quiet('alisa');p.state.heat=5;p.lastAttackAt=0;t.x=43;g.input.aim={x:46,y:7};const hp=t.hp;assert.ok(g.cast(p,'r',p));run(g,.75);assert.ok(!p.state.detonating);run(g,.45);assert.ok(p.state.detonating&&p.hp>p.maxHp*.9);g.status(p,'stun',1,1);assert.equal(g.stat(p,'stun'),0);run(g,1.9);assert.ok(p.alive);run(g,.1);assert.equal(p.alive,false);assert.ok(t.hp<hp);assert.ok(t.burn);close(p.respawnAt-g.time,3,.1);
 });
 test('Alisa taking lethal damage during ultimate focus cannot schedule two explosions or deaths',()=>{
  const {g,p,t}=quiet('alisa');p.state.heat=5;g.cast(p,'r',p);g.deal(t,p,999999,{fixed:true});run(g,2.9);assert.equal(p.deaths,1);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,1);
@@ -53,7 +53,7 @@ test('Rudolph vulnerability loses one stack per two seconds and every basic hit 
  const {g,p,t}=quiet('rudolph');for(let i=0;i<15;i++){g.time+=.1;mentalWhip(g,p,t);}const m=t.state.mentalWhip[p.id];assert.equal(m.stage,3);g.time=m.at+1.99;g.step(.001);assert.equal(m.stage,3);g.time=m.at+2.01;g.step(.001);assert.equal(m.stage,2);mentalWhip(g,p,t);const next=m.decayAt;g.time=next-.01;g.step(.001);assert.equal(m.stage,2);g.time=next+.01;g.step(.001);assert.equal(m.stage,1);g.time=next+2.01;g.step(.001);assert.equal(m.stage,0);
 });
 test('Rudolph direct hits expire stale stacks before calculating whip damage, then refresh their timer',()=>{
- const {g,p,t}=quiet('rudolph');t.state.mentalWhip={[p.id]:{stage:3,hits:0,at:0,decayAt:2}};g.time=4.01;const hp=t.hp;g.attack(p,t);close(hp-t.hp,48*1.1*.91*.9);close(t.state.mentalWhip[p.id].decayAt,6.01);
+ const {g,p,t}=quiet('rudolph');t.state.mentalWhip={[p.id]:{stage:3,hits:0,at:0,decayAt:2}};g.time=4.01;const hp=t.hp;g.attack(p,t);close(hp-t.hp,48*1.15*.91*.9);close(t.state.mentalWhip[p.id].decayAt,6.01);
 });
 test('Rudolph can damage minions, creeps and towers without champion-only debuff state',()=>{
  for(const kind of ['minion','neutral','tower']){const {g,p}=quiet('rudolph');g.units=[p];const t=g.entity({kind,team:kind==='neutral'?2:1,x:43,y:7,maxHp:10000,radius:.5,range:8.5});assert.equal(t.state,undefined);assert.ok(g.attack(p,t));assert.ok(t.hp<t.maxHp,kind);assert.equal(t.state,undefined);}

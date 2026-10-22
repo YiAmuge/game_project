@@ -94,8 +94,8 @@ test('Queequeg ultimate preserves infinite link and still shares a four-second m
  const {g,p}=quiet('queequeg'),a=ally(g);g.cast(p,'q',a);run(g,4);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);assert.equal(a.state.tetherResistance,4);close(a.buffs.queequegUlt-g.time,4);run(g,4.1);assert.ok(p.state.tether);assert.equal(g.buff(a,'queequegUlt'),false);assert.ok(g.buff(a,'tetherGuard'));
 });
 function shieldHealing(){const f=quiet('yi');f.a=ally(f.g,'meursault');for(const e of [f.p,f.a]){e.hp-=1000;e.lastAttackAt=100;e.lastDamageAt=100;}return f;}
-test('Yi passive shield heals its recipient by seven plus 1.5 percent of recipient max HP each second',()=>{
- const {g,p,t,a}=shieldHealing();g.deal(p,t,1,{fixed:true});const before=a.hp;run(g,1);close(a.hp-before,7+a.maxHp*.015);assert.equal(g.yiShield(a).passive,'yi');
+test('Yi passive grants a shield without healing its recipient',()=>{
+ const {g,p,t,a}=shieldHealing();g.deal(p,t,1,{fixed:true});const before=a.hp;run(g,1);close(a.hp-before,0);assert.equal(g.yiShield(a).passive,'yi');
 });
 test('Yi shield healing stops immediately on depletion and after expiry, even during combat',()=>{
  for(const action of ['deplete','expire']){const {g,p,t,a}=shieldHealing();g.deal(p,t,1,{fixed:true});if(action==='deplete')g.deal(t,a,300,{fixed:true});else g.time=3.01;const hp=a.hp;run(g,1);close(a.hp,hp);assert.equal(g.yiShield(a),undefined);}
@@ -103,6 +103,6 @@ test('Yi shield healing stops immediately on depletion and after expiry, even du
 test('Yi ultimate shields alone do not enable the passive heal',()=>{
  const {g,p,a}=shieldHealing();g.cast(p,'r',p);assert.ok(g.shield(a)>0);assert.equal(g.yiShield(a),undefined);const hp=a.hp;run(g,1);close(a.hp,hp);
 });
-test('multiple Yi passive shields never multiply the healing rate and source death does not erase a surviving shield',()=>{
- const {g,p,t,a}=shieldHealing(),second=ally(g,'yi',41,9);g.deal(p,t,1,{fixed:true});g.deal(second,t,1,{fixed:true});g.kill(p,p);const hp=a.hp;run(g,1);close(a.hp-hp,7+a.maxHp*.015);assert.ok(g.yiShield(a));
+test('multiple Yi passive shields grant no healing and survive source death',()=>{
+ const {g,p,t,a}=shieldHealing(),second=ally(g,'yi',41,9);g.deal(p,t,1,{fixed:true});g.deal(second,t,1,{fixed:true});g.kill(p,p);const hp=a.hp;run(g,1);close(a.hp-hp,0);assert.ok(g.yiShield(a));
 });

@@ -3,7 +3,7 @@ import { distance,direction } from './geometry.js';
 import { area, dash } from './skills.js';
 
 export function init(g,e){if(e.key==='dongbaek'){e.state.petals=3;e.state.petalReady=Infinity;}if(e.key==='dongrang'){e.totalHealingReceived=0;}}
-export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1200);return {radius:3.2,damage:180+n*50};}
+export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1500);return {radius:3.2,damage:180+n*50};}
 export function validate(g,e,slot,p){
  if(e.key==='myo'&&slot==='q')return e.ammo>=1&&!g.buff(e,'rabbitFrenzy');
  if(e.key==='dongrang'&&slot==='r')return !g.stat(e,'root')&&!g.blocked(p.x,p.y,e.radius);
@@ -20,7 +20,7 @@ export function beforeBasic(g,e){
 }
 export function basic(g,e,p,d){
  if(e.key==='myo'){
-  dash(g,e,d,g.attackRange(e),t=>220*(g.buff(e,'rabbitFrenzy')?1.3:1)*(t.state?.rabbitMark?.[e.id]>g.time?1.25:1));return true;
+  dash(g,e,d,g.attackRange(e),t=>220*(g.buff(e,'rabbitFrenzy')?1.3:1)*(t.state?.rabbitMark?.[e.id]>g.time?1.25:1),()=>{},{speed:10.4,maxSpeed:10.4});return true;
  }
  if(e.key==='dongbaek'){
   e.state.flowerHits??={};
@@ -55,7 +55,7 @@ export function cast(g,e,slot,p,d){
    const strike=()=>{const ult=ultGrowth(e);
    let dealt=0;area(g,e,e,ult.radius,0,t=>{dealt+=g.deal(e,t,ult.damage,{fixed:true});g.status(t,'root',1,1.2,e);});g.heal(e,e,dealt*.3,false);
    g.effects.push({type:'burst',x:e.x,y:e.y,r:ult.radius,theme:e.key,life:.7,maxLife:.7});};
-   dash(g,e,d,Math.min(4,distance(e,p)),0,()=>{},{offensive:true,onComplete:strike});
+   const landing=g.safeLanding(e,p,8.5),len=distance(e,landing);g.startMotion(e,direction(e,landing),len,{kind:'leap',ignoreWalls:true,phaseEnemies:true,arcHeight:3,minDuration:len/8,onComplete:strike});
   }return true;
  }
  return false;

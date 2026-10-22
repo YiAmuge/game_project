@@ -32,11 +32,11 @@ test('siege building damage gains eight percent on its existing multiplier',()=>
  const {g}=quiet();g.units=[];const m=g.entity({kind:'minion',siege:true,team:0,x:42,y:7,maxHp:1000,radius:.552});const tower=g.entity({kind:'tower',team:1,x:44,y:7,maxHp:10000,radius:.9,range:9});g.deal(m,tower,100,{fixed:true});close(10000-tower.hp,145.8);
 });
 test('core ward first appears after ten quiet seconds and cannot stack or refill immediately after a hit',()=>{
- const {g,p}=quiet();p.team=1;g.units=[p];const core=g.entity({kind:'core',team:0,x:43,y:7,maxHp:10000,radius:1.3,range:9,lastDamageAt:0});g.entity({kind:'minion',team:1,x:44,y:9,maxHp:1000});
- run(g,9.98);close(g.shield(core),0);run(g,.04);close(g.shield(core),1500);g.deal(p,core,1000,{fixed:true});close(g.shield(core),500);const at=g.time;run(g,9.98);close(g.shield(core),500);run(g,.04);close(g.shield(core),1500);run(g,1);close(g.shield(core),1500);assert.ok(g.time>at+10);
+ const {g,p}=quiet();p.team=1;g.units=[p];const core=g.entity({kind:'core',team:0,x:43,y:7,maxHp:10000,hp:3000,radius:1.3,range:9,lastDamageAt:0});g.entity({kind:'minion',team:1,x:44,y:9,maxHp:1000});
+ core.hp=3000;run(g,9.98);close(g.shield(core),0);run(g,.04);close(g.shield(core),1500);g.deal(p,core,1000,{fixed:true});close(g.shield(core),500);const at=g.time;run(g,9.98);close(g.shield(core),500);run(g,.04);close(g.shield(core),1500);run(g,1);close(g.shield(core),1500);assert.ok(g.time>at+10);
 });
-test('respawn growth increases thirteen percent while base and existing twenty-second cap stay fixed',()=>{
- close(respawnTime(0,1),6);close(respawnTime(60,2),Math.ceil(6+1.13*(.8+1.2)));close(respawnTime(600,5),20);close(respawnTime(1200,10),20);
+test('respawn uses 1.356 growth and a twenty-three-second cap',()=>{
+ close(respawnTime(0,1),6);close(respawnTime(60,2),Math.ceil(6+1.356*(.8+1.2)));close(respawnTime(600,5),23);close(respawnTime(1500,10),23);
 });
 test('walking into a hostile champion stops the mover without shifting its enemy',()=>{
  const {g,p,t}=quiet();g.input.x=1;const start={x:t.x,y:t.y};run(g,2);close(t.x,start.x);close(t.y,start.y);assert.ok(distance(p,t)>=p.radius+t.radius);assert.ok(p.x<t.x);
@@ -77,7 +77,7 @@ test('Yi ultimate fans seven bullets across the widened angle with one extra ran
  const {g,p,t}=quiet('yi');g.cast(p,'r',p);close(g.attackRange(p),7.5);g.attack(p,t);assert.equal(g.projectiles.length,7);assert.ok(g.projectiles.every(b=>b.remaining===7.5));const angles=g.projectiles.map(b=>Math.atan2(b.dy,b.dx));assert.ok(Math.max(...angles)-Math.min(...angles)>1.4);
 });
 test('Rudolph whip radius and range shrink while ultimate scales with actual SP spent',()=>{
- const {g,p,t}=quiet('rudolph');close(g.attackRange(p),7.65);t.x=44;t.y=10.1;g.attack(p,{x:44,y:7});close(t.hp,100000);p.ammo=37;g.cast(p,'r',{x:43,y:7});close(g.pending[0].damage,37*8.5);close(p.ammo,0);
+ const {g,p,t}=quiet('rudolph');close(g.attackRange(p),7.65);t.x=44;t.y=10.1;g.attack(p,{x:44,y:7});close(t.hp,100000);p.ammo=57;g.cast(p,'r',{x:43,y:7});close(g.pending[0].damage,57*8.5);close(p.ammo,0);
 });
 test('Dongrang level power converts to health and armor but never multiplies incoming healing',()=>{
  const {g,p,t}=quiet('dongrang');const hp=p.maxHp,armor=g.armor(p);g.award(p,250,0);assert.equal(p.level,2);const power=CHAMPIONS.dongrang.growth.power;close(g.desireEfficiency(p),1.13+power);assert.ok(p.maxHp>hp&&g.armor(p)>armor);p.hp-=1000;const before=p.hp;g.heal(t,p,100,false);close(p.hp-before,100);close(g.deal(p,t,100),100);
@@ -85,14 +85,14 @@ test('Dongrang level power converts to health and armor but never multiplies inc
 test('Dongrang can place overlapping trees and golden trees with radius 3.8',()=>{
  const {g,p}=quiet('dongrang');g.cast(p,'q',{x:44,y:7});g.zones[0].golden=true;p.qCd=0;assert.ok(g.cast(p,'q',{x:44,y:7}));assert.equal(g.zones.length,2);assert.ok(g.zones.every(z=>z.r===3.8));close(p.qCd,10);
 });
-test('Dongrang ultimate has uncapped 1200-healing damage steps and fixed radius/cooldown, and preserves trees',()=>{
- const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1200*21;assert.deepEqual(ultGrowth(p),{radius:3.2,damage:1230});g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
+test('Dongrang ultimate scales damage every 1500 healing with fixed impact radius',()=>{
+ const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1500*21;assert.deepEqual(ultGrowth(p),{radius:3.2,damage:1230});g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
 });
 test('Dongbaek refills all three petals every ten seconds and pauses ammo recovery throughout disarm',()=>{
  const {g,p,t}=quiet('dongbaek');t.x=41.5;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;g.attack(p,t);}close(p.state.petals,0);run(g,2.8);close(p.reloadProgress,0);close(p.ammo,0);run(g,.1);assert.ok(p.reloadProgress>0);run(g,7.08);close(p.state.petals,0);run(g,.04);close(p.state.petals,3);assert.equal(p.state.petalReady,Infinity);
 });
 test('Queequeg is support, grants stacking resistance while linked, and clears it when detached',()=>{
- const {g,p}=quiet('queequeg'),a=ally(g);assert.equal(CHAMPIONS.queequeg.role,'지원');g.cast(p,'q',a);run(g,4.02);assert.equal(a.state.tetherResistance,4);g.status(a,'silence',1,2);close(a.status.silence.until-g.time,2*.85*.8);a.x=60;run(g,1.6);assert.equal(p.state.tether,undefined);assert.equal(g.buff(a,'tetherResistance'),false);
+ const {g,p}=quiet('queequeg'),a=ally(g);assert.equal(CHAMPIONS.queequeg.role,'지원');g.cast(p,'q',a);run(g,4.02);assert.equal(a.state.tetherResistance,4);g.status(a,'silence',1,2);close(a.status.silence.until-g.time,2*.8);a.x=60;run(g,1.6);assert.equal(p.state.tether,undefined);assert.equal(g.buff(a,'tetherResistance'),false);
 });
 test('Queequeg ultimate preserves the infinite link and shares four seconds of movement speed',()=>{
  const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);run(g,2);const speed=g.speed(a);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);close(a.buffs.queequegUlt-g.time,4);close(g.speed(a)/speed,1.25);run(g,4.1);assert.equal(g.buff(a,'queequegUlt'),false);
@@ -121,7 +121,7 @@ test('Starbuck every basic stabs once then advances 2.875 with either full or pa
 test('Starbuck tactical hits five times at .3 intervals with increasing damage and stops after a miss',()=>{
  const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p)hits.push({at:g.time,n});return deal(e,t,n,o);};g.cast(p,'q',t);run(g,1.9);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.3*i,.02);close(hits[i].n,150*1.045**i);}close(g.stat(t,'slow'),.2);p.qCd=0;t.y=14;hits.length=0;g.cast(p,'q',{x:45,y:7});run(g,2);assert.equal(hits.length,0);
 });
-test('Starbuck ultimate disappears for .7 seconds, teleports and resets tactical on either hit or miss',()=>{
- const {g,p,t}=quiet('starbuck');t.x=46;p.qCd=5;assert.ok(g.cast(p,'r',{x:46,y:7}));assert.ok(g.hidden(p));const hp=t.hp;run(g,.65);close(p.x,40);close(t.hp,hp);run(g,.1);assert.equal(g.hidden(p),false);assert.ok(p.x>44&&t.hp<hp);close(p.qCd,0);assert.ok(distance(p,t)>=p.radius+t.radius);
+test('Starbuck ultimate leaps for .7 seconds and resets tactical on hit or miss',()=>{
+ const {g,p,t}=quiet('starbuck');t.x=46;p.qCd=5;assert.ok(g.cast(p,'r',{x:46,y:7}));assert.ok(g.hidden(p));const hp=t.hp;run(g,.65);assert.ok(p.x>40&&p.x<46);close(t.hp,hp);run(g,.1);assert.equal(g.hidden(p),false);assert.ok(p.x>44&&t.hp<hp);close(p.qCd,0);assert.ok(distance(p,t)>=p.radius+t.radius);
  const f=quiet('starbuck');f.t.y=14;f.p.qCd=5;f.g.cast(f.p,'r',{x:46,y:7});run(f.g,.8);close(f.p.qCd,0);
 });

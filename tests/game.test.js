@@ -126,7 +126,7 @@ test('death grants kill/assist rewards and respawns with full health and ammo',(
   const g=isolated(),p=g.player,t=opponent(g),ally=g.champions(0)[1];t.hp=100;
   g.deal(ally,t,20,{fixed:true});g.deal(p,t,1000,{fixed:true});assert.equal(t.alive,false);assert.equal(g.kills[0],1);
   assert.equal(p.kills,1);assert.equal(t.deaths,1);close(ally.gold,250+40*4/3);
-  assert.equal(respawnTime(0,1),6);assert.equal(respawnTime(600,5),20);assert.equal(respawnTime(1200,5),20);
+  assert.equal(respawnTime(0,1),6);assert.equal(respawnTime(600,5),23);assert.equal(respawnTime(1200,5),23);
   run(g,6.1);assert.ok(t.alive);assert.equal(t.hp,t.maxHp);assert.equal(t.ammo,CHAMPIONS[t.key].ammo);
 });
 test('walls block movement, paths route around walls, diagonal input cannot speed up',()=>{

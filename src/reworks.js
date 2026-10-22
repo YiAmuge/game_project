@@ -14,15 +14,15 @@ export function rectangle(g,e,d,range,width,damage,hit=()=>{}){
 }
 export function heathCharge(g,e,point){
  const elapsed=Math.max(0,g.time-(e.state.chargeAt??g.time)),progress=clamp(elapsed/1.5,0,1),range=.5+6.5*progress,d=g.aim(e,point),len=Math.min(range,Math.max(.5,distance(e,point)));
- let travel=0;for(let t=.05;t<=len+.05;t+=.05){const n=Math.min(t,len);if(g.blocked(e.x+d.x*n,e.y+d.y*n,e.radius))break;travel=n;}
- return {elapsed,progress,range,ready:true,radius:1.8,damage:80+170*progress,stun:progress<.5?0:progress,landing:{x:clamp(e.x+d.x*travel,WORLD.x+e.radius,WORLD.x+WORLD.w-e.radius),y:clamp(e.y+d.y*travel,WORLD.y+e.radius,WORLD.y+WORLD.h-e.radius)}};
+ const landing=g.safeLanding(e,{x:e.x+d.x*len,y:e.y+d.y*len},len);
+ return {elapsed,progress,range,ready:true,radius:1.8,damage:80+170*progress,stun:progress<.5?0:progress,landing};
 }
 export function cancelHeath(e){if(e.key==='heathcliff'){delete e.state.chargeAt;delete e.state.chargeAim;}}
 export function releaseHeath(g,e,p){
  if(e.key!=='heathcliff'||e.state.chargeAt===undefined)return false;
  if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.stat(e,'root')||g.stat(e,'captured')||e.motion||g.hidden(e)){cancelHeath(e);return false;}
  const shape=heathCharge(g,e,p||e.state.chargeAim),d=direction(e,shape.landing);cancelHeath(e);e.qCd=g.cooldown(e,'q');e.lastAttackAt=g.time;
- return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{phaseEnemies:true,onComplete:()=>{
+ return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{kind:'leap',ignoreWalls:true,arcHeight:3,minDuration:distance(e,shape.landing)/RULES.dashSpeed,phaseEnemies:true,onComplete:()=>{
   area(g,e,e,shape.radius,shape.damage,t=>{if(shape.stun)g.status(t,'stun',1,shape.stun,e);});g.effects.push({type:'burst',x:e.x,y:e.y,r:shape.radius,theme:'heathcliff',life:.5,maxLife:.5});
  }}));
 }

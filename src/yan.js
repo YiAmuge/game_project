@@ -34,8 +34,8 @@ export function afterDamage(g,source,t,actual,proc,absorbed=0){
 }
 export function cancelCharge(e){if(e.key==='yan')delete e.state.yanCharge;}
 export function chargeShape(g,e,p){
- const progress=clamp((e.state.yanCharge?.progress||0)/YAN.chargeTime,0,1),d=g.aim(e,p),scale=g.attackRange(e)/YAN.basicRange;
- return {progress,d,range:(YAN.basicRange+(YAN.fullRange-YAN.basicRange)*progress)*scale,width:YAN.width,damage:(YAN.basicDamage+(YAN.fullDamage-YAN.basicDamage)*progress)*ammoBonus(g,e)};
+ const progress=clamp((e.state.yanCharge?.progress||0)/YAN.chargeTime,0,1),d=g.aim(e,p),extraRange=g.attackRange(e)-YAN.basicRange;
+ return {progress,d,range:YAN.basicRange+(YAN.fullRange-YAN.basicRange)*progress+extraRange,width:YAN.width,damage:(YAN.basicDamage+(YAN.fullDamage-YAN.basicDamage)*progress)*ammoBonus(g,e)};
 }
 export function attack(g,e,p){
  g.cancelRecall(e);e.lastAttackAt=g.time;e.facing=Math.atan2(p.y-e.y,p.x-e.x);
@@ -54,7 +54,7 @@ export function release(g,e,p){
    if(Math.hypot(Math.max(0,-along,along-shape.range),Math.max(0,side-shape.width/2))<=t.radius)g.deal(e,t,shape.damage);
   }
  });
- g.effects.push({type:'yanSword',x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},width:shape.width,progress:shape.progress,life:.4,maxLife:.4});return true;
+ g.effects.push({type:'yanCleave',x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},width:shape.width,progress:shape.progress,life:.4,maxLife:.4});return true;
 }
 function safeHandPoint(g,e,point){
  const b=g.bounds||WORLD,d=direction(e,point),len=Math.min(YAN.handLeash-.05,distance(e,point)),p={x:clamp(e.x+d.x*len,b.x+.3,b.x+b.w-.3),y:clamp(e.y+d.y*len,b.y+.3,b.y+b.h-.3)};

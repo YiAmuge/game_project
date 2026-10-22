@@ -16,12 +16,12 @@ export function validate(g,e,slot,p){
 }
 export function basic(g,e,p,d){
  if(e.key==='marton'){
-  const len=Math.min(5,distance(e,p)),point={x:e.x+d.x*len,y:e.y+d.y*len};
+  const len=Math.min(g.attackRange(e),distance(e,p)),point={x:e.x+d.x*len,y:e.y+d.y*len};
   if(len<2.5)g.cone(e,d,2.5,Math.PI,190,()=>g.addBuff(e,'martonStride',2.25));else area(g,e,point,2.2,100);
   g.effects.push({type:len<2.5?'slash':'burst',x:len<2.5?e.x:point.x,y:len<2.5?e.y:point.y,r:len<2.5?2.5:2.2,angle:Math.atan2(d.y,d.x),spread:Math.PI,theme:e.key,life:.4,maxLife:.4});return true;
  }
  if(e.key==='queequeg'){
-  g.addBuff(e,'queegAttack',.42,{copy:false});for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>rectangle(g,e,d,3,1.8,28,t=>{
+  g.addBuff(e,'queegAttack',.42,{copy:false});for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>rectangle(g,e,d,g.attackRange(e),1.8,28,t=>{
    if(t.kind==='champion'&&t.alive){e.state.captureHits??={};e.state.captureHits[t.id]=(e.state.captureHits[t.id]||0)+1;if(e.state.captureHits[t.id]%4===0)g.status(t,'captured',1,1.15,e);}
   }));return true;
  }
@@ -99,5 +99,5 @@ export function tickObjects(g){
  for(const b of g.units.filter(u=>u.kind==='bait'&&u.alive))for(const t of g.units.filter(t=>t.alive&&['champion','minion'].includes(t.kind)&&t.team===1-b.team&&distance(t,b)<=6.5)){
   if((b.tauntReady[t.id]||0)<=g.time){b.tauntReady[t.id]=g.time+1.5;taunt(g,t,b,.75);}
  }
- for(const z of g.zones.filter(z=>z.kind==='electricDevice'&&z.until>g.time))for(const t of g.champions(1-z.source.team).filter(t=>t.alive&&distance(t,z)<=z.r)){t.state.electricWeak??={};t.state.electricWeak[z.source.id]=g.time+3;}
+
 }

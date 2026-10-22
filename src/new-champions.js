@@ -80,7 +80,7 @@ export function cast(g,e,slot,p,d){
    for(let i=0;i<5;i++)g.schedule(e,i*.13,()=>{area(g,e,center,2.5,39,t=>{g.status(t,'slow',.25,1.5,e);if(t.kind==='champion'&&t.state.contempt?.[e.id]>g.time&&!rooted.has(t.id)&&(s.bindReady?.[t.id]||0)<=g.time){rooted.add(t.id);s.bindReady??={};s.bindReady[t.id]=g.time+5;g.status(t,'root',1,1.5,e);}});g.effects.push({type:'slash',...center,angle:e.facing+i*.5,spread:1.2,r:2.5,theme:e.key,life:.3,maxLife:.3});});
   }else{
    e.channelUntil=g.time+1.5;
-   area(g,e,p,5,350/3,t=>{const contempt=t.state?.contempt?.[e.id]>g.time;g.status(t,'stun',1,contempt?1.5:1,e);if(contempt)g.status(t,'armorDown',25,3,e);});
+   area(g,e,p,5,350/3,t=>{const contempt=t.state?.contempt?.[e.id]>g.time;g.status(t,'slow',.5,contempt?1.5:1,e);if(contempt)g.status(t,'armorDown',25,3,e);});
    for(let i=1;i<3;i++)g.pending.push({type:'gazeBurst',source:e,...p,r:5,at:g.time+i*.75,windup:i*.75,damage:350/3});
   }
   return true;

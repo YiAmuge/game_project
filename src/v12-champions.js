@@ -10,14 +10,14 @@ export function validate(g,e,slot,p){
  if(e.key==='kim'&&slot==='q'&&!recast(g,e,slot)&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
  return true;
 }
-export function beforeBasic(g,e,p){if(e.key!=='ppui')return true;const ally=targetAt(g,e,p,7,e.team,a=>a!==e);return !ally||!(ally.state.ppuiEmpowerReady>g.time);}
+export function beforeBasic(g,e,p){if(e.key!=='ppui')return true;const ally=targetAt(g,e,p,g.attackRange(e),e.team,a=>a!==e);return !ally||!(ally.state.ppuiEmpowerReady>g.time);}
 export function basic(g,e,p,d){
  if(e.key==='kim'){
   if(e.state.followSlashUntil>g.time){delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e)*1.2*1.08,1.9*1.3*1.2*1.08,210);g.addShield(e,100,`draw-${e.id}`,3);}
   else{e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2*1.3,75));}return true;
  }
  if(e.key==='ppui'){
-  const ally=targetAt(g,e,p,7,e.team,a=>a!==e);
+  const ally=targetAt(g,e,p,g.attackRange(e),e.team,a=>a!==e);
   if(ally){ally.state.ppuiEmpowerReady=g.time+2.5;const old=g.units.find(a=>a.id===e.state.empower?.target);if(old)delete old.buffs.redEncouragement;e.state.empower={target:ally.id,until:g.time+4,healUntil:g.time+3,healingEvent:e.healingEvent};g.support(e);g.addBuff(ally,'redEncouragement',4,{copy:false});ally.supporters[e.id]=g.time;}
   else for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,65,g.attackRange(e),{theme:'ppui',width:.2}));
   return true;

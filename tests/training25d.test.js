@@ -8,15 +8,15 @@ const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 const training=key=>new Game(key||'faust','bottom',{seed:51,mode:'training25d'});
 const run=(g,s)=>{for(let i=0;i<Math.ceil(s*30);i++)g.step(1/30);};
 
-test('2.5D has separate geometry, spawn, targets and per-session collision data',()=>{
+test('training entries share one garden layout and own per-session collision data',()=>{
  const g=training(),legacy=new Game('faust','bottom',{mode:'training'}),other=training();
- assert.equal(g.training,true);assert.equal(g.training25d,true);assert.equal(legacy.training25d,false);
- assert.equal(g.map.id,'training-25d');assert.notDeepEqual(g.map.walls,legacy.map.walls);
+ assert.equal(g.training,true);assert.equal(g.training25d,true);assert.equal(legacy.training25d,true);
+ assert.equal(g.map.id,'training-25d');assert.deepEqual(g.map.walls,legacy.map.walls);
  assert.notEqual(g.map,other.map);assert.notEqual(g.map.walls[0],other.map.walls[0]);
  assert.deepEqual({x:g.player.x,y:g.player.y},MAP.spawn);assert.deepEqual({x:legacy.player.x,y:legacy.player.y},T.SPAWN);
  assert.equal(g.champions().length,6);assert.equal(g.units.filter(e=>e.kind==='neutral').length,7);
  assert.ok(g.champions().filter(e=>e.trainingDummy?.infinite).every(e=>e.x<T.hazard(g).x));
- assert.deepEqual(T.AREAS[0],{id:1,x:1,y:32,w:39,h:13,name:'회복 · 피해 실험',color:'#688c79'});
+ assert.deepEqual(T.AREAS[0],MAP.areas[0]);
 });
 test('orthographic ray picking round-trips world positions on desktop, ultrawide and mobile',()=>{
  const c=new Camera25D();

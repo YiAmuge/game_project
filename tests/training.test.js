@@ -16,7 +16,7 @@ test('training has one player, five champion dummies, requested seven creeps and
 });
 test('training terrain is independent of the match walls and keeps its rectangular boundary',()=>{
  const g=training(),match=new Game('faust','top',{seed:54}),w=WALLS.find(w=>!g.blocked(w.x+w.w/2,w.y+w.h/2));assert.ok(w);
- assert.ok(match.blocked(w.x+w.w/2,w.y+w.h/2));assert.equal(g.blocked(w.x+w.w/2,w.y+w.h/2),false);assert.ok(g.blocked(-1,20));assert.ok(g.blocked(41.5,18));
+ assert.ok(match.blocked(w.x+w.w/2,w.y+w.h/2));assert.equal(g.blocked(w.x+w.w/2,w.y+w.h/2),false);assert.ok(g.blocked(-1,20));assert.ok(g.blocked(37.5,20));
  assert.equal(blocked(w.x+w.w/2,w.y+w.h/2),true);
 });
 test('zone one fountain and hazard are separate, spawning is safe, and the hazard deals 3.3 percent per second',()=>{
@@ -50,7 +50,7 @@ test('destroying either lane tower freezes its minions, towers and waves until r
 test('training shop is free anywhere and while dead, and sell-all removes upgrades and augments',()=>{
  const g=training(),p=g.player;Object.assign(p,{x:40,y:23,gold:0,lastCombat:0});assert.ok(!g.inSpawn(p));
  for(let i=0;i<3;i++)assert.ok(g.buy(p,'power'));assert.ok(g.buyAugment(p,'power15'));assert.ok(g.sellAugment(p,'power15'));close(p.gold,0);g.kill(p,p);
- assert.ok(g.canUpgrade(p));for(let i=0;i<3;i++)assert.ok(g.buy(p,'health'));assert.ok(g.buyAugment(p,'health15'));T.sellAll(g);assert.ok(UPGRADES.every(u=>p.upgrades[u.key]===0));assert.equal(p.augments.length,0);close(p.gold,0);
+ assert.ok(g.canUpgrade(p));for(let i=0;i<3;i++)assert.ok(g.buy(p,'health'));assert.ok(g.buyAugment(p,'blackOrb'));T.sellAll(g);assert.ok(UPGRADES.every(u=>p.upgrades[u.key]===0));assert.equal(p.augments.length,0);close(p.gold,0);
 });
 test('training toggles honor invincibility, finite/mind ammunition and zero cooldowns without leaking to matches',()=>{
  for(const key of ['faust','rudolph','sora']){

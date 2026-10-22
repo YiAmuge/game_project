@@ -31,20 +31,20 @@ test('normal barrage grants exactly thirty percent defense and rejects all CC an
 test('transforming out of barrage removes its temporary defense and immunity immediately',()=>{
  const {g,p}=quiet('yan'),t=target(g);g.cast(p,'q',t);p.state.ominous=6;g.cast(p,'r',p);assert.equal(Yan.barraging(g,p),false);g.status(p,'root',1,2,t);assert.ok(g.stat(p,'root'));
 });
-for(const key of ['slow','stun','weak','armorDown','reloadWeak'])test(`disruption triggers on ${key} without extra damage or haste and has a ten-second shared cooldown`,()=>{
+for(const key of ['slow','stun','weak','armorDown','reloadWeak'])test(`role metadata grants no disruption bonus on ${key}`,()=>{
  const {g,p}=quiet('gahwan'),t=target(g);p.qCd=8;p.rCd=40;const reload=g.reloadInterval(p),haste=g.haste(p),hp=t.hp;
- g.status(t,key,key==='armorDown'?10:.2,2,p);close(t.hp,hp);close(p.qCd,7);close(p.rCd,35);close(g.reloadInterval(p),reload/1.35);close(g.haste(p),haste);
- g.time=1;g.status(t,'weak',.25,2,p);close(p.qCd,7);close(p.rCd,35);close(p.buffs.disrupt,1.5);
- g.time=1.51;close(g.reloadInterval(p),reload);g.time=9.99;g.status(t,key,.3,2,p);close(p.qCd,7);
- g.time=10;g.status(t,key,.4,2,p);close(p.qCd,7*.875);close(p.rCd,35*.875);
+ g.status(t,key,key==='armorDown'?10:.2,2,p);close(t.hp,hp);close(p.qCd,8);close(p.rCd,40);close(g.reloadInterval(p),reload);close(g.haste(p),haste);
+ g.time=1;g.status(t,'weak',.25,2,p);close(p.qCd,8);close(p.rCd,40);assert.equal(p.buffs.disrupt,undefined);
+ g.time=1.51;close(g.reloadInterval(p),reload);g.time=9.99;g.status(t,key,.3,2,p);close(p.qCd,8);
+ g.time=10;g.status(t,key,.4,2,p);close(p.qCd,8);close(p.rCd,40);
 });
 test('immune, allied and non-champion targets cannot consume the disruption cooldown',()=>{
  const {g,p}=quiet('gahwan'),t=target(g),ally=target(g,42,9,0),creep=g.makeNeutral(42,10,'side');p.qCd=8;p.rCd=40;
  t.ccImmuneUntil=2;g.status(t,'slow',.2,1,p);g.status(ally,'slow',.2,1,p);g.status(creep,'slow',.2,1,p);assert.equal(g.buff(p,'disrupt'),false);close(p.qCd,8);
- t.ccImmuneUntil=0;g.status(t,'slow',.2,1,p);close(p.qCd,7);
+ t.ccImmuneUntil=0;g.status(t,'slow',.2,1,p);close(p.qCd,8);
 });
-test('Gahwan knockback and Ishmael permanent power loss also trigger disruption',()=>{
- for(const key of ['gahwan','ishmael']){const {g,p}=quiet(key),t=target(g,42);p.rCd=40;g.attack(p,t);run(g,.15);assert.ok(g.buff(p,'disrupt'),key);close(p.state.disruptReady,10);assert.ok(p.rCd<35);}
+test('Gahwan knockback and Ishmael power loss have no role bonus',()=>{
+ for(const key of ['gahwan','ishmael']){const {g,p}=quiet(key),t=target(g,42);p.rCd=40;g.attack(p,t);run(g,.15);assert.equal(g.buff(p,'disrupt'),false,key);assert.equal(p.state.disruptReady,undefined);assert.ok(p.rCd>39);}
 });
 test('Gregor piercing rectangle has six range, 1.2 half width and pulls every intersected enemy without teleporting',()=>{
  const {g,p}=quiet('gregor'),a=target(g,42),b=target(g,45,8.65),miss=target(g,45,8.7),far=target(g,46.5);

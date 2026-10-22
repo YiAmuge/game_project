@@ -19,13 +19,13 @@ test('27 ordinary champions include all four additions; XP accrues at three per 
  for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,key==='faust'?9:3);g.kill(p,t);run(g,1);close(p.xp,key==='faust'?18:6);}
 });
 test('four ordinary creeps or two buff creeps now give 225 XP; building HP stays reduced',()=>{
- for(const [camp,n]of [['side',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++)g.kill(g.makeNeutral(42,7,camp),p);assert.equal(p.level,1);close(p.xp,225);}const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===6460));assert.equal(g.units.find(t=>t.kind==='core').maxHp,10200);
+ for(const [camp,n]of [['side',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++)g.kill(g.makeNeutral(42,7,camp),p);assert.equal(p.level,1);close(p.xp,225);}const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===5168));assert.equal(g.units.find(t=>t.kind==='core').maxHp,8160);
 });
 
 test('Rudolph magazine augmentation grants thirty maximum SP',()=>{const {g,p}=quiet('rudolph');p.alive=false;p.upgrades.reload=3;p.gold=5000;assert.ok(g.buyAugment(p,'magazine2'));assert.equal(g.ammoCap(p),130);});
 
 test('Rudolph five-hit chains stack whip vulnerability to thirty percent without ammunition loss or CC',()=>{
- const {g,p,t}=quiet('rudolph');const ammo=t.ammo;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);assert.equal(t.ammo,ammo);assert.equal(g.stat(t,'slow'),0);const hp=t.hp;g.attack(p,t);close(hp-t.hp,48*1.3*.91*.9);p.rCd=0;g.cast(p,'r',t);run(g,1.3);close(g.stat(t,'slow'),.3);assert.equal(g.stat(t,'root'),0);
+ const {g,p,t}=quiet('rudolph');const ammo=t.ammo;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);assert.equal(t.ammo,ammo);assert.equal(g.stat(t,'slow'),0);const hp=t.hp;g.attack(p,t);close(hp-t.hp,48*1.45*.91*.9);p.rCd=0;g.cast(p,'r',t);run(g,1.3);close(g.stat(t,'slow'),.3);assert.equal(g.stat(t,'root'),0);
 });
 test('Sinclair marks allow reload progress during continuous firing while other champions still pause',()=>{
  for(const key of ['sinclair','meursault']){const {g,p}=quiet(key);p.ammo=0;p.attackCd=1;g.addBuff(p,'marks',4);g.input.fire=true;g.input.aim={x:50,y:7};run(g,.25);assert.equal(p.reloadProgress>0,key==='sinclair');}
@@ -33,8 +33,8 @@ test('Sinclair marks allow reload progress during continuous firing while other 
 test('Dongbaek third extra attack lands then applies exactly 2.85 seconds of basic-only disarm',()=>{
  const {g,p,t}=quiet('dongbaek');t.x=41;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;assert.ok(g.attack(p,t));}assert.equal(p.state.petals,0);close(p.status.disarm.until-g.time,2.85);p.ammo=3;p.attackCd=0;assert.equal(g.attack(p,t),false);p.qCd=0;assert.ok(g.cast(p,'q',p));run(g,2.9);assert.ok(g.attack(p,t));
 });
-test('Dongrang non-charge trees can coexist and only damage grows every 1200 healing',()=>{
- const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);g.heal(null,p,1200,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1200);close(ultGrowth(p).damage,230);g.heal(null,p,1200,false);close(ultGrowth(p).damage,280);
+test('Dongrang non-charge trees can coexist and only damage grows every 1500 healing',()=>{
+ const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);g.heal(null,p,1500,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1500);close(ultGrowth(p).damage,230);g.heal(null,p,1500,false);close(ultGrowth(p).damage,280);
 });
 
 test('Hohenheim death state lasts 2.5 seconds, cannot move, heal or ult, and only awards one kill',()=>{
@@ -56,7 +56,7 @@ test('Queequeg ultimate cannot fall below one HP, including fixed damage, then h
  const {g,p,t}=quiet('queequeg');g.cast(p,'r',p);g.deal(t,p,999999,{fixed:true});close(p.hp,1);p.lastDamageAt=g.time+4;run(g,4.05);assert.ok(p.alive&&p.hp>1);assert.equal(g.buff(p,'queequegUlt'),false);g.deal(t,p,999999,{fixed:true});assert.equal(p.alive,false);
 });
 test('Alisa tactical recast consumes heat to heal and her ultimate blocks CC until its automatic explosion',()=>{
- const {g,p,t}=quiet('alisa');p.hp-=1000;p.state.heat=2;assert.ok(g.cast(p,'q',{x:48,y:7}));run(g,.4);assert.ok(g.cast(p,'q',p));assert.equal(p.state.heat,0);assert.ok(p.hp>p.maxHp-1000);p.state.heat=5;assert.ok(g.cast(p,'r',p));g.status(p,'stun',1,3);assert.equal(g.stat(p,'stun'),0);run(g,1);assert.ok(p.state.detonating);run(g,2.1);assert.equal(p.alive,false);assert.equal(p.ccImmuneUntil,0);
+ const {g,p,t}=quiet('alisa');p.hp-=1000;p.state.heat=2;assert.ok(g.cast(p,'q',{x:48,y:7}));run(g,.4);assert.ok(g.cast(p,'q',p));assert.equal(p.state.heat,0);assert.ok(p.hp>p.maxHp-1000);p.state.heat=5;assert.ok(g.cast(p,'r',p));g.status(p,'stun',1,3);assert.equal(g.stat(p,'stun'),0);run(g,1.2);assert.ok(p.state.detonating);run(g,2.1);assert.equal(p.alive,false);assert.equal(p.ccImmuneUntil,0);
 });
 test('Ahab is invulnerable and immune until a visible return dash reaches the original position',()=>{
  const {g,p,t}=quiet('ahab');const start={x:p.x,y:p.y};assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.x,44);const hp=p.hp;g.deal(t,p,9999,{fixed:true});close(p.hp,hp);g.status(p,'stun',1,3);assert.equal(g.stat(p,'stun'),0);run(g,.5);assert.ok(p.motion&&p.state.ahabUlt);const x=p.x;run(g,.1);assert.ok(p.x<x&&x-p.x<=1.21);run(g,1.5);close(distance(p,start),0);assert.equal(p.state.ahabUlt,undefined);g.deal(t,p,10,{fixed:true});assert.ok(p.hp<hp);
