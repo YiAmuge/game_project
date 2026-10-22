@@ -41,7 +41,7 @@ export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set();
  return g.startMotion(e,d,len,{phaseEnemies:typeof damage==='function'||damage>0||Boolean(options.offensive),...options,onComplete:result=>options.onComplete?.({...result,hitIds}),onStep:(from,to)=>{
   if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&segmentDistance(t,from,to)<t.radius+(options.hitWidth??.6)&&g.clearLine(e,t)){hitIds.add(t.id);const actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual);}
-  g.effects.push({type:'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});
+  g.effects.push({type:options.swordTrail?'ryoshuTrail':'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});
  }});
 }
 export const heathCharge=Reworks.heathCharge;
@@ -98,7 +98,7 @@ export function switchWeapon(g,e,step,shield=false){
 export function beforeBasic(g,e,point,options={}){
  if(e.key==='starbuck'&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
  if(g.stat(e,'captured')&&(['don','rodya','myo'].includes(e.key)||e.key==='ezra'))return false;
- if(!V06.beforeBasic(g,e,point,options))return false;
+ if(!V12.beforeBasic(g,e,point)||!V06.beforeBasic(g,e,point,options))return false;
  if(g.stat(e,'root')&&(['don','rodya'].includes(e.key)||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0))))return false;
  if(e.key==='rudolph'){if(e.state.exhaustedUntil>g.time)return false;if(g.time-e.lastAttackAt>.5)e.state.whipChainAt=undefined;if(e.state.whipChainAt!==undefined&&g.time-e.state.whipChainAt>=3)return false;}
  if(e.key==='ezra'&&e.ammo<1&&!g.buff(e,'ezraUlt')){switchWeapon(g,e,1,true);e.attackCd=.2;return false;}
@@ -148,7 +148,7 @@ export function mentalWhip(g,e,t){
  if(++mark.hits>=5){mark.hits=0;mark.stage=Math.min(3,mark.stage+1);}
 }
 function shockIshmael(g,e){
- delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'burst',x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
+ delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
@@ -162,11 +162,11 @@ export function cast(g,e,slot,p,d,options={}){
   }else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
   return true;
  case 'ryoshu':
-  if(slot==='q'){const len=4*(g.buff(e,'amplify')?1.2:1);e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,180,()=>{},{onComplete:()=>e.invulnerableUntil=0});}
+  if(slot==='q'){const len=4*(g.buff(e,'amplify')?1.2:1);e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,180,()=>{},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
   else{
    const len=Math.min(7*(g.buff(e,'amplify')?1.2:1),distance(e,p)),rawDest={x:clamp(e.x+d.x*len,WORLD.x+.6,WORLD.x+WORLD.w-.6),y:clamp(e.y+d.y*len,WORLD.y+.6,WORLD.y+WORLD.h-.6)};
    const dest=trapPoint(g,e,rawDest);if(!g.blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
-   for(let i=0;i<4;i++)g.schedule(e,i*.12,()=>area(g,e,e,2.6,140,t=>g.status(t,'armorDown',25,3,e)));
+   g.effects.push({type:'ryoshuStorm',source:e.id,x:e.x,y:e.y,r:2.6,theme:e.key,life:.7,maxLife:.7});for(let i=0;i<4;i++)g.schedule(e,i*.12,()=>area(g,e,e,2.6,140,t=>g.status(t,'armorDown',25,3,e)));
    e.ammo=ammoCap(g,e);
   }return true;
  case 'honglu':return Reworks.honglu(g,e,slot,p,d);
@@ -175,7 +175,7 @@ export function cast(g,e,slot,p,d,options={}){
  case 'ishmael':
   if(slot==='q'){if(g.buff(e,'ishmaelShield'))shockIshmael(g,e);else {g.addShield(e,e.maxHp*.12,`wreck-${e.id}`,2.5);g.addBuff(e,'ishmaelShield',2.5);state.shockAt=g.time+2.5;}}
   else{
-   state.ishmaelCast=true;g.bullet(e,d,300,16,{ishmaelOwner:e.id,speed:14,width:.585,pierce:99,onHit:t=>{if(t.kind==='champion'){const toward=direction(e,t),front=e.radius+t.radius+.15,dest={x:e.x+toward.x*front,y:e.y+toward.y*front};pushTarget(g,t,dest.x-t.x,dest.y-t.y,{follow:e,stopDistance:front,speed:18,forcedMaxSpeed:18});if(t.motion?.follow===e)t.motion.ishmaelOwner=e.id;g.status(t,'slow',.2,2,e);}}});
+   Reworks.ishmael(g,e,d);
   }return true;
  case 'rodya':
   if(slot==='q'){

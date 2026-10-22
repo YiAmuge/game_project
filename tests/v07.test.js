@@ -83,7 +83,7 @@ test('Ishmael survival shield is 25 percent and shock hits farther enemies, redu
  const {g,p,t}=quiet('ishmael');p.hp=p.maxHp*.29;g.deal(t,p,1,{fixed:true});close(g.shield(p),p.maxHp*.25);p.shields=[];g.cast(p,'q',p);p.rCd=25;const b=enemy(g,40,11);g.cast(p,'q',p);assert.ok(t.hp<10000&&b.hp<10000);close(p.rCd,25*.875-10);
 });
 test('Ishmael wider harpoon pulls even a distant champion all the way in front with no teleport',()=>{
- const {g,p,t}=quiet('ishmael');t.x=54;g.cast(p,'r',t);close(p.rCd,25);close(g.projectiles[0].width,.585);run(g,.9);close(t.x,54);run(g,.15);assert.ok(t.motion);assert.ok(t.x>50&&t.x<54);run(g,2.5);close(t.x,p.x+p.radius+t.radius+.15);
+ const {g,p,t}=quiet('ishmael');t.x=54;g.cast(p,'r',t);close(p.rCd,25);assert.equal(g.projectiles.length,0);run(g,.25);close(g.projectiles[0].width,.585);run(g,.43);close(t.x,54);run(g,.08);assert.ok(t.motion);assert.ok(t.x>50&&t.x<54);run(g,2.5);close(t.x,p.x+p.radius+t.radius+.15);
 });
 test('Rodya three-head jackpot applies tails benefits too and completely reloads',()=>{
  const {g,p}=quiet('rodya');g.random=()=>.1;p.ammo=0;p.rCd=30;g.cast(p,'q',p);assert.ok(p.state.jackpot);assert.equal(p.state.coinHeads,3);assert.equal(p.state.coinTails,3);assert.equal(p.ammo,g.ammoCap(p));assert.ok(g.buff(p,'coinSpeed'));close(p.rCd,24);close(p.qCd,6);
@@ -93,7 +93,7 @@ test('Rodya ultimate creates ice on a miss at max range; its dot and reload debu
 });
 
 test('Ishmael pull follows the moving caster instead of ending at her previous location',()=>{
- const {g,p,t}=quiet('ishmael');t.x=50;g.cast(p,'r',t);run(g,.75);assert.ok(t.motion);p.x=42;run(g,2);close(t.x,p.x+p.radius+t.radius+.15);
+ const {g,p,t}=quiet('ishmael');t.x=50;g.cast(p,'r',t);run(g,.6);assert.ok(t.motion);p.x=42;run(g,2);close(t.x,p.x+p.radius+t.radius+.15);
 });
 
 test('a lethal Ishmael basic cannot reapply a permanent debuff after death cleanup',()=>{

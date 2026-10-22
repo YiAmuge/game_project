@@ -1,3 +1,4 @@
+import * as CombatVisuals from './combat-visuals.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
 import * as Training from './training.js';
@@ -126,7 +127,7 @@ export class Renderer {
     if(e.trainingDummy){const team=e.team===0?'#a9d3df':'#e2a79a';this.line([{x:e.x,y:e.y+.25},{x:e.x,y:e.y-1.8}],'#8d7959',.2);this.line([{x:e.x-.7,y:e.y-.85},{x:e.x+.7,y:e.y-.85}],'#a49171',.18);this.circle(e.x,e.y-1.5,.48,'#a99772',team,.085);this.circle(e.x,e.y-1.5,.23,null,team,.05);this.line([{x:e.x-.5,y:e.y+.3},{x:e.x+.5,y:e.y+.3}],'#9f8c66',.14);return;}
     if(e.kind==='bait'){this.circle(e.x,e.y,.65,'#344725','#bdd079');this.polygon([[e.x-.25,e.y-.9],[e.x+.25,e.y-.9],[e.x+.3,e.y-.3],[e.x-.3,e.y-.3]],'#f1d779','#ffe9a4');this.text('초롱 미끼',e.x,e.y-1.3,'#e8dc9a',.27);return;}
     const def=CHAMPIONS[e.key],inBush=game.bushAt(e),angle=e.facing??(e.team===0?0:Math.PI);
-    c.save();if(inBush)c.globalAlpha=.72;
+    CombatVisuals.behind(this,e,game);c.save();if(inBush)c.globalAlpha=.72;if(e.key==='ryoshu'&&e.invulnerableUntil>game.time)c.globalAlpha*=.65;
     c.beginPath();c.ellipse(e.x,e.y+.2,.65,.25,0,0,Math.PI*2);c.fillStyle='#06131599';c.fill();
     this.circle(e.x,e.y,.67,null,e.player?'#f2d98e':team,.07);
     if(game.shield(e)>0)this.circle(e.x,e.y-.65,1.05,'#9fc9d711','#c8e4df99',.055);
@@ -189,14 +190,14 @@ export class Renderer {
         c.setLineDash([.1,.24]);this.circle(p.x,p.y,game.attackRange(p),null,'#b7d3c727',.035);c.setLineDash([]);
         this.line([{x:p.x+Math.cos(theta),y:p.y+Math.sin(theta)},{x:p.x+Math.cos(theta)*game.attackRange(p),y:p.y+Math.sin(theta)*game.attackRange(p)}],'#dfcfaa50',.04,[.18,.2]);
       }
-      this.circle(aim.x,aim.y,.22,null,'#d8c9a177',.04);
+      CombatVisuals.preview(this,p,game);this.circle(aim.x,aim.y,.22,null,'#d8c9a177',.04);
     }
     if(playing&&game.player.alive&&game.player.key==='hohenheim'&&(game.player.state.hohenCharge||game.player.state.posthumous))this.hohenheimChargePreview(game.player,game);
     targetingPreview(this,game);
     for(const e of game.units.filter(e=>!['core','tower'].includes(e.kind)).sort((a,b)=>a.y-b.y))this.unit(e,game);
     if(!game.training)for(const b of BUSHES)this.bush(b,true);
     for(const p of game.projectiles){
-      if(p.ultimate&&p.theme==='gubo'){const d={x:p.dx||Math.cos(p.source.facing),y:p.dy||Math.sin(p.source.facing)};this.line([{x:p.x-d.x*1.5,y:p.y-d.y*1.5},{x:p.x,y:p.y}],'#ffc181',.19);this.shard(p.x,p.y,.3,Math.atan2(d.y,d.x),'#fff0b2');}
+      if(p.ultimate&&p.theme==='gubo'){const d={x:p.dx||Math.cos(p.source.facing),y:p.dy||Math.sin(p.source.facing)};this.line([{x:p.x-d.x*1.5,y:p.y-d.y*1.5},{x:p.x,y:p.y}],'#b93450',.19);this.shard(p.x,p.y,.3,Math.atan2(d.y,d.x),'#f494a2');}
       else if(p.theme==='boss'){c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(p.dy,p.dx));for(let i=0;i<3;i++){c.beginPath();c.arc(-i*.22,0,.55+i*.12,-1.05,1.05);c.strokeStyle=i?'#b67edc88':'#f0c7ff';c.lineWidth=.12-i*.025;c.stroke();}c.restore();}
       else if(p.theme==='ishmael'){c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(p.dy,p.dx));c.scale(1.3,1.3);this.line([{x:-1.4,y:0},{x:.25,y:0}],'#a6d9e899',.13);this.polygon([[.65,0],[.08,-.38],[.18,-.1],[-.12,-.21],[.05,0],[-.12,.21],[.18,.1],[.08,.38]],'#d1edf0','#6d9dad');c.restore();}
       else if(p.theme==='kim'&&p.swordWave){c.save();c.translate(p.x,p.y-.35);c.rotate(Math.atan2(p.dy,p.dx));const w=p.width;c.beginPath();c.moveTo(-.5,-w);c.quadraticCurveTo(1.05,0,-.5,w);c.strokeStyle='#b6e4ff';c.lineWidth=.18;c.stroke();c.beginPath();c.moveTo(-.85,-w*.88);c.quadraticCurveTo(.45,0,-.85,w*.88);c.strokeStyle='#4a96e7aa';c.lineWidth=.28;c.stroke();c.restore();}
@@ -206,8 +207,8 @@ export class Renderer {
       else {const theme=THEMES[p.theme];this.line([{x:p.x-p.dx*.7,y:p.y-p.dy*.7},{x:p.x,y:p.y}],theme?.light||p.color,.12);if(p.theme==='rodya')this.shard(p.x,p.y,.32*(p.visualScale||1),Math.atan2(p.dy,p.dx),theme.light);else this.circle(p.x,p.y,.14,theme?.light||'#edf0cf');}
     }
     for(const fx of game.effects) {
-      c.save();c.globalAlpha=Math.max(0,fx.life/fx.maxLife);
-      if(fx.type==='guboLaser'){this.line([{x:fx.x,y:fx.y-.4},fx.to],'#51081b',.4);this.line([{x:fx.x,y:fx.y-.4},fx.to],'#ff344b',.16);this.line([{x:fx.x,y:fx.y-.4},fx.to],'#ffe0da',.045);}
+      c.save();c.globalAlpha=Math.max(0,fx.life/fx.maxLife);CombatVisuals.effect(this,fx,game);
+      if(fx.type==='guboLaser'){this.line([{x:fx.x,y:fx.y-.4},fx.to],'#51081b',.4);this.line([{x:fx.x,y:fx.y-.4},fx.to],'#ff344b',.16);this.line([{x:fx.x,y:fx.y-.4},fx.to],'#ffb0bd',.045);}
       if(fx.type==='guboBlast'){c.beginPath();c.moveTo(fx.x,fx.y);c.arc(fx.x,fx.y,fx.r,fx.angle-fx.spread/2,fx.angle+fx.spread/2);c.closePath();c.fillStyle='#4c061f66';c.fill();c.strokeStyle='#b82442';c.lineWidth=.08;c.stroke();for(let i=0;i<18;i++){const a=fx.angle+((i*7%19)/18-.5)*fx.spread*.9,len=2+(i%6)*2,x=fx.x+Math.cos(a)*len,y=fx.y+Math.sin(a)*len;this.circle(x,y,.55,null,'#ff344e',.05);this.circle(x,y,.38,null,'#ba233e',.035);const star=[];for(let j=0;j<=5;j++){const b=j*Math.PI*4/5+game.time;star.push({x:x+Math.cos(b)*.5,y:y+Math.sin(b)*.5});}this.line(star,'#f85463',.04);}}
       if(fx.type==='hongluSweep'){const age=1-fx.life/fx.maxLife;c.beginPath();c.arc(fx.x,fx.y,fx.r,-Math.PI/2,age*Math.PI*2-Math.PI/2);c.strokeStyle='#a0ffde';c.lineWidth=.16;c.stroke();}
       if(fx.type==='line'){this.line([{x:fx.x,y:fx.y},fx.to],fx.color,.1);if(fx.theme==='rudolph'){this.line([{x:fx.x,y:fx.y-.45},fx.to],'#ffb65f',.18);for(let i=1;i<5;i++)this.shard(fx.x+(fx.to.x-fx.x)*i/5,fx.y+(fx.to.y-fx.y)*i/5,.13,game.time*8+i,'#ffd09b');}if(fx.theme==='sinclair')this.line([{x:fx.x,y:fx.y-.2},{x:fx.to.x,y:fx.to.y-.2}],'#f5e997',.08);}
@@ -256,7 +257,7 @@ export class Renderer {
       }
       if(fx.type==='impact'){
         const t=1-fx.life/fx.maxLife,color=THEMES[fx.theme]?.accent||fx.color;
-        for(let i=0;i<6;i++){const a=fx.angle+(i-2.5)*.86,r=.2+t*.65;this.line([{x:fx.x+Math.cos(a)*r*.5,y:fx.y-.45+Math.sin(a)*r*.5},{x:fx.x+Math.cos(a)*r,y:fx.y-.45+Math.sin(a)*r}],color,.08*(1-t)+.02);}if(t<.4)this.circle(fx.x,fx.y-.45,.18,'#fff6da');
+        for(let i=0;i<6;i++){const a=fx.angle+(i-2.5)*.86,r=.2+t*.65;this.line([{x:fx.x+Math.cos(a)*r*.5,y:fx.y-.45+Math.sin(a)*r*.5},{x:fx.x+Math.cos(a)*r,y:fx.y-.45+Math.sin(a)*r}],color,.08*(1-t)+.02);}if(t<.4)this.circle(fx.x,fx.y-.45,.18,fx.theme==='gubo'?'#f0a3b1':'#fff6da');
       }
 
       if(fx.type==='cast'||fx.type==='burst')this.skillEffect(fx,game);
@@ -264,7 +265,7 @@ export class Renderer {
     }
     // Nameplates render after bushes and effects; the player's is always last.
     for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.8,e.y-.65,game);else if(e.kind==='neutral')this.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
-    for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)).sort((a,b)=>Number(a.player)-Number(b.player))){championEffects(this,e,game);championHud(this,e,game);}
+    for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)).sort((a,b)=>Number(a.player)-Number(b.player))){championEffects(this,e,game);CombatVisuals.front(this,e,game);championHud(this,e,game);CombatVisuals.meter(this,e,game);}
     for(const e of game.champions().filter(e=>e.easterText?.until>game.time))this.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   }
   shard(x,y,r,a,color){const c=this.ctx;c.save();c.translate(x,y);c.rotate(a);this.polygon([[-r,0],[0,-r*.35],[r,0],[0,r*.65]],color,'#f2ffff');c.restore();}
@@ -284,6 +285,7 @@ export class Renderer {
     for(let i=0;i<n;i++){c.beginPath();c.ellipse(i*len/n,Math.sin(i*1.4)*.035,.15,i%2?.055:.09,0,0,Math.PI*2);c.stroke();}c.restore();
   }
   weapon(e,game){
+    if(e.key==='ishmael'&&e.state.ishmaelCast?.windupUntil>game.time){const c=this.ctx,d=e.state.ishmaelCast.d;c.save();c.translate(e.x,e.y-.6);c.rotate(Math.atan2(d.y,d.x));this.line([{x:-.35,y:0},{x:1.5,y:0}],'#839c9d',.12);this.polygon([[1.9,0],[1.35,-.28],[1.48,0],[1.35,.28]],'#dcebe6','#5c9cac');c.restore();return;}
     if(e.key==='yan'){
       if(Yan.distorted(game,e))return;
       const c=this.ctx,f=FRAMES.yanSword,a=this.atlasV17,charge=Yan.chargeShape(game,e,game.input.aim),facing=e.facing||0,age=game.time-(e.attackAt??-99);

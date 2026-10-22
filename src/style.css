@@ -177,3 +177,5 @@ body.in-game.training-mode .event-feed{right:324px;max-width:250px}
 .ability.can-recast{border-color:#94dadb;box-shadow:inset 0 0 0 1px #94dadb44}.ability.can-recast .cooldown{color:#b7f9ff}
 
 .training-panel .training-actions button:last-child{grid-column:auto}#training-summon-dialog{width:min(520px,94vw)}#training-summon-dialog select{min-height:42px}#summon-stage .training-actions{margin-bottom:10px}
+
+#training-remove-dialog{width:min(600px,94vw)}#training-remove{grid-column:1/-1}#training-remove-dialog .training-actions{margin-bottom:15px}

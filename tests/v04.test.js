@@ -53,7 +53,7 @@ test('Ryoshu dash invulnerability blocks forced movement and ends at wall collis
  assert.ok(g.startMotion(p,{x:-1,y:0},1,{kind:'knock'}));
 });
 test('Ishmael pulls over time at the forced movement speed cap',()=>{
- const {g,p,t}=quiet('ishmael');g.cast(p,'r',t);close(t.x,44);run(g,.2);close(t.x,44);run(g,.1);assert.ok(t.x<44&&t.x>42.5);run(g,.5);close(t.x,p.x+p.radius+t.radius+.15);
+ const {g,p,t}=quiet('ishmael');g.cast(p,'r',t);close(t.x,44);run(g,.32);close(t.x,44);run(g,.06);assert.ok(t.x<44&&t.x>42.5);run(g,.5);close(t.x,p.x+p.radius+t.radius+.15);
 });
 test('Gregor knockback triggers extra damage and stun at wall contact, not at cast time',()=>{
  const {g,p,t}=quiet('gregor');Object.assign(p,{x:13,y:15});Object.assign(t,{x:16.2,y:15,hp:10000,maxHp:10000});assert.ok(!blocked(t.x,t.y,t.radius));

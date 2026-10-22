@@ -39,7 +39,7 @@ export function cast(g,e,slot,p,d){
   else{
    e.channelUntil=g.time+2.5;e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+2.5);e.state.fairy={until:g.time+2.5,received:0,nextTaunt:g.time};
    for(const t of g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=6.8))taunt(g,t,e,.5);
-   g.schedule(e,2.5,()=>{const received=e.state.fairy?.received||0;delete e.state.fairy;area(g,e,e,6.8,Math.min(900,received*.3));g.effects.push({type:'burst',x:e.x,y:e.y,r:6.8,theme:e.key,life:.6,maxLife:.6});});
+   g.schedule(e,2.5,()=>{const received=e.state.fairy?.received||0;delete e.state.fairy;area(g,e,e,6.8,Math.min(900,received*.3));g.effects.push({type:'martonExplosion',x:e.x,y:e.y,r:6.8,theme:e.key,life:.6,maxLife:.6});});
   }return true;
  }
  if(e.key==='queequeg'){
@@ -61,7 +61,7 @@ export function controlTaunt(g,e,dt){
  }else if(distance(e,target)>e.range+target.radius)g.moveToward(e,target,dt);else if(e.attackCd<=0){g.simpleAttack(e,target);e.attackCd=e.interval;}
  return true;
 }
-function detach(g,e){const old=g.units.find(t=>t.id===e.state.tether?.target);if(old?.state.tetherSource===e.id){delete old.buffs.tetherArmor;if(!old.state.tether)delete old.buffs.tetherGuard;delete old.buffs.tetherResistance;delete old.state.tetherResistance;delete old.state.tetherSource;}delete e.state.tether;if(!e.state.tetherSource)delete e.buffs.tetherGuard;}
+export function detach(g,e){const old=g.units.find(t=>t.id===e.state.tether?.target);if(old?.state.tetherSource===e.id){delete old.buffs.tetherArmor;if(!old.state.tether)delete old.buffs.tetherGuard;delete old.buffs.tetherResistance;delete old.state.tetherResistance;delete old.state.tetherSource;}delete e.state.tether;if(!e.state.tetherSource)delete e.buffs.tetherGuard;}
 export function crowdControlled(g,e){return g.stat(e,'netCapture')||['stun','root','silence','disarm','slow','taunt','captured'].some(key=>g.stat(e,key)>0)||Boolean(e.motion?.forced);}
 export function transfer(g,source,target,amount,kind){
  const owner=g.units.find(e=>e.id===target.state?.tetherSource&&e.alive&&e.state.tether?.target===target.id&&e.state.tether.until>g.time);

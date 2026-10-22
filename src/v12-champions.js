@@ -10,6 +10,7 @@ export function validate(g,e,slot,p){
  if(e.key==='kim'&&slot==='q'&&!recast(g,e,slot)&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
  return true;
 }
+export function beforeBasic(g,e,p){if(e.key!=='ppui')return true;const ally=targetAt(g,e,p,7,e.team,a=>a!==e);return !ally||!(ally.state.ppuiEmpowerReady>g.time);}
 export function basic(g,e,p,d){
  if(e.key==='kim'){
   if(e.state.followSlashUntil>g.time){delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e)*1.2*1.08,1.9*1.3*1.2*1.08,210);g.addShield(e,100,`draw-${e.id}`,3);}
@@ -17,7 +18,7 @@ export function basic(g,e,p,d){
  }
  if(e.key==='ppui'){
   const ally=targetAt(g,e,p,7,e.team,a=>a!==e);
-  if(ally){const old=g.units.find(a=>a.id===e.state.empower?.target);if(old)delete old.buffs.redEncouragement;e.state.empower={target:ally.id,until:g.time+4,healUntil:g.time+3};g.support(e);g.addBuff(ally,'redEncouragement',4,{copy:false});ally.supporters[e.id]=g.time;}
+  if(ally){ally.state.ppuiEmpowerReady=g.time+2.5;const old=g.units.find(a=>a.id===e.state.empower?.target);if(old)delete old.buffs.redEncouragement;e.state.empower={target:ally.id,until:g.time+4,healUntil:g.time+3,healingEvent:e.healingEvent};g.support(e);g.addBuff(ally,'redEncouragement',4,{copy:false});ally.supporters[e.id]=g.time;}
   else for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,65,g.attackRange(e),{theme:'ppui',width:.2}));
   return true;
  }return false;
@@ -53,7 +54,7 @@ export function cast(g,e,slot,p,d){
  if(e.key==='ppui'){
   if(slot==='q'){
    const allies=g.champions(e.team).filter(a=>a.alive&&distance(a,p)<=3.5&&g.clearLine(p,a));
-   e.state.helping={targets:[],until:g.time+2,rate:(450+g.combatPower(e)*.3)/2};for(const t of allies){const cc=g.stat(t,'netCapture')||['stun','root','silence','disarm','taunt','captured','slow'].some(k=>g.stat(t,k))||t.motion?.forced;if(cc){t.status={};delete t.state.netTrap;if(t.motion?.forced)delete t.motion;t.ccImmuneUntil=Math.max(t.ccImmuneUntil||0,g.time+1);}e.state.helping.targets.push(t.id);t.supporters[e.id]=g.time;g.support(e);}
+   e.state.helping={targets:[],until:g.time+2,healingEvent:e.healingEvent,rate:(450+g.combatPower(e)*.3)/2};for(const t of allies){const cc=g.stat(t,'netCapture')||['stun','root','silence','disarm','taunt','captured','slow'].some(k=>g.stat(t,k))||t.motion?.forced;if(cc){t.status={};delete t.state.netTrap;if(t.motion?.forced)delete t.motion;t.ccImmuneUntil=Math.max(t.ccImmuneUntil||0,g.time+1);}e.state.helping.targets.push(t.id);t.supporters[e.id]=g.time;g.support(e);}
    g.effects.push({type:'ring',...p,r:3.5,color:'#efadb5',life:.6,maxLife:.6});
   }else{
    e.ammo=g.ammoCap(e);e.reloadProgress=0;e.qCd=0;e.state.nailStorm={d:{...d},until:g.time+2};
@@ -69,14 +70,8 @@ export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
  if(proc&&actual+absorbed>0&&e.key==='kim'&&t.kind==='champion'&&e.team!==t.team&&e.passiveReady<=g.time){
   e.passiveReady=g.time+1;for(const ally of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=4)){g.addShield(ally,KIM.shield,`sword-${e.id}`,3);g.addBuff(ally,'swordDiscipline',3,{copy:false});}g.support(e);
  }
- if(!proc||actual+absorbed<=0||t.kind!=='champion'||e.kind!=='champion'||e.team===t.team)return;
- for(const owner of g.champions(e.team).filter(a=>a.alive&&a.key==='ppui')){
-  const buff=owner.state.empower,token=kind==='basic'?`b${e.attackSerial}`:`s${e.castAt}`;
-  if(buff?.target!==e.id||buff.until<=g.time||distance(owner,t)>g.attackRange(owner)||buff.lastToken===token)continue;
-  buff.lastToken=token;t.contributors[owner.id]=g.time;
-  for(let i=0;i<3;i++)g.schedule(owner,i*.1,()=>{if(t.alive)g.bullet(owner,direction(owner,t),65,4,{homing:true,target:t,speed:18,theme:'ppui',nonLethal:true,proc:false,damageKind:'skill'});});
- }
 }
+
 export function tick(g,e,dt){
  if(e.key==='kim'&&e.state.swordGrab&&(!carried(g,e)||g.stat(e,'stun')))releaseGrab(g,e);
  if(e.key!=='ppui')return;
@@ -87,14 +82,14 @@ export function tick(g,e,dt){
    if(span>0){
     // Integrate the missing-HP term over this frame, retaining normal healing power scaling.
     const scale=g.powerScale(e)*.9*RULES.power[CHAMPIONS[e.key].power],missing=t.maxHp-t.hp;
-    g.heal(e,t,(150+.025*missing)*-Math.expm1(-.025*scale*span)/.025,false);
+    g.heal(e,t,(150+.025*missing)*-Math.expm1(-.025*scale*span)/.025,false,{healingKey:empower.healingEvent?.key,startedAt:empower.healingEvent?.at});
    }
    if(empower.until>g.time)t.supporters[e.id]=g.time;
   }
   if(!t||empower.until<=g.time)delete e.state.empower;
  }
  const help=e.state.helping;
- if(help){const span=Math.min(dt,Math.max(0,help.until-(g.time-dt)));for(const id of help.targets){const t=g.champions(e.team).find(a=>a.id===id&&a.alive);if(t&&span>0){g.heal(e,t,help.rate*span);t.supporters[e.id]=g.time;}}if(help.until<=g.time)delete e.state.helping;}
+ if(help){const span=Math.min(dt,Math.max(0,help.until-(g.time-dt)));for(const id of help.targets){const t=g.champions(e.team).find(a=>a.id===id&&a.alive);if(t&&span>0){g.heal(e,t,help.rate*span,true,{healingKey:help.healingEvent?.key,startedAt:help.healingEvent?.at});t.supporters[e.id]=g.time;}}if(help.until<=g.time)delete e.state.helping;}
  if(e.state.nailStorm?.until<=g.time)delete e.state.nailStorm;
 }
 export function onDeath(g,e){

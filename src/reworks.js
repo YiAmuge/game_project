@@ -46,8 +46,8 @@ export function outis(g,e,d){
  let victim=null,finished=false;
  const blast=()=>{
   if(finished)return;finished=true;
-  const backward={x:-d.x,y:-d.y};g.cone(e,backward,6.5,Math.PI*2/3,220,()=>{},{exclude:new Set(victim?[victim.id]:[])});
-  g.effects.push({type:'slash',x:e.x,y:e.y,angle:Math.atan2(backward.y,backward.x),r:6.5,spread:Math.PI*2/3,theme:'outis',life:.5,maxLife:.5});
+  const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,()=>{},{exclude:new Set(victim?[victim.id]:[])});
+  g.effects.push({type:'slash',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:6.5,spread:Math.PI*2/3,theme:'outis',life:.5,maxLife:.5});
   if(victim){if(!g.startMotion(e,backward,2.5,{speed:18,maxSpeed:18,phaseEnemies:true,onComplete:finish}))finish();}else finish();
  };
  const ok=g.startMotion(e,d,4.5,{speed:12,maxSpeed:12,phaseEnemies:true,onStep:(from,to)=>{
@@ -58,12 +58,12 @@ export function outis(g,e,d){
 }
 export function honglu(g,e,slot,p,d){
  if(slot==='q'){
-  e.state.insightUntil=g.time+1.2;e.state.insightOrigin={x:e.x,y:e.y};e.phaseEnemiesUntil=g.time+1.2;
+  e.state.insightHealingEvent=e.healingEvent;e.state.insightUntil=g.time+1.2;e.state.insightOrigin={x:e.x,y:e.y};e.phaseEnemiesUntil=g.time+1.2;
   e.invulnerableUntil=Math.max(e.invulnerableUntil||0,g.time+1.2);g.addBuff(e,'insight',1.2,{copy:false});
  }else{
   const z=g.zones.find(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time);
   if(z)z.moving=!z.moving;
-  else g.zones.push({kind:'waterfall',source:e,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,damage:60,heal:75*(1+.05*2),cleanse:true,cleansed:new Set()});
+  else g.zones.push({kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,damage:60,heal:75*(1+.05*2),cleanse:true,cleansed:new Set()});
  }
  return true;
 }
@@ -75,8 +75,9 @@ export function tick(g,e){
  }
  if(s.outisRush&&!e.motion)delete s.outisRush;
  if(s.gregorPulls){s.gregorPulls=s.gregorPulls.filter(id=>g.units.some(t=>t.id===id&&t.alive&&t.motion?.follow===e));if(!s.gregorPulls.length)delete s.gregorPulls;}
- if(s.ishmaelCast){const active=g.projectiles.some(p=>p.ishmaelOwner===e.id&&p.remaining>0)||g.units.some(t=>t.alive&&t.motion?.ishmaelOwner===e.id);if(!active)delete s.ishmaelCast;}
- if(s.insightUntil!==undefined&&g.time+1e-8>=s.insightUntil){delete s.insightUntil;e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;for(const t of g.champions(e.team).filter(t=>t.alive&&distance(e,t)<=5))g.heal(e,t,500,false);g.effects.push({type:'ring',x:e.x,y:e.y,r:5,color:'#84e6dc',life:.6,maxLife:.6});}
+ if(s.ishmaelCast&&!s.ishmaelCast.fired&&g.stat(e,'stun'))delete s.ishmaelCast;
+ if(s.ishmaelCast?.fired){const active=g.projectiles.some(p=>p.ishmaelOwner===e.id&&p.remaining>0)||g.units.some(t=>t.alive&&t.motion?.ishmaelOwner===e.id);if(!active)delete s.ishmaelCast;}
+ if(s.insightUntil!==undefined&&g.time+1e-8>=s.insightUntil){delete s.insightUntil;e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;for(const t of g.champions(e.team).filter(t=>t.alive&&distance(e,t)<=5))g.heal(e,t,500,false,{healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});g.effects.push({type:'ring',x:e.x,y:e.y,r:5,color:'#84e6dc',life:.6,maxLife:.6});}
 }
 export function easterEggs(g,dt){
  g.easterEggs??=new Set();const phrases={queequeg:'자, 막아내라!',starbuck:'엄호해라!',ishmael:'네 탓이군, 이스마엘!'};
@@ -85,4 +86,19 @@ export function easterEggs(g,dt){
   e.state.captainDwell=near?(e.state.captainDwell||0)+dt:0;
   if(!g.easterEggs.has(key)&&e.state.captainDwell+1e-8>=3){g.easterEggs.add(key);e.easterText={text:phrases[e.key],until:g.time+2};}
  }
+}
+
+export function ishmael(g,e,d){
+ const cast={d:{...d},windupUntil:g.time+.235};e.state.ishmaelCast=cast;e.channelUntil=cast.windupUntil;
+ g.schedule(e,.235,()=>{
+  if(e.state.ishmaelCast!==cast)return;cast.fired=true;
+  g.bullet(e,d,300,16,{ishmaelOwner:e.id,speed:28,width:.585,pierce:Infinity,onHit:(t,p)=>{
+   if(t.kind!=='champion')return;
+   p.remaining=0;p.hit=true;if(!t.alive)return;
+   const front=e.radius+t.radius+.15;
+   const pulled=g.startMotion(t,direction(t,e),Math.max(0,distance(t,e)-front),{kind:'knock',source:e,follow:e,stopDistance:front,speed:18,forcedMaxSpeed:18});
+   if(pulled&&t.motion){t.motion.ishmaelOwner=e.id;t.state.harpoon={source:e.id,until:g.time+1.5};}
+   g.status(t,'slow',.2,2,e);
+  }});
+ });return true;
 }

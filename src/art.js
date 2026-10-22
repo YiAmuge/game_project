@@ -47,13 +47,13 @@ export const THEMES = {
   moses:{light:"#f0e1d4",dark:"#715d6d",accent:"#c27472",weapon:"pipe"},
   ezra:{light:"#f4cd96",dark:"#8c6b3d",accent:"#cee0dd",weapon:"hammer"},
   alisa:{light:"#ffb67a",dark:"#a04538",accent:"#fbd064",weapon:"fire"},
-  gahwan:{light:'#f4cebf',dark:'#7d3044',accent:'#e9ba66',weapon:'spear'},
+  gahwan:{light:'#ffe176',dark:'#842e35',accent:'#ce453f',weapon:'spear'},
   nelly:{light:'#d4e2f5',dark:'#485572',accent:'#a4bcda',weapon:'knives'},
   ahab:{light:'#e2d6a5',dark:'#596d4d',accent:'#d9ae68',weapon:'harpoon'},
   myo:{light:'#e6ae78',dark:'#8150a3',accent:'#c59ff0',weapon:'rabbitBlade'},
   dongbaek:{light:'#fff0cc',dark:'#8e7540',accent:'#f0ce63',weapon:'fan'},
   dongrang:{light:'#e3d99c',dark:'#756939',accent:'#b6c575',weapon:'scythe'},
-  gubo:{light:"#d8c1d4",dark:"#745c80",accent:"#d8a494",weapon:"rifle"},
+  gubo:{light:"#df6c7d",dark:"#340b19",accent:"#a42744",weapon:"rifle"},
 };
 export function loadAtlas(sheet=0){
   sheet=Number(sheet);

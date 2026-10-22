@@ -32,9 +32,9 @@ test('Kim counter waves use the same direction with .125-second cadence and four
  const {g,p}=quiet('kim'),t=target(g),shots=[],bullet=g.bullet.bind(g);g.bullet=(...a)=>{shots.push({at:g.time,d:a[1],width:a[4].width,n:a[2]});return bullet(...a);};g.cast(p,'r',{x:48,y:7});g.deal(t,p,100,{fixed:true});assert.equal(shots.length,1);run(g,.116);assert.equal(shots.length,1);run(g,.27);assert.equal(shots.length,4);
  shots.forEach((s,i)=>{close(s.at,i*.125,.009);close(s.d.x,1);close(s.d.y,0);close(s.width,.42*4.5);close(s.n,338);});
 });
-test('Ppui direct and allied-hit basics fire exactly three 65-damage nails per attack',()=>{
+test('Ppui direct basics fire three 65-damage nails and ally hits no longer add a volley',()=>{
  const {g,p}=quiet('ppui'),t=target(g),shots=[],bullet=g.bullet.bind(g);g.bullet=(...a)=>{if(a[0]===p)shots.push(a);return bullet(...a);};g.attack(p,t);run(g,.22);assert.equal(shots.length,3);assert.ok(shots.every(a=>a[2]===65));
- const a=target(g,41,8,0);p.attackCd=0;p.ammo=1;g.attack(p,a);shots.length=0;g.attack(a,t);run(g,.22);assert.equal(shots.length,3);assert.ok(shots.every(a=>a[2]===65&&a[4].nonLethal&&a[4].proc===false));
+ const a=target(g,41,8,0);p.attackCd=0;p.ammo=1;g.attack(p,a);shots.length=0;g.attack(a,t);run(g,.22);assert.equal(shots.length,0);
 });
 test('Ppui tactical heals its complete group for 450 plus thirty percent current combat power',()=>{
  const {g,p}=quiet('ppui'),a=target(g,42,7,0),b=target(g,43,8,0);a.hp=b.hp=1000;g.cast(p,'q',a);const expected=(450+.3*g.combatPower(p))*.82*.9;run(g,2);close(a.hp-1000,expected);close(b.hp-1000,expected);

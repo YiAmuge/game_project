@@ -63,6 +63,10 @@ CHAMPIONS.marton.range=5;CHAMPIONS.marton.qText='4초 동안 반경 5.5에 초�
 CHAMPIONS.queequeg.range=3;CHAMPIONS.queequeg.qText='사거리 8 아군 연결·최대 연결 거리 8. 갈색 밧줄, 연결 무한·방어력·저항·피해 분담';CHAMPIONS.queequeg.rText='4초 불사·이동 +25%·장전 +40%, 종료 시 잃은 체력 25% 회복. 연결한 아군에게도 모든 효과 적용';
 CHAMPIONS.gubo.rText='1.2초 대상 조준 후 사거리·지형 무관 즉발 붉은 레이저 500 피해. 아군 처치 시 사거리 14.7 부채꼴로 (현재 전투력 + 적 최대 체력)의 25% 고정 피해';
 CHAMPIONS.hohenheim.rText+=' 추적 대상 사망 시 정지·재지정 대기. 남색 지네 외곽 이펙트';
+CHAMPIONS.meursault.range=2.6;CHAMPIONS.meursault.rText='전방 사거리 8 사슬·270 피해·속박·전투력 약화. 시전 직후 이동속도 -99%, 0.275초 동안 빠르게 원상 회복. 방어력 +10% 3초';
+CHAMPIONS.ishmael.rText='0.235초 작살 조준 후 사거리 16·속도 28로 발사, 300 피해. 첫 적 챔피언에서 멈추고 바로 앞으로 끌기. 비행·끌기 완료까지 이동 불가, 쿨다운 25초';
+CHAMPIONS.outis.rText=CHAMPIONS.outis.rText.replace('종료점 뒤','종료점 앞');
+CHAMPIONS.gubo.color='#aa344e';CHAMPIONS.gahwan.color='#eac854';
 export const POSITIONS={
   top:{name:'탑',lane:0,recommend:['보호','돌격'],description:'상단 라인 1vs1 · 보호·돌격 추천'},
   jungle:{name:'정글',lane:0,recommend:['암살','돌격'],description:'중립 크립 사냥·갱킹 · 암살·돌격 추천'},

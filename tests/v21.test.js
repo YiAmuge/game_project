@@ -48,7 +48,7 @@ test('Queequeg links at eight and shares immortality, reload, movement and end h
  const {g,p}=quiet('queequeg'),a=target(g,47.8,7,0,'yi'),enemy=target(g,43);a.level=1;assert.ok(g.cast(p,'q',a));const reload=g.reloadInterval(a),speed=g.speed(a);g.cast(p,'r',p);assert.ok(g.buff(a,'queequegUlt'));close(g.speed(a)/speed,1.25);assert.ok(g.reloadInterval(a)<reload);g.deal(enemy,a,1e9,{fixed:true});close(a.hp,1);run(g,4.01);assert.ok(a.alive&&a.hp>1);assert.equal(a.state.queegHealAt,undefined);
 });
 test('Ishmael cannot walk during flight or pull, hooks at eighteen and unlocks after both end',()=>{
- const {g,p}=quiet('ishmael'),t=target(g,49);g.input.x=1;g.cast(p,'r',t);close(g.speed(p),0);run(g,.62);close(p.x,40);assert.equal(t.motion?.speed,18);assert.ok(t.x<49&&t.x>46);run(g,.6);assert.ok(p.x>40);assert.equal(p.state.ishmaelCast,undefined);assert.ok(distance(p,t)<2);
+ const {g,p}=quiet('ishmael'),t=target(g,49);g.input.x=1;g.cast(p,'r',t);close(g.speed(p),0);run(g,.57);close(p.x,40);assert.equal(t.motion?.speed,18);assert.ok(t.x<49&&t.x>46);run(g,.6);assert.ok(p.x>40);assert.equal(p.state.ishmaelCast,undefined);assert.ok(distance(p,t)<2);
 });
 test('missed or terrain-blocked Ishmael harpoons release the movement lock',()=>{for(const blocked of [false,true]){const {g,p}=quiet('ishmael');if(blocked)g.map.walls=[{x:43,y:3,w:1,h:8}];g.cast(p,'r',{x:60,y:7});run(g,1.3);assert.ok(g.speed(p)>0);}});
 test('Gregor slows only while victims travel, at double pull speed, and clears interrupted hooks',()=>{
@@ -60,10 +60,10 @@ for(const progress of [0,.49,.5,1])test(`Heathcliff hold/release charge ${progre
 });
 test('Heathcliff holds a full charge until release and cancels under CC without cooldown',()=>{const {g,p}=quiet('heathcliff');g.cast(p,'q',{x:47,y:7});run(g,2);close(p.x,40);assert.equal(Skills.heathCharge(g,p,{x:47,y:7}).progress,1);g.status(p,'stun',1,1);run(g,.01);assert.equal(p.state.chargeAt,undefined);close(p.qCd,0);});
 test('Outis basic damage is exactly 215 at near and far range',()=>{for(const x of [42,47]){const {g,p}=quiet('outis'),t=target(g,x);g.attack(p,t);run(g,.5);close(100000-t.hp,damageFormula(215,4,1)*g.powerScale(p));}});
-test('Outis R contact damages once then retreats and excludes that target from the backward blast',()=>{
- const {g,p}=quiet('outis'),t=target(g,43),back=target(g,37);g.cast(p,'r',{x:48,y:7});assert.ok(p.state.outisRush);const hp=p.hp;g.deal(t,p,100,{damageKind:'skill'});close(hp-p.hp,damageFormula(100,4,1)*g.powerScale(t)*.5);run(g,.8);close(100000-t.hp,damageFormula(450,4,1)*g.powerScale(p));close(100000-back.hp,damageFormula(220,4,1)*g.powerScale(p));assert.ok(p.x<41);assert.equal(p.state.outisRush,undefined);assert.ok(canOccupy(g,p,p));
+test('Outis R contact damages once then retreats and excludes that target from the forward blast',()=>{
+ const {g,p}=quiet('outis'),t=target(g,43),back=target(g,47);g.cast(p,'r',{x:48,y:7});assert.ok(p.state.outisRush);const hp=p.hp;g.deal(t,p,100,{damageKind:'skill'});close(hp-p.hp,damageFormula(100,4,1)*g.powerScale(t)*.5);run(g,.8);close(100000-t.hp,damageFormula(450,4,1)*g.powerScale(p));close(100000-back.hp,damageFormula(220,4,1)*g.powerScale(p));assert.ok(p.x<41);assert.equal(p.state.outisRush,undefined);assert.ok(canOccupy(g,p,p));
 });
-test('Outis R maximum distance and terrain endpoints produce a backward blast without projectiles',()=>{for(const wall of [false,true]){const {g,p}=quiet('outis'),t=target(g,38);if(wall)g.map.walls=[{x:43,y:3,w:1,h:8}];g.cast(p,'r',{x:50,y:7});run(g,.6);assert.ok(t.hp<100000);assert.equal(g.projectiles.length,0);assert.ok(!p.motion);assert.ok(!g.blocked(p.x,p.y,p.radius));}});
+test('Outis R maximum distance produces a forward blast and terrain blocks that blast',()=>{for(const wall of [false,true]){const {g,p}=quiet('outis'),t=target(g,48);if(wall)g.map.walls=[{x:43,y:3,w:1,h:8}];g.cast(p,'r',{x:50,y:7});run(g,.6);if(wall)close(t.hp,100000);else assert.ok(t.hp<100000);assert.equal(g.projectiles.length,0);assert.ok(!p.motion);assert.ok(!g.blocked(p.x,p.y,p.radius));}});
 test('Marton uses a near 190 sweep with stride or distant 100 root and channel refreshes taunt',()=>{
  for(const [x,damage] of [[42,190],[45,100]]){const {g,p}=quiet('marton'),t=target(g,x);g.attack(p,t);close(100000-t.hp,damageFormula(damage,RUNTIME_CHAMPIONS[p.key].power,1)*g.powerScale(p));assert.equal(g.buff(p,'martonStride'),damage===190);}
  const {g,p}=quiet('marton'),t=target(g,46.7);g.cast(p,'r',p);close(p.channelUntil,2.5);run(g,2.3);assert.ok(g.stat(t,'taunt'));assert.ok(t.status.taunt.until>2.5);

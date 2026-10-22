@@ -1,3 +1,6 @@
+import * as Yan from './yan.js';
+import * as V08 from './v08-champions.js';
+import { onDeath as releaseReferences } from './v12-champions.js';
 import * as BotAI from './bot-ai.js';
 import { cancelCharge as cancelYan } from './yan.js';
 import { cancelCharge as cancelHohen } from './hohenheim.js';
@@ -28,7 +31,7 @@ export function lanePath(team){const p=[{x:9,y:8.5},{x:40,y:8.5},{x:74,y:8.5}];r
 function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아비'}={}){
  const e=g.makeChampion('faust',team,10+g.champions().length,'bottom');
  Object.assign(e,{x,y,player:false,name,maxHp:hp,hp,range:10.5,damage:100,interval:1.3});
- e.trainingDummy={home:{x,y},hp,infinite,mode,leash:12,respawn:5};return e;
+ e.trainingDummy={home:{x,y},hp,infinite,mode,leash:12,respawn:5};if(infinite)e.trainingDummy.meter={kind:team===0?'healing':'damage',total:0,last:0,samples:[],groups:{},lastStarted:-Infinity};return e;
 }
 export function init(g,key,position){
  g.practice={invincible:false,noCooldown:false,infiniteAmmo:false,lineStopped:false,championAI:false};
@@ -55,7 +58,7 @@ export function tickDummy(g,e,dt){
  const d=e.trainingDummy;
  if(!e.alive){if(g.time>=e.respawnAt)respawnDummy(g,e);return;}
  if(distance(e,d.home)>d.leash)resetDummyPosition(g,e);
- if(d.infinite)e.hp=e.maxHp;
+ if(d.infinite){e.hp=e.maxHp;const yi=g.yiShield(e),owner=yi&&g.champions(e.team).find(c=>c.key==='yi'&&yi.source===`yi-${c.id}`);if(owner)g.heal(owner,e,(7+e.maxHp*.015)*dt,false,{healingKey:`yi-${owner.id}-${yi.until}`,startedAt:yi.until-3});if(g.buff(e,'blessingHeal'))g.heal(null,e,30*dt,false,{healingKey:'blessing'});if(g.buff(e,'mosesHeal'))g.heal(null,e,35*dt,false,{healingKey:'moses'});}
  if(e.motion)g.updateMotion(e,dt);
  if(g.stat(e,'stun')||g.stat(e,'root')||e.motion||e.state.swordHeldBy)return;
  if(d.mode==='patrol'){
@@ -95,7 +98,7 @@ export function beforeStep(g,dt){
  if(!g.practice.lineStopped&&g.time+1e-8>=g.practice.nextWave){g.spawnWave();g.practice.nextWave=g.time+RULES.waveEvery;}
  const p=g.player;
  if(p.alive&&p.x>=HAZARD.x&&p.x<=HAZARD.x+HAZARD.w&&p.y>=HAZARD.y&&p.y<=HAZARD.y+HAZARD.h){
-  p.hazardTime=(p.hazardTime||0)+dt;while(p.hazardTime+1e-8>=.25){p.hazardTime-=.25;g.deal({kind:'training-floor',team:1,name:'피해 장판',x:p.x,y:p.y},p,p.maxHp*.0025,{fixed:true,proc:false});}
+  p.hazardTime=(p.hazardTime||0)+dt;while(p.hazardTime+1e-8>=.25){p.hazardTime-=.25;g.deal({kind:'training-floor',team:1,name:'피해 장판',x:p.x,y:p.y},p,p.maxHp*.00825,{fixed:true,proc:false});}
  }
 }
 export function afterStep(g){
@@ -131,7 +134,7 @@ export function summon(g,key,team,point){
  const probe={kind:'champion',team,radius:.48,alive:true,state:{}};
  if(!canOccupy(g,probe,point,{phaseEnemies:false}))return false;
  const e=g.makeChampion(key,team,10+g.nextId,'top');
- Object.assign(e,point,{player:false,trainingSummoned:true,trainingHome:{...point}});e.path=[];return e;
+ g.practice.summonCounts??={};const number=g.practice.summonCounts[key]=(g.practice.summonCounts[key]||0)+1;Object.assign(e,point,{player:false,trainingSummoned:true,summonNumber:number,trainingHome:{...point}});e.path=[];return e;
 }
 export function setChampionAI(g,on){
  if(!g.training)return false;g.practice.championAI=Boolean(on);
@@ -144,4 +147,30 @@ export function aiChampion(g,e,dt){
  if(distance(e,t)>g.attackRange(e)+t.radius||!g.clearLine(e,t))g.moveToward(e,t,dt);
  else g.attack(e,t);
  BotAI.combatSkills(g,e,t);
+}
+
+// A one-second rolling window remains useful even during an indefinitely long session.
+export function recordMetric(g,e,kind,amount,{source,healingKey,startedAt}={}){
+ const m=e.trainingDummy?.meter;if(!m||m.kind!==kind||!Number.isFinite(amount)||amount<=0)return;
+ m.total+=amount;m.samples.push({at:g.time,amount});m.samples=m.samples.filter(s=>g.time-s.at<1);
+ if(kind==='damage'){m.last=amount;return;}
+ const key=healingKey||source?.healingEvent?.key||`heal-${source?.id||0}`,at=startedAt??source?.healingEvent?.at??g.time;
+ m.groups[key]=(m.groups[key]||0)+amount;
+ if(at>=m.lastStarted){m.lastStarted=at;m.lastKey=key;}
+ m.last=m.groups[m.lastKey]||0;
+ const names=Object.keys(m.groups);if(names.length>64)for(const k of names.slice(0,names.length-64))if(k!==m.lastKey)delete m.groups[k];
+}
+export function metric(g,e){
+ const m=e.trainingDummy?.meter;if(!m)return null;m.samples=m.samples.filter(s=>g.time-s.at<1);
+ return {kind:m.kind,total:m.total,last:m.last,perSecond:m.samples.reduce((n,s)=>n+s.amount,0)};
+}
+export function summoned(g){return g.training?g.champions().filter(e=>e.trainingSummoned).sort((a,b)=>a.id-b.id):[];}
+export function summonLabel(e){return `${e.name} ${e.summonNumber} · ${e.team===0?'아군':'적군'}${e.alive?'':' · 사망'}`;}
+export function removeSummoned(g,id=null){
+ if(!g.training)return false;const targets=summoned(g).filter(e=>id===null||e.id===id);if(!targets.length)return false;
+ const ids=new Set(targets.map(e=>e.id));
+ for(const e of targets){releaseReferences(g,e);V08.detach(g,e);const owner=g.units.find(t=>t.id===e.state.tetherSource);if(owner)V08.detach(g,owner);Yan.removeHand(g,e);e.alive=false;delete e.motion;}
+ for(const e of g.units){if(ids.has(e.owner))ids.add(e.id);if(e.motion?.follow&&ids.has(e.motion.follow.id)){delete e.motion;settleBody(g,e,e.bodySafe);}if(ids.has(e.state?.guboAim?.target?.id)){delete e.state.guboAim;e.channelUntil=g.time;}if(ids.has(e.state?.empower?.target))delete e.state.empower;}
+ g.units=g.units.filter(e=>!ids.has(e.id));g.events=g.events.filter(e=>!ids.has(e.source.id));g.pending=g.pending.filter(e=>!ids.has(e.source.id));g.zones=g.zones.filter(e=>!ids.has(e.source.id));g.projectiles=g.projectiles.filter(p=>!ids.has(p.source.id)&&!ids.has(p.target?.id));
+ for(const z of g.zones)if(ids.has(z.targetId))z.waitingForTarget=true;g.corpses=g.corpses.filter(c=>!ids.has(c.unitId));return true;
 }

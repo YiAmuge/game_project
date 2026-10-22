@@ -129,6 +129,11 @@ $('summon-confirm').onclick=()=>{$('summon-selection').classList.add('hidden');$
 $('summon-reselect').onclick=()=>{$('summon-stage').classList.add('hidden');$('summon-selection').classList.remove('hidden');};
 function placeSummon(team){const key=$('summon-champion').value;$('training-summon-dialog').close();clearInput();cancelGlobal();summonChoice={key,team};globalKind='summon';globalTarget=true;$('shop').classList.add('hidden');$('global-title').textContent=RUNTIME_CHAMPIONS[key].name+' · '+(team?'적군':'아군')+' 소환 위치 선택';$('global-description').textContent='미니맵을 좌클릭해 배치합니다. 중복 소환 가능 · 챔피언 AI는 연습장 옵션에서 켜세요.';$('global-target').classList.remove('hidden');}
 $('summon-ally').onclick=()=>placeSummon(0);$('summon-enemy').onclick=()=>placeSummon(1);
+function refreshRemoval(){const units=Training.summoned(game),select=$('remove-champion');select.replaceChildren();for(const e of units){const option=document.createElement('option');option.value=e.id;option.textContent=Training.summonLabel(e);select.append(option);}$('remove-status').textContent=units.length?`현재 소환 챔피언 ${units.length}명`:'소환한 챔피언이 없습니다.';for(const id of ['remove-all','remove-choose','remove-selected'])$(id).disabled=!units.length;}
+$('training-remove').onclick=()=>{if(!active()||!game.training)return;refreshRemoval();$('remove-selection').classList.add('hidden');showDialog('training-remove-dialog');};
+$('remove-choose').onclick=()=>$('remove-selection').classList.remove('hidden');
+$('remove-all').onclick=()=>{if(Training.removeSummoned(game)){$('training-remove-dialog').close();toast('소환한 챔피언을 전부 제거했습니다.');updateHud();}};
+$('remove-selected').onclick=()=>{if(Training.removeSummoned(game,Number($('remove-champion').value))){refreshRemoval();toast('선택한 소환 챔피언을 제거했습니다.');updateHud();}};
 function updateTrainingOptions(){
  const visible=game.training&&mode==='playing';$('training-panel').classList.toggle('hidden',!visible);if(!visible)return;
  for(const [id,key] of [['training-invincible','invincible'],['training-no-cooldown','noCooldown'],['training-infinite-ammo','infiniteAmmo']])$(id).checked=game.practice[key];
