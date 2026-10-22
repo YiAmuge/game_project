@@ -179,3 +179,10 @@ body.in-game.training-mode .event-feed{right:324px;max-width:250px}
 .training-panel .training-actions button:last-child{grid-column:auto}#training-summon-dialog{width:min(520px,94vw)}#training-summon-dialog select{min-height:42px}#summon-stage .training-actions{margin-bottom:10px}
 
 #training-remove-dialog{width:min(600px,94vw)}#training-remove{grid-column:1/-1}#training-remove-dialog .training-actions{margin-bottom:15px}
+
+/* A real WebGL scene below the existing input/HUD canvas. */
+#arena-3d{position:absolute;inset:0;width:100%;height:100%;max-height:none;aspect-ratio:auto;pointer-events:none;z-index:0;image-rendering:auto}
+#arena-3d[hidden]{display:none}
+body.in-game.training-25d #arena{z-index:1;background:transparent;image-rendering:auto}
+body.in-game.training-25d .arena-shell{background:#101e2a}
+#training-25d-open{border-color:#74969a66;background:linear-gradient(110deg,#29484955,#20333c44)}

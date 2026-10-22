@@ -10,6 +10,7 @@ import { canOccupy,settleBody } from './collision.js';
 import * as Skills from './skills.js';
 import * as Sora from './sora.js';
 import { releaseGrab } from './v12-champions.js';
+import { TRAINING_25D } from './training-25d-map.js';
 
 export const SPAWN={x:8,y:40};
 export const HAZARD={x:34,y:38.5,w:4,h:4};
@@ -27,7 +28,10 @@ export const MAP={bounds:{x:0,y:0,w:RULES.width,h:RULES.height},walls:[
  {x:41.2,y:31.4,w:.6,h:4.6},{x:41.2,y:42,w:.6,h:RULES.height-42},
  {x:61,y:22,w:2,h:1.4},
 ]};
-export function lanePath(team){const p=[{x:9,y:8.5},{x:40,y:8.5},{x:74,y:8.5}];return team?p.reverse():p;}
+export function spawn(g){return g.training25d?TRAINING_25D.spawn:SPAWN;}
+export function hazard(g){return g.training25d?TRAINING_25D.hazard:HAZARD;}
+export function areas(g){return g.training25d?TRAINING_25D.areas:AREAS;}
+export function lanePath(team,g){const p=(g?.training25d?TRAINING_25D.lane:[{x:9,y:8.5},{x:40,y:8.5},{x:74,y:8.5}]).map(p=>({...p}));return team?p.reverse():p;}
 function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아비'}={}){
  const e=g.makeChampion('faust',team,10+g.champions().length,'bottom');
  Object.assign(e,{x,y,player:false,name,maxHp:hp,hp,range:10.5,damage:100,interval:1.3});
@@ -35,15 +39,17 @@ function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아�
 }
 export function init(g,key,position){
  g.practice={invincible:false,noCooldown:false,infiniteAmmo:false,lineStopped:false,championAI:false};
- g.makeChampion(key,0,0,position);g.player=g.units.find(u=>u.player);Object.assign(g.player,SPAWN);
- dummy(g,0,23,40,{infinite:true,hp:10000,name:'아군 무한 허수아비'});
- dummy(g,1,29,40,{infinite:true,hp:10000,name:'적 무한 허수아비'});
- const a=dummy(g,0,12,23,{mode:'duel',name:'아군 대치 허수아비'}),b=dummy(g,1,22,23,{mode:'duel',name:'적 대치 허수아비'});
+ g.makeChampion(key,0,0,position);g.player=g.units.find(u=>u.player);Object.assign(g.player,spawn(g));
+ const layout=g.training25d?TRAINING_25D:null;
+ for(const p of layout?.infinite||[{team:0,x:23,y:40},{team:1,x:29,y:40}])dummy(g,p.team,p.x,p.y,{infinite:true,hp:10000,name:p.team?'적 무한 허수아비':'아군 무한 허수아비'});
+ const [pa,pb]=layout?.duel||[{team:0,x:12,y:23},{team:1,x:22,y:23}];
+ const a=dummy(g,0,pa.x,pa.y,{mode:'duel',name:'아군 대치 허수아비'}),b=dummy(g,1,pb.x,pb.y,{mode:'duel',name:'적 대치 허수아비'});
  a.trainingDummy.opponent=b.id;b.trainingDummy.opponent=a.id;
- dummy(g,1,62,18,{hp:1000,mode:'patrol',name:'이동 허수아비'});
- const center={x:58.5,y:36.5};
- for(const [x,y] of [[57,35],[60,35],[57,38],[60,38]]){const n=g.makeNeutral(x,y,'central');n.campCenter={...center};n.campId='training-central';}
- for(const [x,y,kind] of [[68,35,'amplify'],[75,35,'blessing'],[72,42,'boss']]){const n=g.makeNeutral(x,y,kind);n.respawnDelay=kind==='boss'?10:n.respawnDelay;}
+ const patrol=layout?.patrol||{x:62,y:18,to:28};const moving=dummy(g,1,patrol.x,patrol.y,{hp:1000,mode:'patrol',name:'이동 허수아비'});moving.trainingDummy.patrolTo=patrol.to;
+ const central=layout?.central||[{x:57,y:35},{x:60,y:35},{x:57,y:38},{x:60,y:38}];
+ const center={x:central.reduce((s,p)=>s+p.x,0)/4,y:central.reduce((s,p)=>s+p.y,0)/4};
+ for(const {x,y} of central){const n=g.makeNeutral(x,y,'central');n.campCenter={...center};n.campId='training-central';}
+ for(const {x,y,kind} of layout?.camps||[{x:68,y:35,kind:'amplify'},{x:75,y:35,kind:'blessing'},{x:72,y:42,kind:'boss'}]){const n=g.makeNeutral(x,y,kind);n.respawnDelay=kind==='boss'?10:n.respawnDelay;}
  resetLane(g);g.log('연습장 · 우측 상단 옵션 · G 무료 상점');
 }
 export function resetLane(g){
@@ -51,7 +57,7 @@ export function resetLane(g){
  const removed=new Set(g.units.filter(u=>u.trainingLane).map(u=>u.id));
  g.units=g.units.filter(u=>!u.trainingLane);g.projectiles=g.projectiles.filter(p=>!removed.has(p.source.id)&&!removed.has(p.target?.id));
  g.events=g.events.filter(e=>!removed.has(e.source.id));g.minionQueue=[];g.wave=0;g.practice.lineStopped=false;g.practice.nextWave=g.time+3;
- for(const team of [0,1])g.entity({kind:'tower',trainingLane:true,team,lane:0,x:team?74:9,y:8.5,maxHp:6460,armor:120,range:8.5,damage:280,interval:1.05,radius:.9,name:'연습 포탑'});
+ for(const team of [0,1])g.entity({kind:'tower',trainingLane:true,team,lane:0,...lanePath(team,g)[0],maxHp:6460,armor:120,range:8.5,damage:280,interval:1.05,radius:.9,name:'연습 포탑'});
  return true;
 }
 export function tickDummy(g,e,dt){
@@ -62,8 +68,8 @@ export function tickDummy(g,e,dt){
  if(e.motion)g.updateMotion(e,dt);
  if(g.stat(e,'stun')||g.stat(e,'root')||e.motion||e.state.swordHeldBy)return;
  if(d.mode==='patrol'){
-  d.end??=28;if(distance(e,{x:62,y:d.end})<.4)d.end=d.end===28?18:28;
-  g.moveToward(e,{x:62,y:d.end},dt,{speed:2.6});
+  d.end??=d.patrolTo;if(distance(e,{x:d.home.x,y:d.end})<.4)d.end=d.end===d.patrolTo?d.home.y:d.patrolTo;
+  g.moveToward(e,{x:d.home.x,y:d.end},dt,{speed:2.6});
  }
  if(d.mode==='duel'&&!g.stat(e,'disarm')&&e.attackCd<=0){
   const t=g.units.find(t=>t.id===d.opponent&&t.alive);
@@ -97,7 +103,7 @@ export function beforeStep(g,dt){
  refreshOptions(g);
  if(!g.practice.lineStopped&&g.time+1e-8>=g.practice.nextWave){g.spawnWave();g.practice.nextWave=g.time+RULES.waveEvery;}
  const p=g.player;
- if(p.alive&&p.x>=HAZARD.x&&p.x<=HAZARD.x+HAZARD.w&&p.y>=HAZARD.y&&p.y<=HAZARD.y+HAZARD.h){
+ const h=hazard(g);if(p.alive&&p.x>=h.x&&p.x<=h.x+h.w&&p.y>=h.y&&p.y<=h.y+h.h){
   p.hazardTime=(p.hazardTime||0)+dt;while(p.hazardTime+1e-8>=.25){p.hazardTime-=.25;g.deal({kind:'training-floor',team:1,name:'피해 장판',x:p.x,y:p.y},p,p.maxHp*.00825,{fixed:true,proc:false});}
  }
 }
@@ -113,7 +119,7 @@ export function sellAll(g){
 export function deathOrRespawn(g){
  if(!g.training)return false;const p=g.player;
  if(p.alive){g.kill(p,p);p.respawnAt=Infinity;}
- else{p.alive=true;p.state={};p.status={};p.buffs={};p.shields=[];p.maxHp=g.maxHp(p);p.hp=p.maxHp;p.ammo=g.ammoCap(p);p.qCd=p.rCd=0;p.reloadProgress=0;p.ccImmuneUntil=p.invulnerableUntil=p.channelUntil=p.untargetableUntil=0;delete p.motion;delete p.recall;Object.assign(p,SPAWN);Skills.onRespawn(g,p);}
+ else{p.alive=true;p.state={};p.status={};p.buffs={};p.shields=[];p.maxHp=g.maxHp(p);p.hp=p.maxHp;p.ammo=g.ammoCap(p);p.qCd=p.rCd=0;p.reloadProgress=0;p.ccImmuneUntil=p.invulnerableUntil=p.channelUntil=p.untargetableUntil=0;delete p.motion;delete p.recall;Object.assign(p,spawn(g));Skills.onRespawn(g,p);}
  return true;
 }
 export function teleport(g,p){
@@ -122,11 +128,11 @@ export function teleport(g,p){
 }
 export function changeChampion(g,key){
  if(!g.training||!RUNTIME_CHAMPIONS[key])return false;
- const old=g.player,point=old.alive?{x:old.x,y:old.y}:{...SPAWN},saved={level:old.level,xp:old.xp,gold:old.gold,upgrades:{...old.upgrades},augments:[...old.augments]};
+ const old=g.player,point=old.alive?{x:old.x,y:old.y}:{...spawn(g)},saved={level:old.level,xp:old.xp,gold:old.gold,upgrades:{...old.upgrades},augments:[...old.augments]};
  if(old.alive)g.kill(old,old);g.corpses=[];
  g.units=g.units.filter(e=>e!==old);g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old);
  g.makeChampion(key,0,0,old.position);g.player=g.units.find(e=>e.player);Object.assign(g.player,saved,point);
- g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,SPAWN);refreshOptions(g);return true;
+ g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,spawn(g));refreshOptions(g);return true;
 }
 
 export function summon(g,key,team,point){

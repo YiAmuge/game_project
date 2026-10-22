@@ -4,6 +4,7 @@ import { clamp, distance, direction, clearLine, slide, findPath, segmentDistance
 import * as Infestation from './infestation.js';
 import { carried } from './attachments.js';
 import * as Training from './training.js';
+import { createTraining25DMap } from './training-25d-map.js';
 import { shiftCarried } from './attachments.js';
 import * as Skills from './skills.js';
 import * as CreepPatterns from './creep-patterns.js';
@@ -34,7 +35,7 @@ export class Game {
     this.units=[]; this.minionQueue=[];this.corpses=[]; this.projectiles=[]; this.effects=[]; this.zones=[]; this.pending=[]; this.logs=[];this.events=[];this.buffSequence=0;this.randomState=(seed>>>0)||137;
     this.kills=[0,0]; this.damageDone=0; this.input={x:0,y:0,aim:{x:32,y:18},fire:false};
     this.firstBlood=null;this.announcements=[];this.announcementSequence=0;
-    this.training=mode==='training';this.map=this.training?Training.MAP:null;this.bounds=this.map?.bounds||WORLD;
+    this.training25d=mode==='training25d';this.training=mode==='training'||this.training25d;this.map=this.training25d?createTraining25DMap():this.training?Training.MAP:null;this.bounds=this.map?.bounds||WORLD;
     if(this.training){Training.init(this,selected,position);return;}
     this.makeStructures(); this.makeCamps();
     this.makeChampion(selected,0,0,position);
@@ -46,7 +47,7 @@ export class Game {
   blocked(x,y,r=.4){return blocked(x,y,r,this.map);}
   clearLine(a,b,r=.12){return clearLine(a,b,r,this.map);}
   findPath(a,b,r=.48){return findPath(a,b,r,this.map);}
-  spawnPoint(e){return this.training?(e.trainingDummy?e.trainingDummy.home:e.trainingHome||Training.SPAWN):FOUNTAINS[e.team];}
+  spawnPoint(e){return this.training?(e.trainingDummy?e.trainingDummy.home:e.trainingHome||Training.spawn(this)):FOUNTAINS[e.team];}
   entity(values) {
     const e={id:this.nextId++,alive:true,attackCd:0,radius:.35,armor:0,shields:[],status:{},lastCombat:-99,...values};
     e.hp=e.maxHp; this.units.push(e); return e;
@@ -410,7 +411,7 @@ export class Game {
   flushMinions(){
     const due=this.minionQueue.filter(s=>s.at<=this.time+1e-8);this.minionQueue=this.minionQueue.filter(s=>s.at>this.time+1e-8);
     for(const spawn of due){
-      const {team,lane,index,wave,scale}=spawn,ranged=index===3,siege=index===4,path=this.training?Training.lanePath(team):lanePath(team,lane),radius=(siege?.48:.28)*1.15,forward=direction(path[0],path[1]),origin={x:path[0].x+forward.x*(1.4+radius),y:path[0].y+forward.y*(1.4+radius)};
+      const {team,lane,index,wave,scale}=spawn,ranged=index===3,siege=index===4,path=this.training?Training.lanePath(team,this):lanePath(team,lane),radius=(siege?.48:.28)*1.15,forward=direction(path[0],path[1]),origin={x:path[0].x+forward.x*(1.4+radius),y:path[0].y+forward.y*(1.4+radius)};
       this.entity({kind:'minion',trainingLane:this.training,team,lane,...origin,wave,formationIndex:index,spawnAt:spawn.at,
         maxHp:(siege?MINIONS.health.siege:ranged?MINIONS.health.ranged:MINIONS.health.melee)*(1+MINIONS.hpGrowth*scale),damage:(siege?125:ranged?72:58)*(1+MINIONS.attackGrowth*scale),
         interval:siege?2:ranged?1.5:1.25,range:siege?6:ranged?5.5:1.2,radius,
@@ -514,7 +515,7 @@ export class Game {
     }
     return true;
   }
-  inSpawn(e) {return this.training?distance(e,Training.SPAWN)<=2.5:inWell(e);}
+  inSpawn(e) {return this.training?distance(e,Training.spawn(this))<=2.5:inWell(e);}
   canShop(e) {return e.alive&&!e.state.posthumous&&this.inSpawn(e)&&this.time-e.lastCombat>=3&&this.winner===null;}
   canUpgrade(e){return e.kind==='champion'&&this.winner===null&&(this.training||!e.alive||this.canShop(e));}
   buyAugment(e,key){const item=Augments.AUGMENTS.find(a=>a.key===key);if(!item||!this.canUpgrade(e)||!Augments.unlocked(e,item.group)||e.augments.length>=Augments.AUGMENT_RULES.slots||Augments.has(e,key)||!this.training&&e.gold<Augments.AUGMENT_RULES.cost)return false;if(!this.training)e.gold-=Augments.AUGMENT_RULES.cost;e.augments.push(key);this.refreshEquipment(e);return true;}
@@ -576,7 +577,7 @@ export class Game {
       if(distance(e,target)>e.range+target.radius)this.moveToward(e,target,dt);
       else if(e.attackCd<=0&&!this.stat(e,'stun')&&!this.stat(e,'disarm')){this.simpleAttack(e,target);e.attackCd=e.interval;}
     } else {
-      const path=this.training?Training.lanePath(e.team):lanePath(e.team,e.lane),goal=path[e.waypoint];
+      const path=this.training?Training.lanePath(e.team,this):lanePath(e.team,e.lane),goal=path[e.waypoint];
       const ahead=this.units.find(a=>a.alive&&a.kind==='minion'&&a.team===e.team&&a.lane===e.lane&&a.wave===e.wave&&a.formationIndex===e.formationIndex-1);
       if(ahead&&distance(e,ahead)<e.radius+ahead.radius+.12)return;
       this.moveToward(e,goal,dt);

@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     page=b.new_page(viewport={'width':1440,'height':900});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.22.0');expect(page.locator('#training-panel')).to_be_hidden()
+    expect(page.locator('.build-tag')).to_contain_text('0.23.0');expect(page.locator('#training-panel')).to_be_hidden()
     page.click('#training-open');page.get_by_role('button',name='소라 선택').click();page.click('#start')
     assert page.evaluate('__moba.game.training&&__moba.game.champions().every(e=>e.player||e.trainingDummy)')
     expect(page.locator('#phase')).to_contain_text('시간 제한 없음')

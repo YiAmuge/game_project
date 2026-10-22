@@ -12,7 +12,7 @@ html = (root / 'dist/city-border.html').read_text()
 with sync_playwright() as p:
     browser = p.chromium.launch(
         executable_path=os.environ.get('CHROMIUM_PATH', '/usr/bin/chromium'),
-        headless=True, args=['--no-sandbox'],
+        headless=True, args=['--no-sandbox','--enable-unsafe-swiftshader'],
     )
     context = browser.new_context(viewport={'width': 1280, 'height': 900})
     page = context.new_page()
@@ -27,7 +27,7 @@ with sync_playwright() as p:
     page.set_content('<iframe id="preview" sandbox="allow-scripts" style="border:0;width:100%;height:900px"></iframe>')
     page.evaluate('(html) => document.querySelector("iframe").srcdoc = html', html)
     frame = page.frame_locator('#preview')
-    expect(frame.locator('#main-menu .menu-action')).to_have_count(4)
+    expect(frame.locator('#main-menu .menu-action')).to_have_count(5)
     expect(frame.locator('#online')).to_be_disabled()
     frame.locator('#practice-open').click()
     expect(frame.locator('.champion-option')).to_have_count(29)
@@ -113,6 +113,12 @@ with sync_playwright() as p:
     frame.locator('#training-remove-dialog .close-dialog').click()
     frame.locator('#training-panel-toggle').click()
     expect(frame.locator('#training-options')).to_be_hidden()
+    # The 3D engine and textures must also be embedded, without CDN requests.
+    frame.locator('#pause').click();frame.locator('#leave').click();frame.locator('#practice-back').click()
+    frame.locator('#training-25d-open').click();frame.locator('#start').click()
+    expect(frame.locator('#arena-3d')).to_be_visible()
+    expect(frame.locator('#field-title')).to_contain_text('2.5D')
+    frame.locator('#training-panel-toggle').click()
     assert not requests, f'Unexpected network dependencies: {requests}'
     assert not errors, errors
     (root / 'artifacts').mkdir(exist_ok=True)
@@ -123,4 +129,4 @@ with sync_playwright() as p:
     page.evaluate('(html) => document.querySelector("iframe").srcdoc = html', html)
     expect(page.frame_locator('#preview').locator('noscript p')).to_be_visible()
     browser.close()
-    print('Standalone passed: four-entry menu, 29 champions/four positions, nine embedded sprite atlases, codex, match controls, training entry/map/options/death/revive/champion change/summon/AI/removal, no-script fallback. External requests: 0. JS errors: 0.')
+    print('Standalone passed: five-entry menu, 29 champions/four positions, nine embedded sprite atlases, codex, match controls, training entry/map/options/death/revive/champion change/summon/AI/removal, no-script fallback. External requests: 0. JS errors: 0.')

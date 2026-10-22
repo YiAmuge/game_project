@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     page=browser.new_page(viewport={'width':1440,'height':900});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.22.0');page.click('#training-open');page.get_by_role('button',name='히스클리프 선택',exact=True).click();page.click('#start')
+    expect(page.locator('.build-tag')).to_contain_text('0.23.0');page.click('#training-open');page.get_by_role('button',name='히스클리프 선택',exact=True).click();page.click('#start')
     def fixture():
         page.evaluate('''()=>{const g=__moba.game,p=g.player;for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};g.map={bounds:g.bounds,walls:[]};g.units=[p];g.effects=[];g.events=[];g.pending=[];g.zones=[];g.projectiles=[];g.minionQueue=[];g.practice.lineStopped=true;g.practice.invincible=false;g.practice.noCooldown=false;g.practice.infiniteAmmo=false;p.state={};p.status={};p.buffs={};delete p.motion;Object.assign(p,{x:40,y:20,qCd:0,rCd:0,lastAttackAt:1000,lastDamageAt:1000,attackCd:0});const t=g.makeChampion('faust',1,9);Object.assign(t,{x:44,y:20,level:10,maxHp:100000,hp:100000,lastAttackAt:1000,lastDamageAt:1000});window.__target=t;}''')
     def change(key):
@@ -46,4 +46,4 @@ with sync_playwright() as pw:
     # Summoning is available while dead.
     page.click('#training-life');page.wait_for_function('!__moba.game.player.alive');summon('enemy',49,23);assert page.evaluate('__moba.game.champions().filter(e=>e.trainingSummoned).length===3')
     page.set_viewport_size({'width':390,'height':844});page.click('#training-panel-toggle');expect(page.locator('#training-options')).to_be_hidden();page.click('#training-panel-toggle');expect(page.locator('#training-summon')).to_be_visible();page.screenshot(path=str(art/'v21-training-mobile-options.png'))
-    assert not errors,errors;print(json.dumps({'version':'0.22.0','held_input':'passed','quick_casts':'passed','effects':'passed','summon_and_ai':'passed','dead_and_mobile':'passed','errors':errors},ensure_ascii=False));browser.close()
+    assert not errors,errors;print(json.dumps({'version':'0.23.0','held_input':'passed','quick_casts':'passed','effects':'passed','summon_and_ai':'passed','dead_and_mobile':'passed','errors':errors},ensure_ascii=False));browser.close()

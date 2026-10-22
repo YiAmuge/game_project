@@ -6,6 +6,7 @@ import { ego as soraEgo,basicImpact as soraImpact } from './sora.js';
 import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, WORLD, TERRAIN, worldPoint, RUNTIME_CHAMPIONS as CHAMPIONS, lanePath } from './data.js';
 import { distance } from './geometry.js';
 import { Camera } from './camera.js';
+import { Renderer25D } from './render-25d.js';
 import { FRAMES, THEMES, loadAtlas } from './art.js';
 import { draw as bossPattern } from './boss-patterns.js';
 import { draw as creepPattern } from './creep-patterns.js';
@@ -18,8 +19,15 @@ export class Renderer {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
     this.dpr=dpr;this.width=r.width;this.height=r.height;
+    this.scene25d?.resize();
   }
-  follow(game,playing){this.camera.update(this.width,this.height,game.player,playing);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
+  prepare(game){
+    if(game.training25d&&!this.scene25d)this.scene25d=new Renderer25D(this);
+    this.flatCamera??=this.camera;
+    this.camera=game.training25d?this.scene25d.camera:this.flatCamera;
+    if(this.scene25d)this.scene25d.canvas.hidden=!game.training25d;
+  }
+  follow(game,playing){this.prepare(game);this.camera.update(this.width,this.height,game.player,playing);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
   point(clientX,clientY) {const r=this.canvas.getBoundingClientRect();return this.camera.screenToWorld(clientX-r.left,clientY-r.top);}
   circle(x,y,r,fill,stroke=null,width=.07) {const c=this.ctx;c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
   line(points,color,width,dash=[]) {const c=this.ctx;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.setLineDash(dash);c.stroke();c.setLineDash([]);}
@@ -27,12 +35,12 @@ export class Renderer {
   polygon(points,fill,stroke=null) {const c=this.ctx;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=.08;c.stroke();}}
   trainingFloor(game){
     const c=this.ctx,b=game.bounds;c.fillStyle='#0c191e';c.fillRect(b.x-20,b.y-20,b.w+40,b.h+40);c.fillStyle='#243733';c.fillRect(b.x,b.y,b.w,b.h);
-    for(const a of Training.AREAS){c.fillStyle=a.color+'18';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.color+'66';c.lineWidth=.06;c.strokeRect(a.x,a.y,a.w,a.h);this.text(`${a.id} · ${a.name}`,a.x+a.w/2,a.y+1,a.color,.52);}
+    for(const a of Training.areas(game)){c.fillStyle=a.color+'18';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.color+'66';c.lineWidth=.06;c.strokeRect(a.x,a.y,a.w,a.h);this.text(`${a.id} · ${a.name}`,a.x+a.w/2,a.y+1,a.color,.52);}
     for(let x=0;x<b.w;x+=2)this.line([{x,y:0},{x,y:b.h}],'#96bba60a',.03);
     for(let y=0;y<b.h;y+=2)this.line([{x:0,y},{x:b.w,y}],'#96bba60a',.03);
     for(const w of game.map.walls){c.fillStyle='#53665b';c.fillRect(w.x,w.y,w.w,w.h);c.strokeStyle='#9caf90';c.lineWidth=.04;c.strokeRect(w.x,w.y,w.w,w.h);}
     const h=Training.HAZARD;c.fillStyle='#a554472d';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle='#d09370';c.lineWidth=.08;c.strokeRect(h.x,h.y,h.w,h.h);
-    this.text('피해 장판',h.x+h.w/2,h.y+h.h/2-.25,'#e3ab88',.3);this.text('초당 최대 체력 1%',h.x+h.w/2,h.y+h.h/2+.3,'#e3ab88',.23);
+    this.text('피해 장판',h.x+h.w/2,h.y+h.h/2-.25,'#e3ab88',.3);this.text('초당 최대 체력 3.3%',h.x+h.w/2,h.y+h.h/2+.3,'#e3ab88',.23);
     const f=Training.SPAWN;this.circle(f.x,f.y,2.5,'#7ed3d21a','#a4ded8',.08);this.circle(f.x,f.y,1.6,null,'#a4ded855',.06);this.text('부활소',f.x,f.y+3,'#b7e4db',.4);
     this.line(Training.lanePath(0),'#ab9c6644',2.5);this.text(game.practice.lineStopped?'라인 정지 · 우측 상단 옵션에서 초기화':'미니언 · 포탑 실험 라인',41.5,12,'#d4bf89',.43);
   }
@@ -170,6 +178,7 @@ export class Renderer {
   atlasFor(key){return FRAMES[key]?.sheet===8?this.atlasV17:FRAMES[key]?.sheet===7?this.atlasV13:FRAMES[key]?.sheet===6?this.atlasV12:FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
   corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.form||e.key],atlas=this.atlasFor(e.form||e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=1.7,w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(f.mirror?-1:1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
   draw(game,playing) {
+    if(!this.groundPass&&game.training25d){this.follow(game,playing);this.scene25d.draw(game,playing);return;}
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);
     this.floor(game);this.camps(game);for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
@@ -262,6 +271,10 @@ export class Renderer {
 
       if(fx.type==='cast'||fx.type==='burst')this.skillEffect(fx,game);
       c.restore();
+    }
+    if(this.groundPass){
+      for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e))){championEffects(this,e,game);CombatVisuals.front(this,e,game);}
+      return;
     }
     // Nameplates render after bushes and effects; the player's is always last.
     for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.8,e.y-.65,game);else if(e.kind==='neutral')this.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
@@ -391,7 +404,7 @@ export class Renderer {
   minimap(canvas,game){
     const bounds=game.bounds,c=canvas.getContext('2d'),sx=canvas.width/bounds.w,sy=canvas.height/bounds.h;
     c.clearRect(0,0,canvas.width,canvas.height);c.fillStyle='#142321e8';c.fillRect(0,0,canvas.width,canvas.height);
-    c.save();c.scale(sx,sy);c.translate(-bounds.x,-bounds.y);c.fillStyle='#253f35';for(const room of game.training?[bounds]:TERRAIN)c.fillRect(room.x,room.y,room.w,room.h);if(game.training)for(const a of Training.AREAS){c.fillStyle=a.color+'55';c.fillRect(a.x,a.y,a.w,a.h);c.fillStyle='#f2dfb8';c.font='2px Arial';c.fillText(String(a.id),a.x+a.w/2,a.y+2);};c.fillStyle='#4e6252';for(const w of game.map?.walls||WALLS)c.fillRect(w.x,w.y,w.w,w.h);
+    c.save();c.scale(sx,sy);c.translate(-bounds.x,-bounds.y);c.fillStyle='#253f35';for(const room of game.training?[bounds]:TERRAIN)c.fillRect(room.x,room.y,room.w,room.h);if(game.training)for(const a of Training.areas(game)){c.fillStyle=a.color+'55';c.fillRect(a.x,a.y,a.w,a.h);c.fillStyle='#f2dfb8';c.font='2px Arial';c.fillText(String(a.id),a.x+a.w/2,a.y+2);};c.fillStyle='#4e6252';for(const w of game.map?.walls||WALLS)c.fillRect(w.x,w.y,w.w,w.h);
     c.fillStyle='#486c39';for(const b of game.training?[]:BUSHES)c.fillRect(b.x,b.y,b.w,b.h);
     for(const u of game.units.filter(e=>e.alive&&['champion','core','tower'].includes(e.kind)&&game.visibleTo(0,e))){c.beginPath();c.arc(u.x,u.y,u.player?1.1:u.kind==='champion'?.65:.8,0,Math.PI*2);c.fillStyle=u.player?'#f2da95':u.team===0?'#89c9dd':'#e09484';c.fill();}
     const b=this.camera.bounds;c.strokeStyle='#e3d8aa';c.lineWidth=.25;c.strokeRect(b.x,b.y,b.w,b.h);c.restore();
