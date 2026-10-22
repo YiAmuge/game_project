@@ -4,9 +4,10 @@ import { TRAINING_25D as MAP } from './training-25d-map.js';
 import * as Training from './training.js';
 import { championHud,orderMark } from './overlays.js';
 import * as CombatVisuals from './combat-visuals.js';
+import { projectFeet,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
 
 const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17'];
-const material=(color,extra={})=>new THREE.MeshStandardMaterial({color,roughness:.88,metalness:.12,...extra});
+const material=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
 function painter(base,canvas){
  const p=Object.create(Object.getPrototypeOf(base));p.canvas=canvas;p.ctx=canvas.getContext('2d');
  for(const key of ATLAS_KEYS)p[key]=base[key];return p;
@@ -15,10 +16,10 @@ function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material
 
 export class Renderer25D {
  constructor(base){
-  this.base=base;this.camera=new Camera25D();this.units=new Map();this.structures=new Map();this.walls=[];this.occlusionRay=new THREE.Raycaster();
+  this.base=base;this.camera=new Camera25D();this.sceneryCamera=this.camera.native.clone();this.units=new Map();this.structures=new Map();this.walls=[];this.occlusionRay=new THREE.Raycaster();
   this.canvas=document.createElement('canvas');this.canvas.id='arena-3d';this.canvas.setAttribute('aria-hidden','true');
   this.canvas.hidden=true;base.canvas.before(this.canvas);
-  try{this.webgl=new THREE.WebGLRenderer({canvas:this.canvas,antialias:true,alpha:false,powerPreference:'high-performance'});}
+  try{this.webgl=new THREE.WebGLRenderer({canvas:this.canvas,antialias:false,alpha:false,powerPreference:'high-performance',precision:'mediump'});}
   catch(error){this.canvas.remove();throw new Error('2.5D 연습장은 WebGL을 지원하는 브라우저가 필요합니다. 브라우저의 하드웨어 가속 설정을 확인해 주세요.',{cause:error});}
   this.webgl.outputColorSpace=THREE.SRGBColorSpace;this.webgl.setClearColor('#101e2a');
   this.scene=new THREE.Scene();this.scene.fog=new THREE.Fog('#101e2a',55,110);
@@ -26,19 +27,24 @@ export class Renderer25D {
   const sun=new THREE.DirectionalLight('#ffe4b9',3.1);sun.position.set(-12,35,8);this.scene.add(sun);
   const rim=new THREE.DirectionalLight('#789acb',1.5);rim.position.set(15,12,-20);this.scene.add(rim);
   this.world=new THREE.Group();this.scene.add(this.world);this.buildArena();
-  this.groundCanvas=document.createElement('canvas');this.groundPainter=painter(base,this.groundCanvas);
+  this.groundPainter=painter(base,base.canvas);
   const p=this.groundPainter;p.groundPass=true;p.dpr=1;p.unit=()=>{};p.structure=()=>{};
-  p.floor=game=>this.floorMarks(game);p.follow=()=>{};
-  this.groundTexture=new THREE.CanvasTexture(this.groundCanvas);this.groundTexture.colorSpace=THREE.SRGBColorSpace;
-  this.groundTexture.minFilter=THREE.LinearFilter;this.groundTexture.generateMipmaps=false;
-  this.ground=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:this.groundTexture,transparent:true,depthWrite:false}));
-  this.ground.rotation.x=-Math.PI/2;this.ground.position.y=.045;this.ground.renderOrder=1;this.scene.add(this.ground);
-  this.unitPainter=painter(base,document.createElement('canvas'));
+  p.floor=()=>{};p.follow=()=>{};
+  this.floorCanvas=document.createElement('canvas');this.floorCanvas.width=2048;this.floorCanvas.height=1152;
+  this.floorPainter=painter(base,this.floorCanvas);this.floorTexture=new THREE.CanvasTexture(this.floorCanvas);
+  this.floorTexture.colorSpace=THREE.SRGBColorSpace;this.floorTexture.minFilter=THREE.LinearFilter;this.floorTexture.generateMipmaps=false;
+  this.floor=new THREE.Mesh(new THREE.PlaneGeometry(MAP.bounds.w,MAP.bounds.h),new THREE.MeshBasicMaterial({map:this.floorTexture,transparent:true,depthWrite:false}));
+  this.floor.rotation.x=-Math.PI/2;this.floor.position.set(MAP.bounds.w/2,.045,MAP.bounds.h/2);this.floor.renderOrder=1;this.scene.add(this.floor);
   this.resize();
   this.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.contextLost=true;});
-  this.canvas.addEventListener('webglcontextrestored',()=>{this.contextLost=false;});
+  this.canvas.addEventListener('webglcontextrestored',()=>{this.contextLost=false;this.sceneryDirty=true;this.floorStamp=null;this.occlusionStamp=null;});
  }
- resize(){const b=this.base;this.webgl.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));this.webgl.setSize(Math.max(1,b.width),Math.max(1,b.height),false);}
+ resize(){
+  const b=this.base,pad=Math.ceil(Math.max(b.width/32,b.height/21)*5),width=Math.max(1,b.width+pad*2),height=Math.max(1,b.height+pad*2),ratio=sceneryPixelRatio(width,height,window.devicePixelRatio||1),stamp=[b.width,b.height,ratio].join('/');
+  if(stamp===this.sizeStamp)return;this.sizeStamp=stamp;this.sceneryDirty=true;this.padding=pad;
+  this.webgl.setPixelRatio(ratio);this.webgl.setSize(width,height,false);
+  Object.assign(this.canvas.style,{width:width+'px',height:height+'px',left:-pad+'px',top:-pad+'px'});
+ }
  box(w,h,d,x,y,z,color,group=this.world){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material(color));mesh.position.set(x,y,z);group.add(mesh);return mesh;}
  cylinder(radius,height,x,y,z,color,group=this.world,top=radius){const m=new THREE.Mesh(new THREE.CylinderGeometry(top,radius,height,12),material(color));m.position.set(x,y,z);group.add(m);return m;}
  buildArena(){
@@ -69,8 +75,8 @@ export class Renderer25D {
   // Keep the visual pedestal below the combat plane; movement has no elevation.
   for(const obj of this.world.children.slice(-3))obj.position.y-=.32;
  }
- floorMarks(game){
-  const r=this.groundPainter,c=r.ctx,v=this.groundView;
+ floorMarks(game,r,v){
+  const c=r.ctx;
   c.clearRect(v.x,v.y,v.w,v.h);
   const b=MAP.bounds;
   c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();
@@ -85,45 +91,38 @@ export class Renderer25D {
   r.line(Training.lanePath(0,game),'#d5c28b35',2.6);r.text(game.practice.lineStopped?'라인 정지 · 옵션에서 초기화':'미니언 · 포탑 회랑',41.6,11,'#e3d2a5',.42);
   c.restore();
  }
- groundFrame(game,playing){
-  const view=this.camera.bounds,p=this.groundPainter;
-  this.groundView={x:view.x-3,y:view.y-3,w:view.w+6,h:view.h+6};const v=this.groundView;
-  // Only upload the visible part of the ground, not a full-map texture every frame.
-  const scale=Math.min(40,1536/Math.max(v.w,v.h)),w=Math.ceil(v.w*scale/32)*32,h=Math.ceil(v.h*scale/32)*32;
-  if(this.groundCanvas.width!==w||this.groundCanvas.height!==h){
-   this.groundCanvas.width=w;this.groundCanvas.height=h;
-   // WebGL texture storage cannot be resized by a subsequent texSubImage2D.
-   // Allocate a fresh texture when the viewport changes (including fullscreen).
-   this.groundTexture.dispose();this.groundTexture=new THREE.CanvasTexture(this.groundCanvas);
-   this.groundTexture.colorSpace=THREE.SRGBColorSpace;this.groundTexture.minFilter=THREE.LinearFilter;this.groundTexture.generateMipmaps=false;
-   this.ground.material.map=this.groundTexture;
-  }
-  v.w=w/scale;v.h=h/scale;
-  p.width=w;p.height=h;p.scale=scale;p.ox=-v.x*scale;p.oy=-v.y*scale;
-  p.draw(game,playing);this.groundTexture.needsUpdate=true;
-  this.ground.scale.set(w/scale,h/scale,1);this.ground.position.set(v.x+w/scale/2,.045,v.y+h/scale/2);
+ staticFloor(game){
+  if(this.floorStamp===game.practice.lineStopped)return;this.floorStamp=game.practice.lineStopped;
+  const r=this.floorPainter,c=r.ctx,b=MAP.bounds;c.setTransform(this.floorCanvas.width/b.w,0,0,this.floorCanvas.height/b.h,0,0);
+  this.floorMarks(game,r,b);this.floorTexture.needsUpdate=true;this.sceneryDirty=true;
  }
- unitRecord(e){
-  let item=this.units.get(e.id);if(item)return item;
-  const canvas=document.createElement('canvas');canvas.width=320;canvas.height=320;
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.minFilter=THREE.LinearFilter;texture.generateMipmaps=false;
-  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false,alphaTest:.015}));
-  sprite.center.set(.5,.25);sprite.scale.set(320/48,320/48,1);sprite.renderOrder=3;this.scene.add(sprite);
-  const shadow=new THREE.Mesh(new THREE.CylinderGeometry(e.radius+.08,e.radius+.08,.012,20),new THREE.MeshBasicMaterial({color:'#0a161d',transparent:true,opacity:.4,depthWrite:false}));
-  this.scene.add(shadow);item={canvas,texture,sprite,shadow};this.units.set(e.id,item);return item;
+ groundFrame(game,playing){
+  const p=this.groundPainter,b=this.base,camera=this.camera,origin=camera.worldToScreen({x:0,y:0},.055),dx=camera.worldToScreen({x:1,y:0},.055),dy=camera.worldToScreen({x:0,y:1},.055);
+  p.width=b.width;p.height=b.height;p.dpr=b.dpr;p.scale=camera.scale;
+  // An orthographic ground plane is affine. Draw straight to Canvas2D instead
+  // of copying a large changing texture back to WebGL on every frame.
+  p.groundTransform=[dx.x-origin.x,dx.y-origin.y,dy.x-origin.x,dy.y-origin.y,origin.x,origin.y];
+  p.draw(game,playing);
+  for(const {entity:e} of this.units.values()){
+   const c=p.ctx;c.beginPath();c.ellipse(e.x,e.y,e.radius+.12,(e.radius+.12)*.65,0,0,Math.PI*2);c.fillStyle='#07161a77';c.fill();
+   if(e.kind==='champion'&&!e.trainingDummy)p.circle(e.x,e.y,.67,null,e.player?'#f2d98e':e.team?'#d99588':'#92cad3',.06);
+  }
+  this.maskScenery(game);
+ }
+ maskScenery(game){
+  const c=this.base.ctx;c.save();c.setTransform(this.base.dpr,0,0,this.base.dpr,0,0);c.globalCompositeOperation='destination-out';c.fillStyle='#000';
+  const erase=(rect,alpha)=>{c.globalAlpha=alpha;const points=sceneryOutline(this.camera,rect);c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill();};
+  for(let i=0;i<this.walls.length;i+=2){const {rect:w,mesh}=this.walls[i];erase({...w,height:1.51},mesh.material.opacity);}
+  for(const e of game.units.filter(e=>e.kind==='tower'||e.kind==='core')){const group=this.structures.get(e.id);if(group)erase({x:e.x-1.05,y:e.y-1.05,w:2.1,h:2.1,height:e.alive?3:.36},group.userData.occluding?.22:1);}
+  c.restore();
  }
  unitsFrame(game){
-  const keep=new Set();
+  this.units.clear();
   for(const e of game.units){
-   if(['tower','core'].includes(e.kind))continue;keep.add(e.id);
+   if(['tower','core'].includes(e.kind))continue;
    const s=this.camera.worldToScreen(e),visible=e.alive&&(!game.hidden(e)||e.motion?.kind==='leap')&&game.visibleTo(0,e)&&s.x>-220&&s.x<this.base.width+220&&s.y>-220&&s.y<this.base.height+220;
-   if(!visible){const old=this.units.get(e.id);if(old){old.sprite.visible=false;old.shadow.visible=false;}continue;}
-   const item=this.unitRecord(e),r=this.unitPainter;r.canvas=item.canvas;r.ctx=item.canvas.getContext('2d');const c=r.ctx;
-   c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,320,320);c.setTransform(48,0,0,48,160-e.x*48,240-e.y*48);
-   r.unit(e,game);item.texture.needsUpdate=true;item.sprite.position.set(e.x,.04,e.y);item.sprite.visible=true;
-   item.shadow.position.set(e.x,.027,e.y);item.shadow.visible=true;
+   if(visible)this.units.set(e.id,{entity:e,feet:projectFeet(this.camera,e)});
   }
-  for(const [id,item] of this.units)if(!keep.has(id)){dispose(item.sprite);dispose(item.shadow);this.units.delete(id);}
  }
  makeTower(e){
   const group=new THREE.Group(),color=e.team===0?'#7bbbd0':'#d49080',dark=e.team===0?'#355d71':'#704e49';
@@ -138,17 +137,20 @@ export class Renderer25D {
  structureFrame(game){
   const keep=new Set();
   for(const e of game.units.filter(e=>e.kind==='tower'||e.kind==='core')){
-   keep.add(e.id);let group=this.structures.get(e.id);if(!group){group=this.makeTower(e);this.structures.set(e.id,group);}
-   group.scale.y=e.alive?1:.12;
+   keep.add(e.id);let group=this.structures.get(e.id);if(!group){group=this.makeTower(e);this.structures.set(e.id,group);this.sceneryDirty=true;}
+   const sy=e.alive?1:.12;if(group.scale.y!==sy){group.scale.y=sy;this.sceneryDirty=true;}
   }
-  for(const [id,group] of this.structures)if(!keep.has(id)){dispose(group);this.structures.delete(id);}
+  for(const [id,group] of this.structures)if(!keep.has(id)){dispose(group);this.structures.delete(id);this.sceneryDirty=true;}
  }
  occlusion(game){
+  const champions=game.champions().filter(e=>e.alive&&!game.hidden(e)&&game.visibleTo(0,e));
+  const stamp=[this.camera.x,this.camera.y,this.sizeStamp,...champions.flatMap(e=>[e.id,e.x,e.y]),...Array.from(this.structures,([id,g])=>`${id}:${g.scale.y}`)].join('/');
+  if(stamp===this.occlusionStamp)return;this.occlusionStamp=stamp;
   const groups=[...this.walls.map(w=>w.mesh),...this.structures.values()],faded=new Set();
   // Test actual 3D geometry along the view rays through every visible champion.
   // Using screen rays also works for the orthographic camera near wall ends.
   this.scene.updateMatrixWorld(true);
-  for(const e of game.champions().filter(e=>e.alive&&!game.hidden(e)&&game.visibleTo(0,e))){
+  for(const e of champions){
    const s=this.camera.worldToScreen(e,1);if(s.x<-50||s.x>this.base.width+50||s.y<-100||s.y>this.base.height+100)continue;
    for(const [dx,height] of [[0,.35],[-.35,1],[.35,1],[0,1.8]]){
     const point=new THREE.Vector3(e.x+dx,height,e.y),v=point.clone().project(this.camera.native);
@@ -160,13 +162,18 @@ export class Renderer25D {
     }
    }
   }
-  for(const root of groups){const fade=faded.has(root);root.userData.occluding=fade;root.traverse(o=>{if(o.material){o.material.opacity=fade?.22:1;o.material.depthWrite=!fade;}});}
+  for(const root of groups){const fade=faded.has(root);if(root.userData.occluding!==fade)this.sceneryDirty=true;root.userData.occluding=fade;root.traverse(o=>{if(o.material){o.material.opacity=fade?.22:1;o.material.depthWrite=!fade;}});}
  }
- hud(game){
-  const r=this.base,c=r.ctx;c.setTransform(r.dpr,0,0,r.dpr,0,0);c.clearRect(0,0,r.width,r.height);
-  const at=(e,fn)=>{const p=this.camera.worldToScreen(e);if(p.x<-230||p.x>r.width+230||p.y<-230||p.y>r.height+230)return;c.save();c.translate(p.x,p.y);c.scale(this.camera.scale,this.camera.scale);c.translate(-e.x,-e.y);fn();c.restore();};
+ hud(game,playing){
+  this.groundFrame(game,playing);
+  const r=this.base,c=r.ctx;c.setTransform(r.dpr,0,0,r.dpr,0,0);
+  const at=(e,fn)=>{const p=projectFeet(this.camera,e);if(p.x<-230||p.x>r.width+230||p.y<-230||p.y>r.height+230)return;c.save();c.translate(p.x,p.y);c.scale(p.scale,p.scale);c.translate(-e.x,-e.y-p.offset);fn();c.restore();};
+  // Upright screen-space art has no tilted quad extending through ground/walls.
+  // Reuse atlas draws directly instead of uploading a canvas texture per entity.
+  const old=r.billboardPass;r.billboardPass=true;
+  try{for(const {entity:e} of [...this.units.values()].sort((a,b)=>a.entity.y-b.entity.y||a.entity.id-b.entity.id))at(e,()=>r.unit(e,game));}finally{r.billboardPass=old;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
-   if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);}
+   if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-1.55,'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-2,'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}
    else if(e.kind==='minion')r.bar(e,.8,e.y-.65,game);
    else if(e.kind==='tower')r.bar(e,2.3,e.y-3.5,game);
   });
@@ -177,9 +184,17 @@ export class Renderer25D {
   if(this.contextLost){c.fillStyle='#102331dd';c.fillRect(0,r.height/2-45,r.width,90);c.fillStyle='#ffe1a6';c.font='16px sans-serif';c.textAlign='center';c.fillText('3D 화면 복구 중 · 계속 표시되면 페이지를 새로고침해 주세요.',r.width/2,r.height/2);}
  }
  draw(game,playing){
-  if(this.game!==game){for(const item of this.units.values()){dispose(item.sprite);dispose(item.shadow);}for(const group of this.structures.values())dispose(group);this.units.clear();this.structures.clear();this.game=game;}
-  this.groundFrame(game,playing);this.unitsFrame(game);this.structureFrame(game);
+  if(this.game!==game){for(const group of this.structures.values())dispose(group);this.units.clear();this.structures.clear();this.sceneryDirty=true;this.floorStamp=null;this.occlusionStamp=null;this.game=game;}
+  this.unitsFrame(game);this.staticFloor(game);this.structureFrame(game);
   this.occlusion(game);
-  this.webgl.render(this.scene,this.camera.native);this.hud(game);
+  const pan=this.sceneryAnchor?sceneryPan(this.camera,this.sceneryAnchor):{x:Infinity,y:Infinity};
+  // Orthographic camera motion is a screen translation. Keep a guard band of
+  // scenery and pan that cached image until its edge approaches the viewport.
+  // Units, aiming and floor effects continue updating on every animation frame.
+  if(this.sceneryDirty||Math.abs(pan.x)>this.padding*.7||Math.abs(pan.y)>this.padding*.7){
+   const c=this.sceneryCamera;c.copy(this.camera.native);const extra=this.padding/this.camera.scale;c.left-=extra;c.right+=extra;c.top+=extra;c.bottom-=extra;c.updateProjectionMatrix();
+   this.webgl.render(this.scene,c);this.sceneryAnchor={x:this.camera.x,y:this.camera.y};this.sceneryDirty=false;this.canvas.style.transform='translate3d(0,0,0)';
+  }else this.canvas.style.transform=`translate3d(${pan.x}px,${pan.y}px,0)`;
+  this.hud(game,playing);
  }
 }
