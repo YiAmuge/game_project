@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     page=b.new_page(viewport={'width':1440,'height':900});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.20.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.21.0')
     page.click('#training-open');page.get_by_role('button',name='호엔하임 선택',exact=True).click();page.click('#start')
     def fixture():
         page.evaluate('''() => {const g=__moba.game,p=g.player;for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};g.map={bounds:g.bounds,walls:[]};Object.assign(p,{x:40,y:20,alive:true,hp:p.maxHp,ammo:0,qCd:0,rCd:0,attackCd:0,invulnerableUntil:0,ccImmuneUntil:0,untargetableUntil:0,channelUntil:0,state:{},status:{},buffs:{},lastAttackAt:100,lastDamageAt:100});if(p.key==='ahab'){p.state.order='cover';g.addBuff(p,'ahabOrder',Infinity,{copy:false});}g.units=[p];g.events=[];g.pending=[];g.zones=[];g.projectiles=[];g.effects=[];g.minionQueue=[];g.practice.lineStopped=true;const t=g.makeChampion('faust',1,9);Object.assign(t,{x:44,y:20,maxHp:100000,hp:100000,lastAttackAt:100,lastDamageAt:100});window.__target=t;window.__hits=[];if(!window.__deal){window.__deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===g.player&&b===window.__target)window.__hits.push({n,at:g.time,serial:a.attackSerial});return window.__deal(a,b,n,o);};}}''')

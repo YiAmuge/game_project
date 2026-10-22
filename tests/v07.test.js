@@ -10,27 +10,27 @@ const run=(g,s)=>{for(let i=0;i<Math.ceil(s*60);i++)g.step(1/60);};
 function quiet(key){const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:44,y:7,hp:10000,maxHp:10000});g.units=[p,t];g.minionQueue=[];return {g,p,t};}
 function enemy(g,x=44,y=7){const t=g.makeChampion('faust',1,8);Object.assign(t,{x,y,hp:10000,maxHp:10000});return t;}
 
-test('Don widened barrage hits a target outside the old sector and keeps the same forward range',()=>{
- const {g,p,t}=quiet('don');Object.assign(t,{x:40+2*Math.cos(.7),y:7+2*Math.sin(.7)});g.cast(p,'q',{x:45,y:7});run(g,.05);assert.ok(t.hp<10000);assert.equal(skillTargeting(g,p,'q').radius,1.8);
+test('Don straight barrage covers a side-edge target and reports half width 1.05',()=>{
+ const {g,p,t}=quiet('don');Object.assign(t,{x:40+2*Math.cos(.7),y:7+2*Math.sin(.7)});g.cast(p,'q',{x:45,y:7});run(g,.05);assert.ok(t.hp<10000);assert.equal(skillTargeting(g,p,'q').radius,1.05);
 });
 test('Meursault basic nerf, tactical refill and temporary ultimate armor affect actual combat',()=>{
  const {g,p,t}=quiet('meursault');t.x=41;assert.equal(g.ammoCap(p),3);g.attack(p,t);close(10000-t.hp,233.75*.9);p.ammo=0;g.cast(p,'q',p);assert.equal(p.ammo,1);g.cast(p,'r',t);close(g.armor(p),10);run(g,3.05);close(g.armor(p),0);
 });
-test('Gubo normal shot pierces exactly one enemy, hitting two and leaving a third unharmed',()=>{
- const {g,p,t}=quiet('gubo'),b=enemy(g,46),c=enemy(g,48);g.attack(p,t);run(g,.8);assert.ok(t.hp<10000);assert.ok(b.hp<10000);close(c.hp,10000);
+test('Gubo normal shot pierces all three enemies',()=>{
+ const {g,p,t}=quiet('gubo'),b=enemy(g,46),c=enemy(g,48);g.attack(p,t);run(g,.8);assert.ok(t.hp<10000);assert.ok(b.hp<10000);assert.ok(c.hp<10000);
 });
-test('Gubo ally execution fires one 7.5 cone, capped at 800, halves respawn and grants return haste',()=>{
+test('Gubo allied execution has a long uncapped cone, halves respawn and grants return haste',()=>{
  const {g,p,t}=quiet('gubo');t.x=48;const a=g.makeChampion('yi',0,9);Object.assign(a,{x:41,y:7,maxHp:1000,hp:200,lastDamageAt:20});const near=enemy(g,43),back=enemy(g,38),b=enemy(g,49);g.time=20;
- g.attack(p,a);run(g,.05);assert.equal(a.alive,false);close(a.respawnAt-g.time,respawnTime(20,1)*.5-.05,.04);close(10000-t.hp,800);close(10000-near.hp,800);close(back.hp,10000);close(b.hp,10000);g.time=a.respawnAt;g.step(.001);assert.ok(a.alive);assert.ok(g.buff(a,'executedHaste'));close(g.speed(a)/RULES.speed[CHAMPIONS.yi.speed],1.4);
+ g.attack(p,a);run(g,.05);assert.equal(a.alive,false);close(a.respawnAt-g.time,respawnTime(20,1)*.5-.05,.04);const blast=.2*(g.combatPower(p)+10000);close(10000-t.hp,blast);close(10000-near.hp,blast);close(back.hp,10000);close(10000-b.hp,blast);g.time=a.respawnAt;g.step(.001);assert.ok(a.alive);assert.ok(g.buff(a,'executedHaste'));close(g.speed(a)/RULES.speed[CHAMPIONS.yi.speed],1.4);
 });
 test('Gubo shot and ultimate respect the inclusive live ally health threshold and its temporary increase',()=>{
  const {g,p}=quiet('gubo'),a=g.makeChampion('faust',0,8);Object.assign(a,{x:42,y:7,maxHp:1000,hp:211});close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);a.hp=210;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=350;g.cast(p,'q',p);close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=351;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);
 });
-test('Gubo ultimate aims without instant damage, then resolves a visible traveling target projectile',()=>{
- const {g,p,t}=quiet('gubo');t.x=50;assert.ok(g.cast(p,'r',t));assert.equal(p.state.guboAim.target,t);close(t.hp,10000);run(g,1.21);assert.ok(g.projectiles.some(b=>b.homing&&b.ultimate));close(t.hp,10000);run(g,.7);assert.ok(t.hp<10000);assert.equal(p.state.guboAim,undefined);
+test('Gubo ultimate aims without instant damage, then resolves an instant laser',()=>{
+ const {g,p,t}=quiet('gubo');t.x=50;assert.ok(g.cast(p,'r',t));assert.equal(p.state.guboAim.target,t);close(t.hp,10000);run(g,1.1);close(t.hp,10000);run(g,.12);assert.equal(g.projectiles.length,0);assert.ok(g.effects.some(f=>f.type==='guboLaser'));assert.ok(t.hp<10000);assert.equal(p.state.guboAim,undefined);
 });
 test('Gubo ultimate ally kill does not duplicate the passive blast',()=>{
- const {g,p,t}=quiet('gubo'),a=g.makeChampion('yi',0,8);Object.assign(a,{x:42,y:7,hp:200,maxHp:1000,lastDamageAt:0});t.x=48;assert.ok(g.cast(p,'r',a));run(g,1.5);assert.equal(a.alive,false);close(10000-t.hp,800);
+ const {g,p,t}=quiet('gubo'),a=g.makeChampion('yi',0,8);Object.assign(a,{x:42,y:7,hp:200,maxHp:1000,lastDamageAt:0});t.x=48;assert.ok(g.cast(p,'r',a));run(g,1.5);assert.equal(a.alive,false);close(10000-t.hp,.25*(g.combatPower(p)+t.maxHp));
 });
 test('Gahwan converts gaze at five and ultimate adds precisely one stack per hit at 0/.75/1.5',()=>{
  const {g,p,t}=quiet('gahwan');t.x=48;g.cast(p,'r',t);assert.equal(t.state.gaze[p.id].n,1);run(g,.7);assert.equal(t.state.gaze[p.id].n,1);run(g,.1);assert.equal(t.state.gaze[p.id].n,2);run(g,.75);assert.equal(t.state.gaze[p.id].n,3);for(let i=0;i<2;i++)g.deal(p,t,1);assert.equal(t.state.gaze[p.id].n,0);assert.ok(t.state.contempt[p.id]>g.time);
@@ -83,7 +83,7 @@ test('Ishmael survival shield is 25 percent and shock hits farther enemies, redu
  const {g,p,t}=quiet('ishmael');p.hp=p.maxHp*.29;g.deal(t,p,1,{fixed:true});close(g.shield(p),p.maxHp*.25);p.shields=[];g.cast(p,'q',p);p.rCd=25;const b=enemy(g,40,11);g.cast(p,'q',p);assert.ok(t.hp<10000&&b.hp<10000);close(p.rCd,25*.875-10);
 });
 test('Ishmael wider harpoon pulls even a distant champion all the way in front with no teleport',()=>{
- const {g,p,t}=quiet('ishmael');t.x=54;g.cast(p,'r',t);close(p.rCd,25);close(g.projectiles[0].width,.585);run(g,.9);close(t.x,54);run(g,.15);assert.ok(t.motion);assert.ok(t.x>53);run(g,2.5);close(t.x,p.x+p.radius+t.radius+.15);
+ const {g,p,t}=quiet('ishmael');t.x=54;g.cast(p,'r',t);close(p.rCd,25);close(g.projectiles[0].width,.585);run(g,.9);close(t.x,54);run(g,.15);assert.ok(t.motion);assert.ok(t.x>50&&t.x<54);run(g,2.5);close(t.x,p.x+p.radius+t.radius+.15);
 });
 test('Rodya three-head jackpot applies tails benefits too and completely reloads',()=>{
  const {g,p}=quiet('rodya');g.random=()=>.1;p.ammo=0;p.rCd=30;g.cast(p,'q',p);assert.ok(p.state.jackpot);assert.equal(p.state.coinHeads,3);assert.equal(p.state.coinTails,3);assert.equal(p.ammo,g.ammoCap(p));assert.ok(g.buff(p,'coinSpeed'));close(p.rCd,24);close(p.qCd,6);

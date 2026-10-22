@@ -1,3 +1,4 @@
+import { releaseHeath } from '../src/skills.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -68,15 +69,15 @@ test('new eight basic attacks and abilities execute without NaN state',()=>{
   const {g,p,t}=quiet(key);t.hp=t.maxHp=100000;
   assert.ok(g.attack(p,t),key+' basic');run(g,.6);p.attackCd=0;
   assert.ok(g.cast(p,'q',t),key+' Q');
-  if(key==='heathcliff'){run(g,1.3);assert.ok(g.cast(p,'q',t));}
+  if(key==='heathcliff'){run(g,1.3);assert.ok(releaseHeath(g,p,t));}
   if(key==='ishmael')assert.ok(g.cast(p,'q',t));
   run(g,.7);if(key==='don'){t.x=p.x+1;t.y=p.y;}
   assert.ok(g.cast(p,'r',t),key+' R');run(g,5.2);
   assert.ok(Number.isFinite(p.hp)&&Number.isFinite(t.hp));assert.ok(p.totalDamage>0,key+' should damage a target');
  }
 });
-test('Heathcliff charge can be recast and is stronger after 2.4 seconds',()=>{
- const {g,p,t}=quiet('heathcliff');t.x=35;g.cast(p,'q',t);run(g,2.5);assert.ok(g.cast(p,'q',t));assert.equal(p.state.chargeAt,undefined);run(g,1);assert.ok(p.x>34);assert.ok(t.hp<t.maxHp);
+test('Heathcliff held charge releases at full strength after 1.5 seconds',()=>{
+ const {g,p,t}=quiet('heathcliff');t.x=35;g.cast(p,'q',t);run(g,1.5);assert.ok(releaseHeath(g,p,t));assert.equal(p.state.chargeAt,undefined);run(g,1);assert.ok(p.x>34);assert.ok(t.hp<t.maxHp);
 });
 test('Ishmael shield detonates on recast and on expiry, and low-health passive has cooldown',()=>{
  const {g,p,t}=quiet('ishmael');g.cast(p,'q',t);assert.ok(g.shield(p)>0);assert.ok(g.cast(p,'q',t));assert.ok(t.hp<t.maxHp);assert.ok(g.stat(t,'stun')>0);

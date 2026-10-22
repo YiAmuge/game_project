@@ -12,7 +12,7 @@ with sync_playwright() as pw:
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL', 'http://127.0.0.1:5180') + '/?debug=1', wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.20.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.21.0')
 
     def choose(name):
         if page.evaluate('__moba.mode') == 'playing':

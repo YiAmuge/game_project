@@ -1,3 +1,4 @@
+import { rectangle } from './reworks.js';
 import * as Hohenheim from './hohenheim.js';
 import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
@@ -10,16 +11,17 @@ export function movementSkill(e,slot){
 }
 export function validate(g,e,slot,p){
  if(g.stat(e,'captured')&&movementSkill(e,slot)&&!(e.key==='alisa'&&slot==='q'&&g.buff(e,'alisaReload')))return false;
- if(e.key==='queequeg'&&slot==='q')return Boolean(targetAt(g,e,p,5,e.team,t=>t!==e));
+ if(e.key==='queequeg'&&slot==='q')return Boolean(targetAt(g,e,p,8,e.team,t=>t!==e));
  return true;
 }
 export function basic(g,e,p,d){
  if(e.key==='marton'){
-  const len=Math.min(g.attackRange(e),distance(e,p)),point={x:e.x+d.x*len,y:e.y+d.y*len};
-  area(g,e,point,2.2,180,t=>{if(t.kind==='champion')g.addBuff(e,'martonStride',2.5);});g.effects.push({type:'burst',...point,r:2.2,theme:e.key,life:.4,maxLife:.4});return true;
+  const len=Math.min(5,distance(e,p)),point={x:e.x+d.x*len,y:e.y+d.y*len};
+  if(len<2.5)g.cone(e,d,2.5,Math.PI,190,()=>g.addBuff(e,'martonStride',2.25));else area(g,e,point,2.2,100);
+  g.effects.push({type:len<2.5?'slash':'burst',x:len<2.5?e.x:point.x,y:len<2.5?e.y:point.y,r:len<2.5?2.5:2.2,angle:Math.atan2(d.y,d.x),spread:Math.PI,theme:e.key,life:.4,maxLife:.4});return true;
  }
  if(e.key==='queequeg'){
-  for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>g.cone(e,d,g.attackRange(e),1.36,28,t=>{
+  g.addBuff(e,'queegAttack',.42,{copy:false});for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>rectangle(g,e,d,3,1.8,28,t=>{
    if(t.kind==='champion'&&t.alive){e.state.captureHits??={};e.state.captureHits[t.id]=(e.state.captureHits[t.id]||0)+1;if(e.state.captureHits[t.id]%4===0)g.status(t,'captured',1,1.15,e);}
   }));return true;
  }
@@ -35,16 +37,16 @@ export function cast(g,e,slot,p,d){
  if(e.key==='marton'){
   if(slot==='q'){g.addBuff(e,'martonDrain',4);e.state.drainTick=g.time;}
   else{
-   e.channelUntil=g.time+1.2;e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+1.2);e.state.fairy={until:g.time+1.2,received:0};
-   for(const t of g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=4))taunt(g,t,e,1.2);
-   g.schedule(e,1.2,()=>{const received=e.state.fairy?.received||0;delete e.state.fairy;area(g,e,e,5,Math.min(900,received*.3));g.effects.push({type:'burst',x:e.x,y:e.y,r:5,theme:e.key,life:.6,maxLife:.6});});
+   e.channelUntil=g.time+2.5;e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+2.5);e.state.fairy={until:g.time+2.5,received:0,nextTaunt:g.time};
+   for(const t of g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=6.8))taunt(g,t,e,.5);
+   g.schedule(e,2.5,()=>{const received=e.state.fairy?.received||0;delete e.state.fairy;area(g,e,e,6.8,Math.min(900,received*.3));g.effects.push({type:'burst',x:e.x,y:e.y,r:6.8,theme:e.key,life:.6,maxLife:.6});});
   }return true;
  }
  if(e.key==='queequeg'){
   if(slot==='q'){
-   const t=targetAt(g,e,p,5,e.team,a=>a!==e);detach(g,e);const previous=g.units.find(a=>a.id===t.state.tetherSource);if(previous)detach(g,previous);
+   const t=targetAt(g,e,p,8,e.team,a=>a!==e);detach(g,e);const previous=g.units.find(a=>a.id===t.state.tetherSource);if(previous)detach(g,previous);
    e.state.tether={target:t.id,until:Infinity,nextResistance:g.time+1};g.addBuff(t,'tetherArmor',Infinity,{copy:false});g.addBuff(t,'tetherGuard',Infinity,{copy:false});g.addBuff(e,'tetherGuard',Infinity,{copy:false});t.state.tetherSource=e.id;t.state.tetherResistance=0;
-  }else{g.addBuff(e,'queequegUlt',4);e.state.queegHealAt=g.time+4;const tether=e.state.tether,t=g.units.find(t=>t.id===tether?.target&&t.alive);if(t&&tether.until>g.time)g.addBuff(t,'tetherStride',4,{copy:false});}
+  }else{g.addBuff(e,'queequegUlt',4);e.state.queegHealAt=g.time+4;const tether=e.state.tether,t=g.units.find(t=>t.id===tether?.target&&t.alive);if(t&&tether.until>g.time){g.addBuff(t,'queequegUlt',4,{copy:false});t.state.queegHealAt=g.time+4;}}
   return true;
  }
  return false;
@@ -85,15 +87,16 @@ export function onDeath(g,e){
 }
 export function tick(g,e){
  const s=e.state;
- if(s.posthumous){e.hp=0;e.ammo=g.ammoCap(e);if(g.time+1e-8>=s.posthumous.until){g.kill(e,s.posthumous.killer);return;}if(!e.player){const t=g.nearest(e,g.attackRange(e),false);if(t)g.attack(e,t);}}
- if(e.key==='marton'&&g.buff(e,'martonDrain')&&g.time+1e-8>=(s.drainTick||0)){s.drainTick=g.time+.25;area(g,e,e,3,27.5,t=>g.status(t,'slow',.2,.4,e));}
+ if(s.posthumous){e.hp=0;e.ammo=g.ammoCap(e);if(g.time+1e-8>=s.posthumous.until){g.kill(e,s.posthumous.killer);return;}if(!e.player&&(!e.trainingSummoned||g.practice.championAI)){const t=g.nearest(e,g.attackRange(e),false);if(t)g.attack(e,t);}}
+ if(e.key==='marton'&&g.buff(e,'martonDrain')&&g.time+1e-8>=(s.drainTick||0)){s.drainTick=g.time+.25;area(g,e,e,5.5,27.5,t=>g.status(t,'slow',.2,.4,e));}
+ if(s.queegHealAt&&g.time+1e-8>=s.queegHealAt){delete s.queegHealAt;g.heal(e,e,(e.maxHp-e.hp)*.25,false);}
+ if(s.fairy&&g.time<s.fairy.until&&g.time+1e-8>=s.fairy.nextTaunt){s.fairy.nextTaunt=g.time+.25;for(const t of g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=6.8))taunt(g,t,e,.5);}
  if(e.key==='queequeg'){
-  if(s.queegHealAt&&g.time+1e-8>=s.queegHealAt){delete s.queegHealAt;g.heal(e,e,(e.maxHp-e.hp)*.25,false);}
   if(s.tether){const t=g.units.find(t=>t.id===s.tether.target);if(!t?.alive||s.tether.until<=g.time)detach(g,e);else{if(distance(e,t)>8){s.tether.outside??=g.time;if(g.time-s.tether.outside>=1.5)detach(g,e);}else delete s.tether.outside;if(s.tether&&g.time+1e-8>=s.tether.nextResistance){const count=Math.floor((g.time-s.tether.nextResistance+1e-8)/1)+1;s.tether.nextResistance+=count;t.state.tetherResistance=Math.min(4,(t.state.tetherResistance||0)+count);g.addBuff(t,'tetherResistance',s.tether.until-g.time,{copy:false});}}}
  }
 }
 export function tickObjects(g){
- for(const b of g.units.filter(u=>u.kind==='bait'&&u.alive))for(const t of g.units.filter(t=>t.alive&&['champion','minion'].includes(t.kind)&&t.team===1-b.team&&distance(t,b)<=4)){
+ for(const b of g.units.filter(u=>u.kind==='bait'&&u.alive))for(const t of g.units.filter(t=>t.alive&&['champion','minion'].includes(t.kind)&&t.team===1-b.team&&distance(t,b)<=6.5)){
   if((b.tauntReady[t.id]||0)<=g.time){b.tauntReady[t.id]=g.time+1.5;taunt(g,t,b,.75);}
  }
  for(const z of g.zones.filter(z=>z.kind==='electricDevice'&&z.until>g.time))for(const t of g.champions(1-z.source.team).filter(t=>t.alive&&distance(t,z)<=z.r)){t.state.electricWeak??={};t.state.electricWeak[z.source.id]=g.time+3;}

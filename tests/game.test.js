@@ -59,7 +59,7 @@ test('5:00 permanently removes central creeps, even pending respawns, and spawns
 test('boss gives all teammates 180 XP and 160 currency once',()=>{
   const g=isolated();g.spawnBoss();const boss=g.units.find(u=>u.camp==='boss');
   g.deal(g.player,boss,100000,{fixed:true});
-  for(const c of g.champions(0)){close(c.gold,410);close(c.xp,c.key==='faust'?207:c.key==='starbuck'?198:180);}
+  for(const c of g.champions(0)){close(c.gold,410);close(c.xp,c.key==='starbuck'?198:180);}
   assert.ok(g.champions(1).every(c=>c.xp===0));g.deal(g.player,boss,100000,{fixed:true});close(g.player.gold,410);
 });
 test('matches continue past the former ten-minute limit',()=>{

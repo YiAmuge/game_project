@@ -13,8 +13,8 @@ function quiet(key='starbuck'){
  const p=g.player,t=g.makeChampion('faust',1,9);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:10000,maxHp:10000});g.units=[p,t];return {g,p,t};
 }
 function ally(g,key='meursault',x=41,y=9){const a=g.makeChampion(key,0,9);Object.assign(a,{x,y});return a;}
-test('three automatic XP per second is unaffected by passives, alive or dead',()=>{
- for(const key of ['faust','ppui','starbuck']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,3);g.kill(p,t);run(g,1);close(p.xp,6);}
+test('automatic XP is three per second except Faust nine, alive or dead',()=>{
+ for(const key of ['faust','ppui','starbuck']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,key==='faust'?9:3);g.kill(p,t);run(g,1);close(p.xp,key==='faust'?18:6);}
 });
 test('Starbuck jungle damage +12% and flat kill healing preserve +10% creep XP',()=>{
  const {g,p}=quiet();g.units=[p];p.hp-=500;const n=g.makeNeutral(43,7,'side');const hp=n.hp;g.deal(p,n,100,{fixed:true});close(hp-n.hp,112);const before=p.hp;g.kill(n,p);close(p.hp-before,150);close(p.xp,56.25*1.1);
@@ -45,13 +45,13 @@ for(const key of ['ryoshu','ahab','sinclair','starbuck'])test(`capture also conf
  const {g,t}=capture(key),net={...t.state.netTrap};g.units=[t];g.time+=.01;t.rCd=0;t.channelUntil=0;assert.ok(g.cast(t,'r',{x:55,y:7}));run(g,.8);assert.ok(distance(t,net)<=net.r+1e-5,`${key} escaped`);
 });
 test('Queequeg stats follow missing health immediately, including healing and max-HP growth',()=>{
- const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),48);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),12);g.award(p,6900,0);close(g.armor(p),0);close(g.attackRange(p),4.1);
+ const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),48);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),12);g.award(p,6900,0);close(g.armor(p),0);close(g.attackRange(p),3);
 });
 test('Don tactical recasts once, keeps the original cooldown and can restart only when ready',()=>{
  const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,12);run(g,1);close(p.qCd,11);assert.ok(g.cast(p,'q',p));close(p.qCd,11,.02);assert.equal(p.state.donBarrage,undefined);assert.equal(g.buff(p,'donGuard'),false);assert.equal(g.cast(p,'q',p),false);
 });
 test('Don ultimate accepts an empty coordinate and applies seven-second lifesteal',()=>{
- const {g,p}=quiet('don');g.units=[p];assert.equal(skillTargeting(g,p,'r').confirm,true);assert.ok(g.cast(p,'r',{x:45,y:7}));close(p.motion.total,5);close(p.buffs.donLifesteal,7);run(g,.7);close(p.x,45);
+ const {g,p}=quiet('don');g.units=[p];assert.equal(skillTargeting(g,p,'r').confirm,false);assert.ok(g.cast(p,'r',{x:45,y:7}));close(p.motion.total,5);close(p.buffs.donLifesteal,7);run(g,.7);close(p.x,45);
 });
 test('Yi basic projectiles are 50% larger and pierce multiple enemies',()=>{
  const {g,p,t}=quiet('yi');t.x=42;const second=g.makeChampion('faust',1,10);Object.assign(second,{x:44,y:7,hp:10000,maxHp:10000});g.attack(p,{x:48,y:7});assert.ok(g.projectiles.every(b=>b.width===.27&&b.pierce===Infinity));run(g,.3);assert.ok(t.hp<10000&&second.hp<10000);

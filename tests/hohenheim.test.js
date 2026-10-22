@@ -42,10 +42,10 @@ test('normal Hohenheim bots finish charges instead of repeatedly canceling them 
 test('ultimate first ticks at .4 seconds, deals twenty per tick, and lasts exactly seven seconds',()=>{
  const {g,p}=quiet(),t=target(g),hits=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)hits.push({n,at:g.time});return deal(a,b,n,o);};g.cast(p,'r',t);run(g,.39);assert.equal(hits.length,0);run(g,.02);assert.equal(hits.length,1);close(hits[0].n,20);run(g,6.6);assert.equal(hits.length,17);assert.equal(H.activeZone(g,p),undefined);assert.ok(hits.every(h=>h.n===20));
 });
-test('ultimate follows the nearest champion, supports manual retargeting without resetting its duration or cooldown, and reacquires on death',()=>{
+test('ultimate follows the nearest champion, supports manual retargeting without resetting its duration or cooldown, and waits for retargeting on death',()=>{
  const {g,p}=quiet(),a=target(g,45),b=target(g,47.5,9);g.cast(p,'r',{x:44,y:7});const z=H.activeZone(g,p);run(g,.1);assert.equal(z.targetId,a.id);assert.ok(z.x>44&&z.x<=44.61);const cd=p.rCd,until=z.until;assert.equal(skillTargeting(g,p,'r').kind,'target');
  assert.ok(g.cast(p,'r',b));close(p.rCd,cd);close(z.until,until);assert.equal(z.manualTargetId,b.id);run(g,.2);assert.equal(z.targetId,b.id);const n=distance(z,b);run(g,.1);assert.ok(distance(z,b)<n);
- g.kill(b,p);run(g,.01);assert.equal(z.targetId,a.id);assert.equal(z.manualTargetId,undefined);
+ g.kill(b,p);const x=z.x;run(g,.01);assert.equal(z.targetId,b.id);assert.ok(z.waitingForTarget);close(z.x,x);assert.ok(g.cast(p,'r',a));run(g,.01);assert.equal(z.targetId,a.id);
 });
 test('invalid retarget keeps the current target, expiry, and cooldown intact',()=>{
  const {g,p}=quiet(),t=target(g);g.cast(p,'r',t);const z=H.activeZone(g,p),cd=p.rCd;run(g,.1);const targetId=z.targetId;assert.equal(g.cast(p,'r',{x:35,y:10}),false);close(z.until,7);assert.equal(z.targetId,targetId);close(p.rCd,cd-.1);

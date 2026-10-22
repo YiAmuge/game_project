@@ -95,7 +95,7 @@ test('Queequeg is support, grants stacking resistance while linked, and clears i
  const {g,p}=quiet('queequeg'),a=ally(g);assert.equal(CHAMPIONS.queequeg.role,'지원');g.cast(p,'q',a);run(g,4.02);assert.equal(a.state.tetherResistance,4);g.status(a,'silence',1,2);close(a.status.silence.until-g.time,2*.85*.8);a.x=60;run(g,1.6);assert.equal(p.state.tether,undefined);assert.equal(g.buff(a,'tetherResistance'),false);
 });
 test('Queequeg ultimate preserves the infinite link and shares four seconds of movement speed',()=>{
- const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);run(g,2);const speed=g.speed(a);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);close(a.buffs.tetherStride-g.time,4);close(g.speed(a)/speed,1.25);run(g,4.1);assert.equal(g.buff(a,'tetherStride'),false);
+ const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);run(g,2);const speed=g.speed(a);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);close(a.buffs.queequegUlt-g.time,4);close(g.speed(a)/speed,1.25);run(g,4.1);assert.equal(g.buff(a,'queequegUlt'),false);
 });
 test('Ahab starts and respawns with cover, is sniper and gains range plus baseline reload',()=>{
  const {g,p,t}=quiet('ahab');assert.equal(CHAMPIONS.ahab.role,'저격');assert.equal(p.state.order,'cover');close(p.range,10.8);close(g.reloadInterval(p),RULES.reload[CHAMPIONS.ahab.reload]/(RULES.reloadEfficiency*1.15));g.kill(p,t);g.time=p.respawnAt;g.step(.01);assert.equal(p.state.order,'cover');assert.ok(g.buff(p,'ahabOrder'));

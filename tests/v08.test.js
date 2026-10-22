@@ -14,9 +14,9 @@ function quiet(key='faust'){
  const p=g.player,t=g.champions(1).find(e=>e.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 function ally(g,key='yi'){const e=g.makeChampion(key,0,5);Object.assign(e,{x:42,y:9});return e;}
-test('27 ordinary champions include all four additions; XP accrues at exactly three per second even while dead',()=>{
+test('27 ordinary champions include all four additions; XP accrues at three per second (Faust nine) even while dead',()=>{
  assert.equal(Object.keys(CHAMPIONS).length,29);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,31);
- for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,3);g.kill(p,t);run(g,1);close(p.xp,6);}
+ for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,key==='faust'?9:3);g.kill(p,t);run(g,1);close(p.xp,key==='faust'?18:6);}
 });
 test('four ordinary creeps or two buff creeps now give 225 XP; building HP stays reduced',()=>{
  for(const [camp,n]of [['side',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++)g.kill(g.makeNeutral(42,7,camp),p);assert.equal(p.level,1);close(p.xp,225);}const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===6460));assert.equal(g.units.find(t=>t.kind==='core').maxHp,10200);

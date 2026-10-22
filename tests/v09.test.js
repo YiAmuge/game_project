@@ -40,8 +40,8 @@ test('Alisa ultimate detonates automatically at full HP after focus and two-seco
 test('Alisa taking lethal damage during ultimate focus cannot schedule two explosions or deaths',()=>{
  const {g,p,t}=quiet('alisa');p.state.heat=5;g.cast(p,'r',p);g.deal(t,p,999999,{fixed:true});run(g,2.9);assert.equal(p.deaths,1);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,1);
 });
-test('Marton attack range is reduced to 4.9 without changing its ground effect radius',()=>{
- const {g,p,t}=quiet('marton');close(g.attackRange(p),4.9);t.x=47.7;g.attack(p,{x:50,y:7});close(t.hp,100000);p.attackCd=0;t.x=46.7;g.attack(p,{x:50,y:7});assert.ok(t.hp<100000);
+test('Marton maximum attack range is five without changing its ground effect radius',()=>{
+ const {g,p,t}=quiet('marton');close(g.attackRange(p),5);t.x=47.8;g.attack(p,{x:50,y:7});close(t.hp,100000);p.attackCd=0;t.x=46.8;g.attack(p,{x:50,y:7});assert.ok(t.hp<100000);
 });
 test('Myo frenzy reloads during basic attacks, grants sixty percent reload and removes boosted dash length',()=>{
  const {g,p,t}=quiet('myo');const reload=g.reloadInterval(p);g.cast(p,'r',p);close(g.reloadInterval(p),reload/1.6);close(g.attackRange(p),2.4);g.attack(p,t);close(p.motion.total,2.4);assert.equal(p.motion.actionKind,'basic');p.ammo=0;p.reloadProgress=0;g.input.fire=true;run(g,.15);assert.ok(p.reloadProgress>0);
@@ -87,7 +87,7 @@ test('boss creates one ground warning per nearby champion, explodes at 2.15 seco
  const {g,p,boss}=bossFight();p.x=43;p.maxHp=p.hp=100000;p.lastDamageAt=100;const ally=g.makeChampion('faust',0,8);Object.assign(ally,{x:41,y:11});const enemy=g.makeChampion('faust',1,9);Object.assign(enemy,{x:38,y:7});const far=g.makeChampion('faust',1,10);Object.assign(far,{x:55,y:7});run(g,7.05);assert.equal(boss.bossMarkers.length,3);const marks=boss.bossMarkers.map(m=>({...m}));ally.x=48;const hp=enemy.hp;run(g,2);close(enemy.hp,hp);run(g,.2);assert.equal(boss.bossMarkers.length,0);assert.ok(enemy.hp<hp);assert.ok(g.stat(enemy,'root'));close(enemy.status.root.until-(marks[0].at),.8,.04);assert.equal(g.stat(ally,'root'),0);assert.equal(g.stat(far,'root'),0);
 });
 test('boss death cancels pending telegraphs so a dead boss cannot create ground hits',()=>{
- const {g,p,boss}=bossFight();p.maxHp=p.hp=100000;run(g,7.1);assert.ok(boss.bossMarkers.length);g.kill(boss,p);const hp=p.hp;run(g,2.2);assert.equal(boss.bossMarkers.length,0);close(p.hp,hp);
+ const {g,p,boss}=bossFight();p.maxHp=p.hp=100000;p.level=10;run(g,7.1);assert.ok(boss.bossMarkers.length);g.kill(boss,p);const hp=p.hp;run(g,2.2);assert.equal(boss.bossMarkers.length,0);close(p.hp,hp);
 });
 test('buff creep exposure remains for two seconds after its attack but interrupts do not create it',()=>{
  for(const camp of ['amplify','blessing']){const {g,p}=quiet();g.units=[p];const c=g.makeNeutral(40,7,camp);p.x=43;g.aiNeutral=Game.prototype.aiNeutral;g.deal(p,c,1,{fixed:true});run(g,4.2);assert.ok(c.exposedUntil>g.time&&!c.pattern);const hp=c.hp;g.deal(p,c,100,{fixed:true});close(hp-c.hp,120);g.time=c.exposedUntil+.01;const before=c.hp;g.deal(p,c,100,{fixed:true});close(before-c.hp,100);}

@@ -42,11 +42,12 @@ function targetAt(g,e,p){return g.champions(1-e.team).filter(t=>t.alive&&!g.hidd
 export function validate(g,e,slot,p){return !isChampion(e)||slot!=='r'||!activeZone(g,e)||Boolean(targetAt(g,e,p));}
 export function cast(g,e,p){
  cancelCharge(e);const zone=activeZone(g,e);
- if(zone){const target=targetAt(g,e,p);if(!target)return false;zone.manualTargetId=zone.targetId=target.id;return true;}
+ if(zone){const target=targetAt(g,e,p);if(!target)return false;zone.manualTargetId=zone.targetId=target.id;delete zone.waitingForTarget;return true;}
  g.zones.push({kind:'electricDevice',source:e,...p,r:HOHENHEIM.radius,until:g.time+HOHENHEIM.duration,nextTick:g.time+HOHENHEIM.every,tickEvery:HOHENHEIM.every,damage:HOHENHEIM.damage});return true;
 }
 export function updateZone(g,z,dt){
  const eligible=t=>t?.alive&&t.team===1-z.source.team&&t.kind==='champion'&&!g.hidden(t)&&g.visibleTo(z.source.team,t);
+ const tracked=g.units.find(t=>t.id===z.targetId);if(tracked&&!tracked.alive)z.waitingForTarget=true;if(z.waitingForTarget)return;
  let target=g.units.find(t=>t.id===z.manualTargetId&&eligible(t));
  if(!target){delete z.manualTargetId;target=g.champions(1-z.source.team).filter(eligible).sort((a,b)=>distance(z,a)-distance(z,b)||a.id-b.id)[0];}
  z.targetId=target?.id;if(!target)return;

@@ -49,13 +49,20 @@ export const GROWTH={
 };
 export const ATTACK_STYLES={faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'flame',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
-CHAMPIONS.don.rText='사거리 6.5 좌표 지정 논타겟 돌진 · 경로 300 피해 · 적중 시 회복 · 7초간 흡혈 25%';
+CHAMPIONS.don.rText='사거리 6.5 커서 빠른 시전 논타겟 돌진 · 경로 300 피해 · 적중 시 회복 · 7초간 흡혈 25%';
 CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.brief='짧은 돌진 도끼와 동전의 도박사';
-CHAMPIONS.don.qText='재사용으로 조기 취소 가능·쿨다운 반환 없음. 2.5초 동안 사거리 6의 반투명 노란 범위로 방향을 고정해 랜스 연속 찌르기 · 이동 가능 · 정면 방어력 +50%';
+CHAMPIONS.don.qText='재사용으로 조기 취소 가능·쿨다운 반환 없음. 2.5초 동안 사거리 4.5·폭 2.1의 반투명 노란 직선 범위로 랜스 연속 찌르기 · 매 4번째 타격 피해의 20% 회복 · 이동 가능 · 정면 방어력 +50%';
 CHAMPIONS.heathcliff.rText='반경 7.5의 시체자루 · 피해·흡혈·처치 연장';
 CHAMPIONS.yi.qText='장판 0.1초마다 침묵 0.25초·장전 −10%. 최초 피해에 탄창 1개 소모, 매 피해마다 감속 3.5% 누적';
-CHAMPIONS.outis.rText='2.5거리 후퇴 후 사거리18 투사체로450피해. 명중 또는 사거리 끝에 반경3.5 폭발로250피해. 체력50%미만 대상에게 각각30% 추가피해.';
-CHAMPIONS.ishmael.rText='사거리 16 · 관통 작살 투사체 · 300 피해 · 적 챔피언을 바로 앞으로 끌기 · 쿨다운 25초';
+CHAMPIONS.outis.damage=215;CHAMPIONS.outis.rText='방어력 +50% 상태로 사거리 4.5 고속 돌진. 첫 충돌 450 피해·1초 기절 후 2.5거리 고속 후퇴. 돌진 종료점 뒤 사거리 6.5 부채꼴 220 피해(첫 충돌 대상 제외).';
+CHAMPIONS.ishmael.rText='사거리 16 관통 작살·300 피해. 발사 후 비행·끌기 완료까지 이동 불가. 적을 초당 18 거리로 바로 앞으로 끌기. 쿨다운 25초';
+CHAMPIONS.honglu.q=20;CHAMPIONS.honglu.qText='1.2초 이동속도 +40%·모든 공격 면역·적 통과. 종료 시 반경 5의 모든 아군 체력 500 회복. 쿨다운 20초';CHAMPIONS.honglu.rText='4초 동안 느리게 전진하는 반경 6.5 장판. 초당 120 피해·150 회복(전투력 등급당 +5%). 재사용으로 전진/정지 전환';
+CHAMPIONS.heathcliff.qText='우클릭을 누른 동안 최대 1.5초 충전, 놓으면 도약. 사거리 0.5→7·피해 80→250·착지 반경 1.8. 50%부터 기절 0.5→1초';
+CHAMPIONS.faust.qText='전방 베기 150·사거리 3 반원 230 피해 및 범위 밖까지 고속 밀치기. 4초 장전 +20%. 최고 레벨 적중 시 1.5초 감속 20%';CHAMPIONS.faust.rText='지정 반경 4.8에 680 피해. 1.25초 집중(최고 레벨 즉발). 적 챔피언 적중 수당 표상방출 1중첩(최대 4), 5초간 중첩당 방어력·전투력 +10%';
+CHAMPIONS.marton.range=5;CHAMPIONS.marton.qText='4초 동안 반경 5.5에 초당 110 피해·감속. 이동속도 +30%, 쿨다운 12초';CHAMPIONS.marton.rText='2.5초 집중 동안 반경 6.8 적 챔피언에게 0.25초마다 0.5초 도발. 종료 시 받은 피해 30%로 범위 공격(최대 900)';
+CHAMPIONS.queequeg.range=3;CHAMPIONS.queequeg.qText='사거리 8 아군 연결·최대 연결 거리 8. 갈색 밧줄, 연결 무한·방어력·저항·피해 분담';CHAMPIONS.queequeg.rText='4초 불사·이동 +25%·장전 +40%, 종료 시 잃은 체력 25% 회복. 연결한 아군에게도 모든 효과 적용';
+CHAMPIONS.gubo.rText='1.2초 대상 조준 후 사거리·지형 무관 즉발 붉은 레이저 500 피해. 아군 처치 시 사거리 14.7 부채꼴로 (현재 전투력 + 적 최대 체력)의 25% 고정 피해';
+CHAMPIONS.hohenheim.rText+=' 추적 대상 사망 시 정지·재지정 대기. 남색 지네 외곽 이펙트';
 export const POSITIONS={
   top:{name:'탑',lane:0,recommend:['보호','돌격'],description:'상단 라인 1vs1 · 보호·돌격 추천'},
   jungle:{name:'정글',lane:0,recommend:['암살','돌격'],description:'중립 크립 사냥·갱킹 · 암살·돌격 추천'},

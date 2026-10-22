@@ -1,3 +1,4 @@
+import { releaseHeath } from '../src/skills.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -59,7 +60,7 @@ test('Gregor knockback triggers extra damage and stun at wall contact, not at ca
  g.cast(p,'r',t);close(t.x,16.2);const hp=t.hp;assert.equal(g.stat(t,'stun'),0);run(g,.2);assert.ok(t.x>16.2&&t.x<17.1);assert.ok(t.hp<hp);assert.ok(g.stat(t,'stun')>0);assert.ok(!blocked(t.x,t.y,t.radius));
 });
 test('Heathcliff preview and actual landing share progressive charge range and wall constraints',()=>{
- const {g,p,t}=quiet('heathcliff');t.y=10;const aim={x:50,y:7};g.cast(p,'q',aim);g.time=1.2;close(heathCharge(g,p,aim).range,5);g.time=1.8;close(heathCharge(g,p,aim).range,6);g.time=2.4;const charged=heathCharge(g,p,aim);close(charged.range,7);g.cast(p,'q',aim);close(p.x,40);run(g,1);close(p.x,charged.landing.x);close(p.y,charged.landing.y);
+ const {g,p,t}=quiet('heathcliff');t.y=10;const aim={x:50,y:7};g.cast(p,'q',aim);g.time=.75;close(heathCharge(g,p,aim).range,3.75);g.time=1.2;close(heathCharge(g,p,aim).range,5.7);g.time=1.5;const charged=heathCharge(g,p,aim);close(charged.range,7);releaseHeath(g,p,aim);close(p.x,40);run(g,1);close(p.x,charged.landing.x);close(p.y,charged.landing.y);
 });
 test('all seventeen implemented champions can finish a three second recall to their fountain',()=>{
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);assert.ok(g.recall(p),key);run(g,2.9);close(p.x,40);run(g,.1);assert.equal(p.recall,undefined);close(distance(p,FOUNTAINS[0]),0);}

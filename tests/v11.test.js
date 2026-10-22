@@ -91,7 +91,7 @@ test('Queequeg relink, range break, owner death and target death remove the righ
  for(const action of ['relink','range','owner-death','target-death']){const {g,p,t}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);if(action==='relink'){p.qCd=0;g.cast(p,'q',ally(g,'faust',41,9));}if(action==='range'){a.x=60;run(g,1.7);}if(action==='owner-death')g.kill(p,t);if(action==='target-death')g.kill(a,t);assert.equal(g.buff(a,'tetherArmor'),false,action);assert.equal(g.buff(a,'tetherGuard'),false,action);if(action!=='relink')assert.equal(g.buff(p,'tetherGuard'),false,action);}
 });
 test('Queequeg ultimate preserves infinite link and still shares a four-second movement buff',()=>{
- const {g,p}=quiet('queequeg'),a=ally(g);g.cast(p,'q',a);run(g,4);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);assert.equal(a.state.tetherResistance,4);close(a.buffs.tetherStride-g.time,4);run(g,4.1);assert.ok(p.state.tether);assert.equal(g.buff(a,'tetherStride'),false);assert.ok(g.buff(a,'tetherGuard'));
+ const {g,p}=quiet('queequeg'),a=ally(g);g.cast(p,'q',a);run(g,4);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);assert.equal(a.state.tetherResistance,4);close(a.buffs.queequegUlt-g.time,4);run(g,4.1);assert.ok(p.state.tether);assert.equal(g.buff(a,'queequegUlt'),false);assert.ok(g.buff(a,'tetherGuard'));
 });
 function shieldHealing(){const f=quiet('yi');f.a=ally(f.g,'meursault');for(const e of [f.p,f.a]){e.hp-=1000;e.lastAttackAt=100;e.lastDamageAt=100;}return f;}
 test('Yi passive shield heals its recipient by seven plus 1.5 percent of recipient max HP each second',()=>{

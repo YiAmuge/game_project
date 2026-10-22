@@ -9,7 +9,7 @@ export function cast(g,e,slot,d,onChampionHit=()=>{}){
    if(Math.hypot(Math.max(0,-along,along-GREGOR.range),Math.max(0,side-GREGOR.halfWidth))>t.radius)continue;
    g.deal(e,t,GREGOR.pullDamage);
    const front=e.radius+t.radius+.15;
-   g.startMotion(t,direction(t,e),Math.max(0,distance(t,e)-front),{kind:'knock',source:e,follow:e,stopDistance:front});
+   if(g.startMotion(t,direction(t,e),Math.max(0,distance(t,e)-front),{kind:'knock',source:e,follow:e,stopDistance:front,speed:12,forcedMaxSpeed:12})){e.state.gregorPulls??=[];e.state.gregorPulls.push(t.id);}
   }
   g.effects.push({type:'gregorPierce',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:GREGOR.range,width:GREGOR.halfWidth,theme:'gregor',life:.4,maxLife:.4});
  }else{

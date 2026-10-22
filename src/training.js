@@ -1,3 +1,6 @@
+import * as BotAI from './bot-ai.js';
+import { cancelCharge as cancelYan } from './yan.js';
+import { cancelCharge as cancelHohen } from './hohenheim.js';
 import { RULES,UPGRADES,RUNTIME_CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
 import { canOccupy,settleBody } from './collision.js';
@@ -28,7 +31,7 @@ function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아�
  e.trainingDummy={home:{x,y},hp,infinite,mode,leash:12,respawn:5};return e;
 }
 export function init(g,key,position){
- g.practice={invincible:false,noCooldown:false,infiniteAmmo:false,lineStopped:false};
+ g.practice={invincible:false,noCooldown:false,infiniteAmmo:false,lineStopped:false,championAI:false};
  g.makeChampion(key,0,0,position);g.player=g.units.find(u=>u.player);Object.assign(g.player,SPAWN);
  dummy(g,0,23,40,{infinite:true,hp:10000,name:'아군 무한 허수아비'});
  dummy(g,1,29,40,{infinite:true,hp:10000,name:'적 무한 허수아비'});
@@ -121,4 +124,24 @@ export function changeChampion(g,key){
  g.units=g.units.filter(e=>e!==old);g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old);
  g.makeChampion(key,0,0,old.position);g.player=g.units.find(e=>e.player);Object.assign(g.player,saved,point);
  g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,SPAWN);refreshOptions(g);return true;
+}
+
+export function summon(g,key,team,point){
+ if(!g.training||!RUNTIME_CHAMPIONS[key]||![0,1].includes(team)||!Number.isFinite(point?.x)||!Number.isFinite(point?.y))return false;
+ const probe={kind:'champion',team,radius:.48,alive:true,state:{}};
+ if(!canOccupy(g,probe,point,{phaseEnemies:false}))return false;
+ const e=g.makeChampion(key,team,10+g.nextId,'top');
+ Object.assign(e,point,{player:false,trainingSummoned:true,trainingHome:{...point}});e.path=[];return e;
+}
+export function setChampionAI(g,on){
+ if(!g.training)return false;g.practice.championAI=Boolean(on);
+ if(!on)for(const e of g.champions().filter(e=>e.trainingSummoned)){cancelYan(e);cancelHohen(e);Skills.cancelHeath(e);e.path=[];}
+ return true;
+}
+export function aiChampion(g,e,dt){
+ if(!g.practice.championAI||!e.alive||g.stat(e,'stun')||e.channelUntil>g.time)return;
+ const t=g.nearest(e,12,false);if(!t)return;
+ if(distance(e,t)>g.attackRange(e)+t.radius||!g.clearLine(e,t))g.moveToward(e,t,dt);
+ else g.attack(e,t);
+ BotAI.combatSkills(g,e,t);
 }
