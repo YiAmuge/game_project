@@ -45,7 +45,7 @@ function nellyMark(g,e,t,force=false){
  if(force){t.state.nellyMarks[e.id]={active:true,ready:Infinity,hold:3,until:g.time+7};t.visuals.nellyMark={until:g.time+7,theme:'nelly',forced:true};return;}
  if(mark?.active&&mark.until>g.time){
   if(mark.hold>0){mark.hold--;return;}
-  mark.active=false;mark.ready=g.time+3;delete t.visuals.nellyMark;if(!e.state.knifeRefundCast)refundKnife(g,e);if(t.hp>0)g.deal(e,t,t.maxHp*.07,{fixed:true,proc:false});
+  g.effects.push({type:'nellyProc',source:e.id,target:t.id,theme:'nelly',x:t.x,y:t.y,r:.9,life:.3,maxLife:.3});mark.active=false;mark.ready=g.time+3;delete t.visuals.nellyMark;if(!e.state.knifeRefundCast)refundKnife(g,e);if(t.hp>0)g.deal(e,t,t.maxHp*.07,{fixed:true,proc:false});
  }else if(!mark||mark.ready<=g.time){t.state.nellyMarks[e.id]={active:true,ready:g.time+3,until:g.time+6};t.visuals.nellyMark={until:g.time+6,theme:'nelly'};}
 }
 export function afterDamage(g,e,t,actual,proc){

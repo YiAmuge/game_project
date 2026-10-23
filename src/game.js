@@ -108,7 +108,7 @@ export class Game {
     if(forced&&e.state?.swordHeldBy){const owner=this.units.find(a=>a.id===e.state.swordHeldBy);if(owner)V12.releaseGrab(this,owner);}
     const actionKind=e.actionKind||'skill',wrap=fn=>fn&&((...args)=>this.action(e,actionKind,()=>fn(...args)));
     onStep=wrap(onStep);onComplete=wrap(onComplete);onCollision=wrap(onCollision);
-    this.cancelRecall(e);e.motion={actionKind,phaseEnemies:!forced&&phaseEnemies,lastClear:{x:e.x,y:e.y},dx:d.x,dy:d.y,remaining:len,total:len,speed:Math.min(speed,forced?forcedMaxSpeed:maxSpeed),kind,arcHeight,forced,onStep,onComplete,onCollision,ignoreWalls,startedAt:this.time,elapsed:0,minDuration,follow,stopDistance};
+    this.cancelRecall(e);e.motion={visualOrigin:{x:e.x,y:e.y},actionKind,phaseEnemies:!forced&&phaseEnemies,lastClear:{x:e.x,y:e.y},dx:d.x,dy:d.y,remaining:len,total:len,speed:Math.min(speed,forced?forcedMaxSpeed:maxSpeed),kind,arcHeight,forced,onStep,onComplete,onCollision,ignoreWalls,startedAt:this.time,elapsed:0,minDuration,follow,stopDistance};
     if(forced&&len>0)this.triggerDisrupt(source,e);
     if(len<.001&&!minDuration){delete e.motion;onComplete?.();}return true;
   }
@@ -326,7 +326,7 @@ export class Game {
     V08.afterDamage(this,source,target,actual,proc,damageKind);
     Augments.afterHit(this,source,target,actual,proc);
     target.hitFlashUntil=this.time+.1;target.hitFrom=Math.atan2(target.y-source.y,target.x-source.x);
-    this.effects.push({type:'impact',x:target.x,y:target.y,angle:target.hitFrom,theme:source.key,color:source.key==='gregor'?'#c49a73':source.team===0?'#e9f7df':'#f3b9a3',life:.24,maxLife:.24});
+    this.effects.push({type:'impact',x:target.x,y:target.y,angle:target.hitFrom,source:source.id,target:target.id,damageKind,slot:damageKind==='skill'?source.castSlot:undefined,theme:source.key,color:source.key==='gregor'?'#c49a73':source.team===0?'#e9f7df':'#f3b9a3',life:.24,maxLife:.24});
     if(source.kind==='champion') {source.totalDamage+=actual;if(source.player)this.damageDone+=actual;}
     this.effects.push({type:'number',x:target.x,y:target.y-.7,text:Math.round(amount),color:source.key==='gubo'?'#d75d75':fixed?'#e3bbff':source.team===0?'#eddaac':'#ee978f',life:.7,maxLife:.7});
     if(proc&&source.key==='yi'&&target.kind==='champion'&&source.passiveReady<=this.time) {
@@ -438,7 +438,7 @@ export class Game {
   }
   aim(e,point) {const d=direction(e,point);return Math.hypot(d.x,d.y)>.01?d:{x:e.team===0?1:-1,y:0};}
   bullet(e,dir,damage,range,options={}) {
-    this.projectiles.push({source:e,damageKind:e.actionKind||'skill',x:e.x,y:e.y,origin:{x:e.x,y:e.y},dx:dir.x,dy:dir.y,damage,remaining:range,width:.18,speed:22,knock:0,color:e.key==='gubo'?'#a62c45':e.team===0?'#92d5dd':'#e6a097',theme:e.key,hitIds:new Set(),...options});
+    this.projectiles.push({source:e,damageKind:e.actionKind||'skill',x:e.x,y:e.y,slot:e.actionKind==='skill'?e.castSlot:undefined,bornAt:this.time,origin:{x:e.x,y:e.y},dx:dir.x,dy:dir.y,damage,remaining:range,width:.18,speed:22,knock:0,color:e.key==='gubo'?'#a62c45':e.team===0?'#92d5dd':'#e6a097',theme:e.key,hitIds:new Set(),...options});
   }
   cone(e,dir,range,angle,damage,onHit=()=>{},{exclude}={}) {
     for(const target of this.units.filter(u=>this.hostile(e,u))) {
@@ -446,7 +446,7 @@ export class Game {
       const d=direction(e,target);
       if(distance(e,target)<=range+target.radius&&d.x*dir.x+d.y*dir.y>=Math.cos(angle/2)&&this.clearLine(e,target)) {const actual=this.deal(e,target,damage);onHit(target,actual);}
     }
-    this.effects.push({type:['thrust','punch','whip','flame'].includes(this.attackStyle(e))?'thrust':'slash',x:e.x,y:e.y,angle:Math.atan2(dir.y,dir.x),spread:angle,r:range,color:e.key==='gregor'?CHAMPIONS[e.key].color:e.team===0?'#bce5e5':'#eaa39c',theme:e.key,side:(e.attackSerial||0)%2?1:-1,life:.28,maxLife:.28});
+    this.effects.push({source:e.id,damageKind:e.actionKind||'basic',slot:e.actionKind==='skill'?e.castSlot:undefined,shape:{kind:'cone',range,spread:angle,angle:Math.atan2(dir.y,dir.x)},type:['thrust','punch','whip','flame'].includes(this.attackStyle(e))?'thrust':'slash',x:e.x,y:e.y,angle:Math.atan2(dir.y,dir.x),spread:angle,r:range,color:e.key==='gregor'?CHAMPIONS[e.key].color:e.team===0?'#bce5e5':'#eaa39c',theme:e.key,side:(e.attackSerial||0)%2?1:-1,life:.28,maxLife:.28});
   }
   addMark(e,n=1) {
     if(e.key==='sinclair'&&this.buff(e,'marks'))return;
@@ -487,7 +487,7 @@ export class Game {
     if(!Skills.validateSkill(this,e,slot,point,options))return false;
     this.cancelRecall(e);const c=CHAMPIONS[e.key],d=this.aim(e,point); if(!recast)e[slot+'Cd']=this.cooldown(e,slot);
     if(Skills.isOffensive(e,slot))e.lastAttackAt=this.time;
-    e.facing=Math.atan2(d.y,d.x);e.castAt=this.time;e.castSlot=slot;e.healingEvent={key:`cast-${e.id}-${e.castSerial=(e.castSerial||0)+1}`,at:this.time};e.revealedUntil=this.time+1.25;
+    e.facing=Math.atan2(d.y,d.x);e.castAt=this.time;e.castSlot=slot;e.visualCast={slot,at:this.time,point:{...point},origin:{x:e.x,y:e.y},angle:e.facing,healthy:e.hp/e.maxHp>=.5};e.healingEvent={key:`cast-${e.id}-${e.castSerial=(e.castSerial||0)+1}`,at:this.time};e.revealedUntil=this.time+1.25;
     if(!(slot==='r'&&['ishmael','marton','ryoshu'].includes(e.key)))this.effects.push({type:'cast',x:e.x,y:e.y,angle:e.facing,r:slot==='r'?(e.key==='meursault'?8:5):3,theme:e.key,slot,life:slot==='r'?.9:.55,maxLife:slot==='r'?.9:.55});
     if(Skills.cast(this,e,slot,point,d,options))return true;
     const destination=(max)=>{const len=Math.min(max,distance(e,point));return {x:clamp(e.x+d.x*len,this.bounds.x+.6,this.bounds.x+this.bounds.w-.6),y:clamp(e.y+d.y*len,this.bounds.y+.6,this.bounds.y+this.bounds.h-.6)};};
@@ -643,7 +643,7 @@ export class Game {
       let hits=0;
       for(const t of this.units.filter(t=>this.hostile(e,t)&&distance(event,t)<=event.r&&(event.ignoreWalls||this.clearLine(event,t)))) {this.deal(e,t,event.damage);event.onHit?.(t);if(t.kind==='champion')hits++;}
       if(event.type==='burst'&&hits){this.addBuff(e,'faustUlt',5);e.ultStacks=Math.min(4,hits);}
-      this.effects.push({type:'burst',x:event.x,y:event.y,r:event.r,color:'#d6be7f',theme:e.key,life:.65,maxLife:.65});
+      this.effects.push({source:e.id,slot:'r',damageKind:'skill',type:'burst',x:event.x,y:event.y,r:event.r,color:'#d6be7f',theme:e.key,life:.65,maxLife:.65});
     }
     this.pending=this.pending.filter(e=>e.at>this.time&&e.source.alive);
     for(const z of this.zones) {

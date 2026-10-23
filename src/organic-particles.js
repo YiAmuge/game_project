@@ -21,15 +21,25 @@ export function organicPixels(form,variant,size=64){
   if(form==='crystal'){qx*=1.8;qy*=.7;rough=.5;}
   if(form==='leaf'||form==='petal'){qx*=1.5;qy*=.8;rough=.5;}
   if(form==='drop'){qx*=1.2+(1-wy)*.2;qy*=.85;rough=.45;}
+  const solid=['chip','chunk','woodchip','crystal','leaf','petal','feather'].includes(form);
+  if(form==='chip'||form==='chunk'){qx*=1.3;qy*=2.2;rough=.35;}
+  if(form==='feather'){qx*=2.8;qy*=.7;rough=.3;}
   const radius=form==='crystal'?Math.abs(qx)*.7+Math.abs(qy)*.75:qx*qx+qy*qy;
   let field=1-radius+(clouds-.52)*rough;
+  // Chipped metal has planar edges and flat facets; its silhouette never flows.
+  if(form==='chip'||form==='chunk'){
+   const sx=nx+ny*(variant%2?.25:-.18),top=.28+variant*.035;
+   field=Math.min(.66-sx,.58+sx,top-ny,.37+ny,.69-sx*.65-ny,.67+sx*.7+ny);
+  }
   if(form==='rune')field=.22-Math.abs(Math.sqrt(radius)-.56)+(clouds-.5)*.45;
-  let density=smooth(clamp(field/(['smoke','mist','frost','flame','spark','glow'].includes(form)?.75:.3)));
+  let density=smooth(clamp(field/(solid?.055:(['smoke','mist','frost','flame','spark','glow'].includes(form)?.75:.3))));
   density*=clamp((1-Math.max(Math.abs(nx),Math.abs(ny)))/.16);
   density*=.38+clouds*.4+detail*.22;
+  if(form==='feather')density*=.5+.5*Math.abs(Math.sin(wy*35+wx*20));
   if(form==='spark'||form==='glow')density*=Math.exp(-radius*2.5);
   const grain=form==='woodchip'?noise(wx*35,wy*3,seed)*.35:0;
-  const illumination=clamp(.45+clouds*.35+detail*.2-wx*.14-wy*.12-grain),i=(y*size+x)*4;
+  const facet=form==='chip'||form==='chunk'?(ny>nx*.25?.13:-.08):0;
+  const illumination=clamp(.45+clouds*.35+detail*.2-wx*.14-wy*.12-grain+facet),i=(y*size+x)*4;
   data[i]=data[i+1]=data[i+2]=Math.round(illumination*255);data[i+3]=Math.round(density*255);
  }
  return data;

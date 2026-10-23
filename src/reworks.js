@@ -6,6 +6,7 @@ import { area } from './skills.js';
 // Shared rectangles use full width; circle/body intersection includes the target radius.
 export function rectangle(g,e,d,range,width,damage,hit=()=>{}){
  const hits=[];
+ g.effects.push({type:'strikeRect',source:e.id,theme:e.key,x:e.x,y:e.y,r:range,angle:Math.atan2(d.y,d.x),shape:{kind:'rect',range,width,angle:Math.atan2(d.y,d.x)},slot:e.actionKind==='skill'?e.castSlot:undefined,life:.24,maxLife:.24});
  for(const t of [...g.units])if(g.hostile(e,t)&&g.clearLine(e,t)){
   const x=t.x-e.x,y=t.y-e.y,along=x*d.x+y*d.y,side=Math.abs(y*d.x-x*d.y);
   if(Math.hypot(Math.max(0,-along,along-range),Math.max(0,side-width/2))<=t.radius){const actual=g.deal(e,t,damage);hit(t,actual);hits.push(t);}

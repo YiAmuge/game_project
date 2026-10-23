@@ -208,7 +208,7 @@ export function cast(g,e,slot,p,d,options={}){
   return true;
  case 'gubo':
   if(slot==='q'){state.guboReloadAt=g.time;g.addBuff(e,'guboReload',4);}
-  else {const t=guboTarget(g,e,p,options.executeAlly);if(t){e.channelUntil=g.time+1.2;state.guboAim={target:t,until:g.time+1.2};g.schedule(e,1.2,()=>{delete state.guboAim;if(!t.alive)return;g.effects.push({type:'guboLaser',x:e.x,y:e.y,to:{x:t.x,y:t.y},life:.35,maxLife:.35});state.guboLaserFiring=true;try{g.deal(e,t,500,{allowFriendly:t.team===e.team,damageKind:'skill'});}finally{delete state.guboLaserFiring;}});}}
+  else {const t=guboTarget(g,e,p,options.executeAlly);if(t){e.channelUntil=g.time+1.2;state.guboAim={target:t,until:g.time+1.2};g.schedule(e,1.2,()=>{delete state.guboAim;if(!t.alive)return;g.effects.push({source:e.id,theme:'gubo',type:'guboLaser',x:e.x,y:e.y,to:{x:t.x,y:t.y},life:.35,maxLife:.35});state.guboLaserFiring=true;try{g.deal(e,t,500,{allowFriendly:t.team===e.team,damageKind:'skill'});}finally{delete state.guboLaserFiring;}});}}
   return true;
  default:return false;
  }

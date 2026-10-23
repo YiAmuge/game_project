@@ -45,14 +45,14 @@ function endTransform(g,e){
 }
 // The same impact circle drives the hit test, aiming guide and shockwave.
 export function basicImpact(g,e,d){return {x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e),r:SORA.basicRadius};}
-function shockwave(g,p,r,cracks=false){
- g.effects.push({type:'soraShockwave',x:p.x,y:p.y,r,life:.38,maxLife:.38});
- if(cracks)g.effects.push({type:'soraCracks',x:p.x,y:p.y,r,life:1.4,maxLife:1.4});
+function shockwave(g,p,r,cracks=false,owner){
+ g.effects.push({source:owner?.id,type:'soraShockwave',theme:'sora',x:p.x,y:p.y,r,life:.38,maxLife:.38});
+ if(cracks)g.effects.push({source:owner?.id,theme:'sora',type:'soraCracks',x:p.x,y:p.y,r,life:1.4,maxLife:1.4});
 }
 export function basic(g,e,p,d){
  if(e.key!=='sora')return false;
- if(ego(g,e)){g.addBuff(e,'soraScratch',.35,{copy:false});area(g,e,e,g.attackRange(e),0,t=>g.deal(e,t,SORA.egoDamage));g.effects.push({type:'soraClaw',x:e.x,y:e.y,r:g.attackRange(e),angle:Math.atan2(d.y,d.x),circle:true,life:.3,maxLife:.3});}
- else {const impact=basicImpact(g,e,d);if(g.clearLine(e,impact)){area(g,e,impact,impact.r,0,t=>{if(g.clearLine(e,t))g.deal(e,t,SORA.basicDamage);});shockwave(g,impact,impact.r);}}
+ if(ego(g,e)){g.addBuff(e,'soraScratch',.35,{copy:false});area(g,e,e,g.attackRange(e),0,t=>g.deal(e,t,SORA.egoDamage));g.effects.push({source:e.id,theme:'sora',type:'soraClaw',x:e.x,y:e.y,r:g.attackRange(e),angle:Math.atan2(d.y,d.x),circle:true,life:.3,maxLife:.3});}
+ else {const impact=basicImpact(g,e,d);if(g.clearLine(e,impact)){area(g,e,impact,impact.r,0,t=>{if(g.clearLine(e,t))g.deal(e,t,SORA.basicDamage);});shockwave(g,impact,impact.r,false,e);}}
  return true;
 }
 function trail(g,e,origin){
@@ -61,12 +61,12 @@ function trail(g,e,origin){
  // Extend both ends by 5%, stopping at terrain or buildings, using the actual dash path.
  const extend=(p,sign)=>{let out={...p};for(let n=.05;n<extra+.05;n+=.05){const step=Math.min(n,extra),next={x:p.x+d.x*step*sign,y:p.y+d.y*step*sign};if(g.blocked(next.x,next.y,.01)||!g.clearLine(p,next)||g.units.some(t=>t.alive&&['tower','core'].includes(t.kind)&&distance(t,next)<t.radius))break;out=next;}return out;};
  const start=extend(origin,-1),finish=extend(end,1),halfLength=distance(start,finish)/2,center={x:(start.x+finish.x)/2,y:(start.y+finish.y)/2};
- g.effects.push({type:'soraTrail',...start,to:finish,width:SORA.trailWidth,life:SORA.trailDuration,maxLife:SORA.trailDuration});
+ g.effects.push({source:e.id,theme:'sora',type:'soraTrail',...start,to:finish,width:SORA.trailWidth,life:SORA.trailDuration,maxLife:SORA.trailDuration});
  for(let i=0;i<6;i++)g.schedule(e,i*SORA.trailEvery,()=>{
   for(const t of [...g.units])if(g.hostile(e,t)&&Math.hypot(Math.max(0,Math.abs((t.x-center.x)*d.x+(t.y-center.y)*d.y)-halfLength),Math.max(0,Math.abs((t.y-center.y)*d.x-(t.x-center.x)*d.y)-SORA.trailWidth))<=t.radius&&g.clearLine(origin,t)&&g.clearLine(end,t)){
    g.deal(e,t,SORA.trailDamage);g.status(t,'slow',.3,1,e);
   }
-  g.effects.push({type:'soraClaw',x:(origin.x+end.x)/2,y:(origin.y+end.y)/2,r:Math.max(.6,distance(origin,end)/2),angle:Math.atan2(end.y-origin.y,end.x-origin.x),life:.18,maxLife:.18});
+  g.effects.push({source:e.id,theme:'sora',type:'soraClaw',x:start.x,y:start.y,r:Math.max(.6,distance(start,finish)),shape:{kind:'rect',range:distance(start,finish),width:SORA.trailWidth*2,angle:Math.atan2(end.y-origin.y,end.x-origin.x)},angle:Math.atan2(end.y-origin.y,end.x-origin.x),life:.18,maxLife:.18});
  });
 }
 export function cast(g,e,slot,p,d){
@@ -85,11 +85,11 @@ export function cast(g,e,slot,p,d){
  }else{
   // Sweep only the first contacted enemy; no teleport and no pushing through terrain.
   const stopped=new Set();
-  g.startMotion(e,d,length,{phaseEnemies:true,onStep:(from,to)=>{
+  g.startMotion(e,d,length,{phaseEnemies:true,onComplete:()=>shockwave(g,e,SORA.qWidth,true,e),onStep:(from,to)=>{
    const target=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=SORA.qWidth+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
    if(!target||stopped.size)return;stopped.add(target.id);const refill=marked(g,e,target),fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);
    g.deal(e,target,SORA.qDamage);g.status(target,'stun',1,1,e);g.addShield(e,SORA.qShield,`sora-dash-${e.id}`,2);if(refill)e.ammo=Math.min(g.ammoCap(e),e.ammo+1);
-   shockwave(g,target,SORA.qWidth,true);
+   shockwave(g,target,SORA.qWidth,true,e);
   }});
  }
  return true;
@@ -119,5 +119,5 @@ export function onDeath(g,e){if(e.key==='sora')restoreGuard(e);}
 export function abilityInfo(g,e){
  if(e.key!=='sora')return {};
  const transformed=ego(g,e),unlocked=ready(g,e);
- return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?`충전 ${e.state.egoQCharges}/2 · 1회 충전 5초. 커서 방향으로 즉시 초속 24 무적 돌진(최대 6.5)·240 피해. 후속 장판 좌우 +30%·전후 +10%, 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.`:'사거리 7 좌표로 돌진, 처음 닿은 적에게 210 피해·기절 1초. 적중 시 250 보호막 2초·원형 충격파·지면 균열. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
+ return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?`충전 ${e.state.egoQCharges}/2 · 1회 충전 5초. 커서 방향으로 즉시 초속 24 무적 돌진(최대 6.5)·240 피해. 후속 장판 좌우 +30%·전후 +10%, 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.`:'사거리 7 좌표로 돌진, 처음 닿은 적에게 210 피해·기절 1초. 적중 시 250 보호막 2초. 적중·돌진 종료 위치에 원형 충격파·지면 균열. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
 }

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SkillVFX,VFX_LIMITS,VFX_PRESETS,CHAMPION_ELEMENTS,particlePose,coolingColor,effectRecipe } from '../src/skill-vfx.js';
 import { Game } from '../src/game.js';
+import { combatStyle,CHAMPION_STYLES } from '../src/combat-style.js';
 import { THEMES } from '../src/art.js';
 
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
@@ -46,13 +47,12 @@ test('classification covers slash, pierce, hit, gun and themed explosions',()=>{
  assert.equal(effectRecipe({type:'ryoshuStorm',theme:'ryoshu'}).kind,'explosion');
  assert.equal(effectRecipe({type:'cast'}),null);assert.equal(effectRecipe({type:'number'}),null);
 });
-test('every champion keeps its established primary, highlight and dark colors in every effect family',()=>{
+test('every champion attack uses the current per-action visual guide',()=>{
  const g=new Game('faust','top',{mode:'training'}),v=new SkillVFX();g.projectiles=[];
- for(const [key,theme] of Object.entries(THEMES))for(const type of ['slash','thrust','impact','burst','guboLaser','ryoshuStorm']){
-  g.effects=[{type,theme:key,x:5,y:5,r:3,maxLife:.7,life:.7}];v.sync(g,camera,THEMES);
-  const e=v.emitters.at(-1),p=v.particles.at(-1);assert.equal(e.color,theme.light);assert.equal(p.color,theme.light);assert.equal(p.accent,theme.accent);assert.equal(p.dark,theme.dark);
+ for(const key of Object.keys(CHAMPION_STYLES)){
+  g.effects=[{type:'slash',theme:key,x:5,y:5,r:3,maxLife:.7,life:.7,damageKind:'basic'}];v.sync(g,camera,THEMES);
+  const e=v.emitters.at(-1),expected=combatStyle(key,g,null,{kind:'basic'});assert.equal(e.color,expected.color);assert.equal(e.element,expected.element);
  }
- g.projectiles=[{source:g.player,origin:{x:5,y:5},dx:1,dy:0,theme:'gubo'}];v.sync(g,camera,THEMES);assert.equal(v.emitters.at(-1).color,THEMES.gubo.light);
 });
 test('automatic observation emits each event once, culls offscreen attacks and never consumes gameplay random state',()=>{
  const g=new Game('faust','top',{mode:'training'}),v=new SkillVFX();g.time=1;
@@ -60,7 +60,7 @@ test('automatic observation emits each event once, culls offscreen attacks and n
  const random=g.randomState;v.sync(g,camera,{});const n=v.particles.length;assert.equal(n,18);assert.equal(g.randomState,random);
  v.sync(g,camera,{});assert.equal(v.particles.length,n);
  g.effects.push({type:'burst',x:1000,y:1000,r:4,maxLife:.7,life:.7});v.sync(g,camera,{});assert.equal(v.particles.length,n);
- const p={source:g.player,origin:{x:6,y:6},x:6,y:6,dx:1,dy:0,theme:'faust'};g.projectiles=[p];v.sync(g,camera,{});assert.equal(v.particles.length,n+12);v.sync(g,camera,{});assert.equal(v.particles.length,n+12);
+ const p={source:g.player,origin:{x:6,y:6},x:6,y:6,dx:1,dy:0,theme:'faust'};g.projectiles=[p];v.sync(g,camera,{});assert.equal(v.particles.length,n+4);v.sync(g,camera,{});assert.equal(v.particles.length,n+4);
  const other=new Game('faust','top',{mode:'training'});other.effects=[];other.projectiles=[];v.sync(other,camera,{});assert.equal(v.particles.length,0);
 });
 test('height projection, camera changes, emitter light and depth sorting stay in world coordinates',()=>{
@@ -73,19 +73,19 @@ test('height projection, camera changes, emitter light and depth sorting stay in
  const light=v.lightAt({x:5,y:5}).strength;v.advance(.3);assert.ok(v.lightAt({x:5,y:5}).strength<light);
 });
 test('elements use distinct geometry and non-fire skills never emit fire or smoke particles',()=>{
- const forms={electric:'bolt',ice:'crystal',wood:'woodchip',water:'drop',petal:'petal',mirror:'crystal',arcane:'rune',blood:'drop'};
+ const forms={electric:'bolt',ice:'crystal',wood:'woodchip',water:'drop',petal:'petal',mirror:'crystal',arcane:'spark',blood:'drop'};
  for(const [element,required] of Object.entries(forms))for(const kind of Object.keys(VFX_PRESETS)){
   const v=new SkillVFX();v.emit(kind,{x:5,y:5},0,{element,seed:2});
   assert.ok(v.particles.some(p=>p.form===required),`${element}/${kind}`);assert.ok(v.particles.every(p=>!['flame','smoke'].includes(p.form)));
   assert.ok(v.particles.every(p=>particlePose(p,.1).z>0));
  }
  const v=new SkillVFX();v.emit('explosion',{x:5,y:5},0,{element:'fire'});assert.ok(v.particles.some(p=>p.form==='flame'));assert.ok(v.particles.some(p=>p.form==='smoke'));
- for(const [key,element] of [['hohenheim','electric'],['rodya','ice'],['marton','wood'],['dongrang','wood'],['honglu','water'],['alisa','fire']])assert.equal(CHAMPION_ELEMENTS[key],element);
+ for(const [key,element] of [['hohenheim','electric'],['rodya','metal'],['marton','wood'],['dongrang','metal'],['honglu','water'],['alisa','fire']])assert.equal(CHAMPION_ELEMENTS[key],element);
 });
 test('water, ice, wood and electric zones emit their own attributed burst exactly once',()=>{
  const g=new Game('faust','top',{mode:'training'}),v=new SkillVFX();g.effects=[];g.projectiles=[];
  for(const [kind,key,element] of [['waterfall','honglu','water'],['ice','rodya','ice'],['desireTree','dongrang','wood'],['electricBloom','hohenheim','electric']]){
-  g.zones=[{kind,source:{key},x:5,y:5,r:4}];v.sync(g,camera,THEMES);assert.equal(v.emitters.at(-1).element,element);assert.equal(v.emitters.at(-1).color,THEMES[key].light);
+  g.zones=[{kind,source:{key},x:5,y:5,r:4}];v.sync(g,camera,THEMES);assert.equal(v.emitters.at(-1).element,element);assert.equal(v.emitters.at(-1).color,combatStyle(key,g,null,{kind:'zone',slot:'r',type:kind}).color);
   const n=v.emitters.length;v.sync(g,camera,THEMES);assert.equal(v.emitters.length,n);
  }
 });

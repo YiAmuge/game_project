@@ -54,7 +54,7 @@ export function release(g,e,p){
    if(Math.hypot(Math.max(0,-along,along-shape.range),Math.max(0,side-shape.width/2))<=t.radius)g.deal(e,t,shape.damage);
   }
  });
- g.effects.push({type:'yanCleave',x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},width:shape.width,progress:shape.progress,life:.4,maxLife:.4});return true;
+ g.effects.push({source:e.id,theme:'yan',type:'yanCleave',x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},width:shape.width,progress:shape.progress,life:.4,maxLife:.4});return true;
 }
 function safeHandPoint(g,e,point){
  const b=g.bounds||WORLD,d=direction(e,point),len=Math.min(YAN.handLeash-.05,distance(e,point)),p={x:clamp(e.x+d.x*len,b.x+.3,b.x+b.w-.3),y:clamp(e.y+d.y*len,b.y+.3,b.y+b.h-.3)};
@@ -90,7 +90,7 @@ export function cast(g,e,slot,p){
   const point={...p};g.effects.push({type:'yanSwordWarning',...point,r:YAN.distortedQRadius,life:YAN.distortedQDelay,maxLife:YAN.distortedQDelay});
   g.schedule(e,YAN.distortedQDelay,()=>{
    for(const t of [...g.units])if(g.hostile(e,t)&&distance(point,t)<=YAN.distortedQRadius+t.radius&&g.clearLine(point,t)){g.deal(e,t,YAN.distortedQDamage);g.status(t,'stun',1,1.5,e);}
-   g.effects.push({type:'yanGreatsword',...point,r:YAN.distortedQRadius,life:.7,maxLife:.7});
+   g.effects.push({source:e.id,theme:'yan',type:'yanGreatsword',...point,r:YAN.distortedQRadius,life:.7,maxLife:.7});
   });
  }else{
   e.state.yanBarrage={until:g.time+YAN.qDuration,next:g.time,ticks:0,hits:{},d:g.aim(e,p)};
@@ -133,7 +133,7 @@ export function tick(g,e,dt){
   g.action(e,'skill',()=>{for(const t of [...g.units]){const d=direction(e,t);if(g.hostile(e,t)&&distance(e,t)<=YAN.qRange+t.radius&&d.x*q.d.x+d.y*q.d.y>=0&&g.clearLine(e,t)){
    g.deal(e,t,YAN.qDamage);q.hits[t.id]=(q.hits[t.id]||0)+1;if(q.hits[t.id]===6)g.status(t,'slow',.5,1.5,e);
   }}});
-  g.effects.push({type:'yanWave',x:e.x,y:e.y,angle:Math.atan2(q.d.y,q.d.x),r:YAN.qRange,life:.28,maxLife:.28});
+  g.effects.push({source:e.id,theme:'yan',type:'yanWave',x:e.x,y:e.y,angle:Math.atan2(q.d.y,q.d.x),r:YAN.qRange,life:.28,maxLife:.28});
  }
 }
 export function onDeath(g,e){if(e.key==='yan'){cancelCharge(e);removeHand(g,e);}}

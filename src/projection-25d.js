@@ -13,7 +13,7 @@ export function feetOffset(e){
  return .35;
 }
 export function projectFeet(camera,e){
- const point=camera.worldToScreen(e,.075);
+ const point=camera.worldToScreen(renderAnchor(e),.075);
  return {x:point.x,y:point.y,offset:feetOffset(e),scale:camera.scale};
 }
 export function sceneryPan(camera,anchor){
@@ -29,4 +29,5 @@ export function sceneryOutline(camera,{x,y,w,h,height}){
  const lower=half(points),upper=half([...points].reverse());return [...lower.slice(0,-1),...upper.slice(0,-1)];
 }
 
-export function leapLift(e){const m=e.motion;if(m?.kind!=='leap')return 0;const duration=Math.max(.01,m.minDuration||m.total/m.speed);return Math.sin(Math.PI*Math.min(1,m.elapsed/duration))*(m.arcHeight||1.1);}
+export function renderAnchor(e){const m=e.motion;if(e.key==='starbuck'&&m?.kind==='leap'&&m.visualOrigin){const t=m.elapsed/Math.max(.01,m.minDuration||.7);return t<.5?m.visualOrigin:{x:m.visualOrigin.x+m.dx*m.total,y:m.visualOrigin.y+m.dy*m.total};}return e;}
+export function leapLift(e){const m=e.motion;if(m?.kind!=='leap')return 0;if(e.key==='starbuck'){const t=Math.min(1,m.elapsed/Math.max(.01,m.minDuration||.7));return t<.18?t/.18*32:t>.82?(1-t)/.18*32:32;}const duration=Math.max(.01,m.minDuration||m.total/m.speed);return Math.sin(Math.PI*Math.min(1,m.elapsed/duration))*(m.arcHeight||1.1);}

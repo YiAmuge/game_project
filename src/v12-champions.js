@@ -30,7 +30,7 @@ export function releaseGrab(g,e,throwDirection){
  if(throwDirection&&t.alive){g.deal(e,t,KIM.throwDamage);g.startMotion(t,throwDirection,2.5,{kind:'knock'});}
 }
 function counterWave(g,e,counter){
- const s=e.state.counter;if(!s)return;delete e.state.counter;e.channelUntil=0;e.ccImmuneUntil=s.immune;
+ const s=e.state.counter;if(!s)return;if(counter)g.effects.push({type:'counterSignal',source:e.id,theme:'kim',x:e.x,y:e.y,r:1,life:.25,maxLife:.25});delete e.state.counter;e.channelUntil=0;e.ccImmuneUntil=s.immune;
  const fire=()=>g.bullet(e,{x:Math.cos(s.angle),y:Math.sin(s.angle)},counter?KIM.counterDamage:KIM.rDamage,counter?8:6,{width:(counter?.42:.3)*4.5,pierce:Infinity,theme:'kim',swordWave:true,onHit:t=>{if(counter)g.status(t,'slow',.25,1.5,e);}});
  fire();if(counter)for(let i=1;i<4;i++)g.schedule(e,i*.125,fire);
  g.effects.push({type:'slash',x:e.x,y:e.y,r:counter?5:3,angle:s.angle,spread:counter?2.2:1.1,theme:'kim',life:.5,maxLife:.5});

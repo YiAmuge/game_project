@@ -1,17 +1,19 @@
 import { organicPixels,shapeWarp,noise } from './organic-particles.js';
+import { combatStyle,hitStyle,bodyHeight,visualShape,insideShape,clipShape,CHAMPION_STYLES } from './combat-style.js';
 import { AttackStrokes } from './attack-strokes.js';
+import { leapLift } from './projection-25d.js';
 // Render-only effects: gameplay X/Y is the ground, Z is height (Three.js Y).
 // Analytic motion uses simulation time, so pause, low FPS and replay stay stable.
 export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384};
-export const CHAMPION_ELEMENTS={alisa:'fire',ryoshu:'fire',hohenheim:'electric',rodya:'ice',marton:'wood',dongrang:'wood',honglu:'water',dongbaek:'petal',yi:'mirror',sora:'arcane',yan:'arcane',rudolph:'arcane',gubo:'blood'};
-const ELEMENT_FORMS={ice:['crystal','crystal','frost'],electric:['bolt','spark','bolt'],wood:['woodchip','leaf','woodchip'],water:['drop','drop','mist'],petal:['petal','petal','spark'],mirror:['crystal','crystal','spark'],arcane:['rune','spark','rune'],blood:['drop','drop','spark']};
+export const CHAMPION_ELEMENTS=Object.fromEntries(Object.entries(CHAMPION_STYLES).map(([k,v])=>[k,v.element]));
+const ELEMENT_FORMS={metal:['chip','spark','spark'],ice:['crystal','spark','frost'],electric:['bolt','spark','spark'],wood:['woodchip','leaf','spark'],water:['drop','drop','mist'],liquid:['drop','drop','mist'],petal:['petal','petal','spark'],mirror:['crystal','crystal','spark'],feather:['feather','smoke','feather'],arcane:['spark','chip','spark'],blood:['drop','spark','spark']};
 const ELEMENT_MOTION={electric:{speed:1.25,life:.75,drag:1.2},ice:{lift:.85,gravity:1.25},wood:{speed:.8,gravity:.75,drag:1.35},water:{lift:.9,gravity:1.2},petal:{gravity:.6,drag:1.4}};
 export const VFX_PRESETS={
- explosion:{count:80,speed:23,lift:11,life:1.55,size:.66,drag:6,gravity:22,light:1,ring:true},
- slash:{count:18,speed:12,lift:5.5,life:.8,size:.15,drag:7,gravity:18,light:.35,ring:false},
- pierce:{count:16,speed:22,lift:4,life:.7,size:.13,drag:7.5,gravity:18,light:.3,ring:false},
- impact:{count:20,speed:14,lift:7,life:.85,size:.21,drag:7,gravity:22,light:.48,ring:true},
- shot:{count:12,speed:26,lift:3.5,life:.48,size:.13,drag:9,gravity:20,light:.6,ring:false},
+ explosion:{count:80,speed:23,lift:11,life:1.55,size:.66,drag:6,gravity:22,light:.16,ring:true},
+ slash:{count:18,speed:12,lift:5.5,life:.8,size:.15,drag:7,gravity:18,light:.025,ring:false},
+ pierce:{count:16,speed:22,lift:4,life:.7,size:.13,drag:7.5,gravity:18,light:.025,ring:false},
+ impact:{count:20,speed:14,lift:7,life:.85,size:.21,drag:7,gravity:22,light:.035,ring:false},
+ shot:{count:12,speed:26,lift:3.5,life:.48,size:.13,drag:9,gravity:20,light:.035,ring:false},
 };
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
@@ -30,78 +32,83 @@ export function particlePose(p,time){
 }
 export function effectRecipe(fx){
  const kinds={burst:'explosion',ryoshuStorm:'explosion',martonExplosion:'explosion',slash:'slash',
-  yanCleave:'slash',ryoshuTrail:'slash',soraClaw:'slash',hongluSweep:'slash',thrust:'pierce',gregorPierce:'pierce',yanWave:'pierce',
-  impact:'impact',soraShockwave:'impact',ishmaelShock:'impact',yanGreatsword:'impact',guboLaser:'shot',whipArc:'shot',nailVolley:'shot',guboBlast:'explosion'};
+  yanCleave:'slash',soraClaw:'slash',hongluSweep:'slash',thrust:'pierce',gregorPierce:'pierce',yanWave:'pierce',
+  strikeRect:'pierce',nellyProc:'slash',impact:'impact',soraShockwave:'impact',ishmaelShock:'impact',yanGreatsword:'impact',guboLaser:'shot',whipArc:'shot',nailVolley:'shot',guboBlast:'explosion'};
  const kind=fx.type==='line'&&fx.theme==='hohenheim'?'shot':kinds[fx.type];if(!kind)return null;
  return {kind,theme:fx.theme||({hongluSweep:'honglu',yanCleave:'yan',yanWave:'yan',yanGreatsword:'yan',nailVolley:'ppui',soraClaw:'sora'}[fx.type])};
 }
 
 export class SkillVFX {
  constructor(){
-  this.particles=[];this.free=Array.from({length:VFX_LIMITS.particles},()=>({}));this.emitters=[];this.strokes=new AttackStrokes();
+  this.particles=[];this.free=Array.from({length:VFX_LIMITS.particles},()=>({}));this.emitters=[];this.lastHits=new Map();this.strokes=new AttackStrokes();
   this.seen=new WeakSet();this.seenProjectiles=new WeakSet();this.seenZones=new WeakSet();this.seenAttacks=new WeakMap();this.sprites=new Map();this.masks=new Map();this.tints=new Map();this.atlasIds=new WeakMap();this.serial=0;this.atlasSerial=0;this.time=0;
  }
- clear(){this.free.push(...this.particles);this.particles.length=0;this.emitters.length=0;this.seen=new WeakSet();this.seenProjectiles=new WeakSet();this.seenZones=new WeakSet();this.seenAttacks=new WeakMap();}
+ clear(){this.free.push(...this.particles);this.particles.length=0;this.emitters.length=0;this.lastHits.clear();this.seen=new WeakSet();this.seenProjectiles=new WeakSet();this.seenZones=new WeakSet();this.seenAttacks=new WeakMap();}
  advance(time){
   if(time<this.time)this.clear();this.time=time;
   let n=0;for(const p of this.particles){if(time-p.born<p.life)this.particles[n++]=p;else this.free.push(p);}this.particles.length=n;
   this.emitters=this.emitters.filter(e=>time-e.born<e.life);
  }
- emit(kind,point,time,{radius=1,angle=0,color='#ff852b',accent=color,dark='#2a272c',element='metal',seed,count}={}){
+ emit(kind,point,time,{radius=1,angle=0,color='#e6e7e9',accent=color,dark='#2a272c',element='metal',seed,count,height=0,shape=null,body=false,ownerId=null,follow=false,life:lifeOverride,light:lightOverride}={}){
   const preset=VFX_PRESETS[kind];if(!preset||!Number.isFinite(time)||![point.x,point.y,radius,angle].every(Number.isFinite)||!/^#[\da-f]{6}$/i.test(color))return null;
   if(!/^#[\da-f]{6}$/i.test(accent))accent=color;if(!/^#[\da-f]{6}$/i.test(dark))dark='#2a272c';
-  radius=clamp(radius,.3,8);const scale=kind==='explosion'?clamp(radius/4,.5,1.8):1,motion=ELEMENT_MOTION[element]||{};
+  radius=clamp(radius,.05,32);const scale=kind==='explosion'?clamp(radius/4,.5,1.8):1,motion=ELEMENT_MOTION[element]||{};
   let state=(seed??++this.serial)>>>0;const random=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
-  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,life:preset.life*(motion.life||1),light:preset.light,ring:preset.ring};
+  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,height,shape,body,ownerId,follow,life:lifeOverride||preset.life*(motion.life||1),light:lightOverride??preset.light,ring:!body&&preset.ring};
   if(this.emitters.length>=VFX_LIMITS.emitters)this.emitters.shift();this.emitters.push(emitter);
-  const total=clamp(Math.round(count??preset.count),1,VFX_LIMITS.particles);
+  const total=clamp(Math.round(count??(body?9:preset.count)),1,VFX_LIMITS.particles);
   for(let i=0;i<total;i++){
    const p=this.free.pop()||this.particles.shift(),fan=random()-.5;
    const a=kind==='slash'?angle+fan*2.4:kind==='pierce'||kind==='shot'?angle+fan*.75:random()*Math.PI*2;
    const speed=preset.speed*(.35+random()*.8)*scale*(motion.speed||1),offset=kind==='slash'?radius*(.35+random()*.55):random()*.2;
-   const forms=ELEMENT_FORMS[element],form=forms?forms[i%forms.length]:element==='fire'&&kind==='explosion'?(i<18?'flame':i<52?'spark':i<64?'chunk':'smoke'):(i%4===0?'chunk':'spark');
+   const forms=ELEMENT_FORMS[element],form=element==='fire'&&kind!=='explosion'?(i%3===0?'flame':'spark'):forms?forms[i%forms.length]:element==='fire'&&kind==='explosion'?(i<18?'flame':i<52?'spark':i<64?'chunk':'smoke'):(i%4===0?'chunk':'spark');
    const life=emitter.life*(.65+random()*.35),size=preset.size*(.55+random()*.7)*scale*(form==='spark'?.22:['smoke','mist','frost'].includes(form)?1.8:form==='bolt'?.25:.7);
-   Object.assign(p,{x:point.x+Math.cos(a)*offset,y:point.y+Math.sin(a)*offset,z:kind==='shot'?.8:.12,
-    vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,vz:preset.lift*(.6+random()*.6)*Math.sqrt(scale)*(motion.lift||1),
-    gravity:preset.gravity*(motion.gravity||1),drag:preset.drag*(motion.drag||1),born:time,life,size,form,color,accent,dark,element,rotation:random()*Math.PI*2,spin:(random()-.5)*7,variant:Math.floor(random()*4),phase:random()*20});
+   Object.assign(p,{x:point.x+Math.cos(a)*offset,y:point.y+Math.sin(a)*offset,z:height+(kind==='shot'?.8:.12),
+    vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,vz:(body?1.5:preset.lift)*(.6+random()*.6)*Math.sqrt(scale)*(motion.lift||1),
+    gravity:(body?8:preset.gravity)*(motion.gravity||1),drag:preset.drag*(motion.drag||1),born:time,life,size:body?Math.min(.075,size):element==='metal'?Math.min(.16,size):size,volume:shape?emitter:null,body,ownerId,anchorX:point.x,anchorY:point.y,height,form,color,accent,dark,element,rotation:random()*Math.PI*2,spin:(random()-.5)*7,variant:Math.floor(random()*4),phase:random()*20});
    this.particles.push(p);
   }
   return emitter;
  }
  sync(game,camera,themes){
-  if(this.game!==game){this.clear();this.game=game;}this.advance(game.time);
-  const observed=new Set();
+  if(this.game!==game){this.clear();this.game=game;}this.advance(game.time);const observed=new Set();this.game=game;
   const visible=p=>{const s=camera.worldToScreen(p);return s.x>-300&&s.x<camera.width+300&&s.y>-300&&s.y<camera.height+300;};
   for(const fx of game.effects){
    if(this.seen.has(fx))continue;this.seen.add(fx);const recipe=effectRecipe(fx);if(!recipe||!visible(fx))continue;
-   const angle=fx.angle??(fx.to?Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x):0),theme=themes[recipe.theme]||{};observed.add(recipe.theme);
-   this.emit(recipe.kind,fx,game.time-Math.max(0,fx.maxLife-fx.life),{radius:fx.r||1,angle,color:theme.light||fx.color||'#bde9f0',accent:theme.accent,dark:theme.dark,element:CHAMPION_ELEMENTS[recipe.theme]||'metal'});
+   const source=game.units.find(e=>e.id===fx.source)||game.champions().find(e=>e.key===recipe.theme),target=game.units.find(e=>e.id===fx.target),key=source?.key||recipe.theme;
+   const hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type});
+   const angle=fx.angle??(fx.to?Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x):0),shape=hit?null:visualShape(fx),kind=hit?s.shape:['ishmael','meursault','heathcliff'].includes(key)?'impact':key==='yan'&&fx.type==='yanWave'?'slash':recipe.kind;
+   if(key==='kim'&&fx.spread>2)s.color='#a0cce8';
+   observed.add(key);
+   if(hit){const id='hit/'+(target?.id??[fx.x,fx.y].join('/'));this.lastHits??=new Map();if(game.time-(this.lastHits.get(id)??-99)<.065)continue;this.lastHits.set(id,game.time);if(this.lastHits.size>300)this.lastHits.clear();}
+   this.emit(kind,fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.45:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',body:hit,shape,count:hit?8:undefined,life:hit?.2:undefined});
+   if(key==='gahwan'&&hit)this.emit('impact',fx,game.time,{color:'#8a3039',accent:'#a9555d',dark:'#38171f',element:'blood',height:bodyHeight(target||{kind:'champion'}),body:true,ownerId:target?.id,count:3,life:.2,radius:.2});
   }
   for(const p of game.projectiles){
-   if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);
-   const origin=p.origin||p.source;if(!origin||!visible(origin)||p.source&&!game.visibleTo(0,p.source))continue;
-   const key=p.theme||p.source?.key,theme=themes[key]||{};observed.add(key);
-   this.emit('shot',origin,game.time,{angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),
-    color:theme.light||p.color||'#ffe4b0',accent:theme.accent,dark:theme.dark,element:CHAMPION_ELEMENTS[p.theme||p.source?.key]||'metal',count:p.source?.kind==='champion'?12:5});
+   if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);const origin=p.origin||p.source;if(!origin||!visible(origin))continue;
+   const key=p.theme||p.source?.key,s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
+   this.emit('shot',origin,game.time,{...s,angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:p.source?.kind==='champion'?4:2,life:.18});
   }
-  // Some rectangular and dash basics have no separate swing effect on a miss.
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
-   if(!e.attackSerial||e.trainingDummy||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e)||!game.visibleTo(0,e))continue;
-   const style=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'pierce'})[style];if(!kind)continue;
-   const theme=themes[e.key]||{},angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),point=style==='punch'?{x:e.x+Math.cos(angle)*radius*.6,y:e.y+Math.sin(angle)*radius*.6}:e;
-   this.emit(kind,point,e.attackAt,{angle,radius,color:theme.light||'#bde9f0',accent:theme.accent,dark:theme.dark,element:CHAMPION_ELEMENTS[e.key]||'metal'});
+   if(!e.attackSerial||e.trainingDummy||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
+   const attack=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'impact'})[attack];if(!kind)continue;
+   const s=combatStyle(e.key,game,e,{kind:'basic'}),angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),shape={kind:attack==='sweep'?'circle':attack==='punch'?'rect':'cone',range:radius,width:radius,spread:1.7,angle};
+   this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});
   }
-  const zoneElements={waterfall:'water',ice:'ice',desireTree:'wood',electricBloom:'electric'};
   for(const z of game.zones||[]){
-   if(this.seenZones.has(z))continue;this.seenZones.add(z);const element=zoneElements[z.kind];if(!element||!visible(z))continue;
-   const theme=themes[z.source?.key]||{};this.emit('explosion',z,game.time,{radius:z.r||3,color:theme.light||'#bde9f0',accent:theme.accent,dark:theme.dark,element});
+   if(this.seenZones.has(z))continue;this.seenZones.add(z);if(!visible(z))continue;
+   const element=({waterfall:'water',ice:'ice',desireTree:'wood',electricBloom:'electric'}[z.kind])||'mirror',s=combatStyle(z.source?.key,game,z.source,{kind:'zone',slot:'r',type:z.kind});
+   this.emit('explosion',z,game.time,{...s,element,radius:z.r||3,shape:{kind:'circle',range:z.r||3},count:20,light:.035});
   }
  }
  prepare(camera,width,height){
   this.camera=camera;this.frame=[];this.cursor=0;
+  for(const e of this.emitters.filter(e=>e.follow)){const owner=this.game?.units.find(a=>a.id===e.ownerId);if(owner){e.x=owner.x;e.y=owner.y;}}
   for(const p of this.particles){
    const pose=particlePose(p,this.time);if(pose.alpha<=0)continue;
+   if(p.ownerId){const owner=this.game?.units.find(e=>e.id===p.ownerId);if(owner){pose.x+=owner.x-p.anchorX;pose.y+=owner.y-p.anchorY;pose.z+=leapLift(owner);}}
+   if(p.volume&&!insideShape(p.volume.shape,pose.x-p.volume.x,pose.y-p.volume.y))continue;
    const screen=camera.worldToScreen(pose,pose.z+.075),size=pose.size*camera.scale;
    if(screen.x+size<-30||screen.x-size>width+30||screen.y+size*2<-30||screen.y-size*2>height+30)continue;
    this.frame.push({p,pose,screen,size});
@@ -119,9 +126,9 @@ export class SkillVFX {
   c.globalCompositeOperation='destination-in';c.drawImage(mask,0,0);this.sprites.set(key,canvas);return canvas;
  }
  drawOrganic(ctx,{p,pose,screen:s,size}){
-  const warp=shapeWarp(p,this.time),phase=Math.floor(warp.frame),blend=warp.frame-phase,alpha=ctx.globalAlpha,stage=Math.min(7,Math.floor(pose.progress*8));
+  const warp=shapeWarp(p,this.time),solid=['chip','chunk','spark','crystal','woodchip','leaf','petal','feather'].includes(p.form),phase=solid?p.variant:Math.floor(warp.frame),blend=solid?0:warp.frame-Math.floor(warp.frame),alpha=ctx.globalAlpha,stage=Math.min(7,Math.floor(pose.progress*8));
   const stretch=p.form==='flame'?1.55:p.form==='woodchip'||p.form==='crystal'?1.4:1;
-  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(warp.turn);ctx.transform(warp.x,0,warp.shear,warp.y*stretch,0,0);
+  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(warp.turn);ctx.transform(solid?1:warp.x,0,solid?0:warp.shear,(solid?1:warp.y)*stretch,0,0);
   for(const [variant,weight] of [[phase,1-blend],[(phase+1)%4,blend]]){
    if(weight<.001)continue;ctx.globalAlpha=alpha*weight;
    ctx.drawImage(this.sprite(p.form,p.color,stage,p,variant),-size,-size,size*2,size*2);
@@ -132,10 +139,10 @@ export class SkillVFX {
   ctx.save();
   while(this.cursor<this.frame.length&&this.frame[this.cursor].pose.y<=depth){
    const f=this.frame[this.cursor++],{p,pose,screen:s,size}=f,hot=pose.progress<.65&&!['smoke','mist','frost','woodchip','leaf','petal'].includes(p.form);
-   ctx.globalCompositeOperation=hot?'lighter':'source-over';ctx.globalAlpha=pose.alpha;
+   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=pose.alpha*.75;
    if(p.form==='bolt'){this.drawBolt(ctx,f);continue;}
    if(p.form==='spark'){
-    const old=particlePose(p,Math.max(p.born,this.time-.035)),tail=this.camera.worldToScreen(old,old.z+.075);
+    const old=particlePose(p,Math.max(p.born,this.time-.035)),current=particlePose(p,this.time);old.x+=pose.x-current.x;old.y+=pose.y-current.y;old.z+=pose.z-current.z;const tail=this.camera.worldToScreen(old,old.z+.075);
     ctx.strokeStyle=css(coolingColor(p.color,pose.progress,p));ctx.lineWidth=Math.max(.65,size*.4);ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(tail.x,tail.y);ctx.lineTo(s.x,s.y);ctx.stroke();
    }
@@ -155,17 +162,23 @@ export class SkillVFX {
   ctx.globalAlpha=alpha*.75;ctx.lineWidth=Math.max(1.4,size*.7);ctx.stroke();ctx.strokeStyle=css(coolingColor(p.color,0,p));ctx.lineWidth=.55;ctx.stroke();ctx.globalAlpha=alpha;
  }
  drawFlashes(ctx,camera){
-  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.save();ctx.globalCompositeOperation='source-over';
   for(const e of this.emitters){
-   const age=this.time-e.born;if(age<0||age>.12||!['shot','pierce','impact','explosion'].includes(e.kind))continue;
+   const age=this.time-e.born;if(e.body)continue;if(age<0||age>.12||!['shot','pierce','impact','explosion'].includes(e.kind))continue;
    const s=camera.worldToScreen(e,e.kind==='shot'?.8:.2),toward=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.kind==='shot'?.8:.2);
    const size=camera.scale*(e.kind==='explosion'?.85:e.kind==='impact'?.45:.5)*(1-age/.12);
-   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.atan2(toward.y-s.y,toward.x-s.x));ctx.globalAlpha=(1-age/.12)**2;
+   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.atan2(toward.y-s.y,toward.x-s.x));ctx.globalAlpha=(1-age/.12)**2*.2;
    const form=({fire:'flame',water:'mist',ice:'frost',wood:'woodchip'}[e.element])||'glow';
    ctx.transform(e.kind==='shot'?2.8:1.4,0,.25,.8,0,0);
    ctx.drawImage(this.sprite(form,e.color,0,e,1),-size,-size,size*2,size*2);ctx.restore();
   }
   ctx.restore();
+ }
+ drawBodyHits(c,camera){
+  for(const e of this.emitters.filter(e=>e.body)){
+   const age=this.time-e.born;if(age<0||age>.2)continue;const owner=this.game?.units.find(a=>a.id===e.ownerId),point=owner||e,at=camera.worldToScreen(point,e.height),size=camera.scale*e.radius;
+   c.save();c.globalAlpha=(1-age/.2)*.7;c.translate(at.x,at.y-leapLift(point)*camera.scale);c.rotate(e.angle);c.drawImage(this.strokes.texture(e.kind==='slash'?'slash':'impact',e),-size,-size,size*2,size*2);c.restore();
+  }
  }
  groundDisc(ctx,camera,e,radius,draw){
   const o=camera.worldToScreen(e,.06),x=camera.worldToScreen({x:e.x+1,y:e.y},.06),y=camera.worldToScreen({x:e.x,y:e.y+1},.06);
@@ -173,16 +186,16 @@ export class SkillVFX {
  }
  drawGround(ctx,camera){
   ctx.save();
-  for(const e of this.emitters){
+  for(const e of this.emitters.filter(e=>!e.body)){ctx.save();clipShape(ctx,camera,e);this.strokes.draw(ctx,camera,e,this.time);ctx.restore();}
+  for(const e of this.emitters.filter(e=>!e.body).sort((a,b)=>b.light-a.light).slice(0,6)){
    const age=this.time-e.born;if(age<0)continue;const power=e.light*Math.exp(-age*6),range=e.radius*(e.kind==='explosion'?1.65:1.2)+1;
-   this.strokes.draw(ctx,camera,e,this.time);
    if(power>.005)this.groundDisc(ctx,camera,e,range,()=>{
-    ctx.globalCompositeOperation='lighter';const glow=ctx.createRadialGradient(0,0,0,0,0,1);
-    glow.addColorStop(0,css(rgb(e.color),power*.58));glow.addColorStop(.35,css(rgb(e.color),power*.28));glow.addColorStop(1,css(rgb(e.color),0));
+    ctx.globalCompositeOperation='source-over';const glow=ctx.createRadialGradient(0,0,0,0,0,1);
+    glow.addColorStop(0,css(rgb(e.accent),power*.2));glow.addColorStop(.35,css(rgb(e.accent),power*.08));glow.addColorStop(1,css(rgb(e.color),0));
     ctx.fillStyle=glow;ctx.fillRect(-1,-1,2,2);
    });
-   if(e.ring&&age<.55)this.groundDisc(ctx,camera,e,e.radius*Math.max(.001,1-Math.exp(-age*12)),()=>{
-    ctx.globalCompositeOperation='lighter';ctx.globalAlpha=(1-age/.55)**2;ctx.strokeStyle=css(coolingColor(e.color,age/.55,e));ctx.lineWidth=.035;
+   if(e.ring&&age<.35&&['water','liquid','electric','wood'].includes(e.element))this.groundDisc(ctx,camera,e,e.radius*Math.max(.001,1-Math.exp(-age*12)),()=>{
+    ctx.globalCompositeOperation='lighter';ctx.globalAlpha=(1-age/.55)**2*.18;ctx.strokeStyle=css(coolingColor(e.color,age/.55,e));ctx.lineWidth=.035;
     const phase=e.x*.7+e.y*.4+e.born;
     if(e.element==='wood'){
      for(let i=0;i<7;i++){const a=i*.91+noise(phase,i,2)*.45,len=.55+noise(i,phase,5)*.45,x=Math.cos(a)*len,y=Math.sin(a)*len,bend=(noise(i,phase+age,8)-.5)*.4;
@@ -198,7 +211,7 @@ export class SkillVFX {
   }
   // Small ground shadows separate airborne fragments from their landing plane.
   for(const p of this.particles){
-   if(!['chunk','woodchip','crystal','drop'].includes(p.form))continue;const pose=particlePose(p,this.time),s=camera.worldToScreen(pose,.06);
+   if(p.body||!['chunk','woodchip','crystal','drop'].includes(p.form))continue;const pose=particlePose(p,this.time);if(p.volume&&!insideShape(p.volume.shape,pose.x-p.volume.x,pose.y-p.volume.y))continue;const s=camera.worldToScreen(pose,.06);
    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=pose.alpha*.25/(1+pose.z);ctx.fillStyle='#101018';
    ctx.beginPath();ctx.ellipse(s.x,s.y,Math.max(1,p.size*camera.scale),Math.max(.5,p.size*camera.scale*.45),0,0,Math.PI*2);ctx.fill();
   }
@@ -207,8 +220,8 @@ export class SkillVFX {
  lightAt(point){
   let strength=0,color='#ffb85d';
   for(const e of this.emitters){const age=this.time-e.born;if(age<0)continue;const range=e.radius*1.65+2,d=Math.hypot(point.x-e.x,point.y-e.y);
-   const n=e.light*Math.exp(-age*6)*Math.max(0,1-d/range)**2;if(n>strength){strength=n;color=e.color;}}
-  return {strength:Math.min(.8,strength),color};
+   const n=e.light*Math.exp(-age*6)*Math.max(0,1-d/range)**2;if(n>strength){strength=n;color=e.accent;}}
+  return {strength:Math.min(.12,strength*.25),color};
  }
  tintFrame(atlas,frame,color){
   if(!this.atlasIds.has(atlas))this.atlasIds.set(atlas,++this.atlasSerial);

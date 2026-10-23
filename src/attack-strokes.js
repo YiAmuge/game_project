@@ -28,8 +28,7 @@ export class AttackStrokes {
    }
   }else if(kind==='pierce'){
    // A dense nose and axial spine peel into asymmetric, flowing filaments.
-   const body=document.createElement('canvas');body.width=body.height=64;const b=body.getContext('2d'),pixels=b.createImageData(64,64);pixels.data.set(organicPixels('drop',variant));b.putImageData(pixels,0,0);
-   c.save();c.translate(186,96);c.rotate(-Math.PI/2);c.drawImage(body,-40,-55,80,110);c.restore();
+
    for(let layer=0;layer<16;layer++){
     const side=layer%2?1:-1,spread=8+noise(layer,variant,3)*24,end=208+noise(layer,variant,8)*28,start=8+noise(layer,variant,5)*70;
     c.beginPath();c.moveTo(start,96+side*spread*.5);c.bezierCurveTo(95,96+side*spread*1.8,170,96+side*spread*.4,end,96);
@@ -66,14 +65,15 @@ export class AttackStrokes {
   const age=time-e.born,duration=e.kind==='explosion'?.48:e.kind==='shot'?.18:.34;if(age<0||age>duration)return;
   const kind=e.kind==='slash'?'slash':['pierce','shot'].includes(e.kind)?'pierce':'impact',t=age/duration,ease=1-Math.exp(-t*7),radius=e.kind==='explosion'?e.radius:e.kind==='impact'?.8+ease*1.2:e.radius;
   const origin=camera.worldToScreen(e,.16),x=camera.worldToScreen({x:e.x+1,y:e.y},.16),y=camera.worldToScreen({x:e.x,y:e.y+1},.16);
-  ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=(1-t)**1.25*(e.kind==='explosion'?.55:.85);
+  ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=(1-t)**1.25*(e.kind==='explosion'?.22:.55);
   ctx.translate(origin.x,origin.y);ctx.transform(x.x-origin.x,x.y-origin.y,y.x-origin.x,y.y-origin.y,0,0);
   ctx.rotate(e.angle+(kind==='slash'?(ease-.5)*.8:0));
   if(kind==='pierce'){
    const reach=(e.kind==='shot'?1.5:radius)*(.35+ease*.65),width=e.kind==='shot'?.75:Math.min(2.2,Math.max(1.1,radius*.45));
    ctx.drawImage(this.texture(kind,e),0,-width/2,reach,width);
   }else{
-   const r=radius*(kind==='impact'?.3+ease*.7:1);ctx.drawImage(this.texture(kind,e),-r,-r*.8,r*2,r*1.6);
+   if(kind==='impact'&&e.shape?.kind==='rect')ctx.translate(e.shape.range*.6,0);
+   const r=Math.min(e.shape?.kind==='rect'?e.shape.width*.7:Infinity,radius*(kind==='impact'?.3+ease*.7:1));ctx.drawImage(this.texture(kind,e),-r,-r*.8,r*2,r*1.6);
   }
   ctx.restore();
  }
