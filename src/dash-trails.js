@@ -1,4 +1,4 @@
-import { renderAnchor,leapLift } from './projection-25d.js';
+import { renderAnchor,leapLift,leapOpacity } from './projection-25d.js';
 import { combatStyle } from './combat-style.js';
 import { FRAMES } from './art.js';
 import { ego } from './sora.js';
@@ -12,7 +12,7 @@ export function dashSections(samples,time,camera){
  return samples.map((p,i)=>{
   const at=camera.worldToScreen(p,.075),center={x:at.x,y:at.y-(p.height+.85)*camera.scale},t=i/(samples.length-1),width=t**.85;
   const before=samples[Math.max(0,i-1)],after=samples[Math.min(samples.length-1,i+1)],a=camera.worldToScreen(before,before.height+.85),b=camera.worldToScreen(after,after.height+.85),dx=b.x-a.x,dy=b.y-a.y,n=Math.hypot(dx,dy)||1,w=.48*camera.scale*width;
-  return {center,inner:{x:center.x-dy/n*w,y:center.y+dx/n*w},outer:{x:center.x+dy/n*w,y:center.y-dx/n*w},width,alpha:.32*t**1.5*fade};
+  return {center,inner:{x:center.x-dy/n*w,y:center.y+dx/n*w},outer:{x:center.x+dy/n*w,y:center.y-dx/n*w},width,alpha:.32*t**1.5*fade*(p.opacity??1)};
  });
 }
 export class DashTrails {
@@ -24,7 +24,7 @@ export class DashTrails {
    let h=this.histories.get(e);
    if(active){
     if(!h||h.motion!==m||h.segment!==segment){h={motion:m,segment,samples:[],at:-Infinity};this.histories.set(e,h);}
-    if(g.time>h.at){const p=renderAnchor(e);h.samples.push({x:p.x,y:p.y,height:leapLift(e),time:g.time,facing:e.facing||0,visual:ego(g,e)?'soraEgo':form(g,e),large:g.buff(e,'mutant')?1.15:form(g,e)==='yanDistorted'?1.1:1});if(h.samples.length>DASH_TRAIL_FRAMES)h.samples.shift();h.at=g.time;}
+    if(g.time>h.at){const p=renderAnchor(e);h.samples.push({x:p.x,y:p.y,height:leapLift(e),opacity:leapOpacity(e),time:g.time,facing:e.facing||0,visual:ego(g,e)?'soraEgo':form(g,e),large:g.buff(e,'mutant')?1.15:form(g,e)==='yanDistorted'?1.1:1});if(h.samples.length>DASH_TRAIL_FRAMES)h.samples.shift();h.at=g.time;}
    }else if(h&&(!e.alive||g.time-h.at>=DASH_TRAIL_FADE))this.histories.delete(e);
   }
  }
@@ -35,7 +35,7 @@ export class DashTrails {
   for(let i=0;i<h.samples.length-1;i++){
    const p=h.samples[i],f=FRAMES[p.visual],atlas=renderer.atlasFor(p.visual);if(!f||!atlas.complete||!atlas.naturalWidth)continue;
    const t=(i+1)/h.samples.length,scale=.38+.62*t,height=(p.visual==='soraEgo'?2.22:2.1)*p.large*camera.scale*scale,width=height*f.w/f.h,at=camera.worldToScreen(p,.075);
-   c.save();c.globalAlpha=.28*t**1.5*fade;c.translate(at.x,at.y-p.height*camera.scale);if((Math.cos(p.facing)<0)!==Boolean(f.mirror))c.scale(-1,1);
+   c.save();c.globalAlpha=.28*t**1.5*fade*(p.opacity??1);c.translate(at.x,at.y-p.height*camera.scale);if((Math.cos(p.facing)<0)!==Boolean(f.mirror))c.scale(-1,1);
    c.drawImage(vfx.tintFrame(atlas,f,color),-width/2,-height,width,height);c.restore();
   }
  }

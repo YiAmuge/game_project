@@ -1,13 +1,13 @@
 import { combatStyle } from './combat-style.js';
 import { championPresentation } from './champion-vfx.js';
-import { leapLift,renderAnchor } from './projection-25d.js';
+import { leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
 import { MotionTrails,ribbonSections,drawRibbon,captureBlade,projectBlade } from './weapon-trails.js';
 import * as CombatVisuals from './combat-visuals.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
 import * as Training from './training.js';
 import { ego as soraEgo,basicImpact as soraImpact } from './sora.js';
-import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, WORLD, TERRAIN, MINIONS, worldPoint, RUNTIME_CHAMPIONS as CHAMPIONS, lanePath } from './data.js';
+import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, FOUNTAIN_AREAS, WORLD, TERRAIN, MINIONS, worldPoint, RUNTIME_CHAMPIONS as CHAMPIONS, lanePath } from './data.js';
 import { distance } from './geometry.js';
 import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
@@ -15,7 +15,7 @@ import { FRAMES, THEMES, loadAtlas } from './art.js';
 import { draw as bossPattern } from './boss-patterns.js';
 import { draw as creepPattern } from './creep-patterns.js';
 import { targetingPreview } from './targeting.js';
-import { championHud, championEffects, championGroundEffects, chargePreview, orderMark } from './overlays.js';
+import { championHud, championEffects, championGroundEffects, chargePreview, orderMark, threatRanges } from './overlays.js';
 
 export class Renderer {
   constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.scale=1;this.ox=0;this.oy=0;this.resize();}
@@ -71,7 +71,7 @@ export class Renderer {
       this.line([{x:w.x+.2,y:w.y+.22},{x:w.x+w.w-.2,y:w.y+.22}],'#84917a66',.06);
       for(let x=w.x+1;x<w.x+w.w;x+=1.4)this.line([{x,y:w.y},{x:x-.15,y:w.y+w.h}],'#16262a88',.05);
     }
-    for(const [i,p] of WELL_ROOMS.entries()){const color=i===0?'#88d5dc':'#db9a85';c.beginPath();c.arc(p.x,p.y,p.r,i===0?Math.PI/2:-Math.PI/2,i===0?Math.PI*1.5:Math.PI/2);c.closePath();c.fillStyle=color+'16';c.fill();c.strokeStyle=color+'aa';c.lineWidth=.16;c.stroke();for(let j=1;j<=3;j++){c.beginPath();c.arc(p.x,p.y,p.r-j*.35,i===0?Math.PI/2:-Math.PI/2,i===0?Math.PI*1.5:Math.PI/2);c.strokeStyle=color+'33';c.lineWidth=.045;c.stroke();}const f=FOUNTAINS[i];this.circle(f.x,f.y,.85,color+'18',color,.07);this.text('부활소',f.x,f.y+2.2,color,.36);}
+    for(const a of FOUNTAIN_AREAS){const color=a.team?'#df9b82':'#8adfe1';c.fillStyle=color+'22';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=color;c.lineWidth=.13;c.strokeRect(a.x,a.y,a.w,a.h);this.text('부활소',a.x+a.w/2,a.y+a.h/2,color,.42);}
     this.text('UPPER LINE',MAP_CENTER.x,4.7,'#84907866',.43);this.text('LOWER LINE',MAP_CENTER.x,RULES.height-4.5,'#84907866',.43);
     c.restore();
     this.text('N',2,2,'#617972',.5);this.line([{x:2,y:4},{x:2,y:2.6}],'#617972',.08);this.polygon([[1.8,2.9],[2,2.5],[2.2,2.9]],'#617972');c.restore();for(const room of TERRAIN.slice(1)){c.strokeStyle='#6c887855';c.lineWidth=.12;c.strokeRect(room.x+.08,room.y+.08,room.w-.16,room.h-.16);}
@@ -142,7 +142,7 @@ export class Renderer {
     if(e.kind==='bait'&&this.billboardPass){const v=this.scene25d.championVfx;const c=this.ctx;c.save();c.translate(e.x,e.y-.65);v.fairy(c,game.time,.8);c.restore();return;}
     if(e.kind==='bait'){this.circle(e.x,e.y,.65,'#344725','#bdd079');this.polygon([[e.x-.25,e.y-.9],[e.x+.25,e.y-.9],[e.x+.3,e.y-.3],[e.x-.3,e.y-.3]],'#f1d779','#ffe9a4');this.text('초롱 미끼',e.x,e.y-1.3,'#e8dc9a',.27);return;}
     const def=CHAMPIONS[e.key],inBush=game.bushAt(e),angle=e.facing??(e.team===0?0:Math.PI);
-    if(!this.billboardPass)CombatVisuals.behind(this,e,game);c.save();if(inBush)c.globalAlpha=.72;if(e.key==='ryoshu'&&e.invulnerableUntil>game.time)c.globalAlpha*=.65;
+    if(!this.billboardPass)CombatVisuals.behind(this,e,game);c.save();if(inBush)c.globalAlpha=.72;if(e.key==='ryoshu'&&e.invulnerableUntil>game.time)c.globalAlpha*=.65;c.globalAlpha*=leapOpacity(e);
     if(!this.billboardPass){c.beginPath();c.ellipse(e.x,e.y+.2,.65,.25,0,0,Math.PI*2);c.fillStyle='#06131599';c.fill();this.circle(e.x,e.y,.67,null,e.player?'#f2d98e':team,.07);}
     if(!this.billboardPass&&game.shield(e)>0)this.circle(e.x,e.y-.65,1.05,'#9fc9d711','#c8e4df99',.055);
     if(!this.billboardPass&&(game.buff(e,'marks')||game.buff(e,'resolve')))this.circle(e.x,e.y,1,null,'#d9be78aa',.09);
@@ -152,6 +152,7 @@ export class Renderer {
     c.save();const appearance=championPresentation(game,e);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(e.x,e.y+.3+bob-lift);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
       c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h,w,h);
+      if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),-w/2,-h,w,h);c.restore();}
       if(appearance.frozen&&this.skillVfx){c.save();c.globalAlpha*=.28;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#a7d0e5'),-w/2,-h,w,h);c.restore();}
       const light=this.skillVfx?.lightAt(e);if(light?.strength>.01){c.save();c.globalCompositeOperation='lighter';c.globalAlpha*=light.strength;c.drawImage(this.skillVfx.tintFrame(atlas,f,light.color),-w/2,-h,w,h);c.restore();}
     }
@@ -189,7 +190,7 @@ export class Renderer {
     if(!game.training&&!game.bossSpawned){this.text('CENTRAL CAMP',MAP_CENTER.x,MAP_CENTER.y,'#b8ae7766',.4);this.text('05:00',MAP_CENTER.x,MAP_CENTER.y+.7,'#a5a58b66',.48);}
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo(0,e))chargePreview(this,e,game);
-    for(const e of game.units.filter(e=>e.kind==='core'||e.kind==='tower'))this.structure(e,game);
+    for(const e of game.units.filter(e=>e.kind==='core'||e.kind==='tower'))this.structure(e,game);threatRanges(this,game);
     if(playing&&game.player.alive&&!game.hidden(game.player)) {
       const p=game.player,aim=game.input.aim,theta=Math.atan2(aim.y-p.y,aim.x-p.x);
       if(p.key==='yan'){
@@ -336,6 +337,7 @@ export class Renderer {
     c.clearRect(0,0,canvas.width,canvas.height);c.fillStyle='#142321e8';c.fillRect(0,0,canvas.width,canvas.height);
     c.save();c.scale(sx,sy);c.translate(-bounds.x,-bounds.y);c.fillStyle='#253f35';for(const room of game.training?[bounds]:TERRAIN)c.fillRect(room.x,room.y,room.w,room.h);if(game.training)for(const a of Training.areas(game)){c.fillStyle=a.color+'55';c.fillRect(a.x,a.y,a.w,a.h);c.fillStyle='#f2dfb8';c.font='2px Arial';c.fillText(String(a.id),a.x+a.w/2,a.y+2);};c.fillStyle='#4e6252';for(const w of game.map?.walls||WALLS)c.fillRect(w.x,w.y,w.w,w.h);
     c.fillStyle='#486c39';for(const b of game.training?[]:BUSHES)c.fillRect(b.x,b.y,b.w,b.h);
+    if(!game.training)for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#aa4d4266':'#4eabb366';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#eeb192':'#9be1e1';c.lineWidth=.3;c.strokeRect(a.x,a.y,a.w,a.h);}
     for(const u of game.units.filter(e=>e.alive&&['champion','core','tower'].includes(e.kind)&&game.visibleTo(0,e))){c.beginPath();c.arc(u.x,u.y,u.player?1.1:u.kind==='champion'?.65:.8,0,Math.PI*2);c.fillStyle=u.player?'#f2da95':u.team===0?'#89c9dd':'#e09484';c.fill();}
     const b=this.camera.bounds;c.strokeStyle='#e3d8aa';c.lineWidth=.25;c.strokeRect(b.x,b.y,b.w,b.h);c.restore();
     const uiScale=canvas.width/Math.max(1,canvas.getBoundingClientRect().width);

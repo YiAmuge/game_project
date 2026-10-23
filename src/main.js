@@ -3,7 +3,7 @@ import * as Sora from './sora.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
 import { skillTargeting, castPoint } from './targeting.js';
-import { AUGMENTS, AUGMENT_RULES, unlocked, has, categoryCount } from './augments.js';
+import { AUGMENTS, AUGMENT_RULES, unlocked, has, categoryCount,slots,usedSlots,fits,sellable } from './augments.js';
 import { releaseHeath,cancelHeath } from './skills.js';
 import { canRecast } from './skills.js';
 import { Game } from './game.js';
@@ -99,10 +99,12 @@ for(const item of UPGRADES){
  const buy=document.createElement('button');buy.id='buy-'+item.key;buy.className='shop-buy';buy.setAttribute('aria-label',item.name+' 구매');buy.onclick=()=>shopAction(()=>{const ok=game.buy(game.player,item.key);if(ok)toast(item.name+' 강화 완료');return ok;});
  row.append(info,buy);wrap.append(row);const meter=document.createElement('div');meter.className='upgrade-meter';meter.id='upgrade-meter-'+item.key;meter.setAttribute('aria-label',item.name+' 구매 단계');for(let i=0;i<item.max;i++)meter.append(document.createElement('i'));wrap.append(meter);$('upgrade-list').append(wrap);
 }
+const AUGMENT_GROUPS=[['combat','전투'],['survival','생존'],['tech','기술']],augmentGroups={};
+for(const [key,name] of AUGMENT_GROUPS){const section=document.createElement('section');section.className='augment-category';section.dataset.group=key;const h=document.createElement('h4');h.textContent=name;const grid=document.createElement('div');grid.className='augment-group-grid';section.append(h,grid);$('augment-list').append(section);augmentGroups[key]=grid;}
 for(const item of AUGMENTS){
  const row=document.createElement('div');row.className='shop-item shop-option augment-item';row.id='augment-row-'+item.key;
  const info=document.createElement('button');info.id='select-augment-'+item.key;info.className='shop-info';info.innerHTML=`<strong>${item.name}</strong><small>${item.text}</small><small id="augment-state-${item.key}"></small>`;info.onclick=()=>{if(has(game.player,item.key)){shopSelection={kind:'augment',key:item.key};updateHud();}};
- const buy=document.createElement('button');buy.id='augment-'+item.key;buy.className='shop-buy';buy.setAttribute('aria-label',item.name+' 구매');buy.onclick=()=>shopAction(()=>{const ok=game.buyAugment(game.player,item.key);if(ok)toast(item.name+' 선택 완료');return ok;});row.append(info,buy);$('augment-list').append(row);
+ const buy=document.createElement('button');buy.id='augment-'+item.key;buy.className='shop-buy';buy.setAttribute('aria-label',item.name+' 구매');buy.onclick=()=>shopAction(()=>{const ok=game.buyAugment(game.player,item.key);if(ok)toast(item.name+' 선택 완료');return ok;});row.append(info,buy);augmentGroups[item.group].append(row);
 }
 $('shop-sell').onclick=()=>shopAction(()=>{if(!shopSelection)return false;const ok=game.sellAugment(game.player,shopSelection.key);if(ok){toast('판매 완료');shopSelection=null;}return ok;});
 function setTrainingCollapsed(collapsed){
@@ -155,8 +157,8 @@ function updateShopCards(p){
   const owned=has(p,item.key),gate=unlocked(p,item.group),b=$('augment-'+item.key),label={combat:'전투 3단계',survival:'체력 3단계',tech:'이동·장전·가속 합계 3단계'}[item.group];
   $('augment-row-'+item.key).classList.toggle('equipped',owned);
   $('select-augment-'+item.key).classList.toggle('selected',shopSelection?.key===item.key);
-  $('augment-state-'+item.key).textContent=owned?'보유 · 선택 후 판매':gate?`카테고리 ${categoryCount(p,item.group)} / 2`:label+' 필요';
-  b.textContent=owned?'보유':game.training?'무료 구매':'구매 500 ◈';b.disabled=owned||!available||busy||!gate||!game.training&&p.gold<AUGMENT_RULES.cost||p.augments.length>=AUGMENT_RULES.slots||categoryCount(p,item.group)>=AUGMENT_RULES.categorySlots;
+  $('augment-state-'+item.key).textContent=owned?(sellable(game,item.key)?'보유 · 선택 후 판매':'보유 · 판매 불가'):gate?`카테고리 ${categoryCount(p,item.group)} / 2`:label+' 필요';
+  b.textContent=owned?'보유':game.training?'무료 구매':'구매 500 ◈';b.disabled=owned||!available||busy||!gate||!game.training&&p.gold<AUGMENT_RULES.cost||!fits(p,item.key)||categoryCount(p,item.group)>=AUGMENT_RULES.categorySlots;
  }
 }
 function updateShopInventory(p){
@@ -164,8 +166,8 @@ function updateShopInventory(p){
  if(shopSelection&&!owned.some(a=>a.key===shopSelection.key))shopSelection=null;
  const holder=$('owned-list'),signature=JSON.stringify([p.augments,shopSelection]);
  if(holder.dataset.signature!==signature){holder.dataset.signature=signature;holder.replaceChildren();for(const a of owned){const b=document.createElement('button');b.className='owned-item'+(shopSelection?.key===a.key?' selected':'');b.textContent=a.name;b.onclick=()=>{shopSelection={kind:'augment',key:a.key};updateHud();};holder.append(b);}}
- const selected=owned.find(a=>a.key===shopSelection?.key),value=game.training?0:350;
- $('shop-selected-info').textContent=selected?`${selected.name} · 판매 시 ${value} ◈ 환급`:'판매할 증강을 선택하세요.';$('shop-sell').textContent=selected?`판매 +${value} ◈`:'판매';$('shop-sell').disabled=!selected||!active()||!game.canUpgrade(p)||performance.now()<shopBusyUntil;
+ const selected=owned.find(a=>a.key===shopSelection?.key),value=game.training?0:350,canSell=selected&&sellable(game,selected.key);
+ $('shop-selected-info').textContent=selected?(canSell?`${selected.name} · 판매 시 ${value} ◈ 환급`:`${selected.name} · 판매 불가`):'판매할 증강을 선택하세요.';$('shop-sell').textContent=selected?`판매 +${value} ◈`:'판매';$('shop-sell').disabled=!canSell||!active()||!game.canUpgrade(p)||performance.now()<shopBusyUntil;
 }
 function updatePointer(e){if(!inMatch())return;pointer={x:e.clientX,y:e.clientY};renderer.follow(game,inMatch());game.input.aim=renderer.point(e.clientX,e.clientY);}
 function updateDrag(e){
@@ -242,7 +244,7 @@ function updateHud(){
  updateShopCards(p);
  if(!$('shop').classList.contains('hidden')&&!game.training&&p.alive&&!game.inSpawn(p))$('shop').classList.add('hidden');
  $('training-sell-all').classList.toggle('hidden',!game.training);$('shop-title').textContent=game.training?'연습장 상점':'부활소 보급';updateTrainingOptions();
- $('augment-count').textContent=game.training?`${p.augments.length} / ${AUGMENT_RULES.slots} · 구매·판매 무료`:`${p.augments.length} / ${AUGMENT_RULES.slots} · 구매 ${AUGMENT_RULES.cost} ◈ / 판매 ${AUGMENT_RULES.cost*AUGMENT_RULES.refund} ◈`;
+ $('augment-count').textContent=game.training?`${usedSlots(p)} / ${slots(p)} · 구매·판매 무료`:`${usedSlots(p)} / ${slots(p)} · 구매 ${AUGMENT_RULES.cost} ◈ / 판매 ${AUGMENT_RULES.cost*AUGMENT_RULES.refund} ◈`;
  updateShopInventory(p);
  const buffs=game.activeBuffs(p);$('buff-list').innerHTML=buffs.length?buffs.slice(0,3).map(b=>`<div class="buff-chip"><i>◆</i><b>${escape(b.key==='ahabOrder'?(p.state.order==='guard'?'자, 막아내라! · 이동/방어력 +12%':'엄호해라! · 아군 지원'):BUFF_LABELS[b.key]||b.key)}</b><span>${Number.isFinite(b.until)?Math.ceil(b.until-game.time)+'s':'∞'}</span></div>`).join(''):'<small>활성 버프 없음</small>';
  $('respawn').classList.toggle('hidden',p.alive||mode!=='playing'||game.winner!==null);if(!p.alive)$('respawn').innerHTML=game.training&&!Number.isFinite(p.respawnAt)?'연습장 대기<b>우측 상단 · 즉시 부활</b>':`부활 대기<b>${Math.max(0,Math.ceil(p.respawnAt-game.time))}</b>`;
@@ -274,7 +276,7 @@ function record(id){
 function renderCategory(key){category=key;document.querySelectorAll('#codex-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.category===key));$('champion-archive').classList.toggle('hidden',key!=='champions');$('codex-content').classList.toggle('hidden',key==='champions');
  if(key==='champions'){record(activeRecord);return;}
  if(key==='monsters')$('codex-content').innerHTML=MONSTERS.map(m=>`<article><h3>${m.name}</h3><p>체력 ${m.hp.toLocaleString()} · 방어력 ${m.armor}</p><p>공격 ${m.attack}</p><p>${m.text}</p><small>${m.reward}</small></article>`).join('');
- if(key==='augments')$('codex-content').innerHTML=`<article><h3>부활소 증강</h3><p>최대 ${AUGMENT_RULES.slots}개 · 카테고리별 최대 2개 · 구매 ${AUGMENT_RULES.cost} 재화 · 판매 ${AUGMENT_RULES.cost*AUGMENT_RULES.refund} 재화. 사망 중에도 구매 가능. 상점에서 보유 증강을 선택하고 판매 버튼으로 판매하세요.</p></article>`+AUGMENTS.map(a=>`<article><small>${a.group==='combat'?'전투 · 전투력 3단계 이상':a.group==='survival'?'생존 · 체력 3단계 이상':'기술 · 이동·장전·가속 합계 3단계 이상'}</small><h3>${escape(a.name)}</h3><p>${escape(a.text)}</p><small>${AUGMENT_RULES.cost} 재화</small></article>`).join('');
+ if(key==='augments')$('codex-content').innerHTML=`<article><h3>부활소 증강</h3><p>기본 ${AUGMENT_RULES.slots}개 · 딜리버리 캐리어 보유 시 ${AUGMENT_RULES.slots+1}개(캐리어는 칸 미점유) · 카테고리별 최대 2개 · 구매 ${AUGMENT_RULES.cost} 재화 · 판매 ${AUGMENT_RULES.cost*AUGMENT_RULES.refund} 재화. 사망 중에도 구매 가능. 상점에서 보유 증강을 선택하고 판매 버튼으로 판매하세요.</p></article>`+AUGMENT_GROUPS.map(([group,name])=>`<section class="augment-category" data-group="${group}"><h3>${name}</h3><div class="codex-group-grid">${AUGMENTS.filter(a=>a.group===group).map(a=>`<article><h3>${escape(a.name)}</h3><p>${escape(a.text)}</p><small>${AUGMENT_RULES.cost} 재화</small></article>`).join('')}</div></section>`).join('');
  if(key==='rules')$('codex-content').innerHTML=GAME_RULES.map(([name,text])=>`<article><h3>${name}</h3><p>${text}</p></article>`).join('');
 }
 async function openCodex(){if(!roster.length)try{const embedded=$('roster-data');if(embedded)roster=JSON.parse(embedded.textContent);else{const res=await fetch('./src/roster.json');if(!res.ok)throw new Error();roster=await res.json();}}catch{toast('도감을 불러오지 못했습니다.');return;}renderCategory(category);showDialog('archive');}

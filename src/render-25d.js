@@ -1,9 +1,9 @@
 import * as THREE from './vendor/three.js';
 import { Camera25D } from './camera-25d.js';
 import { TRAINING_25D as MAP } from './training-25d-map.js';
-import { WORLD,WALLS,TERRAIN,FOUNTAINS,BUSHES,lanePath } from './data.js';
+import { WORLD,WALLS,TERRAIN,FOUNTAINS,FOUNTAIN_AREAS,BUSHES,lanePath } from './data.js';
 import * as Training from './training.js';
-import { championHud,orderMark,championEffects } from './overlays.js';
+import { championHud,orderMark,championEffects,towerMark } from './overlays.js';
 import * as CombatVisuals from './combat-visuals.js';
 import { ChampionVFX } from './champion-vfx.js';
 import { ProjectileVFX } from './projectile-vfx.js';
@@ -91,7 +91,7 @@ export class Renderer25D {
   for(let y=top;y<Math.min(b.y+b.h,v.y+v.h);y+=2)r.line([{x:Math.max(b.x,v.x),y},{x:Math.min(b.x+b.w,v.x+v.w),y}],'#c1d0c619',.025);
   for(const a of this.layout.areas){r.text(`${String(a.id).padStart(2,'0')} / ${a.name}`,a.x+a.w/2,a.y+1.2,a.color,.52);}
   const f=this.layout.spawn;r.circle(f.x,f.y,2.45,'#a8f2e91c','#bbf7e1aa',.08);r.circle(f.x,f.y,1.65,null,'#dcffef66',.055);r.text('부활소',f.x,f.y+3.1,'#c3e9dc',.42);
-  if(!game.training){for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#c2af7c33',3.2);for(const bush of BUSHES){c.fillStyle='#4c7856aa';c.fillRect(bush.x,bush.y,bush.w,bush.h);}c.restore();return;}
+  if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);r.text('부활소 · 적에게 1000 고정 피해 / 0.5초',a.x+a.w/2,a.y+1.1,a.team?'#f5bba4':'#c7fff1',.27);}for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#c2af7c33',3.2);for(const bush of BUSHES){c.fillStyle='#4c7856aa';c.fillRect(bush.x,bush.y,bush.w,bush.h);}c.restore();return;}
   const h=this.layout.hazard;c.fillStyle='#b3574d70';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle='#f1b18d';c.lineWidth=.07;c.strokeRect(h.x,h.y,h.w,h.h);
   for(let i=.35;i<h.w;i+=.7)r.line([{x:h.x+i,y:h.y+.2},{x:h.x+i,y:h.y+h.h-.2}],'#efae8c55',.04);
   r.text('피해 장판 · 초당 3.3%',h.x+h.w/2,h.y+h.h/2,'#ffe1b8',.32);
@@ -189,7 +189,7 @@ export class Renderer25D {
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-1.55,'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-2,'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}
    else if(e.kind==='minion')r.bar(e,.8,e.y-.65,game);
-   else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-3.5,game);
+   else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-3.5,game);towerMark(r,e,game);
   });
   for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&(!game.hidden(e)||e.motion?.kind==='leap')).sort((a,b)=>Number(a.player)-Number(b.player)))at(e,()=>{
    championEffects(r,e,game);CombatVisuals.front(r,e,game);championHud(r,e,game);CombatVisuals.meter(r,e,game);

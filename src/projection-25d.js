@@ -34,3 +34,5 @@ export function renderAnchor(e){const m=e.motion;if(e.key==='starbuck'&&m?.kind=
 export function leapLift(e){const m=e.motion;if(m?.kind!=='leap')return 0;if(e.key==='starbuck'){const t=Math.min(1,m.elapsed/Math.max(.01,m.minDuration||.7));return t<.38?t/.38*14:t>.53?(1-t)/.47*14:14;}const duration=Math.max(.01,m.minDuration||m.total/m.speed);return Math.sin(Math.PI*Math.min(1,m.elapsed/duration))*(m.arcHeight||1.1);}
 
 export const airborneShadow=e=>!(e.key==='starbuck'&&e.motion?.kind==='leap');
+
+export function leapOpacity(e){if(e.key!=='starbuck'||e.motion?.kind!=='leap')return 1;return Math.max(0,Math.min(1,1-(leapLift(e)-4)/7));}

@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  browser=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1);errors=[]
  page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda m:errors.append(m.text) if 'GL_INVALID_' in m.text else None)
- page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.32.0')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.33.0')
  page.click('#training-open');page.click('#start');page.wait_for_function('Array.from(document.images).every(i=>i.complete)&&__moba.renderer.atlasV17.naturalWidth>0')
  page.evaluate('''async()=>{window.__Y=await import('./src/yan.js');window.__trail=await import('./src/weapon-trails.js');const g=__moba.game;g.step=()=>{};g.practice.lineStopped=true;window.pose=(key,form)=>{g.time=10;g.units=[];g.effects=[];g.projectiles=[];g.pending=[];g.zones=[];const e=g.makeChampion(key,0,0,'top');g.player=e;Object.assign(e,{x:25,y:38,attackCd:0,attackAt:-99});g.input.aim={x:30,y:38};if(form)g.addBuff(e,form,20);g.attack(e,g.input.aim);if(key==='yan')__Y.release(g,e,g.input.aim);g.effects=[];__moba.renderer.draw(g,true);return e;};window.frames=n=>{const g=__moba.game;for(let i=1;i<=n;i++){g.time=10+i/60;__moba.renderer.draw(g,true);}};}''')
  results={}

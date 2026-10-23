@@ -1,7 +1,7 @@
 import { CAMP_RULES } from './data.js';
 import { distance,direction } from './geometry.js';
 
-export function engage(g,e){if(!e.hostile){e.patternReady=g.time+CAMP_RULES.firstPattern;}e.hostile=true;}
+export function engage(g,e){if(!e.alive||e.returning)return;if(!e.hostile){e.patternReady=g.time+CAMP_RULES.firstPattern;}e.hostile=true;}
 export function cancel(e){delete e.pattern;delete e.channelUntil;}
 export function update(g,e,target){
  if(!['amplify','blessing'].includes(e.camp))return false;

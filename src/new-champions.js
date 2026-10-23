@@ -106,10 +106,10 @@ export function cast(g,e,slot,p,d){
    s.ahabUlt={origin:{x:e.x,y:e.y},immune:e.ccImmuneUntil||0,invulnerable:e.invulnerableUntil||0};e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.channelUntil=g.time+.45;
    e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
    {
-    for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{g.effects.push({source:e.id,theme:e.key,slot:'r',damageKind:'skill',type:'ahabSpin',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.28,maxLife:.28});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t))g.deal(e,t,180,{nonLethal:execute.has(t.id)});});
+    for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{g.effects.push({source:e.id,theme:e.key,slot:'r',damageKind:'skill',type:'ahabSpin',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.28,maxLife:.28});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){g.deal(e,t,180,{nonLethal:execute.has(t.id)});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+5;}});
     g.schedule(e,.45,()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){
-     if(execute.has(t.id)){g.deal(e,t,t.hp+g.shield(t),{fixed:true});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+4;}
-     else g.deal(e,t,300+(t.maxHp-t.hp)*.18);
+     if(execute.has(t.id)){g.deal(e,t,t.hp+g.shield(t),{fixed:true});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+5;}
+     else{g.deal(e,t,300+(t.maxHp-t.hp)*.18);if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+5;}
     }g.effects.push({type:'burst',x:e.x,y:e.y,r:2.5,theme:e.key,life:.7,maxLife:.7});const ult=s.ahabUlt;const done=()=>{e.ccImmuneUntil=ult.immune;e.invulnerableUntil=ult.invulnerable;delete s.ahabUlt;s.returnAnchorUntil=g.time+.05;};e.channelUntil=0;if(!g.startMotion(e,direction(e,ult.origin),distance(e,ult.origin),{speed:12,maxSpeed:12,phaseEnemies:true,follow:{...ult.origin,alive:true},onComplete:done}))done();});
    }
   }return true;

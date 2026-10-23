@@ -72,7 +72,7 @@ test('augment gates, unique ownership, four slots, refund and repurchase are enf
 });
 test('every augment can be purchased after its own category unlock and stat augments change real combat stats',()=>{
  for(const item of AUGMENTS){const {g,p}=quiet();p.alive=false;p.gold=10000;Object.assign(p.upgrades,{power:3,health:3,speed:1,reload:1,haste:1});assert.ok(g.buyAugment(p,item.key),item.key);}
- const {g,p,t}=quiet();p.augments=['power15','blackOrb','range7'];close(g.powerScale(p),1.2);close(g.maxHp(p),3400*1.15);close(g.attackRange(p),7.5+2.5);p.augments=['magazine2','cooldown15','adaptiveSpeed'];assert.equal(g.ammoCap(p),5);g.cast(p,'q',t);close(p.qCd,CHAMPIONS.faust.q*.85);p.lastCombat=-99;const outside=g.speed(p);p.lastCombat=g.time;assert.ok(g.speed(p)<outside);
+ const {g,p,t}=quiet();p.augments=['power15','blackOrb','range7'];close(g.powerScale(p),1.1);close(g.maxHp(p),3400*1.15);close(g.attackRange(p),7.5+2.5);p.augments=['magazine2','cooldown15','adaptiveSpeed'];assert.equal(g.ammoCap(p),5);g.cast(p,'q',t);close(p.qCd,CHAMPIONS.faust.q*.85);p.lastCombat=-99;const outside=g.speed(p);p.lastCombat=g.time;assert.ok(g.speed(p)<outside);
 });
 test('final damage augment procs once per 7 seconds and respects final post-armor damage',()=>{
  const {g,p,t}=quiet();p.augments=['finalBullet'];t.armor=100;let hp=t.hp;const hit=g.deal(p,t,100);close(hp-t.hp,hit*1.07);hp=t.hp;g.deal(p,t,100);close(hp-t.hp,hit);g.time=7.1;hp=t.hp;g.deal(p,t,100);close(hp-t.hp,hit*1.07);

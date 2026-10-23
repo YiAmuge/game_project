@@ -45,7 +45,7 @@ export function resetLane(g){
  const removed=new Set(g.units.filter(u=>u.trainingLane).map(u=>u.id));
  g.units=g.units.filter(u=>!u.trainingLane);g.projectiles=g.projectiles.filter(p=>!removed.has(p.source.id)&&!removed.has(p.target?.id));
  g.events=g.events.filter(e=>!removed.has(e.source.id));g.minionQueue=[];g.wave=0;g.practice.lineStopped=false;g.practice.nextWave=g.time+3;
- for(const team of [0,1])g.entity({kind:'tower',trainingLane:true,team,lane:0,...lanePath(team,g)[0],maxHp:5168,armor:120,range:8.5,damage:280,interval:1.05,radius:.9,name:'연습 포탑'});
+ for(const team of [0,1])g.entity({kind:'tower',trainingLane:true,team,lane:0,...lanePath(team,g)[0],maxHp:5000,armor:120,range:8.5,damage:280,interval:1.05,radius:.9,name:'연습 포탑'});
  return true;
 }
 export function tickDummy(g,e,dt){
@@ -101,7 +101,7 @@ export function afterStep(g){
 }
 export function sellAll(g){
  if(!g.training)return false;const p=g.player;p.augments=[];p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
- for(const k of ['augReloadStacks','augCombatAt'])delete p.state[k];for(const k of ['augReload','augBattleHaste'])delete p.buffs[k];
+ for(const k of ['augReloadStacks','augCombatAt','maskStacks','orderStacks','antimatterNext'])delete p.state[k];for(const k of ['augReload','augBattleHaste','maskBoost','writtenOrder'])delete p.buffs[k];
  g.refreshEquipment(p);return true;
 }
 export function deathOrRespawn(g){

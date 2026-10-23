@@ -42,7 +42,7 @@ body.in-game .pause-banner~.hud{z-index:7}
 body.in-game .respawn{z-index:5;top:42%;font-size:16px}
 body.in-game .shop{right:auto;left:18px;bottom:165px;z-index:9}
 body.in-game #result-stats{font-size:15px}
-body.in-game .toast{bottom:175px}
+body.in-game .toast{bottom:auto}
 @media(max-width:1150px){
  body.in-game .field-top>span{display:none}
  body.in-game .field-top{justify-content:flex-end}
@@ -193,3 +193,9 @@ body.in-game.training-25d .arena-shell{background:#101e2a}
 /* The combat surface never participates in browser selection or dragging. */
 .arena-shell{user-select:none;-webkit-user-select:none}
 #arena,#arena-3d{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+
+.shop #augment-list{display:block}.augment-category{margin:12px 0 22px}.augment-category>h4,.augment-category>h3{color:var(--gold);font-size:16px;border-bottom:1px solid #5b6b60;padding-bottom:8px}.augment-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.codex-grid>.augment-category{grid-column:1/-1}.codex-group-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.training-mode .shop{overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior:contain}.training-mode .shop-catalog{flex:none;min-height:0;overflow:visible}.training-mode .shop::-webkit-scrollbar{width:10px}.training-mode .shop::-webkit-scrollbar-thumb{background:#a38b5c;border-radius:5px}@media(max-width:850px){.augment-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.augment-group-grid,.codex-group-grid{grid-template-columns:1fr}}
+
+.shop #shop-supply{display:flex;flex:1;flex-direction:column;min-height:0}.training-mode .shop #shop-supply{display:block;flex:none;min-height:auto}.shop,body.in-game .shop{overflow-y:auto}
+/* Purchase and status notifications remain above the shop and never consume input. */
+.toast{top:12px;bottom:auto;max-width:calc(100vw - 24px);padding:11px 20px;pointer-events:none;text-align:center}

@@ -1,4 +1,4 @@
-import { distance,segmentDistance } from './geometry.js';
+import { distance,direction,segmentDistance } from './geometry.js';
 import { settleBody } from './collision.js';
 import { dash,area } from './skills.js';
 import { RULES } from './data.js';
@@ -76,16 +76,17 @@ export function cast(g,e,slot,p,d){
   else{for(const m of orders(g,e))m.until=g.time+SORA.markDuration;mark(g,e,ultimateTarget(g,e),'ultimate');}
   return true;
  }
- const origin={x:e.x,y:e.y},length=Math.min(ego(g,e)?SORA.egoQRange:SORA.qRange,distance(e,p));
+ const origin={x:e.x,y:e.y};let length=Math.min(ego(g,e)?SORA.egoQRange:SORA.qRange,distance(e,p));
+ if(!ego(g,e)){const landing=g.safeLanding(e,p,SORA.qRange);d=direction(e,landing);length=distance(e,landing);}
  if(ego(g,e)){
   e.state.egoQCharges--;if(!Number.isFinite(e.state.egoQReady))e.state.egoQReady=g.time+g.cooldown(e,'q');
   e.qCd=e.state.egoQCharges>0?0:Math.max(0,e.state.egoQReady-g.time);
   const previous=e.invulnerableUntil||0;
   if(dash(g,e,d,length,SORA.egoQDamage,()=>{},{speed:SORA.egoQSpeed,maxSpeed:SORA.egoQSpeed,hitWidth:SORA.egoHitWidth,onComplete:()=>{restoreGuard(e);trail(g,e,origin);}})&&e.motion){e.state.soraGuard={previous,motion:e.motion};e.invulnerableUntil=Infinity;}
  }else{
-  // Sweep only the first contacted enemy; no teleport and no pushing through terrain.
+  // Airborne traversal crosses terrain and stops at its first reachable enemy.
   const stopped=new Set();
-  g.startMotion(e,d,length,{phaseEnemies:true,onComplete:()=>shockwave(g,e,SORA.qWidth,true,e),onStep:(from,to)=>{
+  g.startMotion(e,d,length,{kind:'leap',ignoreWalls:true,arcHeight:3,minDuration:length/8,phaseEnemies:true,onComplete:()=>shockwave(g,e,SORA.qWidth,true,e),onStep:(from,to)=>{
    const target=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=SORA.qWidth+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
    if(!target||stopped.size)return;stopped.add(target.id);const refill=marked(g,e,target),fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);
    g.deal(e,target,SORA.qDamage);g.status(target,'stun',1,1,e);g.addShield(e,SORA.qShield,`sora-dash-${e.id}`,2);if(refill)e.ammo=Math.min(g.ammoCap(e),e.ammo+1);
@@ -119,5 +120,5 @@ export function onDeath(g,e){if(e.key==='sora')restoreGuard(e);}
 export function abilityInfo(g,e){
  if(e.key!=='sora')return {};
  const transformed=ego(g,e),unlocked=ready(g,e);
- return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?`충전 ${e.state.egoQCharges}/2 · 1회 충전 5초. 커서 방향으로 즉시 초속 24 무적 돌진(최대 6.5)·240 피해. 후속 장판 좌우 +30%·전후 +10%, 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.`:'사거리 7 좌표로 돌진, 처음 닿은 적에게 210 피해·기절 1초. 적중 시 250 보호막 2초. 적중·돌진 종료 위치에 원형 충격파·지면 균열. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
+ return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?`충전 ${e.state.egoQCharges}/2 · 1회 충전 5초. 커서 방향으로 즉시 초속 24 무적 돌진(최대 6.5)·240 피해. 후속 장판 좌우 +30%·전후 +10%, 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.`:'사거리 7 좌표로 포물선을 그리며 도약해 지형을 넘고, 처음 닿은 적에게 210 피해·기절 1초. 적중 시 250 보호막 2초. 적중·돌진 종료 위치에 원형 충격파·지면 균열. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
 }

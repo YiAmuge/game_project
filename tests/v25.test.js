@@ -33,7 +33,7 @@ test('roles have no hidden speed, armor, CC duration, damage, reload or cooldown
 });
 test('battlefield geometry, structures and lanes share the horizontal coordinate scale',()=>{
  const g=new Game();close(RULES.width,70.72);close(WORLD.w,87.72);close(WALLS[0].w,5.61);close(WORLD.h,62.8);
- for(const team of [0,1]){const towers=g.towers(team);assert.ok(towers.every(t=>t.maxHp===5168));close(towers[0].x,worldPoint(team?46:18,0).x+(team?-5:5));assert.equal(g.units.find(e=>e.kind==='core'&&e.team===team).maxHp,6936);}
+ for(const team of [0,1]){const towers=g.towers(team);assert.ok(towers.every(t=>t.maxHp===5000));close(towers[0].x,worldPoint(team?46:18,0).x+(team?-5:5));assert.equal(g.units.find(e=>e.kind==='core'&&e.team===team).maxHp,6000);}
  for(const team of [0,1])for(const lane of [0,1]){const path=lanePath(team,lane);assert.deepEqual(path[0],CORE_POSITIONS[team]);for(let i=1;i<path.length;i++)assert.ok(g.clearLine(path[i-1],path[i],1.1));assert.ok(path.slice(1).reduce((sum,p,i)=>sum+distance(path[i],p),0)<76);}
  assert.ok(FOUNTAINS.every(p=>!g.blocked(p.x,p.y,.48)));
 });
@@ -56,8 +56,8 @@ test('resentment changes power, armor and reload in real time with current healt
 test('K ampule stops a fatal hit, purges crowd control and returns on its cooldown',()=>{
  const {g,p,t}=arena();p.augments=['kAmpule'];g.status(p,'root',1,10,t);g.status(p,'captured',1,10,t);p.hp=100;g.deal(t,p,1000,{fixed:true});assert.ok(p.alive);close(p.hp,p.maxHp*.5);close(g.stat(p,'root'),0);close(g.stat(p,'captured'),0);close(p.state.ampuleReady,60);g.status(p,'stun',1,2,t);close(g.stat(p,'stun'),0);g.time=60;p.hp=1;g.deal(t,p,100,{fixed:true});assert.ok(p.alive);close(p.state.ampuleReady,120);
 });
-test('battery shields exactly actual natural healing, capped at thirty percent',()=>{
- const {g,p}=arena();p.augments=['forceBattery'];p.hp=p.maxHp*.2;g.heal(null,p,p.maxHp*.2,false,{natural:true});close(g.shield(p),p.maxHp*.2);g.heal(null,p,p.maxHp*.3,false,{natural:true});close(g.shield(p),p.maxHp*.3);p.shields=[];g.heal(null,p,100,false);close(g.shield(p),0);
+test('battery charges after two seconds without incoming damage and caps at thirty percent',()=>{
+ const {g,p}=arena();p.augments=['forceBattery'];p.lastDamageAt=0;p.lastAttackAt=100;g.time=1.99;A.tick(g,p,.1);close(g.shield(p),0);g.time=2;A.tick(g,p,1);close(g.shield(p),p.maxHp*.13);A.tick(g,p,3);close(g.shield(p),p.maxHp*.3);close(g.haste(p),.1);
 });
 test('martan uses final health damage and its seven-second shared cooldown',()=>{
  const {g,p,t}=arena();p.augments=['finalBullet'];g.addShield(t,50,'test',3);const before=t.hp,actual=g.deal(p,t,1000);close(before-t.hp,actual*1.07);const hp=t.hp;g.deal(p,t,1000);close(hp-t.hp,actual+50);close(p.state.augBulletReady,7);
@@ -78,8 +78,8 @@ test('Heathcliff leaps over a wall and lands outside blocked geometry',()=>{
 test('Dongrang crosses terrain with healing-scaled leap damage and stable duration',()=>{
  const {g,p,t}=arena('dongrang');g.map.walls=[{x:22,y:17,w:1,h:6}];Object.assign(t,{x:28.5,y:21});p.totalHealingReceived=4500;g.cast(p,'r',{x:28.5,y:20});assert.equal(p.motion.kind,'leap');close(p.motion.total,8.5);close(p.motion.minDuration,8.5/8);run(g,1.1);assert.ok(p.x>23);assert.ok(t.hp<100000);close(g.stat(t,'root'),1);
 });
-test('Alisa has 2400 base HP, 140 basic damage and mutually exclusive fixed burns',()=>{
- const {g,p,t}=arena('alisa');close(p.maxHp,2400);const hp=t.hp;g.attack(p,t);close(hp-t.hp,140*1.1*RULES.power[CHAMPIONS.alisa.power]*.9);let before=t.hp;run(g,2.1);close(before-t.hp,100);S.applyBurn(g,p,t,true);S.applyBurn(g,p,t);assert.ok(t.burn.explosion);before=t.hp;run(g,3);close(before-t.hp,500);assert.equal(t.burn,undefined);
+test('Alisa has 2400 base HP, 100 basic damage and mutually exclusive fixed burns',()=>{
+ const {g,p,t}=arena('alisa');close(p.maxHp,2400);const hp=t.hp;g.attack(p,t);close(hp-t.hp,100*1.1*RULES.power[CHAMPIONS.alisa.power]*.9);let before=t.hp;run(g,2.1);close(before-t.hp,100);S.applyBurn(g,p,t,true);S.applyBurn(g,p,t);assert.ok(t.burn.explosion);before=t.hp;run(g,3);close(before-t.hp,10*(15+p.maxHp*.015));assert.equal(t.burn,undefined);
 });
 test('Alisa Q permits attacking while reloading and R channels at half movement then dashes',()=>{
  const {g,p}=arena('alisa');g.addBuff(p,'alisaReload',5);p.state.alisaReloadActive=true;p.attackCd=1;assert.equal(g.reloadPaused(p),false);delete p.buffs.alisaReload;p.state.alisaReloadActive=false;p.state.heat=5;p.attackCd=0;const speed=g.speed(p);g.input.x=1;g.input.aim={x:30,y:20};assert.ok(g.cast(p,'r',p));close(g.speed(p),speed*.5);assert.equal(g.attack(p,{x:30,y:20}),false);run(g,.4);assert.ok(p.x>20);run(g,.42);assert.equal(p.motion?.kind,'dash');run(g,.4);assert.ok(p.state.detonating);run(g,2.1);assert.equal(p.alive,false);

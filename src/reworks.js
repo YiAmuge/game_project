@@ -47,20 +47,21 @@ export function outis(g,e,d){
  let victim=null,finished=false;
  const blast=()=>{
   if(finished)return;finished=true;
-  const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,t=>{if(!t.alive&&e.alive)g.addBuff(e,'outisReload',3,{copy:false});},{exclude:new Set(victim?[victim.id]:[])});
+  const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,t=>{if(!t.alive&&e.alive){g.addBuff(e,'outisReload',3,{copy:false});e.rCd=Math.max(0,e.rCd-g.cooldown(e,'r')*.3);}},{exclude:new Set(victim?[victim.id]:[])});
   g.effects.push({type:'outisShotgun',source:e.id,slot:'r',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:6.5,spread:Math.PI*2/3,theme:'outis',life:.5,maxLife:.5});
   if(victim){if(!g.startMotion(e,backward,2.5,{speed:18,maxSpeed:18,phaseEnemies:true,onComplete:finish}))finish();}else finish();
  };
  const ok=g.startMotion(e,d,4.5,{speed:12,maxSpeed:12,phaseEnemies:true,onStep:(from,to)=>{
   if(victim)return;
   const t=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=t.radius+e.radius+.06&&g.clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
-  if(t){victim=t;g.deal(e,t,450);if(!t.alive&&e.alive)g.addBuff(e,'outisReload',3,{copy:false});g.status(t,'stun',1,1,e);delete e.motion;settleBody(g,e,from);blast();}
+  if(t){victim=t;g.deal(e,t,450);if(!t.alive&&e.alive){g.addBuff(e,'outisReload',3,{copy:false});e.rCd=Math.max(0,e.rCd-g.cooldown(e,'r')*.3);}g.status(t,'stun',1,1,e);delete e.motion;settleBody(g,e,from);blast();}
  },onComplete:blast});if(!ok)finish();return true;
 }
 export function honglu(g,e,slot,p,d){
  if(slot==='q'){
+  if(e.state.insightUntil>g.time){finishInsight(g,e);return true;}
   e.state.insightHealingEvent=e.healingEvent;e.state.insightUntil=g.time+1.2;e.state.insightOrigin={x:e.x,y:e.y};e.phaseEnemiesUntil=g.time+1.2;
-  e.invulnerableUntil=Math.max(e.invulnerableUntil||0,g.time+1.2);g.addBuff(e,'insight',1.2,{copy:false});
+  g.addShield(e,350,`insight-${e.id}`,1.2);g.addBuff(e,'insight',1.2,{copy:false});
  }else{
   const z=g.zones.find(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time);
   if(z)z.moving=!z.moving;
@@ -78,7 +79,13 @@ export function tick(g,e){
  if(s.gregorPulls){s.gregorPulls=s.gregorPulls.filter(id=>g.units.some(t=>t.id===id&&t.alive&&t.motion?.follow===e));if(!s.gregorPulls.length)delete s.gregorPulls;}
  if(s.ishmaelCast&&!s.ishmaelCast.fired&&g.stat(e,'stun'))delete s.ishmaelCast;
  if(s.ishmaelCast?.fired){const active=g.projectiles.some(p=>p.ishmaelOwner===e.id&&p.remaining>0)||g.units.some(t=>t.alive&&t.motion?.ishmaelOwner===e.id);if(!active)delete s.ishmaelCast;}
- if(s.insightUntil!==undefined&&g.time+1e-8>=s.insightUntil){delete s.insightUntil;e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;for(const t of g.champions(e.team).filter(t=>t.alive&&distance(e,t)<=5))g.heal(e,t,500,false,{healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});g.effects.push({type:'ring',x:e.x,y:e.y,r:5,color:'#84e6dc',life:.6,maxLife:.6});}
+ if(s.insightUntil!==undefined&&g.time+1e-8>=s.insightUntil)finishInsight(g,e);
+}
+export function finishInsight(g,e){
+ const s=e.state;if(s.insightUntil===undefined)return;
+ delete s.insightUntil;delete e.buffs.insight;e.shields=e.shields.filter(a=>a.source!==`insight-${e.id}`);e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;
+ for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500,false,{healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
+ g.effects.push({type:'ring',x:e.x,y:e.y,r:5,color:'#84e6dc',life:.6,maxLife:.6});
 }
 export function easterEggs(g,dt){
  g.easterEggs??=new Set();const phrases={queequeg:'자, 막아내라!',starbuck:'엄호해라!',ishmael:'네 탓이군, 이스마엘!'};

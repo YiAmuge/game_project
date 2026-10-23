@@ -38,7 +38,7 @@ test('Alisa ultimate detonates automatically at full HP after focus and two-seco
  const {g,p,t}=quiet('alisa');p.state.heat=5;p.lastAttackAt=0;t.x=43;g.input.aim={x:46,y:7};const hp=t.hp;assert.ok(g.cast(p,'r',p));run(g,.75);assert.ok(!p.state.detonating);run(g,.45);assert.ok(p.state.detonating&&p.hp>p.maxHp*.9);g.status(p,'stun',1,1);assert.equal(g.stat(p,'stun'),0);run(g,1.9);assert.ok(p.alive);run(g,.1);assert.equal(p.alive,false);assert.ok(t.hp<hp);assert.ok(t.burn);close(p.respawnAt-g.time,3,.1);
 });
 test('Alisa taking lethal damage during ultimate focus cannot schedule two explosions or deaths',()=>{
- const {g,p,t}=quiet('alisa');p.state.heat=5;g.cast(p,'r',p);g.deal(t,p,999999,{fixed:true});run(g,2.9);assert.equal(p.deaths,1);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,1);
+ const {g,p,t}=quiet('alisa');p.state.heat=5;g.cast(p,'r',p);g.deal(t,p,999999,{fixed:true});run(g,2.9);assert.equal(p.deaths,1);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,0);
 });
 test('Marton maximum attack range is five without changing its ground effect radius',()=>{
  const {g,p,t}=quiet('marton');close(g.attackRange(p),5);t.x=47.8;g.attack(p,{x:50,y:7});close(t.hp,100000);p.attackCd=0;t.x=46.8;g.attack(p,{x:50,y:7});assert.ok(t.hp<100000);

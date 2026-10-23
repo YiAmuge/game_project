@@ -23,7 +23,8 @@ export const MINIONS={size:1.15*1.2,health:{melee:680,ranged:480,siege:1320},spa
 export const CAMP_RULES={radius:3.4,leashDistance:3.4,leashDelay:1.85,returnSpeed:9,neutralRespawn:20,buffRespawn:45,buffHealth:1.33,buffDuration:60,patternEvery:5,firstPattern:1.5};
 export const CORE_POSITIONS=[{x:10.2*MAP_X,y:MAP_CENTER.y},{x:RULES.width-10.2*MAP_X,y:MAP_CENTER.y}];
 export const WELL_ROOMS=[{x:-3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width+3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:1}];
-export function inWell(e,team=e.team){const w=WELL_ROOMS[team];return Math.hypot(e.x-w.x,e.y-w.y)<=w.r&&(team===0?e.x<=w.x:e.x>=w.x);}
+export const FOUNTAIN_AREAS=TERRAIN.slice(1,3).map((p,team)=>({...p,team}));
+export function inWell(e,team=e.team){const w=FOUNTAIN_AREAS[team];return Boolean(w&&e.x>=w.x&&e.x<=w.x+w.w&&e.y>=w.y&&e.y<=w.y+w.h);}
 export const CHAMPIONS = {
   faust: { id: 2, name: '파우스트', tag: 'FAUST', role: '저격', color: '#c9d8df', icon: 'F', power: 4, health: 3, speed: 2, ammo: 3, reload: 3, range: 7.5, damage: 180, attackTime: .46, q: 11, r: 48,
     passive: '게젤샤프트', basic: '대상 분석', tactical: '탐구', ultimate: '표상방출기',
@@ -54,9 +55,9 @@ for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,spee
 
 CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.brief='짧은 돌진 도끼와 동전의 도박사';
 
-CHAMPIONS.outis.damage=215;
+CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
 
-CHAMPIONS.honglu.q=20;
+CHAMPIONS.honglu.q=7;
 
 CHAMPIONS.marton.range=5;
 CHAMPIONS.queequeg.range=3;
@@ -119,16 +120,25 @@ CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
 export const AUGMENT_RULES={cost:500,refund:.7,slots:4,categorySlots:2};
 export const AUGMENTS=[
  {key:'finalBullet',group:'combat',name:'마탄',text:'7초마다 적 챔피언 적중 시 최종 체력 피해의 7% 고정 피해'},
- {key:'power15',group:'combat',name:'신검합일',text:'전투력 +20%'},
+ {key:'power15',group:'combat',name:'신검합일',text:'전투력 +10% · 방어관통 +10%'},
  {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 돌진형 기본 공격은 공격 사거리와 돌진거리 각각 +1'},
  {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소'},
+ {key:'glaive',group:'combat',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
+ {key:'wisdom',group:'combat',name:'지혜성도',text:'전투력 +5% · 공격 중에도 장전이 50% 속도로 진행'},
+ {key:'duelManual',group:'combat',name:'듀엘교본 3권',text:'이동속도 +5% · 기본 이동속도를 초과한 현재 이동속도의 비율만큼 전투력 증가'},
  {key:'resentment',group:'survival',name:'원한 문신',text:'잃은 체력 10%마다 전투력·방어력·장전속도 +5%, 최대 8중첩. 현재 체력에 따라 실시간 적용'},
  {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:'치명적인 피해를 받으면 체력을 최대 체력의 50%로 복구하고 모든 군중제어 해제. 1초간 군중제어 면역·이동속도 +30%. 재사용 대기시간 60초'},
- {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:'자연 치유로 실제 회복한 체력만큼 보호막 획득. 최대 체력의 30%까지 누적'},
+ {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:'2초간 피해를 받지 않으면 초당 최대 체력의 13% 보호막 충전, 최대 30%. 최대 체력의 10% 이상 보호막 보유 중 스킬 가속 +10%'},
  {key:'blackOrb',group:'survival',name:'흑수환',text:'최대 체력·이동속도·장전속도 +15%'},
+ {key:'antimatter',group:'survival',name:'반물질 옷',text:'최대 체력 +10% · 사거리 1.6의 적에게 0.5초마다 20 고정 피해'},
+ {key:'writtenOrder',group:'survival',name:'쪽지로 전해진 지령',text:'공격 적중 시 방어력 +5%, 최대 5중첩. 각 중첩은 5초 유지. 최대 중첩 중 일반 피해의 10%를 고정 피해로 전환'},
+ {key:'traumaGuard',group:'survival',name:'트라우마 방지장',text:'최대 체력 +5% · 군중제어를 받을 때 해당 효과를 무효화하고 탄창 1개 충전. 재사용 대기시간 16초'},
  {key:'battleHaste',group:'tech',name:'사랑과 증오의 이름으로',text:'전투를 3초 이상 유지하면 스킬 가속 +15%. 비전투 시 해제'},
  {key:'cooldown15',group:'tech',name:'주민등록 마이크로칩',text:'전술기·궁극기 기본 재사용 대기시간 −15%'},
  {key:'magazine2',group:'tech',name:'카포를 위하여',text:'최대 탄창 +2'},
+ {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'증강 보유 한도 +1. 이 증강은 보유 한도를 차지하지 않는다. 기술 분류 한도에 포함되며 일반 경기에서 판매 불가'},
+ {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'기술 사용 시 이동속도·장전속도 +6%, 최대 2중첩. 각 중첩은 5초 유지'},
+ {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 전술기·궁극기 기본 재사용 대기시간 −5%'},
  {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:'비전투 이동속도 +15% · 전투 중 +7%'},
 ];
 

@@ -1,7 +1,7 @@
 import { combatStyle,clipShape } from './combat-style.js';
 import { noise } from './organic-particles.js';
 import { guardAlly } from './new-champions.js';
-import { leapLift,renderAnchor } from './projection-25d.js';
+import { leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
 import { PROJECTILE_VISUAL_SCALE } from './projectile-rules.js';
 import { FRAMES } from './art.js';
 
@@ -42,7 +42,7 @@ export function championPresentation(g,e){
  const set=(color,element='smoke',strength=.65)=>{aura={color,form:element,strength};};
  if(Object.values(e.buffs||{}).some(t=>t>g.time))set('#c6cbd0','smoke',.5);
  if(g.shield(e)>0)set('#b5c7ce','mist',.7);
- if(e.key==='alisa'&&(s.heat||0)>0)set('#b86132','flame',.7);
+ if(e.key==='alisa'&&(s.heat||0)>0)set('#b86132','flame',.7);if(s.detonatesAt>g.time)set('#f05832','flame',.65+.3*Math.min(1,(g.time-(s.detonationAt??g.time))/2));
  if(buff('marks'))set('#a2c879');if(buff('resolve'))set('#d9dce0','glow');if(buff('chainArmor'))set('#eef0e7','glow',.7);
  if(buff('donLifesteal'))set('#8e2d3e');if(buff('guboReload'))set('#6c1429','flame',.8);
  if(buff('tetherGuard')||buff('tetherArmor'))set('#3c807e');if(buff('queequegUlt'))set('#a7333c','flame',.8);
@@ -135,7 +135,7 @@ export class ChampionVFX {
  }
  body(c,camera,e,g,front=false){
   const p=camera.worldToScreen(renderAnchor(e),.075),scale=camera.scale,presentation=championPresentation(g,e),time=g.time,s=e.state||{};
-  c.save();c.translate(p.x,p.y-(leapLift(e)+presentation.lift)*scale);c.scale(scale,scale);
+  c.save();c.globalAlpha*=leapOpacity(e);c.translate(p.x,p.y-(leapLift(e)+presentation.lift)*scale);c.scale(scale,scale);
   if(!front){
    if(presentation.aura)this.aura(c,presentation.aura,time);
    if(g.buff(e,'chainArmor')){c.save();c.globalAlpha=.2;const light=c.createLinearGradient(0,-7,0,0);light.addColorStop(0,'#e9ece100');light.addColorStop(1,'#e9ece1');c.fillStyle=light;for(let i=0;i<4;i++)c.fillRect((i-1.5)*.4,-7,.23,7);c.restore();}
