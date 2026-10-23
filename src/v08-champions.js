@@ -37,7 +37,7 @@ export function cast(g,e,slot,p,d){
  if(e.key==='marton'){
   if(slot==='q'){g.addBuff(e,'martonDrain',4);e.state.drainTick=g.time;}
   else{
-   e.channelUntil=g.time+2.5;e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+2.5);e.state.fairy={until:g.time+2.5,received:0,nextTaunt:g.time};
+   e.channelUntil=g.time+2.5;e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+2.5);e.state.fairy={at:g.time,until:g.time+2.5,received:0,nextTaunt:g.time};
    for(const t of g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=6.8))taunt(g,t,e,.5);
    g.schedule(e,2.5,()=>{const received=e.state.fairy?.received||0;delete e.state.fairy;area(g,e,e,6.8,Math.min(900,received*.3));g.effects.push({type:'martonExplosion',x:e.x,y:e.y,r:6.8,theme:e.key,life:.6,maxLife:.6});});
   }return true;

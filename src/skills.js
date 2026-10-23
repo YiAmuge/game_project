@@ -119,7 +119,7 @@ export function basic(g,e,p,d,options={}){
  case 'outis':g.bullet(e,d,215,g.attackRange(e),{width:.16});return true;
  case 'gregor':if(g.buff(e,'mutant'))dash(g,e,d,dashLength(e,2.5),210,()=>{},{hitWidth:1.08,onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8*1.3*1.2,210,()=>{},{exclude:hitIds})});else cone(g.attackRange(e),1.8,210);return true;
  case 'gubo':{
-  const base=360*(g.buff(e,'guboReload')?1.2:1);let count=0;g.bullet(e,d,base,g.attackRange(e),{pierce:Infinity,ignoreTerrain:true,allowFriendly:true,beforeHit:(t,b)=>b.damage=base*(t.team===e.team?1:1-Math.min(.3,count*.05)),onHit:t=>{if(t.team!==e.team)count++;}});
+  const base=360*(g.buff(e,'guboReload')?1.2:1);let count=0;g.bullet(e,d,base,g.attackRange(e),{guboEmpowered:g.buff(e,'guboReload'),pierce:Infinity,ignoreTerrain:true,allowFriendly:true,beforeHit:(t,b)=>b.damage=base*(t.team===e.team?1:1-Math.min(.3,count*.05)),onHit:t=>{if(t.team!==e.team)count++;}});
   return true;
  }
  case 'alisa':e.state.heat=Math.min(5,(e.state.heat||0)+1);cone(g.attackRange(e),1.1,140*(1+.1*e.state.heat),t=>applyBurn(g,e,t));return true;

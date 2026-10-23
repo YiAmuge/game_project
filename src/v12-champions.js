@@ -3,6 +3,7 @@ import { carried } from './attachments.js';
 import { distance,direction } from './geometry.js';
 import { settleBody } from './collision.js';
 import { dash,targetAt } from './skills.js';
+import { KIM_WAVE_HALF_WIDTH,KIM_COUNTER_HALF_WIDTH } from './projectile-rules.js';
 
 export const KIM={shield:120,qRange:2.8,qDamage:250,grab:1.8,throwDamage:100,rDamage:450,counterDamage:338};
 export function recast(g,e,slot){return e.key==='kim'&&slot==='q'&&e.state.swordGrab?.until>g.time&&Boolean(carried(g,e));}
@@ -31,9 +32,9 @@ export function releaseGrab(g,e,throwDirection){
 }
 function counterWave(g,e,counter){
  const s=e.state.counter;if(!s)return;if(counter)g.effects.push({type:'counterSignal',source:e.id,theme:'kim',x:e.x,y:e.y,r:1,life:.25,maxLife:.25});delete e.state.counter;e.channelUntil=0;e.ccImmuneUntil=s.immune;
- const fire=()=>g.bullet(e,{x:Math.cos(s.angle),y:Math.sin(s.angle)},counter?KIM.counterDamage:KIM.rDamage,counter?8:6,{width:(counter?.42:.3)*4.5,pierce:Infinity,theme:'kim',swordWave:true,onHit:t=>{if(counter)g.status(t,'slow',.25,1.5,e);}});
+ const fire=()=>g.bullet(e,{x:Math.cos(s.angle),y:Math.sin(s.angle)},counter?KIM.counterDamage:KIM.rDamage,counter?8:6,{slot:'r',damageKind:'skill',width:counter?KIM_COUNTER_HALF_WIDTH:KIM_WAVE_HALF_WIDTH,pierce:Infinity,theme:'kim',swordWave:true,onHit:t=>{if(counter)g.status(t,'slow',.25,1.5,e);}});
  fire();if(counter)for(let i=1;i<4;i++)g.schedule(e,i*.125,fire);
- g.effects.push({type:'slash',x:e.x,y:e.y,r:counter?5:3,angle:s.angle,spread:counter?2.2:1.1,theme:'kim',life:.5,maxLife:.5});
+ g.effects.push({source:e.id,slot:'r',damageKind:'skill',type:'slash',x:e.x,y:e.y,r:(counter?5:3)/1.5,angle:s.angle,spread:counter?2.2:1.1,theme:'kim',life:.5,maxLife:.5});
 }
 export function cast(g,e,slot,p,d){
  if(e.key==='kim'){

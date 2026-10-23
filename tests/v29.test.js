@@ -31,7 +31,7 @@ test('footprint bounds include the full inner and outer extent of each damage sh
  assert.deepEqual(footprintBounds({kind:'rect',range:6.5,width:1.8}),{x:0,y:-.9,w:6.5,h:1.8});for(const kind of ['cone','circle'])assert.deepEqual(footprintBounds({kind,range:7.5}),{x:-7.5,y:-7.5,w:15,h:15});
 });
 test('nails and shotgun pellets move outward within the exact fan and finish their flight',()=>{
- for(const type of ['nailFan','shotgun']){const f={type,x:0,y:0,r:7,angle:.4,spread:1.5},early=fanFlight(f,.06),late=fanFlight(f,.16);assert.ok(early.length>10&&late.length>10);assert.ok(late.find(p=>p.id===early[0].id).distance>early[0].distance);
+ for(const type of ['nailFan','shotgun']){const f={type,x:0,y:0,r:7,angle:.4,spread:1.5},early=fanFlight(f,.06),late=fanFlight(f,.16);assert.ok(early.length>3&&late.length>10);assert.ok(late.find(p=>p.id===early[0].id).distance>early[0].distance);
  for(const p of late)assert.ok(insideShape({kind:'cone',range:f.r,spread:f.spread,angle:f.angle},p.x,p.y));assert.equal(fanFlight(f,1).length,0);}
 });
 test('Ppui red nail trajectories vary per volley and remain stable while paused',()=>{

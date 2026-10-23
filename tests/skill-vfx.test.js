@@ -50,7 +50,7 @@ test('classification covers slash, pierce, hit, gun and themed explosions',()=>{
 test('every champion attack uses the current per-action visual guide',()=>{
  const g=new Game('faust','top',{mode:'training'}),v=new SkillVFX();g.projectiles=[];
  for(const key of Object.keys(CHAMPION_STYLES)){
-  g.effects=[{type:'slash',theme:key,x:5,y:5,r:3,maxLife:.7,life:.7,damageKind:'basic'}];v.sync(g,camera,THEMES);
+  g.effects=[{type:'slash',theme:key,x:5,y:5,r:3,maxLife:.7,life:.7,damageKind:'basic'}];const before=v.emitters.length;v.sync(g,camera,THEMES);if(key==='ppui'){assert.equal(v.emitters.length,before);continue;}
   const e=v.emitters.at(-1),expected=combatStyle(key,g,null,{kind:'basic'});assert.equal(e.color,expected.color);assert.equal(e.element,expected.element);
  }
 });

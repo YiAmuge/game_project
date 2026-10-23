@@ -76,6 +76,8 @@ export class SkillVFX {
   for(const fx of game.effects){
    if(this.seen.has(fx))continue;this.seen.add(fx);const recipe=effectRecipe(fx);if(!recipe||!visible(fx))continue;
    const source=game.units.find(e=>e.id===fx.source)||game.champions().find(e=>e.key===recipe.theme),target=game.units.find(e=>e.id===fx.target),key=source?.key||recipe.theme;
+   if(fx.type==='whipArc'){observed.add(key);continue;}
+   if(key==='ppui'&&fx.damageKind==='basic'&&['slash','thrust'].includes(fx.type)){observed.add(key);continue;}
    if(key==='dongbaek'&&fx.type==='burst')continue;
    if(['ppui','outis'].includes(key)&&fx.slot==='r'&&['slash','thrust'].includes(fx.type))continue;
    const pressure=fx.type==='yanCleave',hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type});
@@ -93,7 +95,7 @@ export class SkillVFX {
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
-   if(!e.attackSerial||e.trainingDummy||e.key==='dongbaek'||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
+   if(!e.attackSerial||e.trainingDummy||['dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
    const attack=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'impact'})[attack];if(!kind)continue;
    const s=combatStyle(e.key,game,e,{kind:'basic'}),angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),shape={kind:attack==='sweep'?'circle':attack==='punch'?'rect':'cone',range:radius,width:radius,spread:1.7,angle};
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});

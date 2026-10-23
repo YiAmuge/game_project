@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1);errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda m:errors.append(m.text) if 'GL_INVALID_' in m.text else None)
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.30.0');page.click('#training-open');page.get_by_role('button',name='소라 선택',exact=True).click();page.click('#start')
+    expect(page.locator('.build-tag')).to_contain_text('0.31.0');page.click('#training-open');page.get_by_role('button',name='소라 선택',exact=True).click();page.click('#start')
     page.wait_for_function('__moba.renderer.atlasV17.naturalWidth>0&&__moba.renderer.atlasV13.naturalWidth>0')
     page.evaluate('''()=>{const g=__moba.game,p=g.player,s=__moba.renderer.scene25d;window.__step=g.step;g.step=()=>{};g.time=4;g.effects=[];g.pending=[];g.zones=[];g.projectiles=[];g.practice.lineStopped=true;g.units=[p,...g.units.filter(e=>e.kind==='tower')];p.buffs={};p.status={};p.facing=0;p.naturalHealing=false;p.attackAt=-99;window.__ground=s.groundFrame;s.groundFrame=()=>{const r=__moba.renderer;r.ctx.setTransform(1,0,0,1,0,0);r.ctx.clearRect(0,0,r.canvas.width,r.canvas.height);};}''')
     def pose(x,y):

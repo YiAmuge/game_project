@@ -22,7 +22,7 @@ function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material
 
 export class Renderer25D {
  constructor(base){
-  this.base=base;this.layout=MAP;this.camera=new Camera25D();this.vfx=new SkillVFX();this.dashTrails=new DashTrails();this.projectileVfx=new ProjectileVFX(this.vfx);this.championVfx=new ChampionVFX(this.vfx,this.projectileVfx);this.sceneryCamera=this.camera.native.clone();this.units=new Map();this.structures=new Map();this.walls=[];this.occlusionRay=new THREE.Raycaster();
+  this.base=base;this.layout=MAP;this.camera=new Camera25D();this.vfx=new SkillVFX();this.dashTrails=new DashTrails();this.projectileVfx=new ProjectileVFX(this.vfx);this.championVfx=new ChampionVFX(this.vfx,this.projectileVfx,base);this.sceneryCamera=this.camera.native.clone();this.units=new Map();this.structures=new Map();this.walls=[];this.occlusionRay=new THREE.Raycaster();
   this.canvas=document.createElement('canvas');this.canvas.id='arena-3d';this.canvas.setAttribute('aria-hidden','true');
   this.canvas.hidden=true;base.canvas.before(this.canvas);
   try{this.webgl=new THREE.WebGLRenderer({canvas:this.canvas,antialias:false,alpha:false,powerPreference:'high-performance',precision:'mediump'});}
