@@ -1,4 +1,5 @@
 import { leapLift } from './projection-25d.js';
+import { MotionTrails,ribbonSections,drawRibbon,captureBlade,projectBlade } from './weapon-trails.js';
 import * as CombatVisuals from './combat-visuals.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
@@ -256,6 +257,9 @@ export class Renderer {
       if(fx.type==='number')this.text(fx.text,fx.x,fx.y-(1-fx.life/fx.maxLife),fx.color,.48);
       if(fx.type==='slash'){
         const t=1-fx.life/fx.maxLife,color=THEMES[fx.theme]?.light||fx.color,side=fx.side||1,a=fx.angle+(t-.5)*fx.spread*side,r=fx.r*(.68+.22*t);
+        this.slashTrails??=new MotionTrails();
+        const samples=this.slashTrails.sample(fx,'cut',{time:game.time,key:'cut',active:true,anchor:{x:fx.x,y:fx.y-.35},inner:{x:Math.cos(a)*r*.65,y:Math.sin(a)*r*.65},outer:{x:Math.cos(a)*r,y:Math.sin(a)*r}});
+        drawRibbon(c,ribbonSections(samples,game.time,s=>({inner:{x:s.anchor.x+s.inner.x,y:s.anchor.y+s.inner.y},outer:{x:s.anchor.x+s.outer.x,y:s.anchor.y+s.outer.y}})),color);
         c.translate(fx.x,fx.y-.35);c.rotate(a);c.beginPath();c.arc(0,0,r,-.62,.62);c.strokeStyle=color;c.lineWidth=.19*(1-t)+.035;c.stroke();c.beginPath();c.arc(-.12,0,r*.85,-.48,.48);c.strokeStyle=color+'88';c.lineWidth=.07;c.stroke();
         for(let i=0;i<3;i++)this.shard(Math.cos((i-1)*.36)*r,Math.sin((i-1)*.36)*r,.09,0,color);
       }
@@ -303,12 +307,21 @@ export class Renderer {
     c.save();c.translate(from.x,from.y);c.rotate(angle);c.strokeStyle=color;c.lineWidth=.055;
     for(let i=0;i<n;i++){c.beginPath();c.ellipse(i*len/n,Math.sin(i*1.4)*.035,.15,i%2?.055:.09,0,0,Math.PI*2);c.stroke();}c.restore();
   }
+  weaponTrail(e,game,part,inner,outer,active){
+    this.weaponTrails??=new MotionTrails();
+    const c=this.ctx,project=p=>this.camera.worldToScreen(p,this.billboardPass?.075:0),origin=project(e);
+    const blade=active?captureBlade(c.getTransform(),this.dpr,this.scale,origin,inner,outer):{};
+    const key=[e.key,e.attackSerial,e.attackAt,soraEgo(game,e),game.buff(e,'mutant'),e.state.weapon].join('/');
+    const samples=this.weaponTrails.sample(e,part,{time:game.time,key,active,anchor:{x:e.x,y:e.y},...blade});
+    const sections=ribbonSections(samples,game.time,s=>projectBlade(s,project,this.scale));
+    c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);drawRibbon(c,sections,(THEMES[e.key]||THEMES.faust).light);c.restore();
+  }
   weapon(e,game){
     if(e.key==='ishmael'&&e.state.ishmaelCast?.windupUntil>game.time){const c=this.ctx,d=e.state.ishmaelCast.d;c.save();c.translate(e.x,e.y-.6);c.rotate(Math.atan2(d.y,d.x));this.line([{x:-.35,y:0},{x:1.5,y:0}],'#839c9d',.12);this.polygon([[1.9,0],[1.35,-.28],[1.48,0],[1.35,.28]],'#dcebe6','#5c9cac');c.restore();return;}
     if(e.key==='yan'){
       if(Yan.distorted(game,e))return;
       const c=this.ctx,f=FRAMES.yanSword,a=this.atlasV17,charge=Yan.chargeShape(game,e,game.input.aim),facing=e.facing||0,age=game.time-(e.attackAt??-99);
-      if(!a.complete||!a.naturalWidth)return;c.save();c.translate(e.x,e.y-.55);c.rotate(facing-(e.state.yanCharge?.65*charge.progress:age<.3?(.3-age)*3:0));c.imageSmoothingEnabled=false;c.drawImage(a,f.x,f.y,f.w,f.h,.18,-.18,2.5,.65);c.restore();return;
+      if(!a.complete||!a.naturalWidth)return;c.save();c.translate(e.x,e.y-.55);c.rotate(facing-(e.state.yanCharge?.65*charge.progress:age<.3?(.3-age)*3:0));this.weaponTrail(e,game,'sword',{x:.65,y:.145},{x:2.68,y:.145},!e.state.yanCharge&&age>=0&&age<.3);c.imageSmoothingEnabled=false;c.drawImage(a,f.x,f.y,f.w,f.h,.18,-.18,2.5,.65);c.restore();return;
     }
     if(e.key==='kim'&&e.state.swordGrab?.until>game.time)return;
     const c=this.ctx,style=game.attackStyle(e),swing=(game.time-(e.attackAt??-10))/.3,attacking=swing>=0&&swing<1,slash=['slash','sweep'].includes(style),side=(e.attackSerial||0)%2?1:-1;
@@ -316,10 +329,14 @@ export class Renderer {
     const lunge=!slash&&attacking?Math.sin(swing*Math.PI)*.38:0;
     c.save();c.translate(e.x,e.y-.45);c.rotate(a);c.translate(.25+lunge,0);
     if(game.buff(e,'mutant'))c.scale(1.15,1.15);
+    if(e.key!=='sora'&&slash){
+      const reach={faust:1.9,sinclair:1.93,honglu:1.95,heathcliff:1.7,rodya:1.52,ishmael:1.45,gregor:1.55,nelly:1.3,myo:1.5,dongbaek:1.45,dongrang:2.2,marton:2.03}[e.key]||1.7;
+      this.weaponTrail(e,game,'weapon',{x:reach*.4,y:0},{x:reach,y:0},slash&&attacking);
+    }
     if(e.key==='sora'){
       if(soraEgo(game,e)){
         // The body atlas has no arms. These detached weapons follow the cursor.
-        for(const side of [-1,1]){c.save();c.translate(.15,side*.6);c.rotate(side*(attacking?.35+Math.sin(swing*Math.PI)*.4:.16));this.polygon([[-.15,-.18],[.55,-.3],[1.18,-.44],[1.6,-.26],[1.74,.08],[1.45,.34],[.8,.3],[.25,.2]],'#171922','#65616c');for(let i=0;i<4;i++)this.polygon([[1.3,i*.16-.26],[2.15-i*.07,i*.2-.46],[1.7,i*.17-.13]],'#292835','#b9adb8');this.line([{x:.2,y:0},{x:.8,y:-.08},{x:1.45,y:.05}],'#756879',.055);c.restore();}
+        for(const side of [-1,1]){c.save();c.translate(.15,side*.6);c.rotate(side*(attacking?.35+Math.sin(swing*Math.PI)*.4:.16));this.weaponTrail(e,game,`claw-${side}`,{x:.8,y:-.08},{x:2.15,y:-.22},attacking);this.polygon([[-.15,-.18],[.55,-.3],[1.18,-.44],[1.6,-.26],[1.74,.08],[1.45,.34],[.8,.3],[.25,.2]],'#171922','#65616c');for(let i=0;i<4;i++)this.polygon([[1.3,i*.16-.26],[2.15-i*.07,i*.2-.46],[1.7,i*.17-.13]],'#292835','#b9adb8');this.line([{x:.2,y:0},{x:.8,y:-.08},{x:1.45,y:.05}],'#756879',.055);c.restore();}
       }else{
         this.chain({x:.3,y:-.3},{x:.3,y:.3},'#d6b45f');
         for(const side of [-1,1]){c.save();c.translate(.7,side*.22);this.polygon([[0,-.19],[.47,-.22],[.64,-.04],[.49,.18],[.05,.16]],'#e3dcd0','#746a54');c.fillStyle='#9d8439';c.fillRect(-.12,-.25,.2,.5);c.strokeStyle='#f4d789';c.lineWidth=.045;c.strokeRect(-.12,-.25,.2,.5);c.restore();}
