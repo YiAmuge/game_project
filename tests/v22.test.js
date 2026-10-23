@@ -28,7 +28,7 @@ test('Ishmael shock visual carries the moving source while damage resolves at th
  const {g,p}=quiet('ishmael'),t=target(g,43);g.cast(p,'q',p);p.x=42;g.cast(p,'q',p);const fx=g.effects.find(f=>f.type==='ishmaelShock');assert.equal(fx.source,p.id);close(fx.x,42);assert.ok(t.hp<100000);p.x=45;assert.equal(g.units.find(e=>e.id===fx.source).x,45);
 });
 test('Outis followup faces the dash direction, excludes the direct victim, and does not hit enemies behind',()=>{
- const {g,p}=quiet('outis'),victim=target(g,43),ahead=target(g,47),behind=target(g,38);g.cast(p,'r',victim);run(g,.8);close(100000-victim.hp,damage(g,p,450));close(100000-ahead.hp,damage(g,p,220));close(behind.hp,100000);assert.ok(p.x<41);
+ const {g,p}=quiet('outis'),victim=target(g,43),ahead=target(g,47),behind=target(g,38);g.cast(p,'r',victim);run(g,.8);close(100000-victim.hp,damage(g,p,450)*1.25);close(100000-ahead.hp,damage(g,p,220));close(behind.hp,100000);assert.ok(p.x<41);
 });
 test('Honglu insight uses a text-only countdown, not fractional stack counts',()=>{const {g,p}=quiet('honglu');g.cast(p,'q',p);const s=stackInfo(p,g);assert.equal(s.textOnly,true);assert.equal(s.label,'통찰 1.2s');assert.equal(s.max,undefined);run(g,.5);assert.match(stackInfo(p,g).label,/통찰 0\.7s/);});
 test('Meursault square reaches its far corners and excludes targets past the full width',()=>{

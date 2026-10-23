@@ -7,7 +7,7 @@ import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
 import * as Training from './training.js';
 import { ego as soraEgo,basicImpact as soraImpact } from './sora.js';
-import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, WORLD, TERRAIN, worldPoint, RUNTIME_CHAMPIONS as CHAMPIONS, lanePath } from './data.js';
+import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, WORLD, TERRAIN, MINIONS, worldPoint, RUNTIME_CHAMPIONS as CHAMPIONS, lanePath } from './data.js';
 import { distance } from './geometry.js';
 import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
@@ -102,7 +102,7 @@ export class Renderer {
       this.circle(e.x,e.y,1.9,`${dark}55`,`${color}66`);this.circle(e.x,e.y,1.45,dark,color,.1);this.circle(e.x,e.y,1.1,'#192b2c',color,.06);
       this.polygon([[e.x,e.y-.8],[e.x+.65,e.y],[e.x,e.y+.8],[e.x-.65,e.y]],color);
       if(locked){this.circle(e.x,e.y,2.25,null,`${color}66`,.045);this.text('LOCKED',e.x,e.y+2.5,color,.39);}
-      else this.text(game.towers(e.team).length===1?'본진 · 받는 피해 −50%':'본진',e.x,e.y+2.35,color,.4);
+      else this.text('본진',e.x,e.y+2.35,color,.4);
 
     } else {
       this.polygon([[e.x-.8,e.y+.7],[e.x-.7,e.y-.4],[e.x-.45,e.y-.95],[e.x+.45,e.y-.95],[e.x+.7,e.y-.4],[e.x+.8,e.y+.7]],dark,color);
@@ -116,7 +116,7 @@ export class Renderer {
     const c=this.ctx,team=e.team===0?'#92cad3':e.team===1?'#d99588':e.camp==='boss'?'#c1a0d9':e.camp==='blessing'?'#84bdc5':e.camp==='amplify'?'#c69db6':'#c7b67c';
     if(!this.billboardPass)this.circle(e.x+.1,e.y+.3,e.radius+.14,'#07161a77');
     if(e.kind==='minion') {
-      c.save();c.translate(e.x,e.y);c.scale(1.15,1.15);c.translate(-e.x,-e.y);
+      c.save();c.translate(e.x,e.y);c.scale(MINIONS.size,MINIONS.size);c.translate(-e.x,-e.y);
       if(e.siege)this.polygon([[e.x-.45,e.y-.3],[e.x+.45,e.y-.3],[e.x+.45,e.y+.3],[e.x-.45,e.y+.3]],team,'#182528');
       else if(e.ranged)this.polygon([[e.x,e.y-.38],[e.x+.32,e.y+.22],[e.x-.32,e.y+.22]],team);
       else this.circle(e.x,e.y,.24,team);

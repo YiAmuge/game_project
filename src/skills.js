@@ -216,6 +216,7 @@ export function cast(g,e,slot,p,d,options={}){
 export function damageBonus(g,e,t){
  if(!e.key)return 1;
  let b=1;
+ if(e.key==='outis'&&distance(e,t)<=2.5)b*=1.25;
  if(e.key==='sora'&&e.actionKind==='basic'&&!Sora.ego(g,e)&&Sora.marked(g,e,t))b*=1.1;
  if(e.key==='heathcliff'&&t.hp/t.maxHp>e.hp/e.maxHp)b*=1.18;
  if(g.buff(e,'mutant'))b*=1.2;
@@ -248,14 +249,13 @@ export function takedown(g,e,victim,direct){
  if(e.key==='starbuck'&&victim.kind==='neutral'&&direct)g.heal(e,e,150,false);
  V06.takedown(g,e,victim,direct);
  if(e.key==='rodya'&&victim.kind==='champion'){e.qCd=Math.max(0,e.qCd-4);e.rCd=Math.max(0,e.rCd-4);e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}
- if(e.key==='outis'&&direct)e.ammo=Math.min(ammoCap(g,e),e.ammo+(victim.kind==='champion'?1.5:.25));
  if(e.key==='gubo'&&victim.kind==='champion')e.qCd=0;
  if(e.key==='heathcliff'&&victim.kind==='champion'&&g.buff(e,'heathUlt')&&(e.state.heathExtensions||0)<4){e.state.heathExtensions++;e.buffs.heathUlt+=1+(direct?.5:0);}
 }
 export function guboBlast(g,e,victim,ratio=e.state.guboLaserFiring?.25:.2){
  const enemies=g.units.filter(t=>t.team===1-e.team&&t.alive),enemy=enemies.slice().sort((a,b)=>distance(a,victim)-distance(b,victim))[0];if(!enemy)return;
  const d=direction(victim,enemy);for(const t of enemies.filter(t=>distance(t,victim)<=14.7+t.radius)){const td=direction(victim,t);if(td.x*d.x+td.y*d.y>.4)g.deal(e,t,ratio*(g.combatPower(e)+t.maxHp),{fixed:true,proc:false});}
- g.effects.push({type:'guboBlast',x:victim.x,y:victim.y,r:14.7,angle:Math.atan2(d.y,d.x),spread:Math.acos(.4)*2,theme:'gubo',life:.8,maxLife:.8});
+ g.effects.push({type:'guboBlast',source:e.id,x:victim.x,y:victim.y,r:14.7,angle:Math.atan2(d.y,d.x),spread:Math.acos(.4)*2,theme:'gubo',life:.8,maxLife:.8});
 }
 export function endAlisaReload(g,e){if(!e.state.alisaReloadActive)return;const heat=e.state.heat||0;delete e.buffs.alisaReload;delete e.state.alisaReloadActive;e.state.heat=0;g.heal(e,e,e.maxHp*(.05+.035*heat),false);}
 export function beginAlisaDetonation(g,e,killer,{lethal=false}={}){

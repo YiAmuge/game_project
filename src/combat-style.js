@@ -2,7 +2,7 @@
 export const NEUTRAL={color:'#e6e7e9',accent:'#ffffff',dark:'#45484f',element:'metal'};
 const style=(color,element='metal',accent=color,dark='#33353b')=>({color,element,accent,dark});
 export const CHAMPION_STYLES={
- yi:style('#dce9ef','mirror'),faust:{...NEUTRAL},sinclair:{...NEUTRAL},don:{...NEUTRAL},meursault:{...NEUTRAL},gubo:{...NEUTRAL},
+ yi:style('#dce9ef','mirror'),faust:{...NEUTRAL},sinclair:{...NEUTRAL},don:style('#e5bd38','metal','#fff1a5','#79611d'),meursault:{...NEUTRAL},gubo:{...NEUTRAL},
  kim:style('#629edc','metal','#c4e9ff','#1c3458'),queequeg:style('#376c70','water','#a7d4ce','#182f36'),ppui:{...NEUTRAL},
  gahwan:style('#e8c653','metal','#fff0aa','#715930'),hohenheim:style('#83cecd','electric','#d0f2ec','#28434d'),
  alisa:style('#e69a58','fire','#f6ce80','#762f26'),marton:style('#684a32','wood','#76cbb3','#30241c'),nelly:{...NEUTRAL},
@@ -17,7 +17,7 @@ export function combatStyle(key,g,e,{kind='basic',slot,type}={}){
  let s={...(CHAMPION_STYLES[key]||NEUTRAL)};
  if(key==='sora'&&e&&g.buff(e,'soraEgo'))s=style('#171820','metal','#59606a','#050609');
  if(key==='yan'&&e&&g.buff(e,'yanDistorted'))s=style('#13141b','liquid','#454853','#030407');
- if(key==='gubo'&&e&&g.buff(e,'guboReload'))s=style('#6f162a','metal','#bb4255','#200711');
+ if(key==='gubo'&&(type==='guboBlast'||e&&g.buff(e,'guboReload')))s=style('#6f162a','metal','#bb4255','#200711');
  if(key==='myo'&&e&&g.buff(e,'rabbitFrenzy'))s=style('#efab61','metal','#ffe0a6','#784425');
  if(kind==='hit'){
   // Only explicit liquids/elements remain elemental on contact.
@@ -26,7 +26,7 @@ export function combatStyle(key,g,e,{kind='basic',slot,type}={}){
  }
  if(key==='rodya'&&kind!=='basic'&&(slot==='r'||['ice','iceAxe'].includes(type)))s=style('#c0d8e7','ice','#eff8fa','#648095');
  if(key==='sinclair'&&slot==='r')s=e?.visualCast?.healthy?style('#a9c96b','wood','#bd6f66','#4e6039'):style('#73894e','wood','#a3b378','#35432e');
- if(key==='don'&&slot==='r')s=style('#a7323f','metal','#e58a82','#40151e');
+ if(key==='don'&&e&&g.buff(e,'donLifesteal'))s=style('#a7323f','metal','#e58a82','#40151e');
  if(key==='heathcliff'&&(slot==='r'||type==='heathAura'))s=style('#60435f','metal','#9b708c','#2f1d32');
  if(key==='ryoshu'&&(type==='ryoshuStorm'||slot==='r'))s=style('#b54c40','fire','#e8a06a','#4e2227');
  if(key==='ahab'&&type==='burst')s=style('#c87645','fire','#edb877','#4f3026');

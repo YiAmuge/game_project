@@ -77,6 +77,8 @@ export class SkillVFX {
    if(this.seen.has(fx))continue;this.seen.add(fx);const recipe=effectRecipe(fx);if(!recipe||!visible(fx))continue;
    const source=game.units.find(e=>e.id===fx.source)||game.champions().find(e=>e.key===recipe.theme),target=game.units.find(e=>e.id===fx.target),key=source?.key||recipe.theme;
    if(fx.type==='whipArc'){observed.add(key);continue;}
+   // Dedicated barrage rendering owns its dark red footprint and sigils.
+   if(fx.type==='guboBlast'){observed.add(key);continue;}
    if(key==='ppui'&&fx.damageKind==='basic'&&['slash','thrust'].includes(fx.type)){observed.add(key);continue;}
    if(key==='dongbaek'&&fx.type==='burst')continue;
    if(['ppui','outis'].includes(key)&&fx.slot==='r'&&['slash','thrust'].includes(fx.type))continue;

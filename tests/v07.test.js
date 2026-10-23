@@ -53,8 +53,8 @@ test('Rudolph consumes ten SP per second and caps the new damage debuff at three
 test('Rudolph cooldown reversal also delays ready charged skills and running charge regeneration',()=>{
  for(const key of ['nelly','dongrang']){const {g,p}=quiet(key);const s=p.state,field=key==='nelly'?'knifeReady':'treeReady',charges=key==='nelly'?'knifeCharges':'treeCharges';s[field]=g.time+3;s[charges]=1;g.rewindCooldowns(p,1.5);g.step(.01);assert.ok(p.qCd>1.4);close(s[field],4.5);assert.equal(g.cast(p,'q',{x:42,y:7}),false);run(g,1.6);assert.ok(g.cast(p,'q',{x:42,y:7}));}
 });
-test('Dongbaek ultimate is instant 360 damage, gives only a timed reload buff and no bonus basic stacks',()=>{
- const {g,p,t}=quiet('dongbaek');const gap=g.reloadInterval(p);g.cast(p,'r',t);close(10000-t.hp,360*.9);assert.ok(!p.channelUntil);assert.equal(g.pending.length,0);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.reloadInterval(p)<gap);run(g,3.05);close(g.reloadInterval(p),gap);
+test('Dongbaek ultimate delivers four 105-damage pulses, gives only a timed reload buff and no bonus basic stacks',()=>{
+ const {g,p,t}=quiet('dongbaek');const gap=g.reloadInterval(p);g.cast(p,'r',t);close(10000-t.hp,105*.9);run(g,.76);close(10000-t.hp,420*.9);assert.ok(!p.channelUntil);assert.equal(g.pending.length,0);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.reloadInterval(p)<gap);run(g,3.05);close(g.reloadInterval(p),gap);
 });
 test('Dongrang grade two converts power into health and armor, never damage or incoming healing',()=>{
  const {g,p,t}=quiet('dongrang');close(p.maxHp,RULES.health[5]*1.13);close(g.armor(p),13);p.hp-=100;close(g.heal(null,p,50,false),50);p.upgrades.power=3;g.refreshEquipment(p);assert.ok(g.armor(p)>13);assert.ok(p.maxHp>RULES.health[5]*1.13);t.x=41;g.attack(p,t);close(10000-t.hp,260);

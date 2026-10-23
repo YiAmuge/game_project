@@ -2,6 +2,7 @@ import { trapPoint } from './confinement.js';
 import { AHAB, RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
+import { rectangle } from './reworks.js';
 
 export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}onRespawn(g,e);}
 export function onRespawn(g,e){if(e.key==='ahab'){e.state.order='cover';g.addBuff(e,'ahabOrder',Infinity,{copy:false});}}
@@ -56,8 +57,8 @@ export function afterDamage(g,e,t,actual,proc){
 export function basic(g,e,p,d){
  switch(e.key){
  case 'gahwan':
-  for(let i=0;i<2;i++)g.schedule(e,i*.12,()=>g.cone(e,d,g.attackRange(e),.85,43.5));
-  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=3.25+t.radius&&g.clearLine(e,t)){const v=direction(e,t);if(v.x*d.x+v.y*d.y>.5){g.deal(e,t,28.5);e.state.knockReady??={};if(t.kind!=='champion'||(e.state.knockReady[t.id]||0)<=g.time){e.state.knockReady[t.id]=g.time+2;g.startMotion(t,v,2.5,{kind:'knock',source:e});}}}
+  for(let i=0;i<2;i++)g.schedule(e,i*.12,()=>rectangle(g,e,d,g.attackRange(e),1.5,43.5));
+  rectangle(g,e,d,3.25,1.5,28.5,t=>{e.state.knockReady??={};if(t.kind!=='champion'||(e.state.knockReady[t.id]||0)<=g.time){e.state.knockReady[t.id]=g.time+2;g.startMotion(t,direction(e,t),2.5,{kind:'knock',source:e});}});
   return true;
  case 'nelly':g.cone(e,d,g.attackRange(e),1.2,210);return true;
  case 'ahab':{

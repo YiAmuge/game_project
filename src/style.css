@@ -189,3 +189,7 @@ body.in-game.training-25d .arena-shell{background:#101e2a}
 
 .ability.passive{cursor:help;background:linear-gradient(140deg,#34434b,#18282e);border-color:#7f9ba0;position:relative}.ability.passive kbd{color:#a9c9ce}.ability.passive:focus{outline:2px solid #d6d9aa}.abilities{align-items:stretch}
 @media(max-width:540px){body.in-game .hud .abilities{gap:4px}body.in-game .hud .ability{width:76px}body.in-game .hud .ability.passive{width:67px}.ability.passive span{font-size:9px}}
+
+/* The combat surface never participates in browser selection or dragging. */
+.arena-shell{user-select:none;-webkit-user-select:none}
+#arena,#arena-3d{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}

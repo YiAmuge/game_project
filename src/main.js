@@ -187,7 +187,7 @@ $('arena').addEventListener('pointerdown',e=>{
 });
 window.addEventListener('pointerup',e=>{if((e.button===2||e.target.closest?.('#q-btn'))&&game.player.key==='heathcliff'&&game.player.state.chargeAt!==undefined){if(active())releaseHeath(game,game.player,game.input.aim);else cancelHeath(game.player);}if(e.button===0){game.input.fire=false;if(active())releaseBasicCharge(game,game.player,game.input.aim);else cancelBasicCharge(game.player);}if(e.button===2&&drag){updateDrag(e);const chosen=drag.choice,owner=drag.owner;cancelDrag();if(chosen&&game.player.id===owner)skill('q',{direction:chosen});else toast('전술기 선택 취소');}});
 window.addEventListener('pointercancel',()=>{game.input.fire=false;cancelBasicCharge(game.player);});
-$('arena').addEventListener('contextmenu',e=>e.preventDefault());
+for(const type of ['contextmenu','selectstart','dragstart'])$('arena').addEventListener(type,e=>e.preventDefault());
 function mapPoint(canvas,e){const r=canvas.getBoundingClientRect();const bounds=game.bounds;return {x:bounds.x+(e.clientX-r.left)/r.width*bounds.w,y:bounds.y+(e.clientY-r.top)/r.height*bounds.h};}
 $('target-map').addEventListener('pointermove',e=>globalPoint=mapPoint($('target-map'),e));
 $('target-map').addEventListener('pointerdown',e=>{e.preventDefault();if(e.button===2){cancelGlobal();return;}if(e.button===0&&globalTarget){const point=mapPoint($('target-map'),e);if(globalKind==='summon'?Training.summon(game,summonChoice.key,summonChoice.team,point):globalKind==='teleport'?Training.teleport(game,point):skill('r',{confirmGlobal:true,point})){cancelGlobal();$('arena').focus();}else if(['teleport','summon'].includes(globalKind))toast('벽·건물·개체와 겹치지 않는 지점을 선택하세요.');}});

@@ -22,7 +22,7 @@ test('neutral and buff creep XP drops ten percent without changing gold or boss 
 test('first minion wave waits three seconds and following waves remain twenty-five seconds apart',()=>{
  const g=new Game('meursault','top',{seed:1});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};
  assert.equal(g.wave,0);assert.equal(g.units.filter(e=>e.kind==='minion').length,0);run(g,2.99);assert.equal(g.wave,0);run(g,.02);assert.equal(g.wave,1);assert.equal(g.units.filter(e=>e.kind==='minion').length,4);run(g,24.98);assert.equal(g.wave,1);run(g,.02);assert.equal(g.wave,2);
- const m=g.units.find(e=>e.kind==='minion');close(m.radius,.28*1.15);
+ const m=g.units.find(e=>e.kind==='minion');close(m.radius,.28*1.15*1.2);
 });
 test('siege minions resist all non-building final damage and retain building protection',()=>{
  const {g,p}=quiet();const m=g.entity({kind:'minion',siege:true,team:1,x:43,y:7,maxHp:10000,radius:.552});const hp=m.hp;g.deal(p,m,100,{fixed:true});close(hp-m.hp,92.5);

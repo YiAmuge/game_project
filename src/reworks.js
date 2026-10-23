@@ -36,8 +36,8 @@ export function faust(g,e,slot,p,d){
    if(e.level===RULES.maxLevel)g.status(t,'slow',.2,1.5,e);
   });g.addBuff(e,'explore',4);
  }else{
-  const len=Math.min(10,distance(e,p)),delay=e.level===RULES.maxLevel?0:1.25;e.channelUntil=g.time+delay;
-  g.pending.push({type:'burst',source:e,x:e.x+d.x*len,y:e.y+d.y*len,r:4.8,at:g.time+delay,damage:680});
+  const len=Math.min(10,distance(e,p)),delay=1.25;e.channelUntil=e.level===RULES.maxLevel?g.time:g.time+delay;
+  g.pending.push({type:'burst',source:e,x:e.x+d.x*len,y:e.y+d.y*len,r:4.8,at:g.time+delay,windup:delay,autonomous:e.level===RULES.maxLevel,damage:680});
  }
  return true;
 }
@@ -47,14 +47,14 @@ export function outis(g,e,d){
  let victim=null,finished=false;
  const blast=()=>{
   if(finished)return;finished=true;
-  const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,()=>{},{exclude:new Set(victim?[victim.id]:[])});
+  const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,t=>{if(!t.alive&&e.alive)g.addBuff(e,'outisReload',3,{copy:false});},{exclude:new Set(victim?[victim.id]:[])});
   g.effects.push({type:'outisShotgun',source:e.id,slot:'r',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:6.5,spread:Math.PI*2/3,theme:'outis',life:.5,maxLife:.5});
   if(victim){if(!g.startMotion(e,backward,2.5,{speed:18,maxSpeed:18,phaseEnemies:true,onComplete:finish}))finish();}else finish();
  };
  const ok=g.startMotion(e,d,4.5,{speed:12,maxSpeed:12,phaseEnemies:true,onStep:(from,to)=>{
   if(victim)return;
   const t=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=t.radius+e.radius+.06&&g.clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];
-  if(t){victim=t;g.deal(e,t,450);g.status(t,'stun',1,1,e);delete e.motion;settleBody(g,e,from);blast();}
+  if(t){victim=t;g.deal(e,t,450);if(!t.alive&&e.alive)g.addBuff(e,'outisReload',3,{copy:false});g.status(t,'stun',1,1,e);delete e.motion;settleBody(g,e,from);blast();}
  },onComplete:blast});if(!ok)finish();return true;
 }
 export function honglu(g,e,slot,p,d){

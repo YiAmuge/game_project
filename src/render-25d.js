@@ -10,7 +10,7 @@ import { ProjectileVFX } from './projectile-vfx.js';
 import { DashTrails } from './dash-trails.js';
 import { SkillVFX } from './skill-vfx.js';
 import { THEMES } from './art.js';
-import { projectFeet,leapLift,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
+import { projectFeet,leapLift,airborneShadow,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
 
 const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17'];
 const material=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
@@ -55,7 +55,7 @@ export class Renderer25D {
  cylinder(radius,height,x,y,z,color,group=this.world,top=radius){const m=new THREE.Mesh(new THREE.CylinderGeometry(top,radius,height,12),material(color));m.position.set(x,y,z);group.add(m);return m;}
  buildArena(){
   const b=this.layout.bounds;
-  if(this.layout.terrain){for(const t of this.layout.terrain){this.box(t.w,.8,t.h,t.x+t.w/2,-.43,t.y+t.h/2,'#263c4c');this.box(t.w-.08,.12,t.h-.08,t.x+t.w/2,-.09,t.y+t.h/2,'#344b43');}}
+  if(this.layout.terrain){for(const t of this.layout.terrain){this.box(t.w,.8,t.h,t.x+t.w/2,-.55,t.y+t.h/2,'#263c4c');this.box(t.w-.08,.12,t.h-.08,t.x+t.w/2,-.09,t.y+t.h/2,'#344b43');}}
   else {this.box(b.w,.8,b.h,b.x+b.w/2,-.43,b.y+b.h/2,'#263c4c');this.box(b.w-.3,.16,b.h-.3,b.x+b.w/2,-.1,b.y+b.h/2,'#344b50');}
   for(const a of this.layout.areas){
    this.box(a.w,.08,a.h,a.x+a.w/2,-.015,a.y+a.h/2,a.id===2?'#4b5148':a.id===5?'#525349':'#3c5252');
@@ -112,7 +112,7 @@ export class Renderer25D {
   p.draw(game,playing);
   const baseCtx=b.ctx;baseCtx.save();baseCtx.setTransform(b.dpr,0,0,b.dpr,0,0);this.championVfx.ground(baseCtx,camera,game);baseCtx.restore();
   for(const {entity:e} of this.units.values()){
-   const c=p.ctx;c.beginPath();c.ellipse(e.x,e.y,e.radius+.12,(e.radius+.12)*.65,0,0,Math.PI*2);c.fillStyle='#07161a77';c.fill();
+   if(airborneShadow(e)){const c=p.ctx;c.beginPath();c.ellipse(e.x,e.y,e.radius+.12,(e.radius+.12)*.65,0,0,Math.PI*2);c.fillStyle='#07161a77';c.fill();}
    if(e.kind==='champion'&&!e.trainingDummy)p.circle(e.x,e.y,.67,null,e.player?'#f2d98e':e.team?'#d99588':'#92cad3',.06);
   }
   const c=b.ctx;c.save();c.setTransform(b.dpr,0,0,b.dpr,0,0);this.vfx.drawGround(c,camera);c.restore();

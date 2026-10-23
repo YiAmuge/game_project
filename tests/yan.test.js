@@ -85,10 +85,10 @@ test('the hand hits target body edges inside radius 3.5 and leaves nearby target
 test('distorted sword preview and actual damage share radius 7.5 including target body edges',()=>{
  const {g,p}=quiet(),inside=target(g,51.97),outside=target(g,51.99);transform(g,p);close(skillTargeting(g,p,'q').radius,7.5);
  g.cast(p,'q',{x:44,y:7});run(g,1.7);close(inside.hp,10000);close(outside.hp,10000);run(g,.06);
- assert.ok(inside.hp<10000);assert.ok(g.stat(inside,'stun'));close(outside.hp,10000);close(g.stat(outside,'stun'),0);
+ assert.ok(inside.hp<10000);close(g.stat(inside,'slow'),.8);close(g.stat(inside,'stun'),0);close(outside.hp,10000);close(g.stat(outside,'stun'),0);
 });
-test('distorted Q quick-casts coordinates, waits 1.75 seconds, and hits a 7.5-radius area with stun',()=>{
- const {g,p}=quiet(),t=target(g,49,7);transform(g,p);assert.equal(skillTargeting(g,p,'q').confirm,false);g.cast(p,'q',{x:45,y:7});close(p.qCd,5);run(g,1.7);assert.equal(g.stat(t,'stun'),0);run(g,.06);assert.ok(g.stat(t,'stun'));assert.ok(t.hp<10000);
+test('distorted Q quick-casts coordinates, waits 1.75 seconds, and hits a 7.5-radius area with an 80 percent slow',()=>{
+ const {g,p}=quiet(),t=target(g,49,7);transform(g,p);assert.equal(skillTargeting(g,p,'q').confirm,false);g.cast(p,'q',{x:45,y:7});close(p.qCd,5);run(g,1.7);assert.equal(g.stat(t,'stun'),0);run(g,.06);close(g.stat(t,'slow'),.8);close(g.stat(t,'stun'),0);assert.ok(t.hp<10000);
 });
 test('twenty-second expiry restores size, stats, abilities and removes the hand',()=>{
  const {g,p}=quiet(),hp=p.maxHp;transform(g,p);run(g,20.02);assert.equal(Yan.distorted(g,p),false);close(p.maxHp,hp);close(p.radius,.48);close(p.state.ominous,0);assert.equal(Yan.hand(g,p),undefined);assert.equal(Yan.abilityInfo(g,p).ultimate,'도시의 의지');

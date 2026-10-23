@@ -45,7 +45,7 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='dongbaek'){
   if(slot==='q'){g.addShield(e,e.maxHp*.08,`petals-${e.id}`,3);g.addBuff(e,'flowerStride',3);}
-  else{area(g,e,p,4.2,360);g.addBuff(e,'flowerReload',3,{copy:false});g.effects.push({type:'burst',...p,r:4.2,theme:e.key,life:.65,maxLife:.65});}
+  else{const point={...p};area(g,e,point,4.2,105);for(let i=1;i<4;i++)g.schedule(e,i*.25,()=>area(g,e,point,4.2,105),{autonomous:true});g.addBuff(e,'flowerReload',3,{copy:false});g.effects.push({type:'burst',source:e.id,...point,r:4.2,theme:e.key,life:.65,maxLife:.65});}
   return true;
  }
  if(e.key==='dongrang'){

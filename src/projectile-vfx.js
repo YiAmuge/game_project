@@ -1,11 +1,10 @@
 import { combatStyle } from './combat-style.js';
-import { noise } from './organic-particles.js';
 import { projectileDimensions } from './projectile-rules.js';
 const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(light<0?n*(1+light):n+(255-n)*light).toString(16).padStart(2,'0');}).join('');
 
 export function projectileAppearance(p,g){
  const key=p.theme||p.source?.key,style=combatStyle(key,g,p.source,{kind:p.damageKind==='basic'?'basic':'projectile',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});
- const type=p.swordWave||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
+ const type=p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?.45:p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
  return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1,tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:empowered?'#a32b44':null};
@@ -81,9 +80,8 @@ export class ProjectileVFX {
   c.save();
   for(const fx of [...game.effects.filter(f=>f.type!=='whipArc'),...this.whipPulses.map(p=>({...p,life:Math.max(0,.2-(game.time-p.bornAt))}))]){
    if(!['guboLaser','whipArc'].includes(fx.type)&&!(fx.type==='line'&&fx.theme==='hohenheim'))continue;
-   const age=1-fx.life/fx.maxLife,owner=game.units.find(e=>e.id===fx.source),key=fx.theme||(fx.type==='guboLaser'?'gubo':'rudolph');
-   let end=fx.to;if(!end)continue;
-   if(key==='rudolph'){const a=noise(fx.x+fx.y,Math.floor(age*10),8)*Math.PI*2,r=Math.sqrt(noise(fx.y,Math.floor(age*10),4))*2.1675;end={x:end.x+Math.cos(a)*r,y:end.y+Math.sin(a)*r};}
+   const owner=game.units.find(e=>e.id===fx.source),key=fx.theme||(fx.type==='guboLaser'?'gubo':'rudolph');
+   const end=fx.to;if(!end)continue;
    const from=camera.worldToScreen(fx,key==='gubo'?1.35:.95),to=camera.worldToScreen(end,key==='gubo'?1.25:.5),style=beamAppearance(key);
    c.globalAlpha=Math.max(0,fx.life/fx.maxLife)*.7;c.lineCap='round';
    for(const [w,a,tone] of style.layers){c.save();c.globalAlpha*=a;c.strokeStyle=tone;c.lineWidth=w*camera.scale;c.beginPath();c.moveTo(from.x,from.y);if(key==='rudolph')c.quadraticCurveTo((from.x+to.x)/2,Math.min(from.y,to.y)-camera.scale*1.3,to.x,to.y);else c.lineTo(to.x,to.y);c.stroke();c.restore();}

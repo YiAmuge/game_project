@@ -26,8 +26,8 @@ test('reload pauses throughout ammo consumption, preserving partial progress, an
  const {g,p,t}=quiet();p.ammo=2;p.reloadProgress=.25;g.attack(p,t);run(g,.2);close(p.reloadProgress,.25);run(g,.7);assert.ok(p.reloadProgress>.25);
  p.ammo=3;p.attackCd=0;p.reloadProgress=0;g.input.fire=true;g.input.aim=t;run(g,1.1);assert.equal(p.ammo,1);close(p.reloadProgress,0);run(g,.8);assert.equal(p.ammo,0);assert.ok(p.reloadProgress>0);run(g,3);assert.ok(p.totalDamage>0);assert.ok(p.alive);
 });
-test('Faust maximum level adds exactly one magazine and 20 percent range including the actual projectile',()=>{
- const {g,p,t}=quiet();assert.equal(g.ammoCap(p),3);g.award(p,10000,0);assert.equal(g.ammoCap(p),4);close(g.attackRange(p),9);p.ammo=4;g.attack(p,t);close(g.projectiles[0].remaining,9);
+test('Faust maximum level adds exactly one magazine and piercing with an unchanged actual projectile range',()=>{
+ const {g,p,t}=quiet();assert.equal(g.ammoCap(p),3);g.award(p,10000,0);assert.equal(g.ammoCap(p),4);close(g.attackRange(p),7.5);p.ammo=4;g.attack(p,t);close(g.projectiles[0].remaining,7.5);assert.equal(g.projectiles[0].pierce,Infinity);
 });
 test('new fountain is a semicircle behind and separated from its core; recall and respawn use it',()=>{
  for(const team of [0,1]){const {g,p,t}=quiet();const e=team?t:p;Object.assign(e,FOUNTAINS[team]);assert.ok(g.inSpawn(e));Object.assign(e,CORE_POSITIONS[team]);assert.ok(!g.inSpawn(e));assert.ok(distance(WELL_ROOMS[team],CORE_POSITIONS[team])>4);g.kill(e,team?p:t);g.time=e.respawnAt;g.step(.01);assert.ok(e.alive);close(distance(e,FOUNTAINS[team]),0);}

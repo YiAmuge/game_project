@@ -19,7 +19,7 @@ export const WORLD={x:-8.5,y:-8,w:87.72,h:62.8};
 export const TERRAIN=[{x:0,y:0,w:83.2,h:46.8},{x:-10,y:16.4,w:12,h:14},{x:81.2,y:16.4,w:12,h:14},{x:29.6,y:-8,w:24,h:9.5},{x:29.6,y:45.3,w:24,h:9.5}].map(p=>({...p,x:p.x*MAP_X,w:p.w*MAP_X}));
 export const terrainContains=(x,y)=>TERRAIN.some(p=>x>=p.x&&x<=p.x+p.w&&y>=p.y&&y<=p.y+p.h);
 export const FOUNTAINS=[{x:-6.7*MAP_X,y:MAP_CENTER.y},{x:89.9*MAP_X,y:MAP_CENTER.y}];
-export const MINIONS={health:{melee:680,ranged:480,siege:1320},spawnGap:.35,growthEvery:120,maxGrowth:6,hpGrowth:.06,attackGrowth:.05};
+export const MINIONS={size:1.15*1.2,health:{melee:680,ranged:480,siege:1320},spawnGap:.35,growthEvery:120,maxGrowth:6,hpGrowth:.06,attackGrowth:.05};
 export const CAMP_RULES={radius:3.4,leashDistance:3.4,leashDelay:1.85,returnSpeed:9,neutralRespawn:20,buffRespawn:45,buffHealth:1.33,buffDuration:60,patternEvery:5,firstPattern:1.5};
 export const CORE_POSITIONS=[{x:10.2*MAP_X,y:MAP_CENTER.y},{x:RULES.width-10.2*MAP_X,y:MAP_CENTER.y}];
 export const WELL_ROOMS=[{x:-3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width+3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:1}];

@@ -24,14 +24,14 @@ test('Don rectangle hits side edges, excludes outside and heals only on each fou
  const {g,p}=quiet('don'),t=target(g,44,8.4),out=target(g,43,8.6);p.hp-=1000;g.cast(p,'q',{x:47,y:7});run(g,.74);const hp=p.hp,enemy=t.hp;close(out.hp,100000);assert.ok(t.hp<100000);run(g,.02);close(p.hp-hp,(enemy-t.hp)*.2);assert.equal(p.state.donBarrage.hits,4);
 });
 test('Faust gains nine automatic XP, loses the old earned-XP bonus and keeps max-level basic bonuses',()=>{
- const {g,p}=quiet('faust');run(g,1);close(p.xp,9);g.award(p,100,0);close(p.xp,109);g.kill(p,p);run(g,1);close(p.xp,118);g.award(p,7000,0);close(p.level,10);close(g.ammoCap(p),4);close(g.attackRange(p),9);
+ const {g,p}=quiet('faust');run(g,1);close(p.xp,9);g.award(p,100,0);close(p.xp,109);g.kill(p,p);run(g,1);close(p.xp,118);g.award(p,7000,0);close(p.level,10);close(g.ammoCap(p),4);close(g.attackRange(p),7.5);
 });
 test('Faust semicircle knocks near and far enemies beyond radius three at speed eighteen, not enemies behind',()=>{
  const {g,p}=quiet('faust'),near=target(g,41,7),far=target(g,42.8,8),behind=target(g,38,7);g.cast(p,'q',{x:44,y:7});assert.equal(near.motion.speed,18);assert.equal(far.motion.speed,18);close(behind.hp,100000);run(g,.3);assert.ok(distance(p,near)>3+near.radius);assert.ok(distance(p,far)>3+far.radius);
  const b=quiet('faust');b.p.level=10;const t=target(b.g);b.g.cast(b.p,'q',t);assert.equal(b.g.stat(t,'slow'),.2);
 });
-test('Faust R is immediate at ten and stacks power and armor for five seconds without reload or haste',()=>{
- const {g,p}=quiet('faust');p.level=10;const t=target(g,45),power=g.powerScale(p),reload=g.reloadInterval(p),haste=g.haste(p);g.cast(p,'r',t);close(p.channelUntil,g.time);g.updateDelayed(0);assert.ok(g.buff(p,'faustUlt'));close(g.powerScale(p)/power,1.1);close(g.armor(p),10);close(g.reloadInterval(p),reload);close(g.haste(p),haste);close(p.buffs.faustUlt-g.time,5);
+test('Faust R automatically detonates after 1.25 seconds at ten and stacks power and armor for five seconds without reload or haste',()=>{
+ const {g,p}=quiet('faust');p.level=10;const t=target(g,45),power=g.powerScale(p),reload=g.reloadInterval(p),haste=g.haste(p);g.cast(p,'r',t);close(p.channelUntil,g.time);g.updateDelayed(0);assert.equal(g.buff(p,'faustUlt'),false);run(g,1.25);assert.ok(g.buff(p,'faustUlt'));close(g.powerScale(p)/power,1.1);close(g.armor(p),10);close(g.reloadInterval(p),reload);close(g.haste(p),haste);close(p.buffs.faustUlt-g.time,5);
 });
 test('Gubo bullet crosses terrain and every enemy with linear five-percent decay capped at thirty',()=>{
  const {g,p}=quiet('gubo');p.range=20;p.sniperReady=100;const ts=Array.from({length:9},(_,i)=>target(g,42+i*1.5));g.map.walls=[{x:44,y:4,w:.4,h:6}];g.attack(p,{x:65,y:7});run(g,1.3);ts.forEach((t,i)=>close(100000-t.hp,expected(g,p,360)*(1-Math.min(.3,i*.05))));
@@ -59,9 +59,9 @@ for(const progress of [0,.49,.5,1])test(`Heathcliff hold/release charge ${progre
  const {g,p}=quiet('heathcliff');g.cast(p,'q',{x:60,y:7});g.time=progress*1.5;const c=Skills.heathCharge(g,p,{x:60,y:7});close(c.range,.5+6.5*progress);close(c.damage,80+170*progress);close(c.stun,progress<.5?0:progress);assert.ok(Skills.releaseHeath(g,p,{x:60,y:7}));assert.equal(p.state.chargeAt,undefined);assert.ok(p.motion);close(p.motion.total,c.range);assert.ok(p.qCd>0);
 });
 test('Heathcliff holds a full charge until release and cancels under CC without cooldown',()=>{const {g,p}=quiet('heathcliff');g.cast(p,'q',{x:47,y:7});run(g,2);close(p.x,40);assert.equal(Skills.heathCharge(g,p,{x:47,y:7}).progress,1);g.status(p,'stun',1,1);run(g,.01);assert.equal(p.state.chargeAt,undefined);close(p.qCd,0);});
-test('Outis basic damage is exactly 215 at near and far range',()=>{for(const x of [42,47]){const {g,p}=quiet('outis'),t=target(g,x);g.attack(p,t);run(g,.5);close(100000-t.hp,damageFormula(215,4,1)*g.powerScale(p));}});
+test('Outis basic damage gains 25 percent within 2.5 range',()=>{for(const x of [42,47]){const {g,p}=quiet('outis'),t=target(g,x);g.attack(p,t);run(g,.5);close(100000-t.hp,damageFormula(215,4,1)*g.powerScale(p)*(x===42?1.25:1));}});
 test('Outis R contact damages once then retreats and excludes that target from the forward blast',()=>{
- const {g,p}=quiet('outis'),t=target(g,43),back=target(g,47);g.cast(p,'r',{x:48,y:7});assert.ok(p.state.outisRush);const hp=p.hp;g.deal(t,p,100,{damageKind:'skill'});close(hp-p.hp,damageFormula(100,4,1)*g.powerScale(t)*.5);run(g,.8);close(100000-t.hp,damageFormula(450,4,1)*g.powerScale(p));close(100000-back.hp,damageFormula(220,4,1)*g.powerScale(p));assert.ok(p.x<41);assert.equal(p.state.outisRush,undefined);assert.ok(canOccupy(g,p,p));
+ const {g,p}=quiet('outis'),t=target(g,43),back=target(g,47);g.cast(p,'r',{x:48,y:7});assert.ok(p.state.outisRush);const hp=p.hp;g.deal(t,p,100,{damageKind:'skill'});close(hp-p.hp,damageFormula(100,4,1)*g.powerScale(t)*.5);run(g,.8);close(100000-t.hp,damageFormula(450,4,1)*g.powerScale(p)*1.25);close(100000-back.hp,damageFormula(220,4,1)*g.powerScale(p));assert.ok(p.x<41);assert.equal(p.state.outisRush,undefined);assert.ok(canOccupy(g,p,p));
 });
 test('Outis R maximum distance produces a forward blast and terrain blocks that blast',()=>{for(const wall of [false,true]){const {g,p}=quiet('outis'),t=target(g,48);if(wall)g.map.walls=[{x:43,y:3,w:1,h:8}];g.cast(p,'r',{x:50,y:7});run(g,.6);if(wall)close(t.hp,100000);else assert.ok(t.hp<100000);assert.equal(g.projectiles.length,0);assert.ok(!p.motion);assert.ok(!g.blocked(p.x,p.y,p.radius));}});
 test('Marton uses a near 190 sweep with stride or distant 100 root and channel refreshes taunt',()=>{

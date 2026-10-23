@@ -89,7 +89,7 @@ export function cast(g,e,slot,p){
  }else if(distorted(g,e)){
   const point={...p};g.effects.push({source:e.id,theme:'yan',slot:'q',type:'yanSwordWarning',...point,r:YAN.distortedQRadius,life:YAN.distortedQDelay,maxLife:YAN.distortedQDelay});
   g.schedule(e,YAN.distortedQDelay,()=>{
-   for(const t of [...g.units])if(g.hostile(e,t)&&distance(point,t)<=YAN.distortedQRadius+t.radius&&g.clearLine(point,t)){g.deal(e,t,YAN.distortedQDamage);g.status(t,'stun',1,1.5,e);}
+   for(const t of [...g.units])if(g.hostile(e,t)&&distance(point,t)<=YAN.distortedQRadius+t.radius&&g.clearLine(point,t)){g.deal(e,t,YAN.distortedQDamage);g.status(t,'slow',.8,1.5,e);}
    g.effects.push({source:e.id,theme:'yan',type:'yanGreatsword',...point,r:YAN.distortedQRadius,life:.7,maxLife:.7});
   });
  }else{
