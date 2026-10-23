@@ -1,5 +1,7 @@
 import { combatStyle } from './combat-style.js';
 import { noise } from './organic-particles.js';
+import { projectileDimensions } from './projectile-rules.js';
+const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(light<0?n*(1+light):n+(255-n)*light).toString(16).padStart(2,'0');}).join('');
 
 export function projectileAppearance(p,g){
  const key=p.theme||p.source?.key,style=combatStyle(key,g,p.source,{kind:p.damageKind==='basic'?'basic':'projectile',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});
@@ -13,7 +15,7 @@ export class ProjectileVFX {
   const key=type+color+tint;if(this.sprites.has(key))return this.sprites.get(key);
   if(this.sprites.size>=64)this.sprites.delete(this.sprites.keys().next().value);
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=96;const c=canvas.getContext('2d');c.translate(64,48);
-  const metal=c.createLinearGradient(0,-15,0,15);metal.addColorStop(0,tint?'#ff9aa7':'#fafbfc');metal.addColorStop(.3,color);metal.addColorStop(.52,tint?'#f3657e':'#f4f4f4');metal.addColorStop(1,tint?'#4f1224':'#4b5057');
+  const metal=c.createLinearGradient(0,-15,0,15);metal.addColorStop(0,tint?tintTone(color,.45):'#fafbfc');metal.addColorStop(.3,color);metal.addColorStop(.52,tint?tintTone(color,.12):'#f4f4f4');metal.addColorStop(1,tint?tintTone(color,-.6):'#4b5057');
   c.fillStyle=metal;c.strokeStyle='#27313b';c.lineWidth=1.2;c.lineJoin='round';
   if(type==='wave'){
    for(let i=0;i<7;i++){c.beginPath();c.moveTo(-25-i*2,-40+i*3);c.bezierCurveTo(35+i,0,35+i,0,-25-i*2,40-i*3);c.strokeStyle=i%2?color:'#f2f5fa';c.lineWidth=5-i*.6;c.globalAlpha=.8-i*.08;c.stroke();}c.globalAlpha=1;
@@ -25,7 +27,7 @@ export class ProjectileVFX {
    c.beginPath();c.moveTo(type==='knife'?-15:16,-8);c.quadraticCurveTo(30,-10,52,0);c.lineTo(19,9);c.lineTo(type==='knife'?-15:16,6);c.closePath();c.fill();c.stroke();
    if(type==='harpoon'){for(const side of [-1,1]){c.beginPath();c.moveTo(27,side*4);c.lineTo(14,side*18);c.lineTo(16,side*5);c.closePath();c.fill();c.stroke();}}
    if(type==='nail'){c.fillStyle=metal;c.fillRect(-45,-10,6,20);}else{c.fillStyle='#afa18c';c.fillRect(-21,-10,5,20);for(let i=0;i<5;i++){c.strokeStyle='#958474';c.beginPath();c.moveTo(-43+i*4,-4);c.lineTo(-39+i*4,4);c.stroke();}}
-   c.strokeStyle=tint?'#ff9ca9':'#f5f8fa';c.lineWidth=1;c.beginPath();c.moveTo(-12,-3);c.lineTo(43,-1);c.stroke();
+   c.strokeStyle=tint?tintTone(color,.5):'#f5f8fa';c.lineWidth=1;c.beginPath();c.moveTo(-12,-3);c.lineTo(43,-1);c.stroke();
   }else if(type==='glass'){
    c.fillStyle=metal;c.beginPath();c.moveTo(-28,-7);c.lineTo(19,-14);c.lineTo(45,0);c.lineTo(5,14);c.lineTo(-32,4);c.closePath();c.fill();
    c.strokeStyle='#f7ffff';for(const pts of [[[-28,-7],[5,4],[45,0]],[[19,-14],[5,4],[5,14]]]){c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();}
@@ -34,19 +36,20 @@ export class ProjectileVFX {
   }else{
    // A bevelled metal bullet, with cap, seams and a tapered nose.
    c.beginPath();c.moveTo(-39,-7);c.lineTo(12,-7);c.quadraticCurveTo(37,-5,48,0);c.quadraticCurveTo(37,5,12,7);c.lineTo(-39,7);c.closePath();c.fill();c.stroke();
-   c.fillStyle='#aeb2b5';c.fillRect(-40,-8,5,16);c.strokeStyle='#3a424b';c.beginPath();c.moveTo(10,-7);c.lineTo(10,7);c.stroke();c.strokeStyle='#fff';c.beginPath();c.moveTo(-30,-3);c.lineTo(22,-2);c.stroke();
+   c.fillStyle=tint?tintTone(color,-.2):'#aeb2b5';c.fillRect(-40,-8,5,16);c.strokeStyle='#3a424b';c.beginPath();c.moveTo(10,-7);c.lineTo(10,7);c.stroke();c.strokeStyle=tint?tintTone(color,.65):'#fff';c.beginPath();c.moveTo(-30,-3);c.lineTo(22,-2);c.stroke();
   }
   this.sprites.set(key,canvas);return canvas;
  }
  draw(c,camera,game){
   c.save();
   for(const p of game.projectiles){
-   const style=projectileAppearance(p,game),at=camera.worldToScreen(p,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy||0,p.dx||1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);
-   if(at.x<-150||at.x>camera.width+150||at.y<-150||at.y>camera.height+150)continue;
+   const style=projectileAppearance(p,game),at=camera.worldToScreen(p,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy??0,p.dx??1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);
+   const {width,length}=projectileDimensions(style,camera.scale),margin=Math.max(150,Math.hypot(width,length)/2+30);
+   if(at.x<-margin||at.x>camera.width+margin||at.y<-margin||at.y>camera.height+margin)continue;
    let h=this.histories.get(p);if(!h){h=[];this.histories.set(p,h);}if(!h.length||h.at(-1).time!==game.time){h.push({x:p.x,y:p.y,time:game.time});if(h.length>5)h.shift();}
-   const width=style.width*camera.scale,length=style.type==='wave'?width*.7:Math.max(width*2.5,camera.scale*.65),rotation=style.spin?(game.time-(p.bornAt||0))*28:Math.atan2(next.y-at.y,next.x-at.x);
+   const rotation=style.spin?(game.time-(p.bornAt||0))*28:Math.atan2(next.y-at.y,next.x-at.x);
    if(h.length>1){const tail=camera.worldToScreen(h[0],style.height),dx=at.x-tail.x,dy=at.y-tail.y,n=Math.hypot(dx,dy);if(n>1){c.save();c.translate(tail.x,tail.y);c.rotate(Math.atan2(dy,dx));c.globalAlpha=.16;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),0,-Math.max(1,width*.45),n,Math.max(2,width*.9));c.restore();}}
-   c.save();c.translate(at.x,at.y);c.rotate(rotation);c.globalAlpha=.9;c.drawImage(this.sprite(style.type,style.color),-length/2,-width*.6,length,width*1.2);c.restore();
+   c.save();c.translate(at.x,at.y);c.rotate(rotation);c.globalAlpha=1;c.drawImage(this.sprite(style.type,style.color,{tint:p.source?.key==='myo'&&p.slot==='q'}),-length/2,-width*.6,length,width*1.2);c.restore();
   }
   c.restore();
  }

@@ -182,8 +182,9 @@ export class Renderer25D {
   // Reuse atlas draws directly instead of uploading a canvas texture per entity.
   this.vfx.prepare(this.camera,r.width,r.height);
   const old=r.billboardPass,oldVfx=r.skillVfx;r.billboardPass=true;r.skillVfx=this.vfx;
-  try{for(const {entity:e} of [...this.units.values()].sort((a,b)=>a.entity.y-b.entity.y||a.entity.id-b.entity.id)){
-   this.vfx.drawUntil(c,e.y);if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
+  const actors=[...this.units.values()].map(a=>({e:a.entity,tree:false}));for(const z of game.zones)if(z.kind==='desireTree'&&z.until>game.time)actors.push({e:z,tree:true});
+  try{for(const {e,tree} of actors.sort((a,b)=>a.e.y-b.e.y||(a.e.id||0)-(b.e.id||0))){
+   this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-1.55,'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-2,'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}

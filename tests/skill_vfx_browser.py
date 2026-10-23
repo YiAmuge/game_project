@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  browser=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1);errors=[]
  page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda m:errors.append(m.text) if 'GL_INVALID_' in m.text else None)
- page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.29.0')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.30.0')
  page.click('#training-open');page.get_by_role('button',name='알리사 선택',exact=True).click();page.click('#start');page.click('#training-panel-toggle')
  page.wait_for_function('__moba.renderer.atlasV08.naturalWidth>0')
  page.evaluate('''async()=>{window.V=await import('./src/skill-vfx.js');window.A=await import('./src/art.js');const g=__moba.game;g.step=()=>{};g.practice.lineStopped=true;g.units=[g.player];g.effects=[];g.projectiles=[];g.zones=[];Object.assign(g.player,{x:25,y:38});g.time=10;__moba.renderer.draw(g,true);window.burst=(kind,key,element,age=.2)=>{const g=__moba.game,r=__moba.renderer,v=r.scene25d.vfx;v.clear();g.effects=[];g.projectiles=[];g.zones=[];g.time=10;v.advance(10);const t=A.THEMES[key];v.emit(kind,{x:28,y:38},10,{radius:kind==='explosion'?4:2,angle:-.25,color:t.light,accent:t.accent,dark:t.dark,element,seed:12});g.time+=age;r.draw(g,true);};}''')

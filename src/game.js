@@ -21,6 +21,7 @@ import * as Combat from './combat-events.js';
 import { steer } from './navigation.js';
 import { separate,moveBody,canOccupy,settleBody,solid } from './collision.js';
 import { skillTargeting, castPoint } from './targeting.js';
+import { projectileHitWidth } from './projectile-rules.js';
 
 export function damageFormula(base,power=3,level=3,armor=0) {
   return base*RULES.power[power]*(.85+.05*level)*100/(100+Math.max(0,armor));
@@ -617,12 +618,12 @@ export class Game {
   }
   updateProjectiles(dt) {
     for(const p of this.projectiles) {
-      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius){this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true});p.onHit?.(t,p);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
+      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius+projectileHitWidth(p)){this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true});p.onHit?.(t,p);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
       const travel=Math.min(p.remaining,p.speed*dt),n=Math.max(1,Math.ceil(travel/.18));
       for(let i=0;i<n&&p.remaining>0;i++) {
         p.x+=p.dx*travel/n;p.y+=p.dy*travel/n;p.remaining-=travel/n;
         if(!p.ignoreTerrain&&this.blocked(p.x,p.y,.08)){p.remaining=0;break;}
-        const t=this.units.find(t=>(this.hostile(p.source,t)||p.allowFriendly&&this.canGuboHitAlly(p.source,t))&&!p.hitIds.has(t.id)&&distance(p,t)<=t.radius+p.width);
+        const t=this.units.find(t=>(this.hostile(p.source,t)||p.allowFriendly&&this.canGuboHitAlly(p.source,t))&&!p.hitIds.has(t.id)&&distance(p,t)<=t.radius+projectileHitWidth(p));
         if(t) {
           p.hitIds.add(t.id);p.lastHpRatio=t.hp/t.maxHp;
           p.beforeHit?.(t,p);this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly,nonLethal:p.nonLethal,proc:p.proc??true});

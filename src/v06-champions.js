@@ -30,7 +30,7 @@ export function basic(g,e,p,d){
    g.deal(e,t,165*(1+.12*Math.min(4,hits.n)));hits.n++;hits.at=g.time;
   }
   if(e.state.usedPetal&&e.state.petals===0)e.status.disarm={amount:1,until:g.time+2.85,theme:e.key};
-  g.effects.push({type:'slash',x:e.x,y:e.y,angle:e.facing,spread:1.3,r:g.attackRange(e),theme:e.key,life:.4,maxLife:.4});return true;
+  g.effects.push({source:e.id,damageKind:'basic',type:'petalFan',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),spread:1.3,r:g.attackRange(e),shape:{kind:'cone',range:g.attackRange(e),spread:1.3,angle:Math.atan2(d.y,d.x)},theme:e.key,life:.48,maxLife:.48});return true;
  }
  if(e.key==='dongrang'){for(const z of g.zones)if(z.kind==='desireTree'&&z.source===e&&z.golden&&z.until>g.time&&distance(e,z)<=g.attackRange(e)&&g.clearLine(e,z)){const v=direction(e,z);if(v.x*d.x+v.y*d.y>=Math.cos(.95)){z.until=g.time;g.heal(e,e,e.maxHp*.07,false);}}g.zones=g.zones.filter(z=>z.until>g.time);g.cone(e,d,g.attackRange(e),1.9,260);return true;}
  return false;
@@ -40,7 +40,7 @@ export function cast(g,e,slot,p,d){
  if(e.key==='myo'){
   if(slot==='q'){
    e.ammo-=1;e.attackCd=Math.max(e.attackCd,.35);e.lastAttackAt=g.time;
-   for(let i=0;i<4;i++)g.schedule(e,i*.075,()=>{const a=Math.atan2(d.y,d.x)+(i-1.5)*.045;g.bullet(e,{x:Math.cos(a),y:Math.sin(a)},65,7,{speed:24,width:.14,onHit:t=>{if(t.kind==='champion'){t.state.rabbitMark??={};t.state.rabbitMark[e.id]=g.time+3;t.visuals.rabbitMark={until:g.time+3,theme:'myo'};}}});});
+   for(let i=0;i<4;i++)g.schedule(e,i*.075,()=>{const a=Math.atan2(d.y,d.x)+(i-1.5)*.045;g.bullet(e,{x:Math.cos(a),y:Math.sin(a)},65,7,{slot:'q',speed:24,width:.14,onHit:t=>{if(t.kind==='champion'){t.state.rabbitMark??={};t.state.rabbitMark[e.id]=g.time+3;t.visuals.rabbitMark={until:g.time+3,theme:'myo'};}}});});
   }else{g.addBuff(e,'rabbitFrenzy',4.5,{copy:false});s.frenzyWas=true;e.ammo=Math.min(g.ammoCap(e),e.ammo+1);}return true;
  }
  if(e.key==='dongbaek'){

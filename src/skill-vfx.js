@@ -49,14 +49,14 @@ export class SkillVFX {
   let n=0;for(const p of this.particles){if(time-p.born<p.life)this.particles[n++]=p;else this.free.push(p);}this.particles.length=n;
   this.emitters=this.emitters.filter(e=>time-e.born<e.life);
  }
- emit(kind,point,time,{radius=1,angle=0,color='#e6e7e9',accent=color,dark='#2a272c',element='metal',seed,count,height=0,shape=null,body=false,ownerId=null,follow=false,beam=false,life:lifeOverride,light:lightOverride}={}){
+ emit(kind,point,time,{radius=1,angle=0,color='#e6e7e9',accent=color,dark='#2a272c',element='metal',seed,count,height=0,shape=null,body=false,ownerId=null,follow=false,beam=false,pressure=false,life:lifeOverride,light:lightOverride}={}){
   const preset=VFX_PRESETS[kind];if(!preset||!Number.isFinite(time)||![point.x,point.y,radius,angle].every(Number.isFinite)||!/^#[\da-f]{6}$/i.test(color))return null;
   if(!/^#[\da-f]{6}$/i.test(accent))accent=color;if(!/^#[\da-f]{6}$/i.test(dark))dark='#2a272c';
   radius=clamp(radius,.05,32);const scale=kind==='explosion'?clamp(radius/4,.5,1.8):1,motion=ELEMENT_MOTION[element]||{};
   let state=(seed??++this.serial)>>>0;const random=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
-  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,height,shape,body,ownerId,follow,beam,life:lifeOverride||preset.life*(motion.life||1),light:lightOverride??preset.light,ring:!body&&preset.ring};
+  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,height,shape,body,ownerId,follow,beam,pressure,life:lifeOverride||preset.life*(motion.life||1),light:lightOverride??preset.light,ring:!body&&preset.ring};
   if(this.emitters.length>=VFX_LIMITS.emitters)this.emitters.shift();this.emitters.push(emitter);
-  const total=clamp(Math.round(count??(body?9:preset.count)),1,VFX_LIMITS.particles);
+  const total=clamp(Math.round(count??(body?9:preset.count)),0,VFX_LIMITS.particles);
   for(let i=0;i<total;i++){
    const p=this.free.pop()||this.particles.shift(),fan=random()-.5;
    const a=kind==='slash'?angle+fan*2.4:kind==='pierce'||kind==='shot'?angle+fan*.75:random()*Math.PI*2;
@@ -65,7 +65,7 @@ export class SkillVFX {
    const life=emitter.life*(.65+random()*.35),size=preset.size*(.55+random()*.7)*scale*(form==='spark'?.22:['smoke','mist','frost'].includes(form)?1.8:form==='bolt'?.25:.7);
    Object.assign(p,{x:point.x+Math.cos(a)*offset,y:point.y+Math.sin(a)*offset,z:height+(kind==='shot'?.8:.12),
     vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,vz:(body?1.5:preset.lift)*(.6+random()*.6)*Math.sqrt(scale)*(motion.lift||1),
-    gravity:(body?8:preset.gravity)*(motion.gravity||1),drag:preset.drag*(motion.drag||1),born:time,life,size:body?Math.min(.075,size):element==='metal'?Math.min(.16,size):size,volume:shape?emitter:null,body,ownerId,anchorX:point.x,anchorY:point.y,height,form,color,accent,dark,element,rotation:random()*Math.PI*2,spin:(random()-.5)*7,variant:Math.floor(random()*4),phase:random()*20});
+    gravity:(body?8:preset.gravity)*(motion.gravity||1),drag:preset.drag*(motion.drag||1),born:time,life,size:body?Math.min(.12,size*1.55):element==='metal'?Math.min(.16,size):size,volume:shape?emitter:null,body,ownerId,anchorX:point.x,anchorY:point.y,height,form,color,accent,dark,element,rotation:random()*Math.PI*2,spin:(random()-.5)*7,variant:Math.floor(random()*4),phase:random()*20});
    this.particles.push(p);
   }
   return emitter;
@@ -78,12 +78,12 @@ export class SkillVFX {
    const source=game.units.find(e=>e.id===fx.source)||game.champions().find(e=>e.key===recipe.theme),target=game.units.find(e=>e.id===fx.target),key=source?.key||recipe.theme;
    if(key==='dongbaek'&&fx.type==='burst')continue;
    if(['ppui','outis'].includes(key)&&fx.slot==='r'&&['slash','thrust'].includes(fx.type))continue;
-   const hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type});
+   const pressure=fx.type==='yanCleave',hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type});
    const angle=fx.angle??(fx.to?Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x):0),shape=hit?null:visualShape(fx),kind=hit?s.shape:fx.type==='yanCleave'?'impact':['ishmael','meursault','heathcliff'].includes(key)?'impact':key==='yan'&&fx.type==='yanWave'?'slash':recipe.kind;
    if(key==='kim'&&fx.spread>2)s.color='#a0cce8';
    observed.add(key);
    if(hit){const id='hit/'+(target?.id??[fx.x,fx.y].join('/'));this.lastHits??=new Map();if(game.time-(this.lastHits.get(id)??-99)<.065)continue;this.lastHits.set(id,game.time);if(this.lastHits.size>300)this.lastHits.clear();}
-   this.emit(kind,fx.type==='whipArc'?fx.to:fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.45:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',beam:fx.type==='guboLaser',body:hit,shape,count:hit?8:undefined,life:hit?.2:undefined});
+   this.emit(kind,fx.type==='whipArc'?fx.to:fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.6:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',beam:fx.type==='guboLaser',body:hit,shape,pressure,count:pressure?0:hit?12:undefined,light:pressure?0:undefined,life:hit?.3:undefined});
    if(key==='gahwan'&&hit)this.emit('impact',fx,game.time,{color:'#8a3039',accent:'#a9555d',dark:'#38171f',element:'blood',height:bodyHeight(target||{kind:'champion'}),body:true,ownerId:target?.id,count:3,life:.2,radius:.2});
   }
   for(const p of game.projectiles){
@@ -93,7 +93,7 @@ export class SkillVFX {
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
-   if(!e.attackSerial||e.trainingDummy||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
+   if(!e.attackSerial||e.trainingDummy||e.key==='dongbaek'||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
    const attack=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'impact'})[attack];if(!kind)continue;
    const s=combatStyle(e.key,game,e,{kind:'basic'}),angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),shape={kind:attack==='sweep'?'circle':attack==='punch'?'rect':'cone',range:radius,width:radius,spread:1.7,angle};
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});
@@ -141,7 +141,7 @@ export class SkillVFX {
   ctx.save();
   while(this.cursor<this.frame.length&&this.frame[this.cursor].pose.y<=depth){
    const f=this.frame[this.cursor++],{p,pose,screen:s,size}=f,hot=pose.progress<.65&&!['smoke','mist','frost','woodchip','leaf','petal'].includes(p.form);
-   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=pose.alpha*.75;
+   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=pose.alpha*(p.body?1:.75);
    if(p.form==='bolt'){this.drawBolt(ctx,f);continue;}
    if(p.form==='spark'){
     const old=particlePose(p,Math.max(p.born,this.time-.035)),current=particlePose(p,this.time);old.x+=pose.x-current.x;old.y+=pose.y-current.y;old.z+=pose.z-current.z;const tail=this.camera.worldToScreen(old,old.z+.075);
@@ -166,7 +166,7 @@ export class SkillVFX {
  drawFlashes(ctx,camera){
   ctx.save();ctx.globalCompositeOperation='source-over';
   for(const e of this.emitters){
-   const age=this.time-e.born;if(e.body)continue;if(age<0||age>.12||!['shot','pierce','impact','explosion'].includes(e.kind))continue;
+   const age=this.time-e.born;if(e.body||e.pressure)continue;if(age<0||age>.12||!['shot','pierce','impact','explosion'].includes(e.kind))continue;
    const s=camera.worldToScreen(e,e.kind==='shot'?.8:.2),toward=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.kind==='shot'?.8:.2);
    const size=camera.scale*(e.kind==='explosion'?.85:e.kind==='impact'?.45:.5)*(1-age/.12);
    ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.atan2(toward.y-s.y,toward.x-s.x));ctx.globalAlpha=(1-age/.12)**2*.48;
@@ -178,8 +178,8 @@ export class SkillVFX {
  }
  drawBodyHits(c,camera){
   for(const e of this.emitters.filter(e=>e.body)){
-   const age=this.time-e.born;if(age<0||age>.2)continue;const owner=this.game?.units.find(a=>a.id===e.ownerId),point=owner||e,at=camera.worldToScreen(point,e.height),size=camera.scale*e.radius;
-   c.save();c.globalAlpha=(1-age/.2)*.95;c.translate(at.x,at.y-leapLift(point)*camera.scale);c.rotate(e.angle);c.drawImage(this.strokes.texture(['slash','pierce'].includes(e.kind)?e.kind:'impact',e),-size,-size,size*2,size*2);c.restore();
+   const age=this.time-e.born;if(age<0||age>.3)continue;const owner=this.game?.units.find(a=>a.id===e.ownerId),point=owner||e,at=camera.worldToScreen(point,e.height),size=camera.scale*e.radius;
+   c.save();c.globalAlpha=(1-age/.3)**.7;c.translate(at.x,at.y-leapLift(point)*camera.scale);c.rotate(e.angle);c.drawImage(this.strokes.texture(['slash','pierce'].includes(e.kind)?e.kind:'impact',e),-size,-size,size*2,size*2);c.restore();
   }
  }
  groundDisc(ctx,camera,e,radius,draw){

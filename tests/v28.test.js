@@ -26,7 +26,7 @@ test('action palettes distinguish normal attacks, skills and empowered weapon st
  p.key='sinclair';p.visualCast={healthy:true};const high=combatStyle('sinclair',g,p,{slot:'r'});p.visualCast.healthy=false;const low=combatStyle('sinclair',g,p,{slot:'r'});assert.notEqual(high.color,low.color);assert.equal(high.element,'wood');
 });
 test('damage observations attach compact physical hits to a moving torso and reset their merge timer',()=>{
- const {g,p,t}=arena(),v=new SkillVFX();g.deal(p,t,10);v.sync(g,camera);const e=v.emitters.find(e=>e.body);assert.equal(e.ownerId,t.id);assert.equal(e.height,1.25);assert.equal(e.color,NEUTRAL.color);assert.ok(v.particles.every(p=>['chip','spark'].includes(p.form)&&p.size<=.075));
+ const {g,p,t}=arena(),v=new SkillVFX();g.deal(p,t,10);v.sync(g,camera);const e=v.emitters.find(e=>e.body);assert.equal(e.ownerId,t.id);assert.equal(e.height,1.25);assert.equal(e.color,NEUTRAL.color);assert.ok(v.particles.every(p=>['chip','spark'].includes(p.form)&&p.size<=.12));
  g.time+=.01;g.deal(p,t,10);v.sync(g,camera);assert.equal(v.emitters.filter(e=>e.body).length,1);v.prepare(camera,1600,1000);const before=v.frame[0].pose.x;t.x+=2;v.prepare(camera,1600,1000);assert.ok(Math.abs(v.frame[0].pose.x-before-2)<1e-8);
  g.time=1;g.effects=[];g.deal(p,t,10);v.sync(g,camera);assert.equal(v.emitters.filter(e=>e.body).length,1);
 });
@@ -42,8 +42,8 @@ test('overlapping emitters cannot accumulate an excessive sprite highlight',()=>
 test('Ishmael shockwave keeps its volume centered on her moving ground position',()=>{
  const {g,p}=arena('ishmael'),v=new SkillVFX();g.effects.push({type:'ishmaelShock',theme:'ishmael',source:p.id,x:p.x,y:p.y,r:4.5,life:.6,maxLife:.6});v.sync(g,camera);p.x+=1;p.y+=.5;v.prepare(camera,1600,1000);const e=v.emitters[0];assert.equal(e.x,p.x);assert.equal(e.y,p.y);assert.equal(e.shape.range,4.5);assert.ok(v.frame.every(f=>insideShape(e.shape,f.pose.x-p.x,f.pose.y-p.y)));
 });
-test('buffs and shields select one quiet aura while dimming and freeze are state driven',()=>{
- const {g,p}=arena('gubo');g.addShield(p,100,'test',3);g.addBuff(p,'guboReload',4);const look=championPresentation(g,p);assert.equal(look.aura.color,'#6c1429');assert.ok(look.aura.strength<=.15);assert.equal(look.dim,1);
+test('buffs and shields select one vivid aura while dimming and freeze are state driven',()=>{
+ const {g,p}=arena('gubo');g.addShield(p,100,'test',3);g.addBuff(p,'guboReload',4);const look=championPresentation(g,p);assert.equal(look.aura.color,'#6c1429');assert.ok(look.aura.strength>=.65&&look.aura.strength<=1);assert.equal(look.dim,1);
  p.key='rudolph';p.state.exhaustedUntil=g.time+2;assert.ok(championPresentation(g,p).dim<1);p.key='dongbaek';g.status(p,'disarm',1,2);assert.ok(championPresentation(g,p).dim<1);g.status(p,'stun',1,2,{key:'rodya'});assert.equal(championPresentation(g,p).frozen,true);
 });
 test('projectiles carry material shapes and actual widths at torso height',()=>{

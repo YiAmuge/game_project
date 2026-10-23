@@ -29,6 +29,13 @@ export class AttackStrokes {
     c.beginPath();c.moveTo(118+Math.cos(a)*r,96+Math.sin(a)*r*.9);c.quadraticCurveTo(118+Math.cos(a-.2)*(r+4),96+Math.sin(a-.2)*r*.9,118+Math.cos(a-.4)*(r-len*.18),96+Math.sin(a-.4)*(r-len)*.9);
     c.strokeStyle=white(.15+noise(i,variant,5)*.4);c.lineWidth=.35+noise(i,variant,13);c.stroke();
    }
+  }else if(kind==='pressure'){
+   // One connected compression front stretched over the complete sword lane.
+   const glow=c.createLinearGradient(0,96,256,96);glow.addColorStop(0,white(.2));glow.addColorStop(.3,white(.85));glow.addColorStop(.85,white(1));glow.addColorStop(1,white(.55));
+   c.strokeStyle=glow;c.beginPath();c.moveTo(0,96);
+   for(const side of [-1,1])for(let i=0;i<=96;i++){
+    const t=side<0?i/96:1-i/96,x=t*256,w=Math.sin(t*Math.PI)**.45*85,y=96+side*w+(noise(t*8,side,variant+13)-.5)*6*Math.sin(t*Math.PI);c.lineTo(x,y);
+   }c.closePath();c.globalAlpha=.2;c.lineWidth=19;c.stroke();c.globalAlpha=1;c.lineWidth=6;c.stroke();c.lineWidth=2;c.stroke();
   }else if(kind==='pierce'){
    // A dense nose and axial spine peel into asymmetric, flowing filaments.
 
@@ -74,6 +81,7 @@ export class AttackStrokes {
    const n=noise(x/19,y/19,variant+7),grain=noise(x/4,y/4,variant+11),i=(y*256+x)*4,light=.7+n*.3;
    for(let j=0;j<3;j++)pixels.data[i+j]=Math.round(rgb[j]*light);pixels.data[i+3]=Math.round(36+n*36+grain*17);
   }c.putImageData(pixels,0,0);c.lineCap='round';
+  if(e.kind==='pressure'){this.fields.set(key,canvas);return canvas;}
   const directional=e.shape?.kind==='rect'||!e.shape&&['pierce','shot'].includes(e.kind);
   for(let i=0;i<28;i++){
    const n=noise(i,variant,4),a=i*2.399,r=14+n*126;c.beginPath();
@@ -87,9 +95,9 @@ export class AttackStrokes {
  }
  drawFootprint(ctx,camera,e,alpha,progress=0){
   const b=footprintBounds(e.shape),o=camera.worldToScreen(e,.12),x=camera.worldToScreen({x:e.x+1,y:e.y},.12),y=camera.worldToScreen({x:e.x,y:e.y+1},.12);
-  ctx.save();clipShape(ctx,camera,e);ctx.translate(o.x,o.y);ctx.transform(x.x-o.x,x.y-o.y,y.x-o.x,y.y-o.y,0,0);ctx.rotate(e.shape.angle||0);ctx.globalAlpha=alpha;ctx.drawImage(this.fieldTexture(e),b.x,b.y,b.w,b.h);
+  ctx.save();clipShape(ctx,camera,e);ctx.translate(o.x,o.y);ctx.transform(x.x-o.x,x.y-o.y,y.x-o.x,y.y-o.y,0,0);ctx.rotate(e.shape.angle||0);ctx.globalAlpha=alpha;ctx.drawImage(this.fieldTexture(e.pressure?{...e,kind:'pressure'}:e),b.x,b.y,b.w,b.h);
   if(e.kind!=='field'){
-   ctx.globalAlpha=alpha*.85;const kind=e.kind==='slash'?'slash':e.kind==='impact'||e.kind==='explosion'?'impact':'pierce';
+   ctx.globalAlpha=alpha*.85;const kind=e.pressure?'pressure':e.kind==='slash'?'slash':e.kind==='impact'||e.kind==='explosion'?'impact':'pierce';
    if(e.shape.kind==='rect')ctx.drawImage(this.texture(kind,e),b.x,b.y,b.w,b.h);
    else if(kind==='pierce')ctx.drawImage(this.texture(kind,e),0,-e.radius*.7,e.radius,e.radius*1.4);
    else{ctx.rotate(kind==='slash'?progress*2.1:0);const r=e.radius*(kind==='impact'?.65+progress*.35:1.12);ctx.drawImage(this.texture(kind,{...e,color:e.accent||e.color}),-r,-r,r*2,r*2);}
