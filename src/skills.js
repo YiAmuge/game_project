@@ -125,7 +125,7 @@ export function basic(g,e,p,d,options={}){
  case 'alisa':e.state.heat=Math.min(5,(e.state.heat||0)+1);cone(g.attackRange(e),1.1,140*(1+.1*e.state.heat),t=>applyBurn(g,e,t));return true;
  case 'rudolph':
   // 3 hits/s and 10 SP/s; top up basic's 1 SP charge to 10/3 per tick.
-  e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(10/3-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'whipArc',x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:2.1675,color:'#ed883d',life:.2,maxLife:.2});area(g,e,whipPoint,2.1675,t=>{decayMentalWhip(g,t);return 48*(1+.15*(t.state?.mentalWhip?.[e.id]?.stage||0));},t=>mentalWhip(g,e,t));return true;
+  e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(10/3-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'whipArc',source:e.id,x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:2.1675,color:'#ed883d',life:.2,maxLife:.2});area(g,e,whipPoint,2.1675,t=>{decayMentalWhip(g,t);return 48*(1+.15*(t.state?.mentalWhip?.[e.id]?.stage||0));},t=>mentalWhip(g,e,t));return true;
  case 'moses':{
   const color=e.state.smoke;e.state.smoke=null;cone(g.attackRange(e),1.1,180,t=>{if(color==='down')g.status(t,'stun',1,.7,e);if(color==='left'){g.status(t,'slow',.2,3,e);g.status(t,'vulnerable',.12,3,e);}});
   if(['up','right'].includes(color))for(const a of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5)){const toward=direction(e,a);if(toward.x*d.x+toward.y*d.y<.4&&a!==e)continue;if(color==='up')g.addBuff(a,'mosesWhite',4);else {g.addShield(a,200,`smoke-${e.id}`);g.addBuff(a,'mosesHeal',2);}g.support(e);}
@@ -186,7 +186,7 @@ export function cast(g,e,slot,p,d,options={}){
   }else{const ice=p=>g.zones.push({kind:'ice',source:e,...p,r:4.725,until:g.time+3.5,nextTick:g.time,tickEvery:.5,damage:50,slow:.5,reloadWeak:.5,weak:.5,firstDebuffOnly:true,debuffDuration:1.3,championsOnly:true});g.bullet(e,d,360,8,{width:.36,visualScale:1.2,onHit:(t,b)=>{if(b.lastHpRatio>=.5)g.deal(e,t,108);g.status(t,'stun',1,1,e);ice({x:t.x,y:t.y});},onEnd:ice});}
   return true;
  case 'outis':
-  if(slot==='q')dash(g,e,d,3,0,()=>{},{offensive:true,onComplete:()=>{let hit=false;area(g,e,e,2.5,180,t=>{g.status(t,'slow',.2,1.5,e);if(t.kind==='champion')hit=true;});if(hit)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}});
+  if(slot==='q')dash(g,e,d,3,0,()=>{},{offensive:true,onComplete:()=>{g.effects.push({type:'outisSpin',source:e.id,theme:'outis',slot:'q',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.4,maxLife:.4});let hit=false;area(g,e,e,2.5,180,t=>{g.status(t,'slow',.2,1.5,e);if(t.kind==='champion')hit=true;});if(hit)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}});
   else return Reworks.outis(g,e,d);
   return true;
  case 'gregor':return Gregor.cast(g,e,slot,d,()=>gregorStack(g,e,2));

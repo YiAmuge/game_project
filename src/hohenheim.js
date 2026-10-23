@@ -17,7 +17,7 @@ function fire(g,e,point){
  g.action(e,'basic',()=>{const beam=()=>{
   const targets=g.units.filter(t=>g.hostile(e,t)&&g.clearLine(e,t)&&distance(e,t)<=shape.range+t.radius).filter(t=>{const dx=t.x-e.x,dy=t.y-e.y;return dx*shape.d.x+dy*shape.d.y>=0&&Math.abs(dx*shape.d.y-dy*shape.d.x)<=shape.width+t.radius;}).sort((a,b)=>distance(e,a)-distance(e,b));
   targets.forEach((t,j)=>g.deal(e,t,shape.damage*(j?.8:1)));
-  g.effects.push({type:'line',x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},color:'#84edee',theme:'hohenheim',charge:shape.progress,life:.19,maxLife:.19});
+  g.effects.push({type:'line',source:e.id,x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},color:'#84edee',theme:'hohenheim',charge:shape.progress,life:.19,maxLife:.19});
  };beam();for(let i=1;i<shape.hits;i++)g.schedule(e,i*HOHENHEIM.burstGap,beam);});return true;
 }
 export function attack(g,e,p){

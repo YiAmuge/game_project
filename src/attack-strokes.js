@@ -1,9 +1,12 @@
 import { noise,organicPixels } from './organic-particles.js';
+import { clipShape } from './combat-style.js';
+
+export function footprintBounds(shape){const r=shape.range;return shape.kind==='rect'?{x:0,y:-shape.width/2,w:r,h:shape.width}:{x:-r,y:-r,w:r*2,h:r*2};}
 
 // Original grayscale brushwork inspired by the reference silhouettes only.
 // No reference pixels, colors, lettering or watermarks are used.
 export class AttackStrokes {
- constructor(){this.masks=new Map();this.tints=new Map();}
+ constructor(){this.masks=new Map();this.tints=new Map();this.fields=new Map();}
  mask(kind,variant=0){
   const key=kind+'/'+variant;if(this.masks.has(key))return this.masks.get(key);
   const canvas=document.createElement('canvas');canvas.width=256;canvas.height=192;
@@ -61,7 +64,39 @@ export class AttackStrokes {
   const mask=this.mask(kind,variant),canvas=document.createElement('canvas');canvas.width=256;canvas.height=192;
   const c=canvas.getContext('2d');c.drawImage(mask,0,0);c.globalCompositeOperation='source-in';c.fillStyle=e.color;c.fillRect(0,0,256,192);this.tints.set(key,canvas);return canvas;
  }
+ fieldTexture(e){
+  const variant=Math.floor((e.x+e.y+(e.born||0))*13)&1,key=[e.kind,e.shape?.kind,e.element,e.color,e.accent,variant].join('/');if(this.fields.has(key))return this.fields.get(key);
+  if(this.fields.size>=96)this.fields.delete(this.fields.keys().next().value);
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const c=canvas.getContext('2d'),pixels=c.createImageData(256,256),rgb=[1,3,5].map(i=>parseInt(e.color.slice(i,i+2),16));
+  // A low-density continuous material binds the whole hit volume, including its
+  // rim. Sharp filaments give it direction without leaving empty damage areas.
+  for(let y=0;y<256;y++)for(let x=0;x<256;x++){
+   const n=noise(x/19,y/19,variant+7),grain=noise(x/4,y/4,variant+11),i=(y*256+x)*4,light=.7+n*.3;
+   for(let j=0;j<3;j++)pixels.data[i+j]=Math.round(rgb[j]*light);pixels.data[i+3]=Math.round(36+n*36+grain*17);
+  }c.putImageData(pixels,0,0);c.lineCap='round';
+  const directional=e.shape?.kind==='rect'||!e.shape&&['pierce','shot'].includes(e.kind);
+  for(let i=0;i<28;i++){
+   const n=noise(i,variant,4),a=i*2.399,r=14+n*126;c.beginPath();
+   if(directional){const y=8+i*8.8;c.moveTo(-8,y);c.bezierCurveTo(60,y+(n-.5)*26,172,y-(n-.5)*25,268,y+(n-.5)*9);}
+   else if(e.kind==='slash'){c.arc(128,128,r,a,a+1.4+n*1.5);}
+   else{c.moveTo(128+Math.cos(a)*r*.1,128+Math.sin(a)*r*.1);c.lineTo(128+Math.cos(a+.06)*r,128+Math.sin(a+.06)*r);}
+   c.strokeStyle=i%4===0?(e.accent||'#ffffff'):e.color;c.globalAlpha=.3+n*.5;c.lineWidth=i%5===0?4+n*3:.6+n*1.7;c.stroke();
+  }
+  if(!directional&&e.kind!=='slash')for(const r of [32,63,96,126]){c.beginPath();for(let j=0;j<=96;j++){const a=j*Math.PI/48,n=noise(j*.3,r,variant+1),rad=r+(n-.5)*5;j?c.lineTo(128+Math.cos(a)*rad,128+Math.sin(a)*rad):c.moveTo(128+Math.cos(a)*rad,128+Math.sin(a)*rad);}c.strokeStyle=e.accent||'#fff';c.globalAlpha=.45;c.lineWidth=1.6;c.stroke();}
+  this.fields.set(key,canvas);return canvas;
+ }
+ drawFootprint(ctx,camera,e,alpha,progress=0){
+  const b=footprintBounds(e.shape),o=camera.worldToScreen(e,.12),x=camera.worldToScreen({x:e.x+1,y:e.y},.12),y=camera.worldToScreen({x:e.x,y:e.y+1},.12);
+  ctx.save();clipShape(ctx,camera,e);ctx.translate(o.x,o.y);ctx.transform(x.x-o.x,x.y-o.y,y.x-o.x,y.y-o.y,0,0);ctx.rotate(e.shape.angle||0);ctx.globalAlpha=alpha;ctx.drawImage(this.fieldTexture(e),b.x,b.y,b.w,b.h);
+  if(e.kind!=='field'){
+   ctx.globalAlpha=alpha*.85;const kind=e.kind==='slash'?'slash':e.kind==='impact'||e.kind==='explosion'?'impact':'pierce';
+   if(e.shape.kind==='rect')ctx.drawImage(this.texture(kind,e),b.x,b.y,b.w,b.h);
+   else if(kind==='pierce')ctx.drawImage(this.texture(kind,e),0,-e.radius*.7,e.radius,e.radius*1.4);
+   else{ctx.rotate(kind==='slash'?progress*2.1:0);const r=e.radius*(kind==='impact'?.65+progress*.35:1.12);ctx.drawImage(this.texture(kind,{...e,color:e.accent||e.color}),-r,-r,r*2,r*2);}
+  }ctx.restore();
+ }
  draw(ctx,camera,e,time){
+  if(e.shape){const age=time-e.born,duration=e.kind==='field'?Infinity:e.kind==='explosion'?.65:e.kind==='shot'?.2:.4;if(age<0||age>duration)return;this.drawFootprint(ctx,camera,e,e.kind==='field'?.5:.95*(1-age/duration)**.65,Math.min(1,age/duration*2));return;}
   const age=time-e.born,duration=e.kind==='explosion'?.48:e.kind==='shot'?.18:.34;if(age<0||age>duration)return;
   const kind=e.kind==='slash'?'slash':['pierce','shot'].includes(e.kind)?'pierce':'impact',t=age/duration,ease=1-Math.exp(-t*7),radius=e.kind==='explosion'?e.radius:e.kind==='impact'?.8+ease*1.2:e.radius;
   const origin=camera.worldToScreen(e,.16),x=camera.worldToScreen({x:e.x+1,y:e.y},.16),y=camera.worldToScreen({x:e.x,y:e.y+1},.16);

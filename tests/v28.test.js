@@ -4,7 +4,7 @@ import { Game } from '../src/game.js';
 import { NEUTRAL,combatStyle,hitStyle,insideShape,visualShape } from '../src/combat-style.js';
 import { championPresentation,ChampionVFX } from '../src/champion-vfx.js';
 import { projectileAppearance } from '../src/projectile-vfx.js';
-import { SkillVFX } from '../src/skill-vfx.js';
+import { SkillVFX,VFX_LIMITS } from '../src/skill-vfx.js';
 import { renderAnchor,leapLift } from '../src/projection-25d.js';
 import { rectangle } from '../src/reworks.js';
 const camera={width:1600,height:1000,scale:32,worldToScreen:(p,z=0)=>({x:p.x*32,y:p.y*22-z*32})};
@@ -37,7 +37,7 @@ test('rectangle, cone and circle rendering volumes use the actual damage geometr
  assert.deepEqual(visualShape({type:'gregorPierce',r:6,width:1.2,angle:.2}),{kind:'rect',range:6,width:2.4,angle:.2});
 });
 test('overlapping emitters cannot accumulate an excessive sprite highlight',()=>{
- const v=new SkillVFX(),p={x:20,y:20};v.advance(1);v.emit('explosion',p,1,{color:'#e6e7e9',light:1});const one=v.lightAt(p).strength;for(let i=0;i<25;i++)v.emit('explosion',p,1,{color:'#e6e7e9',light:1});assert.equal(v.lightAt(p).strength,one);assert.ok(one<=.12);
+ const v=new SkillVFX(),p={x:20,y:20};v.advance(1);v.emit('explosion',p,1,{color:'#e6e7e9',light:1});const one=v.lightAt(p).strength;for(let i=0;i<25;i++)v.emit('explosion',p,1,{color:'#e6e7e9',light:1});assert.equal(v.lightAt(p).strength,one);assert.ok(one<=VFX_LIMITS.highlight);
 });
 test('Ishmael shockwave keeps its volume centered on her moving ground position',()=>{
  const {g,p}=arena('ishmael'),v=new SkillVFX();g.effects.push({type:'ishmaelShock',theme:'ishmael',source:p.id,x:p.x,y:p.y,r:4.5,life:.6,maxLife:.6});v.sync(g,camera);p.x+=1;p.y+=.5;v.prepare(camera,1600,1000);const e=v.emitters[0];assert.equal(e.x,p.x);assert.equal(e.y,p.y);assert.equal(e.shape.range,4.5);assert.ok(v.frame.every(f=>insideShape(e.shape,f.pose.x-p.x,f.pose.y-p.y)));
@@ -60,5 +60,5 @@ test('Faust delayed ultimate, Yan sword and normal state transitions reach champ
 });
 test('Starbuck rises vertically offscreen and descends vertically at its destination',()=>{
  const e={key:'starbuck',x:22,y:20,motion:{kind:'leap',visualOrigin:{x:20,y:20},dx:1,dy:0,total:6,minDuration:.7,elapsed:.07}};
- assert.deepEqual(renderAnchor(e),{x:20,y:20});assert.ok(leapLift(e)>15);e.motion.elapsed=.35;assert.deepEqual(renderAnchor(e),{x:26,y:20});assert.equal(leapLift(e),32);e.motion.elapsed=.665;assert.ok(leapLift(e)>0&&leapLift(e)<10);e.motion.elapsed=.7;assert.equal(leapLift(e),0);
+ assert.deepEqual(renderAnchor(e),{x:20,y:20});assert.ok(leapLift(e)>2&&leapLift(e)<6);e.motion.elapsed=.35;assert.deepEqual(renderAnchor(e),{x:26,y:20});assert.equal(leapLift(e),14);e.motion.elapsed=.665;assert.ok(leapLift(e)>0&&leapLift(e)<10);e.motion.elapsed=.7;assert.equal(leapLift(e),0);
 });

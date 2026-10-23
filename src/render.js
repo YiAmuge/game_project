@@ -1,6 +1,6 @@
 import { combatStyle } from './combat-style.js';
 import { championPresentation } from './champion-vfx.js';
-import { leapLift } from './projection-25d.js';
+import { leapLift,renderAnchor } from './projection-25d.js';
 import { MotionTrails,ribbonSections,drawRibbon,captureBlade,projectBlade } from './weapon-trails.js';
 import * as CombatVisuals from './combat-visuals.js';
 import * as Yan from './yan.js';
@@ -31,7 +31,7 @@ export class Renderer {
     this.camera=game.training25d?this.scene25d.camera:this.flatCamera;
     if(this.scene25d)this.scene25d.canvas.hidden=!game.training25d;
   }
-  follow(game,playing){this.prepare(game);this.camera.update(this.width,this.height,game.player,playing);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
+  follow(game,playing){this.prepare(game);this.camera.update(this.width,this.height,renderAnchor(game.player),playing);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
   point(clientX,clientY) {const r=this.canvas.getBoundingClientRect();return this.camera.screenToWorld(clientX-r.left,clientY-r.top);}
   circle(x,y,r,fill,stroke=null,width=.07) {const c=this.ctx;c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
   line(points,color,width,dash=[]) {const c=this.ctx;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.setLineDash(dash);c.stroke();c.setLineDash([]);}
@@ -249,6 +249,7 @@ export class Renderer {
     c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);drawRibbon(c,sections,combatStyle(e.key,game,e,{kind:'basic'}).color);c.restore();
   }
   weapon(e,game){
+    if(e.key==='starbuck'&&e.motion?.kind==='leap')return;
     if(e.key==='ishmael'&&e.state.ishmaelCast?.windupUntil>game.time){const c=this.ctx,d=e.state.ishmaelCast.d;c.save();c.translate(e.x,e.y-.6);c.rotate(Math.atan2(d.y,d.x));this.line([{x:-.35,y:0},{x:1.5,y:0}],'#839c9d',.12);this.polygon([[1.9,0],[1.35,-.28],[1.48,0],[1.35,.28]],'#dcebe6','#5c9cac');c.restore();return;}
     if(e.key==='yan'){
       if(Yan.distorted(game,e))return;

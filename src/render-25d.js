@@ -7,6 +7,7 @@ import { championHud,orderMark,championEffects } from './overlays.js';
 import * as CombatVisuals from './combat-visuals.js';
 import { ChampionVFX } from './champion-vfx.js';
 import { ProjectileVFX } from './projectile-vfx.js';
+import { DashTrails } from './dash-trails.js';
 import { SkillVFX } from './skill-vfx.js';
 import { THEMES } from './art.js';
 import { projectFeet,leapLift,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
@@ -21,7 +22,7 @@ function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material
 
 export class Renderer25D {
  constructor(base){
-  this.base=base;this.layout=MAP;this.camera=new Camera25D();this.vfx=new SkillVFX();this.championVfx=new ChampionVFX(this.vfx);this.projectileVfx=new ProjectileVFX(this.vfx);this.sceneryCamera=this.camera.native.clone();this.units=new Map();this.structures=new Map();this.walls=[];this.occlusionRay=new THREE.Raycaster();
+  this.base=base;this.layout=MAP;this.camera=new Camera25D();this.vfx=new SkillVFX();this.dashTrails=new DashTrails();this.projectileVfx=new ProjectileVFX(this.vfx);this.championVfx=new ChampionVFX(this.vfx,this.projectileVfx);this.sceneryCamera=this.camera.native.clone();this.units=new Map();this.structures=new Map();this.walls=[];this.occlusionRay=new THREE.Raycaster();
   this.canvas=document.createElement('canvas');this.canvas.id='arena-3d';this.canvas.setAttribute('aria-hidden','true');
   this.canvas.hidden=true;base.canvas.before(this.canvas);
   try{this.webgl=new THREE.WebGLRenderer({canvas:this.canvas,antialias:false,alpha:false,powerPreference:'high-performance',precision:'mediump'});}
@@ -182,7 +183,7 @@ export class Renderer25D {
   this.vfx.prepare(this.camera,r.width,r.height);
   const old=r.billboardPass,oldVfx=r.skillVfx;r.billboardPass=true;r.skillVfx=this.vfx;
   try{for(const {entity:e} of [...this.units.values()].sort((a,b)=>a.entity.y-b.entity.y||a.entity.id-b.entity.id)){
-   this.vfx.drawUntil(c,e.y);this.championVfx.body(c,this.camera,e,game);at(e,()=>r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
+   this.vfx.drawUntil(c,e.y);if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-1.55,'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-2,'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}
@@ -203,7 +204,7 @@ export class Renderer25D {
  }
  draw(game,playing){
   if(this.game!==game){for(const group of this.structures.values())dispose(group);this.units.clear();this.structures.clear();this.sceneryDirty=true;this.floorStamp=null;this.occlusionStamp=null;this.game=game;this.configureArena(game);}
-  this.vfx.sync(game,this.camera,THEMES);this.championVfx.sync(game);
+  this.vfx.sync(game,this.camera,THEMES);this.championVfx.sync(game);this.dashTrails.sync(game);
   this.unitsFrame(game);this.staticFloor(game);this.structureFrame(game);
   this.occlusion(game);
   const pan=this.sceneryAnchor?sceneryPan(this.camera,this.sceneryAnchor):{x:Infinity,y:Infinity};

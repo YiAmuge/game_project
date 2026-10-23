@@ -4,16 +4,16 @@ import { AttackStrokes } from './attack-strokes.js';
 import { leapLift } from './projection-25d.js';
 // Render-only effects: gameplay X/Y is the ground, Z is height (Three.js Y).
 // Analytic motion uses simulation time, so pause, low FPS and replay stay stable.
-export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384};
+export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384,highlight:.28,lights:8};
 export const CHAMPION_ELEMENTS=Object.fromEntries(Object.entries(CHAMPION_STYLES).map(([k,v])=>[k,v.element]));
 const ELEMENT_FORMS={metal:['chip','spark','spark'],ice:['crystal','spark','frost'],electric:['bolt','spark','spark'],wood:['woodchip','leaf','spark'],water:['drop','drop','mist'],liquid:['drop','drop','mist'],petal:['petal','petal','spark'],mirror:['crystal','crystal','spark'],feather:['feather','smoke','feather'],arcane:['spark','chip','spark'],blood:['drop','spark','spark']};
 const ELEMENT_MOTION={electric:{speed:1.25,life:.75,drag:1.2},ice:{lift:.85,gravity:1.25},wood:{speed:.8,gravity:.75,drag:1.35},water:{lift:.9,gravity:1.2},petal:{gravity:.6,drag:1.4}};
 export const VFX_PRESETS={
- explosion:{count:80,speed:23,lift:11,life:1.55,size:.66,drag:6,gravity:22,light:.16,ring:true},
- slash:{count:18,speed:12,lift:5.5,life:.8,size:.15,drag:7,gravity:18,light:.025,ring:false},
- pierce:{count:16,speed:22,lift:4,life:.7,size:.13,drag:7.5,gravity:18,light:.025,ring:false},
- impact:{count:20,speed:14,lift:7,life:.85,size:.21,drag:7,gravity:22,light:.035,ring:false},
- shot:{count:12,speed:26,lift:3.5,life:.48,size:.13,drag:9,gravity:20,light:.035,ring:false},
+ explosion:{count:80,speed:23,lift:11,life:1.55,size:.66,drag:6,gravity:22,light:.4,ring:true},
+ slash:{count:18,speed:12,lift:5.5,life:.8,size:.15,drag:7,gravity:18,light:.08,ring:false},
+ pierce:{count:16,speed:22,lift:4,life:.7,size:.13,drag:7.5,gravity:18,light:.08,ring:false},
+ impact:{count:20,speed:14,lift:7,life:.85,size:.21,drag:7,gravity:22,light:.12,ring:false},
+ shot:{count:12,speed:26,lift:3.5,life:.48,size:.13,drag:9,gravity:20,light:.12,ring:false},
 };
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
@@ -33,7 +33,7 @@ export function particlePose(p,time){
 export function effectRecipe(fx){
  const kinds={burst:'explosion',ryoshuStorm:'explosion',martonExplosion:'explosion',slash:'slash',
   yanCleave:'slash',soraClaw:'slash',hongluSweep:'slash',thrust:'pierce',gregorPierce:'pierce',yanWave:'pierce',
-  strikeRect:'pierce',nellyProc:'slash',impact:'impact',soraShockwave:'impact',ishmaelShock:'impact',yanGreatsword:'impact',guboLaser:'shot',whipArc:'shot',nailVolley:'shot',guboBlast:'explosion'};
+  outisSpin:'slash',outisShotgun:'pierce',strikeRect:'pierce',nellyProc:'slash',impact:'impact',soraShockwave:'impact',ishmaelShock:'impact',yanGreatsword:'impact',guboLaser:'shot',whipArc:'shot',nailVolley:'shot',guboBlast:'explosion'};
  const kind=fx.type==='line'&&fx.theme==='hohenheim'?'shot':kinds[fx.type];if(!kind)return null;
  return {kind,theme:fx.theme||({hongluSweep:'honglu',yanCleave:'yan',yanWave:'yan',yanGreatsword:'yan',nailVolley:'ppui',soraClaw:'sora'}[fx.type])};
 }
@@ -49,12 +49,12 @@ export class SkillVFX {
   let n=0;for(const p of this.particles){if(time-p.born<p.life)this.particles[n++]=p;else this.free.push(p);}this.particles.length=n;
   this.emitters=this.emitters.filter(e=>time-e.born<e.life);
  }
- emit(kind,point,time,{radius=1,angle=0,color='#e6e7e9',accent=color,dark='#2a272c',element='metal',seed,count,height=0,shape=null,body=false,ownerId=null,follow=false,life:lifeOverride,light:lightOverride}={}){
+ emit(kind,point,time,{radius=1,angle=0,color='#e6e7e9',accent=color,dark='#2a272c',element='metal',seed,count,height=0,shape=null,body=false,ownerId=null,follow=false,beam=false,life:lifeOverride,light:lightOverride}={}){
   const preset=VFX_PRESETS[kind];if(!preset||!Number.isFinite(time)||![point.x,point.y,radius,angle].every(Number.isFinite)||!/^#[\da-f]{6}$/i.test(color))return null;
   if(!/^#[\da-f]{6}$/i.test(accent))accent=color;if(!/^#[\da-f]{6}$/i.test(dark))dark='#2a272c';
   radius=clamp(radius,.05,32);const scale=kind==='explosion'?clamp(radius/4,.5,1.8):1,motion=ELEMENT_MOTION[element]||{};
   let state=(seed??++this.serial)>>>0;const random=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
-  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,height,shape,body,ownerId,follow,life:lifeOverride||preset.life*(motion.life||1),light:lightOverride??preset.light,ring:!body&&preset.ring};
+  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,height,shape,body,ownerId,follow,beam,life:lifeOverride||preset.life*(motion.life||1),light:lightOverride??preset.light,ring:!body&&preset.ring};
   if(this.emitters.length>=VFX_LIMITS.emitters)this.emitters.shift();this.emitters.push(emitter);
   const total=clamp(Math.round(count??(body?9:preset.count)),1,VFX_LIMITS.particles);
   for(let i=0;i<total;i++){
@@ -76,12 +76,14 @@ export class SkillVFX {
   for(const fx of game.effects){
    if(this.seen.has(fx))continue;this.seen.add(fx);const recipe=effectRecipe(fx);if(!recipe||!visible(fx))continue;
    const source=game.units.find(e=>e.id===fx.source)||game.champions().find(e=>e.key===recipe.theme),target=game.units.find(e=>e.id===fx.target),key=source?.key||recipe.theme;
+   if(key==='dongbaek'&&fx.type==='burst')continue;
+   if(['ppui','outis'].includes(key)&&fx.slot==='r'&&['slash','thrust'].includes(fx.type))continue;
    const hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type});
-   const angle=fx.angle??(fx.to?Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x):0),shape=hit?null:visualShape(fx),kind=hit?s.shape:['ishmael','meursault','heathcliff'].includes(key)?'impact':key==='yan'&&fx.type==='yanWave'?'slash':recipe.kind;
+   const angle=fx.angle??(fx.to?Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x):0),shape=hit?null:visualShape(fx),kind=hit?s.shape:fx.type==='yanCleave'?'impact':['ishmael','meursault','heathcliff'].includes(key)?'impact':key==='yan'&&fx.type==='yanWave'?'slash':recipe.kind;
    if(key==='kim'&&fx.spread>2)s.color='#a0cce8';
    observed.add(key);
    if(hit){const id='hit/'+(target?.id??[fx.x,fx.y].join('/'));this.lastHits??=new Map();if(game.time-(this.lastHits.get(id)??-99)<.065)continue;this.lastHits.set(id,game.time);if(this.lastHits.size>300)this.lastHits.clear();}
-   this.emit(kind,fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.45:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',body:hit,shape,count:hit?8:undefined,life:hit?.2:undefined});
+   this.emit(kind,fx.type==='whipArc'?fx.to:fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.45:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',beam:fx.type==='guboLaser',body:hit,shape,count:hit?8:undefined,life:hit?.2:undefined});
    if(key==='gahwan'&&hit)this.emit('impact',fx,game.time,{color:'#8a3039',accent:'#a9555d',dark:'#38171f',element:'blood',height:bodyHeight(target||{kind:'champion'}),body:true,ownerId:target?.id,count:3,life:.2,radius:.2});
   }
   for(const p of game.projectiles){
@@ -97,9 +99,9 @@ export class SkillVFX {
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});
   }
   for(const z of game.zones||[]){
-   if(this.seenZones.has(z))continue;this.seenZones.add(z);if(!visible(z))continue;
+   if(['waterfall','desireTree'].includes(z.kind)||this.seenZones.has(z))continue;this.seenZones.add(z);if(!visible(z))continue;
    const element=({waterfall:'water',ice:'ice',desireTree:'wood',electricBloom:'electric'}[z.kind])||'mirror',s=combatStyle(z.source?.key,game,z.source,{kind:'zone',slot:'r',type:z.kind});
-   this.emit('explosion',z,game.time,{...s,element,radius:z.r||3,shape:{kind:'circle',range:z.r||3},count:20,light:.035});
+   this.emit('explosion',z,game.time,{...s,element,radius:z.r||3,shape:{kind:'circle',range:z.r||3},count:20,light:.09});
   }
  }
  prepare(camera,width,height){
@@ -167,7 +169,7 @@ export class SkillVFX {
    const age=this.time-e.born;if(e.body)continue;if(age<0||age>.12||!['shot','pierce','impact','explosion'].includes(e.kind))continue;
    const s=camera.worldToScreen(e,e.kind==='shot'?.8:.2),toward=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.kind==='shot'?.8:.2);
    const size=camera.scale*(e.kind==='explosion'?.85:e.kind==='impact'?.45:.5)*(1-age/.12);
-   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.atan2(toward.y-s.y,toward.x-s.x));ctx.globalAlpha=(1-age/.12)**2*.2;
+   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.atan2(toward.y-s.y,toward.x-s.x));ctx.globalAlpha=(1-age/.12)**2*.48;
    const form=({fire:'flame',water:'mist',ice:'frost',wood:'woodchip'}[e.element])||'glow';
    ctx.transform(e.kind==='shot'?2.8:1.4,0,.25,.8,0,0);
    ctx.drawImage(this.sprite(form,e.color,0,e,1),-size,-size,size*2,size*2);ctx.restore();
@@ -177,7 +179,7 @@ export class SkillVFX {
  drawBodyHits(c,camera){
   for(const e of this.emitters.filter(e=>e.body)){
    const age=this.time-e.born;if(age<0||age>.2)continue;const owner=this.game?.units.find(a=>a.id===e.ownerId),point=owner||e,at=camera.worldToScreen(point,e.height),size=camera.scale*e.radius;
-   c.save();c.globalAlpha=(1-age/.2)*.7;c.translate(at.x,at.y-leapLift(point)*camera.scale);c.rotate(e.angle);c.drawImage(this.strokes.texture(e.kind==='slash'?'slash':'impact',e),-size,-size,size*2,size*2);c.restore();
+   c.save();c.globalAlpha=(1-age/.2)*.95;c.translate(at.x,at.y-leapLift(point)*camera.scale);c.rotate(e.angle);c.drawImage(this.strokes.texture(['slash','pierce'].includes(e.kind)?e.kind:'impact',e),-size,-size,size*2,size*2);c.restore();
   }
  }
  groundDisc(ctx,camera,e,radius,draw){
@@ -186,12 +188,12 @@ export class SkillVFX {
  }
  drawGround(ctx,camera){
   ctx.save();
-  for(const e of this.emitters.filter(e=>!e.body)){ctx.save();clipShape(ctx,camera,e);this.strokes.draw(ctx,camera,e,this.time);ctx.restore();}
-  for(const e of this.emitters.filter(e=>!e.body).sort((a,b)=>b.light-a.light).slice(0,6)){
+  for(const e of this.emitters.filter(e=>!e.body&&!e.beam)){ctx.save();clipShape(ctx,camera,e);this.strokes.draw(ctx,camera,e,this.time);ctx.restore();}
+  for(const e of this.emitters.filter(e=>!e.body).sort((a,b)=>b.light-a.light).slice(0,VFX_LIMITS.lights)){
    const age=this.time-e.born;if(age<0)continue;const power=e.light*Math.exp(-age*6),range=e.radius*(e.kind==='explosion'?1.65:1.2)+1;
    if(power>.005)this.groundDisc(ctx,camera,e,range,()=>{
     ctx.globalCompositeOperation='source-over';const glow=ctx.createRadialGradient(0,0,0,0,0,1);
-    glow.addColorStop(0,css(rgb(e.accent),power*.2));glow.addColorStop(.35,css(rgb(e.accent),power*.08));glow.addColorStop(1,css(rgb(e.color),0));
+    glow.addColorStop(0,css(rgb(e.accent),power*.65));glow.addColorStop(.35,css(rgb(e.accent),power*.24));glow.addColorStop(1,css(rgb(e.color),0));
     ctx.fillStyle=glow;ctx.fillRect(-1,-1,2,2);
    });
    if(e.ring&&age<.35&&['water','liquid','electric','wood'].includes(e.element))this.groundDisc(ctx,camera,e,e.radius*Math.max(.001,1-Math.exp(-age*12)),()=>{
@@ -221,7 +223,7 @@ export class SkillVFX {
   let strength=0,color='#ffb85d';
   for(const e of this.emitters){const age=this.time-e.born;if(age<0)continue;const range=e.radius*1.65+2,d=Math.hypot(point.x-e.x,point.y-e.y);
    const n=e.light*Math.exp(-age*6)*Math.max(0,1-d/range)**2;if(n>strength){strength=n;color=e.accent;}}
-  return {strength:Math.min(.12,strength*.25),color};
+  return {strength:Math.min(VFX_LIMITS.highlight,strength*.65),color};
  }
  tintFrame(atlas,frame,color){
   if(!this.atlasIds.has(atlas))this.atlasIds.set(atlas,++this.atlasSerial);

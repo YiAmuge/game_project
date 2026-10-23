@@ -57,10 +57,11 @@ export function cast(g,e,slot,p,d){
    e.state.helping={targets:[],until:g.time+2,healingEvent:e.healingEvent,rate:(450+g.combatPower(e)*.3)/2};for(const t of allies){const cc=g.stat(t,'netCapture')||['stun','root','silence','disarm','taunt','captured','slow'].some(k=>g.stat(t,k))||t.motion?.forced;if(cc){t.status={};delete t.state.netTrap;if(t.motion?.forced)delete t.motion;t.ccImmuneUntil=Math.max(t.ccImmuneUntil||0,g.time+1);}e.state.helping.targets.push(t.id);t.supporters[e.id]=g.time;g.support(e);}
    g.effects.push({type:'ring',...p,r:3.5,color:'#efadb5',life:.6,maxLife:.6});
   }else{
-   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.qCd=0;e.state.nailStorm={d:{...d},until:g.time+2};
+   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.qCd=0;e.state.nailStorm={d:{...d},aim:{...p},until:g.time+2};
    for(let i=0;i<5;i++)g.schedule(e,i*.4,()=>{
     if(g.stat(e,'stun')||g.stat(e,'silence')){delete e.state.nailStorm;return;}
-    if(!e.state.nailStorm)return;g.effects.push({type:'nailVolley',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:7,life:.36,maxLife:.36});g.cone(e,d,7,1.5,144,(t,actual)=>{g.heal(e,e,actual*.4,false);if((t.state?.nailPushReady||0)<=g.time){if(t.state)t.state.nailPushReady=g.time+.6;g.startMotion(t,d,.5,{kind:'knock'});}});
+    const storm=e.state.nailStorm;if(!storm)return;const aim=distance(e,storm.aim)>.1?direction(e,storm.aim):storm.d;storm.d={...aim};const angle=Math.atan2(aim.y,aim.x);e.facing=angle;
+    g.effects.push({type:'nailVolley',source:e.id,theme:'ppui',slot:'r',shape:{kind:'cone',range:7,spread:1.5,angle},x:e.x,y:e.y,angle,r:7,spread:1.5,life:.36,maxLife:.36});g.cone(e,aim,7,1.5,144,(t,actual)=>{g.heal(e,e,actual*.4,false);if((t.state?.nailPushReady||0)<=g.time){if(t.state)t.state.nailPushReady=g.time+.6;g.startMotion(t,aim,.5,{kind:'knock'});}});
    });
   }return true;
  }return false;

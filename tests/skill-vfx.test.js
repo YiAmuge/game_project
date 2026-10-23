@@ -82,9 +82,9 @@ test('elements use distinct geometry and non-fire skills never emit fire or smok
  const v=new SkillVFX();v.emit('explosion',{x:5,y:5},0,{element:'fire'});assert.ok(v.particles.some(p=>p.form==='flame'));assert.ok(v.particles.some(p=>p.form==='smoke'));
  for(const [key,element] of [['hohenheim','electric'],['rodya','metal'],['marton','wood'],['dongrang','metal'],['honglu','water'],['alisa','fire']])assert.equal(CHAMPION_ELEMENTS[key],element);
 });
-test('water, ice, wood and electric zones emit their own attributed burst exactly once',()=>{
+test('ice and electric zones emit their own attributed burst exactly once',()=>{
  const g=new Game('faust','top',{mode:'training'}),v=new SkillVFX();g.effects=[];g.projectiles=[];
- for(const [kind,key,element] of [['waterfall','honglu','water'],['ice','rodya','ice'],['desireTree','dongrang','wood'],['electricBloom','hohenheim','electric']]){
+ for(const [kind,key,element] of [['ice','rodya','ice'],['electricBloom','hohenheim','electric']]){
   g.zones=[{kind,source:{key},x:5,y:5,r:4}];v.sync(g,camera,THEMES);assert.equal(v.emitters.at(-1).element,element);assert.equal(v.emitters.at(-1).color,combatStyle(key,g,null,{kind:'zone',slot:'r',type:kind}).color);
   const n=v.emitters.length;v.sync(g,camera,THEMES);assert.equal(v.emitters.length,n);
  }

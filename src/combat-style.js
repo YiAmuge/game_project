@@ -32,10 +32,12 @@ export function combatStyle(key,g,e,{kind='basic',slot,type}={}){
  if(key==='ahab'&&type==='burst')s=style('#c87645','fire','#edb877','#4f3026');
  if(key==='outis'&&slot==='r')s=style('#ac6442','fire','#d5a36a','#354932');
  if(key==='nelly'&&type==='nellyProc')s=style('#ac343f','metal','#e49b9d','#4e1925');
+ if(key==='ppui'&&slot==='r')s=style('#b82e45','metal','#f78d98','#4d1122');
  return s;
 }
 export function hitStyle(g,source,fx){
  const s=combatStyle(source?.key||fx.theme,g,source,{kind:'hit',slot:fx.slot,type:fx.variant||fx.type});
+ if(source?.key==='sinclair'&&fx.slot==='q')return {...NEUTRAL,shape:'pierce'};
  if(source?.key==='ryoshu'&&fx.slot==='q')return {...NEUTRAL,shape:'slash'};
  return {...s,shape:(fx.variant||fx.type)==='nellyProc'?'slash':'impact'};
 }
@@ -45,6 +47,8 @@ export function visualShape(fx){
  const angle=fx.angle||0,r=fx.r||1;
  if(fx.type==='yanWave')return {kind:'cone',range:r,spread:Math.PI,angle};
  if(fx.type==='yanCleave')return {kind:'rect',range:Math.hypot(fx.to.x-fx.x,fx.to.y-fx.y),width:fx.width,angle:Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x)};
+ if(fx.type==='line'&&fx.theme==='hohenheim')return {kind:'rect',range:Math.hypot(fx.to.x-fx.x,fx.to.y-fx.y),width:.4,angle:Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x)};
+ if(fx.type==='whipArc')return {kind:'circle',range:2.1675};
  if(fx.type==='gregorPierce')return {kind:'rect',range:r,width:fx.width*2,angle};
  if(fx.type==='guboBlast')return {kind:'cone',range:r,spread:fx.spread,angle};
  if(fx.spread&&!fx.circle)return {kind:'cone',range:r,spread:Math.min(Math.PI*2,fx.spread),angle};
