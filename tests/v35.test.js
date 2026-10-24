@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from '../src/vendor/three.js';
+import { BACKSTREET_TILES,boxSurfaceUV } from '../src/backstreet.js';
+import { AUGMENT_ART } from '../src/augment-art.js';
+import { readFile } from 'node:fs/promises';
+const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
+test('all required pixel texture sampling constants are exported by the offline Three bundle',()=>{for(const key of ['NearestFilter','LinearMipmapLinearFilter','RepeatWrapping','ClampToEdgeWrapping'])assert.equal(typeof THREE[key],'number');});
+test('box surface mapping repeats by world dimensions without changing collision-sized geometry',()=>{const g=new THREE.BoxGeometry(6,1.25,.8),before=Array.from(g.getAttribute('position').array);boxSurfaceUV(g,6,1.25,.8);const uv=g.getAttribute('uv');assert.ok([...uv.array].every(Number.isFinite));assert.ok([...uv.array].some(v=>v>1));near(Math.max(...[0,1,2,3].map(i=>uv.getY(i))),1.25/2);assert.deepEqual(Array.from(g.getAttribute('position').array),before);g.dispose();});
+test('material atlas has three surfaces and four facade panels confined to their source bounds',()=>{assert.equal(Object.keys(BACKSTREET_TILES).length,7);for(const [x,y,w,h] of Object.values(BACKSTREET_TILES))assert.ok(x>=0&&y>=0&&x+w<=1&&y+h<=1);assert.deepEqual(BACKSTREET_TILES.road,[0,0,.5,.5]);assert.deepEqual(BACKSTREET_TILES.wall,[.5,0,.5,.5]);});
+test('particle antimatter coat has an independent square frame and both images exist as local PNG assets',async()=>{assert.deepEqual(AUGMENT_ART.antimatter,['antimatter',0,0,1254,1254]);for(const name of ['backstreet-materials','augments-antimatter']){const b=await readFile(new URL(`../src/assets/${name}.png`,import.meta.url));assert.equal(b.readUInt32BE(0),0x89504e47);assert.equal(b.readUInt32BE(16),1254);assert.equal(b.readUInt32BE(20),1254);}});

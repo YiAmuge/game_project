@@ -8,7 +8,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=b.new_page(viewport={'width':1440,'height':900},device_scale_factor=1);errors=[]
  page.on('pageerror',lambda e:errors.append(str(e)))
- page.goto(base+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.34.0')
+ page.goto(base+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.35.0')
  expect(page.locator('#main-menu .menu-action')).to_have_count(4);expect(page.locator('#training-25d-open')).to_have_count(0)
  page.click('#practice-open');page.click('[data-position=top]');page.get_by_role('button',name='뫼르소 선택',exact=True).click();expect(page.locator('#selected-role')).to_have_text('보호 · 방해')
  assert {'selected','recommended'} <= set(page.locator('[data-key=meursault].champion-option').get_attribute('class').split())

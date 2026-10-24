@@ -232,7 +232,7 @@ export class Renderer {
     for(let x=b.x+.16;x<b.x+b.w;x+=.4)for(let y=b.y+.15;y<b.y+b.h;y+=.4){
       if(front&&y<b.y+b.h-.45)continue;
       const n=Math.floor((x*17+y*13)%5),offset=Math.sin(x*9+y*3)*.06;
-      this.polygon([[x-.23,y+.15],[x-.25,y-.12],[x-.1,y-.4+offset],[x+.04,y-.18],[x+.21,y-.34],[x+.27,y+.06],[x+.15,y+.25]],['#355737','#466a3b','#567943','#3a633d','#668449'][n],'#1a3c28');
+      this.polygon([[x-.23,y+.15],[x-.25,y-.12],[x-.1,y-.4+offset],[x+.04,y-.18],[x+.21,y-.34],[x+.27,y+.06],[x+.15,y+.25]],['#354333','#45513a','#536144','#3b4b35','#5c6947'][n],'#1a3c28');
       this.line([{x,y:y+.15},{x:x+.02,y:y-.18}],'#8b9a4d77',.03);
     }
   }

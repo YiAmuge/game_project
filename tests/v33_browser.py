@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];result={}
  page.on('pageerror',lambda e:errors.append(str(e)))
- page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.34.0')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.35.0')
  page.click('#menu-codex');page.click('[data-category="augments"]')
  result['codex']=page.locator('#codex-content>.augment-category').evaluate_all("es=>es.map(e=>({group:e.dataset.group,count:e.querySelectorAll('article').length}))")
  assert result['codex']==[{'group':'combat','count':7},{'group':'survival','count':7},{'group':'tech','count':7}],result['codex']

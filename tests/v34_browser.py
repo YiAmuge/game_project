@@ -6,7 +6,7 @@ root=Path(__file__).resolve().parents[1];art=root/'artifacts';art.mkdir(exist_ok
 with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];result={};page.on('pageerror',lambda e:errors.append(str(e)))
- page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.34.0')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.35.0')
  page.click('#practice-open');page.click('#start');page.evaluate('()=>{__moba.game.step=()=>{};__moba.game.player.gold=10000;}');page.keyboard.press('g');expect(page.locator('#shop')).to_be_visible()
  expect(page.locator('#shop-tabs [data-group=combat]')).to_be_disabled();expect(page.locator('#shop-tabs [data-group=all]')).to_be_enabled()
  for i in range(3):page.click('#buy-power');page.wait_for_timeout(280)

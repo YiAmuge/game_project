@@ -1,3 +1,4 @@
+import { BackstreetSkin } from './backstreet.js';
 import { drawWorld as drawPings } from './pings.js';
 import * as THREE from './vendor/three.js';
 import { Camera25D } from './camera-25d.js';
@@ -19,7 +20,7 @@ function painter(base,canvas){
  const p=Object.create(Object.getPrototypeOf(base));p.canvas=canvas;p.ctx=canvas.getContext('2d');
  for(const key of ATLAS_KEYS)p[key]=base[key];return p;
 }
-function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material]){m.map?.dispose();m.dispose();}}});object.removeFromParent();}
+function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m.map?.userData?.backstreetShared)m.map?.dispose();m.dispose();}}});object.removeFromParent();}
 
 export class Renderer25D {
  constructor(base){
@@ -28,11 +29,12 @@ export class Renderer25D {
   this.canvas.hidden=true;base.canvas.before(this.canvas);
   try{this.webgl=new THREE.WebGLRenderer({canvas:this.canvas,antialias:false,alpha:false,powerPreference:'high-performance',precision:'mediump'});}
   catch(error){this.canvas.remove();throw new Error('게임은 WebGL을 지원하는 브라우저가 필요합니다. 브라우저의 하드웨어 가속 설정을 확인해 주세요.',{cause:error});}
-  this.webgl.outputColorSpace=THREE.SRGBColorSpace;this.webgl.setClearColor('#101e2a');
-  this.scene=new THREE.Scene();this.scene.fog=new THREE.Fog('#101e2a',55,110);
-  this.scene.add(new THREE.AmbientLight('#d9efff',2));
-  const sun=new THREE.DirectionalLight('#ffe4b9',3.1);sun.position.set(-12,35,8);this.scene.add(sun);
-  const rim=new THREE.DirectionalLight('#789acb',1.5);rim.position.set(15,12,-20);this.scene.add(rim);
+  this.webgl.outputColorSpace=THREE.SRGBColorSpace;this.webgl.setClearColor('#141919');
+  this.skin=new BackstreetSkin(()=>{this.floorStamp=null;this.sceneryDirty=true;});
+  this.scene=new THREE.Scene();this.scene.fog=new THREE.Fog('#141919',55,110);
+  this.scene.add(new THREE.AmbientLight('#d2d2c9',1.7));
+  const sun=new THREE.DirectionalLight('#e4d4b8',1.8);sun.position.set(-12,35,8);this.scene.add(sun);
+  const rim=new THREE.DirectionalLight('#a3b4bd',.65);rim.position.set(15,12,-20);this.scene.add(rim);
   this.world=new THREE.Group();this.scene.add(this.world);this.buildArena();
   this.groundPainter=painter(base,base.canvas);
   const p=this.groundPainter;p.groundPass=true;p.dpr=1;p.unit=()=>{};p.structure=()=>{};
@@ -56,8 +58,8 @@ export class Renderer25D {
  cylinder(radius,height,x,y,z,color,group=this.world,top=radius){const m=new THREE.Mesh(new THREE.CylinderGeometry(top,radius,height,12),material(color));m.position.set(x,y,z);group.add(m);return m;}
  buildArena(){
   const b=this.layout.bounds;
-  if(this.layout.terrain){for(const t of this.layout.terrain){this.box(t.w,.8,t.h,t.x+t.w/2,-.55,t.y+t.h/2,'#263c4c');this.box(t.w-.08,.12,t.h-.08,t.x+t.w/2,-.09,t.y+t.h/2,'#344b43');}}
-  else {this.box(b.w,.8,b.h,b.x+b.w/2,-.43,b.y+b.h/2,'#263c4c');this.box(b.w-.3,.16,b.h-.3,b.x+b.w/2,-.1,b.y+b.h/2,'#344b50');}
+  if(this.layout.terrain){for(const t of this.layout.terrain){this.box(t.w,.8,t.h,t.x+t.w/2,-.55,t.y+t.h/2,'#292c2a');this.box(t.w-.08,.12,t.h-.08,t.x+t.w/2,-.09,t.y+t.h/2,'#42433e');}}
+  else {this.box(b.w,.8,b.h,b.x+b.w/2,-.43,b.y+b.h/2,'#292c2a');this.box(b.w-.3,.16,b.h-.3,b.x+b.w/2,-.1,b.y+b.h/2,'#42433e');}
   for(const a of this.layout.areas){
    this.box(a.w,.08,a.h,a.x+a.w/2,-.015,a.y+a.h/2,a.id===2?'#4b5148':a.id===5?'#525349':'#3c5252');
    for(const z of [a.y,a.y+a.h])this.box(a.w,.03,.06,a.x+a.w/2,.035,z,a.color);
@@ -66,9 +68,9 @@ export class Renderer25D {
   for(const w of this.layout.walls){
    this.box(w.w+.22,.18,w.h+.22,w.x+w.w/2,.09,w.y+w.h/2,'#1d303b');
    const wall=this.box(w.w,1.25,w.h,w.x+w.w/2,.78,w.y+w.h/2,'#657a7b');
-   wall.material.transparent=true;this.walls.push({mesh:wall,rect:w});
+   this.skin.box(wall,'wall');this.skin.decorateWall(wall,w,this.walls.length/2);wall.material.transparent=true;this.walls.push({mesh:wall,rect:w});
    const cap=this.box(w.w+.08,.1,w.h+.08,w.x+w.w/2,1.455,w.y+w.h/2,'#a5b2a4');
-   cap.material.transparent=true;this.walls.push({mesh:cap,rect:w});
+   this.skin.box(cap,'wall','#c8d0d1');cap.material.transparent=true;this.walls.push({mesh:cap,rect:w});
   }
   // Perimeter rails sit outside the playable rectangle; they add no hidden obstacles.
   for(const z of [b.y-.35,b.y+b.h+.35])this.box(b.w+.7,.45,.35,b.x+b.w/2,.18,z,'#71817d');
@@ -80,19 +82,23 @@ export class Renderer25D {
   for(const f of this.layout.spawns||[this.layout.spawn]){
   this.cylinder(2.45,.13,f.x,.02,f.y,'#476e75');this.cylinder(1.9,.16,f.x,.12,f.y,'#6a9392');this.cylinder(1.5,.12,f.x,.22,f.y,'#7fa8a1');
   // Keep the visual pedestal below the combat plane; movement has no elevation.
-  for(const obj of this.world.children.slice(-3))obj.position.y-=.32;}
+  for(const obj of this.world.children.slice(-3)){obj.position.y-=.32;this.skin.cylinder(obj,'metal','#9dada7');}}
+  for(const mesh of this.world.children){
+   if(!mesh.isMesh||mesh.material.map)continue;
+   if(mesh.geometry.type==='BoxGeometry')this.skin.box(mesh,'wall');
+   else if(mesh.geometry.type==='CylinderGeometry')this.skin.cylinder(mesh,'metal');
+   else if(mesh.geometry.type==='ConeGeometry'){mesh.geometry.dispose();mesh.geometry=new THREE.BoxGeometry(.35,.45,.35);mesh.material.color.set('#d1bd8a');mesh.material.emissive.set('#88764b');mesh.material.emissiveIntensity=.35;}
+  }
  }
  floorMarks(game,r,v){
   const c=r.ctx;
   c.clearRect(v.x,v.y,v.w,v.h);
   const b=this.layout.bounds;
   c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();if(this.layout.terrain){c.beginPath();for(const t of this.layout.terrain)c.rect(t.x,t.y,t.w,t.h);c.clip();}
-  const left=Math.max(b.x,Math.floor(v.x/2)*2),top=Math.max(b.y,Math.floor(v.y/2)*2);
-  for(let x=left;x<Math.min(b.x+b.w,v.x+v.w);x+=2)r.line([{x,y:Math.max(b.y,v.y)},{x,y:Math.min(b.y+b.h,v.y+v.h)}],'#c1d0c619',.025);
-  for(let y=top;y<Math.min(b.y+b.h,v.y+v.h);y+=2)r.line([{x:Math.max(b.x,v.x),y},{x:Math.min(b.x+b.w,v.x+v.w),y}],'#c1d0c619',.025);
+  this.skin.floor(c,b);
   for(const a of this.layout.areas){r.text(`${String(a.id).padStart(2,'0')} / ${a.name}`,a.x+a.w/2,a.y+1.2,a.color,.52);}
   const f=this.layout.spawn;r.circle(f.x,f.y,2.45,'#a8f2e91c','#bbf7e1aa',.08);r.circle(f.x,f.y,1.65,null,'#dcffef66',.055);r.text('부활소',f.x,f.y+3.1,'#c3e9dc',.42);
-  if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);r.text('부활소 · 적에게 1000 고정 피해 / 0.5초',a.x+a.w/2,a.y+1.1,a.team?'#f5bba4':'#c7fff1',.27);}for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#c2af7c33',3.2);for(const bush of BUSHES){c.fillStyle='#4c7856aa';c.fillRect(bush.x,bush.y,bush.w,bush.h);}c.restore();return;}
+  if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);r.text('부활소 · 적에게 1000 고정 피해 / 0.5초',a.x+a.w/2,a.y+1.1,a.team?'#f5bba4':'#c7fff1',.27);}for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#a6a09214',3.2);for(const bush of BUSHES){c.fillStyle='#45524088';c.fillRect(bush.x,bush.y,bush.w,bush.h);}c.restore();return;}
   const h=this.layout.hazard;c.fillStyle='#b3574d70';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle='#f1b18d';c.lineWidth=.07;c.strokeRect(h.x,h.y,h.w,h.h);
   for(let i=.35;i<h.w;i+=.7)r.line([{x:h.x+i,y:h.y+.2},{x:h.x+i,y:h.y+h.h-.2}],'#efae8c55',.04);
   r.text('피해 장판 · 초당 3.3%',h.x+h.w/2,h.y+h.h/2,'#ffe1b8',.32);
@@ -135,14 +141,22 @@ export class Renderer25D {
   }
  }
  makeTower(e){
-  const group=new THREE.Group(),color=e.team===0?'#7bbbd0':'#d49080',dark=e.team===0?'#355d71':'#704e49';
-  if(e.kind==='core'){this.cylinder(1.6,.35,0,.175,0,dark,group);this.cylinder(1.2,.5,0,.6,0,color,group);const crystal=new THREE.Mesh(new THREE.ConeGeometry(1.05,2.1,6),material(color,{emissive:color,emissiveIntensity:.45}));crystal.position.y=1.9;group.add(crystal);for(let i=0;i<4;i++){const a=i*Math.PI/2;this.box(.2,1.5,.2,Math.cos(a)*1.3,.8,Math.sin(a)*1.3,dark,group);}}else{
-  this.cylinder(1.05,.22,0,.11,0,'#283b43',group);
-  this.cylinder(.8,.35,0,.35,0,dark,group);
-  this.cylinder(.57,1.6,0,1.25,0,dark,group,.48);
-  this.cylinder(.8,.22,0,2.13,0,color,group);
-  for(let i=0;i<4;i++){const a=i*Math.PI/2;this.box(.27,.5,.27,Math.cos(a)*.55,2.42,Math.sin(a)*.55,color,group);}
-  const gem=new THREE.Mesh(new THREE.ConeGeometry(.3,.65,4),material(color,{emissive:color,emissiveIntensity:.35}));gem.position.y=2.65;group.add(gem);group.position.set(e.x,0,e.y);}
+  const group=new THREE.Group(),team=e.team===0?'#88c9ca':'#cf9278',skin=this.skin;
+  const box=(w,h,d,x,y,z,kind='metal',tint)=>skin.box(this.box(w,h,d,x,y,z,'#7b8078',group),kind,tint);
+  const cylinder=(r,h,x,y,z,kind='metal',tint)=>skin.cylinder(this.cylinder(r,h,x,y,z,'#6d776d',group),kind,tint);
+  if(e.kind==='core'){
+   cylinder(1.6,.35,0,.175,0,'wall');box(1.9,1.75,1.75,0,1.17,0);box(2.15,.2,1.95,0,2.12,0);
+   for(const side of [-1,1])box(.22,2.15,.24,side*1.2,1.25,.1,'wall');
+   skin.facade(group,'vent',1.4,1.25,0,1.15,.89);skin.facade(group,e.team?'amber':'teal',.9,.48,0,2.45,.15);
+   const beacon=this.cylinder(.27,.25,0,2.78,0,team,group);beacon.material.emissive=new THREE.Color(team);beacon.material.emissiveIntensity=.35;
+  }else{
+   cylinder(1.05,.22,0,.11,0,'wall');cylinder(.8,.35,0,.35,0);
+   box(1,1.5,.95,0,1.23,0,'wall');box(1.45,.52,1.15,0,2.18,0);
+   skin.facade(group,'vent',.8,.7,0,1.35,.49);
+   const barrel=this.cylinder(.13,.8,(e.team?-.65:.65),2.3,0,'#4d5552',group);barrel.rotation.z=Math.PI/2;skin.cylinder(barrel,'metal');
+   const beacon=this.cylinder(.22,.24,0,2.6,0,team,group);beacon.material.emissive=new THREE.Color(team);beacon.material.emissiveIntensity=.35;
+   box(1.55,.12,1.2,0,2.78,0);
+  }
   group.position.set(e.x,0,e.y);group.traverse(o=>{if(o.material)o.material.transparent=true;});this.scene.add(group);return group;
  }
  structureFrame(game){

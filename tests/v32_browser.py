@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[]
  page.on('pageerror',lambda e:errors.append(str(e)))
- page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.34.0')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.35.0')
  page.click('#training-open');page.click('#start');page.click('#training-panel-toggle');page.wait_for_function('__moba.renderer.atlasV17.naturalWidth>0')
  page.evaluate('''async()=>{window.P=await import('./src/projectile-vfx.js');window.C=await import('./src/combat-style.js');const g=__moba.game;g.step=()=>{};
  window.setup=key=>{g.units=[];g.corpses=[];g.logs=[];g.announcements=[];g.effects=[];g.events=[];g.projectiles=[];g.pending=[];g.zones=[];g.time=10;g.winner=null;g.input.fire=false;g.input.x=g.input.y=0;g.practice.lineStopped=true;g.practice.championAI=false;const p=g.makeChampion(key,0,0,'top'),t=g.makeChampion('faust',1,1,'top');g.player=p;Object.assign(p,{x:25,y:38,player:true});Object.assign(t,{x:30,y:38,trainingSummoned:true,maxHp:100000,hp:100000,lastDamageAt:100});g.input.aim={x:30,y:38};const s=__moba.renderer.scene25d;s.vfx.clear();s.championVfx.reset(g);s.projectileVfx.game=null;__moba.renderer.draw(g,true);return {p,t};};window.run=seconds=>{for(let i=0;i<Math.round(seconds*120);i++)Object.getPrototypeOf(g).step.call(g,1/120);__moba.renderer.draw(g,true);};}''')

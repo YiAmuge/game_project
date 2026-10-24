@@ -3,7 +3,7 @@ export const AUGMENT_ART={
  finalBullet:['combat',0,25,390,390],power15:['combat',395,30,365,385],range7:['combat',775,55,355,355],reloadStacks:['mourning',0,0,1254,1254],
  glaive:['combat',15,500,430,420],wisdom:['combat',475,625,660,280],duelManual:['combat',1170,535,315,385],
  resentment:['survival',10,20,370,395],kAmpule:['survival',405,30,340,375],forceBattery:['survival',775,130,380,275],blackOrb:['survival',1185,20,340,390],
- antimatter:['survival',80,510,450,395],writtenOrder:['survival',610,510,370,400],traumaGuard:['survival',1070,515,385,390],
+ antimatter:['antimatter',0,0,1254,1254],writtenOrder:['survival',610,510,370,400],traumaGuard:['survival',1070,515,385,390],
  battleHaste:['tech',10,5,400,415],cooldown15:['tech',440,70,325,335],magazine2:['tech',780,55,390,355],carrier:['carrier',0,0,1254,1254],
  maskDeLu:['mask',0,0,1254,1254],highRisk:['tech',505,520,525,400],adaptiveSpeed:['tech',1065,535,430,375],
 };
