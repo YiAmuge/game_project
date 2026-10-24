@@ -57,7 +57,7 @@ CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.brief='짧은 돌진 도끼와 동전의 �
 
 CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
 
-CHAMPIONS.honglu.q=7;
+CHAMPIONS.honglu.q=12;
 
 CHAMPIONS.marton.range=5;
 CHAMPIONS.queequeg.range=3;
@@ -136,7 +136,7 @@ export const AUGMENTS=[
  {key:'battleHaste',group:'tech',name:'사랑과 증오의 이름으로',text:'전투를 3초 이상 유지하면 스킬 가속 +15%. 비전투 시 해제'},
  {key:'cooldown15',group:'tech',name:'주민등록 마이크로칩',text:'전술기·궁극기 기본 재사용 대기시간 −15%'},
  {key:'magazine2',group:'tech',name:'카포를 위하여',text:'최대 탄창 +2'},
- {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'증강 보유 한도 +1. 이 증강은 보유 한도를 차지하지 않는다. 기술 분류 한도에 포함되며 일반 경기에서 판매 불가'},
+ {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'증강 보유 한도 +1. 이 증강은 보유 한도를 차지하지 않는다. 기술 카테고리 보유 수 제한을 받지 않으며 일반 경기에서 판매 불가'},
  {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'기술 사용 시 이동속도·장전속도 +6%, 최대 2중첩. 각 중첩은 5초 유지'},
  {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 전술기·궁극기 기본 재사용 대기시간 −5%'},
  {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:'비전투 이동속도 +15% · 전투 중 +7%'},

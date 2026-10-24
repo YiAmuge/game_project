@@ -87,7 +87,7 @@ export class SkillVFX {
    if(key==='kim'&&fx.spread>2)s.color='#a0cce8';
    observed.add(key);
    if(hit){const id='hit/'+(target?.id??[fx.x,fx.y].join('/'));this.lastHits??=new Map();if(game.time-(this.lastHits.get(id)??-99)<.065)continue;this.lastHits.set(id,game.time);if(this.lastHits.size>300)this.lastHits.clear();}
-   this.emit(kind,fx.type==='whipArc'?fx.to:fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.6:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',beam:fx.type==='guboLaser',body:hit,shape,pressure,count:pressure?0:hit?12:undefined,light:pressure?0:undefined,life:hit?.3:undefined});
+   this.emit(kind,fx.type==='whipArc'?fx.to:fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.78:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',beam:fx.type==='guboLaser',body:hit,shape,pressure,count:pressure?0:hit?12:undefined,light:pressure?0:undefined,life:hit?.3:undefined});
    if(key==='gahwan'&&hit)this.emit('impact',fx,game.time,{color:'#8a3039',accent:'#a9555d',dark:'#38171f',element:'blood',height:bodyHeight(target||{kind:'champion'}),body:true,ownerId:target?.id,count:3,life:.2,radius:.2});
   }
   for(const p of game.projectiles){

@@ -66,6 +66,6 @@ export function portrait(canvas,key,image,extraImage,v05Image,v06Image,v08Image,
   if(!canvas||!image||!image.complete||!image.naturalWidth)return;
   const c=canvas.getContext('2d'),f=FRAMES[key];c.clearRect(0,0,canvas.width,canvas.height);c.imageSmoothingEnabled=false;
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}
-  const crop=f.h*.66;
-  c.save();if(f.mirror){c.translate(canvas.width,0);c.scale(-1,1);}c.drawImage(image,f.x,f.y,f.w,crop,0,0,canvas.width,canvas.height);c.restore();
+  drawFace(c,key,image,0,0,canvas.width,canvas.height);
 }
+export function drawFace(c,key,image,x,y,w,h=w){const f=FRAMES[key];if(!f||!image?.complete||!image.naturalWidth)return;const side=Math.min(f.w,f.h*.48);c.save();c.imageSmoothingEnabled=false;if(f.mirror){c.translate(x+w,y);c.scale(-1,1);x=0;y=0;}c.drawImage(image,f.x+(f.w-side)/2,f.y+f.h*.025,side,side,x,y,w,h);c.restore();}

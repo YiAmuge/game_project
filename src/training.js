@@ -168,3 +168,11 @@ export function removeSummoned(g,id=null){
  g.units=g.units.filter(e=>!ids.has(e.id));g.events=g.events.filter(e=>!ids.has(e.source.id));g.pending=g.pending.filter(e=>!ids.has(e.source.id));g.zones=g.zones.filter(e=>!ids.has(e.source.id));g.projectiles=g.projectiles.filter(p=>!ids.has(p.source.id)&&!ids.has(p.target?.id));
  for(const z of g.zones)if(ids.has(z.targetId))z.waitingForTarget=true;g.corpses=g.corpses.filter(c=>!ids.has(c.unitId));return true;
 }
+
+export function setLevel(g,level){
+ if(!g.training||!Number.isInteger(level)||level<1||level>RULES.maxLevel)return false;
+ const p=g.player,ratio=p.hp/p.maxHp;p.level=level;p.xp=RULES.xp[level-1];p.maxHp=g.maxHp(p);if(p.alive)p.hp=Math.max(1,p.maxHp*ratio);p.ammo=Math.min(p.ammo,g.ammoCap(p));return true;
+}
+export function procedures(g,buy){
+ if(!g.training)return false;const p=g.player;for(const u of UPGRADES)p.upgrades[u.key]=buy?u.max:0;g.refreshEquipment(p);return true;
+}

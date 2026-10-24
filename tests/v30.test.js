@@ -38,7 +38,7 @@ test('buff and shield presentation has a vivid bounded aura while retaining the 
  g.addBuff(p,'guboReload',4);look=championPresentation(g,p);assert.equal(look.aura.color,'#6c1429');assert.ok(look.aura.strength>=.65&&look.aura.strength<=1);assert.equal(look.dim,1);
 });
 test('physical contacts stay attached to the torso and remain visible during their short fade',()=>{
- const {g,p,t}=arena(),v=new SkillVFX();g.deal(p,t,100);v.sync(g,camera);const hit=v.emitters.find(e=>e.body);assert.equal(hit.height,1.25);assert.equal(hit.ownerId,t.id);assert.equal(hit.life,.3);assert.equal(hit.radius,.6);
+ const {g,p,t}=arena(),v=new SkillVFX();g.deal(p,t,100);v.sync(g,camera);const hit=v.emitters.find(e=>e.body);assert.equal(hit.height,1.25);assert.equal(hit.ownerId,t.id);assert.equal(hit.life,.3);assert.equal(hit.radius,.78);
  assert.equal(v.particles.length,12);assert.ok(v.particles.every(p=>['chip','spark'].includes(p.form)&&p.size<=.12));g.time+=.22;v.advance(g.time);assert.ok(v.emitters.includes(hit));
 });
 test('Dongbaek basic petals travel outward inside their real fan without a stationary slash emitter',()=>{

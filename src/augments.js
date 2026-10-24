@@ -3,7 +3,7 @@ import { AUGMENTS,AUGMENT_RULES } from './data.js';
 export { AUGMENTS,AUGMENT_RULES };
 export const has=(e,key)=>e.augments?.includes(key)||false;
 export function unlocked(e,group){return group==='combat'?e.upgrades.power>=3:group==='survival'?e.upgrades.health>=3:e.upgrades.speed+e.upgrades.reload+e.upgrades.haste>=3;}
-export const categoryCount=(e,group)=>e.augments.filter(key=>AUGMENTS.find(a=>a.key===key)?.group===group).length;
+export const categoryCount=(e,group)=>e.augments.filter(key=>key!=='carrier'&&AUGMENTS.find(a=>a.key===key)?.group===group).length;
 export const resentment=e=>has(e,'resentment')?Math.min(8,Math.floor((1-e.hp/e.maxHp+1e-8)*10))*.05:0;
 export function tick(g,e,dt=0){
  for(const key of ['maskStacks','orderStacks'])e.state[key]=liveStacks(g,e,key);
@@ -39,6 +39,7 @@ export function afterHit(g,e,t,actual,proc,absorbed=0){
 }
 export const slots=e=>AUGMENT_RULES.slots+(has(e,'carrier')?1:0);
 export const usedSlots=e=>e.augments.filter(k=>k!=='carrier').length;
+export const categoryFits=(e,key)=>key==='carrier'||categoryCount(e,AUGMENTS.find(a=>a.key===key)?.group)<AUGMENT_RULES.categorySlots;
 export const fits=(e,key)=>key==='carrier'||usedSlots(e)<slots(e);
 export const sellable=(g,key)=>key!=='carrier'||g.training;
 export const liveStacks=(g,e,key)=>(e.state[key]||[]).filter(at=>at>g.time+1e-8);

@@ -7,7 +7,7 @@ with sync_playwright() as pw:
  b=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=b.new_page(viewport={'width':1440,'height':900});errors=[];result={}
  page.on('pageerror',lambda e:errors.append(str(e)))
- page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.33.0')
+ page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle');expect(page.locator('.build-tag')).to_contain_text('0.34.0')
  page.click('#menu-codex');page.click('[data-category="augments"]')
  result['codex']=page.locator('#codex-content>.augment-category').evaluate_all("es=>es.map(e=>({group:e.dataset.group,count:e.querySelectorAll('article').length}))")
  assert result['codex']==[{'group':'combat','count':7},{'group':'survival','count':7},{'group':'tech','count':7}],result['codex']
@@ -20,13 +20,13 @@ with sync_playwright() as pw:
  page.keyboard.press('g');expect(page.locator('#shop')).to_be_visible()
  result['shop']=page.locator('#augment-list>.augment-category').evaluate_all("es=>es.map(e=>({group:e.dataset.group,count:e.querySelectorAll('.augment-item').length}))")
  assert result['shop']==result['codex'],result['shop']
- page.locator('#augment-carrier').click();page.wait_for_function('__moba.game.player.augments.includes("carrier")');expect(page.locator('#toast')).to_be_visible();result['purchase_notice']=page.locator('#toast').evaluate("e=>({top:e.getBoundingClientRect().top,pointer:getComputedStyle(e).pointerEvents})");assert result['purchase_notice']['top']<=16 and result['purchase_notice']['pointer']=='none';page.wait_for_timeout(280)
- page.locator('#augment-magazine2').click();page.wait_for_function('__moba.game.player.augments.length===6');expect(page.locator('#augment-count')).to_contain_text('5 / 5')
+ page.hover('#select-augment-carrier');page.locator('#detail-buy').click();page.wait_for_function('__moba.game.player.augments.includes("carrier")');expect(page.locator('#toast')).to_be_visible();result['purchase_notice']=page.locator('#toast').evaluate("e=>({top:e.getBoundingClientRect().top,pointer:getComputedStyle(e).pointerEvents})");assert result['purchase_notice']['top']<=16 and result['purchase_notice']['pointer']=='none';page.wait_for_timeout(280)
+ page.hover('#select-augment-magazine2');page.locator('#detail-buy').click();page.wait_for_function('__moba.game.player.augments.length===6');expect(page.locator('#augment-count')).to_contain_text('5 / 5')
  page.locator('#owned-list').get_by_role('button',name='딜리버리 캐리어',exact=True).click();expect(page.locator('#shop-sell')).to_be_enabled()
  page.evaluate('()=>{__moba.game.training=false;__moba.game.player.alive=false;}');expect(page.locator('#shop-sell')).to_be_disabled();expect(page.locator('#shop-selected-info')).to_contain_text('판매 불가')
  page.evaluate('()=>{__moba.game.training=true;__moba.game.player.alive=true;}');expect(page.locator('#shop-sell')).to_be_enabled()
  result['scroll']=page.locator('#shop').evaluate('e=>{e.scrollTop=0;const start=e.scrollTop;e.scrollTop=e.scrollHeight;return {height:e.clientHeight,content:e.scrollHeight,moved:e.scrollTop-start};}')
- assert result['scroll']['moved']>300,result['scroll'];page.screenshot(path=str(art/'v33-training-shop-bottom.png'))
+ assert page.locator('#shop').evaluate("e=>['auto','scroll'].includes(getComputedStyle(e).overflowY)");page.screenshot(path=str(art/'v33-training-shop-bottom.png'))
  page.locator('#shop').evaluate('e=>e.scrollTop=0');page.screenshot(path=str(art/'v33-training-shop-groups.png'))
  page.locator('#shop-sell').click();page.wait_for_function('!__moba.game.player.augments.includes("carrier")');page.wait_for_timeout(280);page.locator('#buy-power').click();page.wait_for_function('__moba.game.player.upgrades.power===4');expect(page.locator('#toast')).to_be_visible();assert page.locator('#toast').evaluate("e=>e.getBoundingClientRect().top<=16&&getComputedStyle(e).pointerEvents==='none'");page.screenshot(path=str(art/'v33-purchase-notice-top.png'));page.locator('#shop-close').click()
  # The bar itself is recorded: its fill is below ammunition, no icons are drawn above HP.

@@ -1,3 +1,5 @@
+import { drawMinimap } from './minimap.js';
+import { paintHealth } from './health-display.js';
 import { combatStyle } from './combat-style.js';
 import { championPresentation } from './champion-vfx.js';
 import { leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
@@ -88,9 +90,7 @@ export class Renderer {
   bar(e,width,y,game) {
     const c=this.ctx,x=e.x-width/2;
     c.fillStyle='#081317';c.fillRect(x-.05,y-.05,width+.1,.31);
-    c.fillStyle=e.team===0?'#87b8bc':e.team===1?'#c78578':e.camp==='boss'?'#b38ecb':'#b0a16d';
-    c.fillRect(x,y,width*Math.max(0,e.hp/e.maxHp),.21);
-    const shield=game.shield(e);if(shield){const total=Math.max(e.maxHp,e.hp+shield);c.fillStyle='#081317';c.fillRect(x,y,width,.21);c.fillStyle=e.team===0?'#87b8bc':'#c78578';c.fillRect(x,y,width*e.hp/total,.21);c.fillStyle='#e2e1cf';c.fillRect(x+width*e.hp/total,y,width*Math.min(shield/total,1-e.hp/total),.21);}
+    paintHealth(c,e,game,x,y,width,.21,e.team===0?'#87b8bc':e.team===1?'#c78578':e.camp==='boss'?'#b38ecb':'#b0a16d');
   }
   structure(e,game) {
     const color=e.team===0?'#8bb8c2':'#c4897e',dark=e.team===0?'#3b6169':'#704941';
@@ -153,6 +153,7 @@ export class Renderer {
     if(f&&atlas.complete&&atlas.naturalWidth){
       c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h,w,h);
       if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),-w/2,-h,w,h);c.restore();}
+      if(game.buff(e,'queequegUlt')&&this.skillVfx){c.save();c.globalAlpha*=.22;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#c44034'),-w/2,-h,w,h);c.restore();}
       if(appearance.frozen&&this.skillVfx){c.save();c.globalAlpha*=.28;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#a7d0e5'),-w/2,-h,w,h);c.restore();}
       const light=this.skillVfx?.lightAt(e);if(light?.strength>.01){c.save();c.globalCompositeOperation='lighter';c.globalAlpha*=light.strength;c.drawImage(this.skillVfx.tintFrame(atlas,f,light.color),-w/2,-h,w,h);c.restore();}
     }
@@ -332,20 +333,5 @@ export class Renderer {
     }
     c.restore();
   }
-  minimap(canvas,game){
-    const bounds=game.bounds,c=canvas.getContext('2d'),sx=canvas.width/bounds.w,sy=canvas.height/bounds.h;
-    c.clearRect(0,0,canvas.width,canvas.height);c.fillStyle='#142321e8';c.fillRect(0,0,canvas.width,canvas.height);
-    c.save();c.scale(sx,sy);c.translate(-bounds.x,-bounds.y);c.fillStyle='#253f35';for(const room of game.training?[bounds]:TERRAIN)c.fillRect(room.x,room.y,room.w,room.h);if(game.training)for(const a of Training.areas(game)){c.fillStyle=a.color+'55';c.fillRect(a.x,a.y,a.w,a.h);c.fillStyle='#f2dfb8';c.font='2px Arial';c.fillText(String(a.id),a.x+a.w/2,a.y+2);};c.fillStyle='#4e6252';for(const w of game.map?.walls||WALLS)c.fillRect(w.x,w.y,w.w,w.h);
-    c.fillStyle='#486c39';for(const b of game.training?[]:BUSHES)c.fillRect(b.x,b.y,b.w,b.h);
-    if(!game.training)for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#aa4d4266':'#4eabb366';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#eeb192':'#9be1e1';c.lineWidth=.3;c.strokeRect(a.x,a.y,a.w,a.h);}
-    for(const u of game.units.filter(e=>e.alive&&['champion','core','tower'].includes(e.kind)&&game.visibleTo(0,e))){c.beginPath();c.arc(u.x,u.y,u.player?1.1:u.kind==='champion'?.65:.8,0,Math.PI*2);c.fillStyle=u.player?'#f2da95':u.team===0?'#89c9dd':'#e09484';c.fill();}
-    const b=this.camera.bounds;c.strokeStyle='#e3d8aa';c.lineWidth=.25;c.strokeRect(b.x,b.y,b.w,b.h);c.restore();
-    const uiScale=canvas.width/Math.max(1,canvas.getBoundingClientRect().width);
-    c.font=`bold ${11*uiScale}px Arial`;c.textAlign='center';c.textBaseline='middle';
-    for(const camp of game.campViews()){
-      const timer=game.campTimers().filter(t=>t.campId===camp.id).sort((a,b)=>a.seconds-b.seconds)[0];
-      const x=(camp.home.x-bounds.x)*sx,y=(camp.home.y-bounds.y)*sy;c.beginPath();c.arc(x,y,(timer?4:2.2)*uiScale,0,Math.PI*2);c.fillStyle=timer?'#d1b176':'#77865c';c.fill();
-      if(timer){const label=String(timer.seconds);c.strokeStyle='#101f1a';c.lineWidth=3*uiScale;c.strokeText(label,x,y-10*uiScale);c.fillStyle='#f2dda1';c.fillText(label,x,y-10*uiScale);}
-    }
-  }
+  minimap(canvas,game){drawMinimap(this,canvas,game);}
 }

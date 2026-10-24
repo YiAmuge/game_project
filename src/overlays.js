@@ -1,3 +1,4 @@
+import { paintHealth } from './health-display.js';
 import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
@@ -32,9 +33,8 @@ export function stackInfo(e,g){
 export function championHud(r,e,g){
  const c=r.ctx,gauge=stackGauge(e,g),guboGauge=e.key==='gubo'&&g.buff(e,'guboReload'),width=2.65,x=e.x-width/2,y=e.y-2.7-(gauge?.55:0)-(guboGauge?.55:0);
  c.save();c.fillStyle='#081317';c.fillRect(x-.06,y-.06,width+.12,.46);
- c.fillStyle=e.player?'#7bd387':e.team===0?'#79bbc9':'#d7877e';c.fillRect(x,y,width*Math.max(0,e.hp/e.maxHp),.34);
+ paintHealth(c,e,g,x,y,width,.34,e.player?'#7bd387':e.team===0?'#79bbc9':'#d7877e');
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);
- const shield=g.shield(e),total=Math.max(e.maxHp,e.hp+shield);if(shield){c.fillStyle=e.player?'#7bd387':e.team===0?'#79bbc9':'#d7877e';c.fillRect(x,y,width*e.hp/total,.34);c.fillStyle='#d9e5df';c.fillRect(x+width*e.hp/total,y,width*Math.min(shield/total,1-e.hp/total),.34);}
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
  if(e.trainingDummy){r.text(e.name,e.x,e.y-3.05,e.team===0?'#a7d8df':'#edb2a4',.29);c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);
@@ -54,6 +54,7 @@ export function championHud(r,e,g){
  r.text(`${e.name} · ${e.level}${g.bounty(e)?' · +'+g.bounty(e)+' ◈':''}`,e.x,y-.32,e.player?'#f4dfa3':e.team===0?'#a7d8df':'#edb2a4',.29);
  if(gauge){const gy=resourceY+.36+(e.key==='gubo'&&g.buff(e,'guboReload')?.55:0);c.fillStyle='#111e26';c.fillRect(x,gy,width,.17);c.fillStyle=gauge.color;c.fillRect(x,gy,width*gauge.ratio,.17);c.strokeStyle=gauge.color;c.lineWidth=.025;c.strokeRect(x,gy,width,.17);if(!gauge.timer&&gauge.max>1&&gauge.max<=12)for(let i=1;i<gauge.max;i++){c.fillStyle='#13202c';c.fillRect(x+width*i/gauge.max-.015,gy,.03,.17);}r.text(gauge.label,e.x,gy+.36,gauge.color,.205);}
  if(g.champions(e.team).some(a=>a.alive&&g.canGuboHitAlly(a,e)))flameHealthBorder(r,e,g,x,y,width);
+ if(g.bounty(e)){r.polygon([[e.x-.92,e.y-.05],[e.x-.56,e.y-.05],[e.x-.47,e.y+.23],[e.x-.58,e.y+.4],[e.x-.91,e.y+.37],[e.x-1,e.y+.15]],'#c39b50','#3c2e19');r.text('¤',e.x-.74,e.y+.2,'#fff0a3',.23);}
  if(e.player&&!towerTargeters(g,e).length)r.polygon([[e.x-.13,y-1.5],[e.x+.13,y-1.5],[e.x,y-1.28]],'#ead18a');
  c.restore();
 }
@@ -115,7 +116,8 @@ export function championGroundEffects(r,e,g){
  if(g.buff(e,'martonDrain'))outline(5.5);
  if(g.buff(e,'heathUlt'))outline(7.5);
  if(e.state.detonatesAt>g.time)r.circle(e.x,e.y,4,'#d94e262e','#ff7957',.085);
- if(e.key==='honglu'&&e.player&&e.alive)r.circle(e.x,e.y,5,null,'#87d8c999',.045);
+ if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,2.5,null,'#d1dcb799',.035);
+ if(e.key==='honglu'&&e.player&&e.alive&&g.buff(e,'insight'))r.circle(e.x,e.y,5,null,'#87d8c999',.045);
  if(e.state.yanBarrage?.until>g.time){const q=e.state.yanBarrage,a=Math.atan2(q.d.y,q.d.x),c=r.ctx;c.beginPath();c.arc(e.x,e.y,5,a-Math.PI/2,a+Math.PI/2);c.strokeStyle=color;c.lineWidth=.025;c.stroke();}
  if(e.state.donBarrage?.until>g.time){const d=e.state.donBarrage.d,w=1.05,end={x:e.x+d.x*4.5,y:e.y+d.y*4.5};r.line([{x:e.x-d.y*w,y:e.y+d.x*w},{x:end.x-d.y*w,y:end.y+d.x*w},{x:end.x+d.y*w,y:end.y-d.x*w},{x:e.x+d.y*w,y:e.y-d.x*w}],color,.025);}
 }

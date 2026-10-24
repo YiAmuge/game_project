@@ -69,7 +69,7 @@ test('Marton uses a near 190 sweep with stride or distant 100 root and channel r
  const {g,p}=quiet('marton'),t=target(g,46.7);g.cast(p,'r',p);close(p.channelUntil,2.5);run(g,2.3);assert.ok(g.stat(t,'taunt'));assert.ok(t.status.taunt.until>2.5);
 });
 test('Honglu insight phases enemies, respects walls, separates safely and heals all allies when ending',()=>{
- const {g,p}=quiet('honglu'),enemy=target(g,41.2),ally=target(g,44,7,0,'yi');ally.hp-=1000;p.hp-=1000;const hp=p.hp,speed=g.speed(p);g.cast(p,'q',p);close(p.qCd,7);close(g.speed(p)/speed,1.4);g.deal(enemy,p,100,{fixed:true});close(p.hp,hp);close(g.shield(p),250);moveBody(g,p,1.2,0);assert.ok(p.x>41);run(g,1.21);close(p.hp,hp+500);close(ally.hp,99500);assert.ok(canOccupy(g,p,p));assert.ok(!g.buff(p,'insight'));
+ const {g,p}=quiet('honglu'),enemy=target(g,41.2),ally=target(g,44,7,0,'yi');ally.hp-=1000;p.hp-=1000;const hp=p.hp,speed=g.speed(p);g.cast(p,'q',p);close(p.qCd,12);close(g.speed(p)/speed,1.4);g.deal(enemy,p,100,{fixed:true});close(p.hp,hp);close(g.shield(p),250);moveBody(g,p,1.2,0);assert.ok(p.x>41);run(g,1.21);close(p.hp,hp+500);close(ally.hp,99500);assert.ok(canOccupy(g,p,p));assert.ok(!g.buff(p,'insight'));
  const b=quiet('honglu');b.g.map.walls=[{x:41,y:3,w:1,h:8}];b.g.cast(b.p,'q',b.p);moveBody(b.g,b.p,3,0);assert.ok(b.p.x<40.53);
 });
 test('Honglu waterfall moves in the initial direction and recast toggles without resetting duration or cooldown',()=>{const {g,p}=quiet('honglu');g.cast(p,'r',{x:45,y:7});const z=g.zones[0];run(g,.5);close(z.x,45.75);const until=z.until,cd=p.rCd;assert.ok(g.cast(p,'r',p));run(g,.5);close(z.x,45.75);close(z.until,until);close(p.rCd,cd-.5);g.cast(p,'r',p);run(g,.2);close(z.x,46.05);});
