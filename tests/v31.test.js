@@ -58,8 +58,8 @@ test('Ppui ultimate has twenty-two forward visual nails per volley with the same
 test('Ppui tactical effect follows the selected healing point and its real radius',()=>{
  const {g,p}=arena('ppui'),v=new ChampionVFX(new SkillVFX()),point={x:24,y:21};g.cast(p,'q',point);v.sync(g);const f=v.effects.find(e=>e.type==='petalField');assert.equal(f.x,point.x);assert.equal(f.y,point.y);assert.equal(f.r,3.5);assert.equal(f.life,2);
 });
-test('Yan sword falls only during the final 0.45 seconds and reaches ground at the damage moment',()=>{
- assert.equal(fallingSwordHeight(.451),null);assert.equal(fallingSwordHeight(-.01),null);close(fallingSwordHeight(.45),11);close(fallingSwordHeight(0),0);let previous=11;for(let remaining=.44;remaining>=0;remaining-=.01){const height=fallingSwordHeight(remaining);assert.ok(height<previous);previous=height;}
+test('Yan sword falls only during the final 0.15 seconds and reaches ground at the damage moment',()=>{
+ assert.equal(fallingSwordHeight(.151),null);assert.equal(fallingSwordHeight(-.01),null);close(fallingSwordHeight(.15),11);close(fallingSwordHeight(0),0);let previous=11;for(let remaining=.14;remaining>=0;remaining-=.01){const height=fallingSwordHeight(remaining);assert.ok(height<previous);previous=height;}
  const {g,p,t}=arena('yan');p.state.ominous=6;g.cast(p,'r',p);g.units=g.units.filter(e=>e.key!=='yanHand');g.cast(p,'q',t);const warning=g.effects.find(f=>f.type==='yanSwordWarning');assert.equal(warning.r,7.5);assert.equal(warning.source,p.id);assert.equal(warning.maxLife,1.75);const hp=t.hp;run(g,1.74);assert.equal(t.hp,hp);run(g,.02);assert.ok(t.hp<hp);
 });
 test('Marton suction waves move inward, stay bounded and use simulation time',()=>{

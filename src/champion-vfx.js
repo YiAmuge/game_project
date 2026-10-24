@@ -34,7 +34,8 @@ export function treeBillboard(camera,z){
 export function treeAttackArea(z,time){
  return z.kind==='desireTree'&&!z.golden&&z.damage!==0&&z.until>time?{x:z.x,y:z.y,r:z.r}:null;
 }
-export function fallingSwordHeight(remaining){return remaining>=0&&remaining<=.45?11*(1-(1-remaining/.45)**2):null;}
+export function fallingSwordHeight(remaining){return remaining>=0&&remaining<=.15?11*(1-(1-remaining/.15)**2):null;}
+export function healingRipples(f,age){return [0,.12,.24].map(delay=>{const t=(age-delay)/.56;return {r:f.r*Math.max(0,Math.min(1,t))**.75,alpha:t<0||t>1?0:(1-t)*.85};}).filter(p=>p.alpha>0);}
 export function inwardWaves(time,startedAt,r){
  if(time<startedAt)return [];return Array.from({length:3},(_,i)=>{const progress=((time-startedAt)/.85+i/3)%1;return {id:i,r:r*(1-progress)**.8,alpha:.25+.4*Math.sin(progress*Math.PI)};});
 }
@@ -228,6 +229,10 @@ export class ChampionVFX {
    if(kind==='desireTree'){this.field(c,camera,z,.9,z.golden?'#ffe27e':'#281e17',z.golden?.45:.3);this.treeRange(c,camera,z,g.time);}
   }
   for(const f of g.pending)if(f.source.key==='faust'&&f.type==='burst'&&f.at>g.time)this.field(c,camera,f,f.r,'#eef4f5',.16);
+  for(const f of g.effects)if(f.type==='hongluRipple'){
+   const at=world(f,.08),x=world({x:f.x+1,y:f.y},.08),y=world({x:f.x,y:f.y+1},.08);c.save();c.translate(at.x,at.y);c.transform(x.x-at.x,x.y-at.y,y.x-at.x,y.y-at.y,0,0);
+   for(const wave of healingRipples(f,f.maxLife-f.life)){c.globalAlpha=wave.alpha;c.strokeStyle='#9cf1e5';c.lineWidth=.07;c.beginPath();c.arc(0,0,wave.r,0,Math.PI*2);c.stroke();c.strokeStyle='#417d79';c.lineWidth=.035;c.beginPath();c.arc(0,0,Math.max(0,wave.r-.12),0,Math.PI*2);c.stroke();}c.restore();
+  }
   for(const f of g.effects)if(f.type==='yanSwordWarning'){
    const progress=clamp(1-f.life/f.maxLife);this.rangeField(c,camera,f,f.r,'#384759',.5,'#b2c7d6');
    for(let i=0;i<12;i++){const a=i*Math.PI/6,p={x:f.x+Math.cos(a)*f.r*(1-progress*.05),y:f.y+Math.sin(a)*f.r*(1-progress*.05)};sprite('spark','#64717d',p,.1,.06,.25);}
@@ -330,7 +335,7 @@ export class ChampionVFX {
   for(const p of fanFlight(f,age)){
    const at=camera.worldToScreen(p,p.height),next=camera.worldToScreen(p.target,.25),a=Math.atan2(next.y-at.y,next.x-at.x),scale=camera.scale;
    if(f.type==='shotgun'){this.mote(c,'flame',p.distance%2>1?'#d7894e':'#738456',at.x,at.y,.24*scale,a,p.alpha*.75);}
-   const nails=f.type==='nailFan',factor=PROJECTILE_VISUAL_SCALE/(nails?1.5:1),height=(nails?.6:.4)*factor,length=1.3*factor;c.save();c.translate(at.x,at.y);c.rotate(a);c.globalAlpha=p.alpha;c.drawImage(this.projectiles.sprite(p.type,nails?'#cc354f':'#e6b27a',{tint:nails}),-scale*length/2,-scale*height/2,scale*length,scale*height);c.restore();
+   const nails=f.type==='nailFan',factor=PROJECTILE_VISUAL_SCALE/(nails?1.5:1)*(nails?.7:1),height=(nails?.6:.4)*factor,length=1.3*factor;c.save();c.translate(at.x,at.y);c.rotate(a);c.globalAlpha=p.alpha;c.drawImage(this.projectiles.sprite(p.type,nails?'#cc354f':'#e6b27a',{tint:nails}),-scale*length/2,-scale*height/2,scale*length,scale*height);c.restore();
   }c.restore();
  }
  smallImpact(c,camera,p,r,angle,color,alpha){this.stamp(c,camera,p,r,angle,color,alpha,'impact');}

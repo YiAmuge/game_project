@@ -9,20 +9,20 @@ export function projectileAppearance(p,g){
  const type=p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?.45:p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
- return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1,tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:empowered?'#a32b44':null};
+ return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:empowered?'#a32b44':null};
 }
 export function beamAppearance(key){
  const width=key==='gubo'?2.5:key==='rudolph'?3.5:1,color=key==='gubo'?'#74192e':key==='rudolph'?'#dc9852':'#a3d6d2',tuned=['gubo','rudolph'].includes(key);
  return {color,layers:[[.2*width,tuned?.18:.09,color],[.075*width,tuned?.8:.6,color],[.023*width,tuned?.95:.8,key==='gubo'?'#bd5266':key==='rudolph'?'#ffe7b8':'#eef1ed']]};
 }
 export const whipVisualInterval=(g,e)=>g.attackInterval(e)*1.2;
-export const projectileAsset=p=>({yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[p.theme||p.source?.key]);
+export const projectileAsset=p=>(p.theme||p.source?.key)==='yi'&&p.damageKind!=='skill'?false:({yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[p.theme||p.source?.key]);
 export class ProjectileVFX {
  constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();}
  sprite(type,color,{tint=false,asset:override}={}){
-  const key=type+color+tint+(override||'');if(this.sprites.has(key))return this.sprites.get(key);
+  const key=type+color+tint+String(override??'');if(this.sprites.has(key))return this.sprites.get(key);
   if(this.sprites.size>=64)this.sprites.delete(this.sprites.keys().next().value);
-  const asset=override||{axe:'rodyaAxe',nail:'ppuiNail',knife:'nellyKnife',harpoon:'ahabHarpoon',glass:'yiDagger'}[type],f=FRAMES[asset],atlas=f&&loadAtlas(f.sheet);
+  const asset=override===false?null:override||{axe:'rodyaAxe',nail:'ppuiNail',knife:'nellyKnife',harpoon:'ahabHarpoon',glass:'yiDagger'}[type],f=FRAMES[asset],atlas=f&&loadAtlas(f.sheet);
   if(f&&atlas.complete&&atlas.naturalWidth){const canvas=document.createElement('canvas'),geometry=weaponGeometry(asset,256);canvas.width=Math.ceil(geometry.span);canvas.height=Math.max(24,Math.round(256*f.h/f.w));canvas.dataset.spriteAsset=asset;canvas.dataset.lengthScale=String(canvas.width/256);const c=canvas.getContext('2d');drawWeapon(c,asset,256,{y:canvas.height/2});if(tint){c.globalCompositeOperation='source-atop';c.globalAlpha=.5;c.fillStyle=color;c.fillRect(0,0,canvas.width,canvas.height);}this.sprites.set(key,canvas);return canvas;}
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=96;const c=canvas.getContext('2d');c.translate(64,48);
   const metal=c.createLinearGradient(0,-15,0,15);metal.addColorStop(0,tint?tintTone(color,.45):'#fafbfc');metal.addColorStop(.3,color);metal.addColorStop(.52,tint?tintTone(color,.12):'#f4f4f4');metal.addColorStop(1,tint?tintTone(color,-.6):'#4b5057');

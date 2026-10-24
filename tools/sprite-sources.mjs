@@ -15,6 +15,7 @@ export const SOURCES={
  hohenheimGroup:'exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png',
  myoBodies:'exec-62c2b150-a0b8-46a7-b262-e885a8b363a3.png',
  myoWeapons:'exec-ddcdf24a-b3bb-42b6-90a8-67b799a9e103.png',
+ ppuiHand:'exec-070ea042-73f1-4624-8141-8ce2faeb476c.png',
 };
 // crown: anatomical skull crown (excludes horns/hat/branches); foot: ground center.
 // face: square portrait crop in source pixels, independent of hair/hat extent.
@@ -41,16 +42,16 @@ export const BODIES=[
  body('gregor','rodyaGroup',[1330,0,444,712],35,[1550,700],[1400,65,290,290]),
  body('dongbaek','dongBodies',[0,0,780,945],140,[445,935],[290,190,310,310],{largestOnly:true,heightBasis:'crown'}),
  body('dongrang','dongBodies',[740,55,572,890],205,[1020,935],[835,135,370,370],{largestOnly:true}),
- body('ahab','ahabGroup',[0,0,715,763],165,[435,755],[310,145,290,290],{largestOnly:true}),
+ body('ahab','ahabGroup',[0,0,715,763],90,[435,755],[310,145,290,290],{largestOnly:true}),
  body('queequeg','ahabGroup',[700,0,540,763],75,[970,755],[850,105,290,290],{largestOnly:true}),
- body('nelly','ahabGroup',[1240,0,534,763],145,[1510,755],[1390,155,290,290]),
+ body('nelly','ahabGroup',[1240,0,534,763],125,[1510,755],[1390,155,290,290]),
  body('queequegUlt','queequegMask',[0,0,1205,1305],65,[660,1250],[510,185,410,410]),
  body('gubo','guboGroup',[0,0,780,880],50,[495,855],[335,105,300,300]),
  body('gahwan','guboGroup',[780,0,756,880],75,[1160,855],[1020,125,300,300]),
  body('hohenheim','hohenheimGroup',[0,0,625,738],35,[315,730],[185,65,280,280],{largestOnly:true}),
  body('alisa','hohenheimGroup',[630,0,550,738],90,[920,730],[770,100,290,290],{heightBasis:'crown'}),
  body('marton','hohenheimGroup',[1200,0,574,738],85,[1500,730],[1380,110,280,280],{largestOnly:true,heightBasis:'crown'}),
- body('myo','myoBodies',[190,220,520,850],260,[470,1040],[325,290,320,320]),
+ body('myo','myoBodies',[190,220,520,850],260,[470,1040],[325,290,320,320],{eyes:[[477,464],[560,462]]}),
  body('rudolph','myoBodies',[730,0,570,1070],265,[1010,1040],[835,300,330,330],{heightBasis:'crown'}),
 ];
 const weapon=(key,source,rect,extra={})=>({key,source,rect,largestOnly:key!=='rudolphStaff',...extra});
@@ -67,4 +68,5 @@ export const WEAPONS=[
  weapon('guboRifle','guboGroup',[0,880,785,144]),weapon('gahwanSword','guboGroup',[790,870,746,154]),
  weapon('hohenheimStaff','hohenheimGroup',[0,738,625,149]),weapon('alisaClub','hohenheimGroup',[630,745,550,142]),weapon('martonHammer','hohenheimGroup',[1190,710,584,177],{largestOnly:true,exclude:[[1190,710,350,45]]}),
  weapon('myoRifle','myoWeapons',[20,735,720,160]),weapon('myoDagger','myoWeapons',[125,900,465,105]),weapon('rudolphStaff','myoWeapons',[745,710,791,314],{exclude:[[745,710,575,25]]}),
+ weapon('ppuiHand','ppuiHand',[0,0,1619,971]),
 ];

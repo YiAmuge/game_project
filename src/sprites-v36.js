@@ -633,8 +633,8 @@ export const SPRITE_FRAMES={
   "ahab": {
     "x": 8,
     "y": 1399,
-    "w": 378,
-    "h": 510,
+    "w": 335,
+    "h": 452,
     "sheet": 9,
     "rotation": 0,
     "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
@@ -647,21 +647,21 @@ export const SPRITE_FRAMES={
     "removedFragments": 1944,
     "heightBasis": "crown",
     "referenceHeight": 400,
-    "crownOffset": 104.40677966101694,
-    "heightScale": 1.275,
+    "crownOffset": 47.5187969924812,
+    "heightScale": 1.13,
     "foot": [
       0.6481149012567325,
-      0.9890329012961115
+      0.990085834054162
     ],
     "face": [
-      160,
-      91,
-      197,
-      197
+      142,
+      81,
+      174,
+      174
     ]
   },
   "queequeg": {
-    "x": 394,
+    "x": 351,
     "y": 1399,
     "w": 242,
     "h": 414,
@@ -691,10 +691,10 @@ export const SPRITE_FRAMES={
     ]
   },
   "nelly": {
-    "x": 644,
+    "x": 601,
     "y": 1399,
-    "w": 277,
-    "h": 470,
+    "w": 268,
+    "h": 455,
     "sheet": 9,
     "rotation": 0,
     "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
@@ -707,21 +707,21 @@ export const SPRITE_FRAMES={
     "removedFragments": 0,
     "heightBasis": "crown",
     "referenceHeight": 400,
-    "crownOffset": 64.91803278688523,
-    "heightScale": 1.175,
+    "crownOffset": 50.15873015873016,
+    "heightScale": 1.1375,
     "foot": [
       0.6398104265402843,
-      0.9891873038018835
+      0.9893598465027037
     ],
     "face": [
-      87,
-      71,
-      190,
-      190
+      84,
+      69,
+      184,
+      184
     ]
   },
   "queequegUlt": {
-    "x": 929,
+    "x": 877,
     "y": 1399,
     "w": 240,
     "h": 407,
@@ -751,7 +751,7 @@ export const SPRITE_FRAMES={
     ]
   },
   "gubo": {
-    "x": 1177,
+    "x": 1125,
     "y": 1399,
     "w": 320,
     "h": 410,
@@ -781,7 +781,7 @@ export const SPRITE_FRAMES={
     ]
   },
   "gahwan": {
-    "x": 1505,
+    "x": 1453,
     "y": 1399,
     "w": 335,
     "h": 435,
@@ -811,8 +811,8 @@ export const SPRITE_FRAMES={
     ]
   },
   "hohenheim": {
-    "x": 8,
-    "y": 1917,
+    "x": 1796,
+    "y": 1399,
     "w": 218,
     "h": 410,
     "sheet": 9,
@@ -841,8 +841,8 @@ export const SPRITE_FRAMES={
     ]
   },
   "alisa": {
-    "x": 234,
-    "y": 1917,
+    "x": 8,
+    "y": 1862,
     "w": 266,
     "h": 446,
     "sheet": 9,
@@ -871,8 +871,8 @@ export const SPRITE_FRAMES={
     ]
   },
   "marton": {
-    "x": 508,
-    "y": 1917,
+    "x": 282,
+    "y": 1862,
     "w": 290,
     "h": 453,
     "sheet": 9,
@@ -901,8 +901,8 @@ export const SPRITE_FRAMES={
     ]
   },
   "myo": {
-    "x": 806,
-    "y": 1917,
+    "x": 580,
+    "y": 1862,
     "w": 187,
     "h": 404,
     "sheet": 9,
@@ -923,6 +923,16 @@ export const SPRITE_FRAMES={
       0.5192307692307693,
       0.9977151561309977
     ],
+    "eyes": [
+      [
+        100.5128205128205,
+        107.69230769230768
+      ],
+      [
+        143.07692307692307,
+        106.66666666666666
+      ]
+    ],
     "face": [
       23,
       18,
@@ -931,8 +941,8 @@ export const SPRITE_FRAMES={
     ]
   },
   "rudolph": {
-    "x": 1001,
-    "y": 1917,
+    "x": 775,
+    "y": 1862,
     "w": 208,
     "h": 503,
     "sheet": 9,
@@ -1501,6 +1511,22 @@ export const SPRITE_FRAMES={
       710,
       791,
       314
+    ],
+    "removedFragments": 0
+  },
+  "ppuiHand": {
+    "x": 1107,
+    "y": 1802,
+    "w": 539,
+    "h": 298,
+    "sheet": 10,
+    "rotation": 0,
+    "source": "exec-070ea042-73f1-4624-8141-8ce2faeb476c.png",
+    "sourceRect": [
+      0,
+      0,
+      1619,
+      971
     ],
     "removedFragments": 0
   }

@@ -15,7 +15,7 @@ export function orders(g,e){
 }
 export function marked(g,e,t){return e.key==='sora'&&Boolean(e.state.orders?.[t.id]?.until>g.time);}
 export function mark(g,e,t,origin='passive'){
- if(!t?.alive||t.camp==='boss'||!g.hostile(e,t)||!['neutral','champion'].includes(t.kind))return false;
+ if(!t?.alive||t.camp==='boss'||!g.hostile(e,t)||!['neutral','champion'].includes(t.kind)||g.debuffImmune?.(t))return false;
  const active=orders(g,e),previous=e.state.orders[t.id];
  if(origin==='passive'&&!previous&&active.filter(m=>m.origin==='passive').length>=SORA.passiveCap)return false;
  e.state.orders[t.id]={target:t.id,until:g.time+SORA.markDuration,origin:origin==='ultimate'||previous?.origin==='ultimate'?'ultimate':'passive'};

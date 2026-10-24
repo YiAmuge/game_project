@@ -1,3 +1,4 @@
+import * as Don from '../src/don.js';
 import { releaseHeath } from '../src/skills.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -71,7 +72,7 @@ test('new eight basic attacks and abilities execute without NaN state',()=>{
   assert.ok(g.cast(p,'q',t),key+' Q');
   if(key==='heathcliff'){run(g,1.3);assert.ok(releaseHeath(g,p,t));}
   if(key==='ishmael')assert.ok(g.cast(p,'q',t));
-  run(g,.7);if(key==='don'){t.x=p.x+1;t.y=p.y;}
+  run(g,.7);if(key==='don'){assert.ok(Don.release(g,p,t));t.x=p.x+1;t.y=p.y;}
   assert.ok(g.cast(p,'r',t),key+' R');run(g,5.2);
   assert.ok(Number.isFinite(p.hp)&&Number.isFinite(t.hp));assert.ok(p.totalDamage>0,key+' should damage a target');
  }

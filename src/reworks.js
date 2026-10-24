@@ -85,7 +85,7 @@ export function finishInsight(g,e){
  const s=e.state;if(s.insightUntil===undefined)return;
  delete s.insightUntil;delete e.buffs.insight;e.shields=e.shields.filter(a=>a.source!==`insight-${e.id}`);e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;
  for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500,false,{healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
- g.effects.push({type:'ring',x:e.x,y:e.y,r:5,color:'#84e6dc',life:.6,maxLife:.6});
+ g.effects.push({type:'hongluRipple',source:e.id,theme:'honglu',x:e.x,y:e.y,r:5,life:.8,maxLife:.8});
 }
 export function easterEggs(g,dt){
  g.easterEggs??=new Set();const phrases={queequeg:'자, 막아내라!',starbuck:'엄호해라!',ishmael:'네 탓이군, 이스마엘!'};

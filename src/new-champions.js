@@ -36,12 +36,13 @@ export function validate(g,e,slot,p){
 export function recast(g,e,slot){return e.key==='ahab'&&slot==='r'&&e.state.recastUntil>g.time&&!e.state.recastSpent;}
 export function receivedMultiplier(g,e,t,kind){return e.key==='gahwan'&&kind==='skill'&&t.state?.contempt?.[e.id]>g.time?1.12:1;}
 function gaze(g,e,t,n=1){
- if(t.kind!=='champion'||!t.alive||t.hp<=0)return;
+ if(t.kind!=='champion'||!t.alive||t.hp<=0||g.debuffImmune?.(t))return;
  t.state.gaze??={};const mark=t.state.gaze[e.id]??={n:0,until:0};if(mark.until<=g.time)mark.n=0;mark.n+=n;mark.until=g.time+5;
  if(mark.n>=5){mark.n=0;t.state.contempt??={};t.state.contempt[e.id]=g.time+3;t.revealedUntil=g.time+3;t.visuals.contempt={until:g.time+3,theme:'gahwan'};g.triggerDisrupt(e,t);}
 }
 function refundKnife(g,e){const s=e.state;if(Number.isFinite(s.knifeReady))s.knifeReady=g.time+Math.max(0,s.knifeReady-g.time)*.5;}
 function nellyMark(g,e,t,force=false){
+ if(g.debuffImmune?.(t))return;
  t.state.nellyMarks??={};let mark=t.state.nellyMarks[e.id];
  if(force){t.state.nellyMarks[e.id]={active:true,ready:Infinity,hold:3,until:g.time+7};t.visuals.nellyMark={until:g.time+7,theme:'nelly',forced:true};return;}
  if(mark?.active&&mark.until>g.time){
@@ -65,7 +66,7 @@ export function basic(g,e,p,d){
   let primaryBonus=0;
   g.bullet(e,d,182,g.attackRange(e),{speed:16,width:.22,beforeHit:(t,shot)=>{primaryBonus=harpoonBonus(g,e,t);shot.damage*=primaryBonus;},onHit:t=>{
    if(!primaryBonus)return;
-   if(t.kind==='champion'&&t.alive){const mark={source:e.id,team:e.team,until:g.time+4};t.state.harpoon=mark;(t.state.harpoons??={})[e.id]=mark;t.revealedUntil=g.time+2.5;g.status(t,'armorDown',25,3,e);t.visuals.harpoon={until:g.time+4,theme:'ahab'};}
+   if(t.kind==='champion'&&t.alive&&!g.debuffImmune?.(t)){const mark={source:e.id,team:e.team,until:g.time+4};t.state.harpoon=mark;(t.state.harpoons??={})[e.id]=mark;t.revealedUntil=g.time+2.5;g.status(t,'armorDown',25,3,e);t.visuals.harpoon={until:g.time+4,theme:'ahab'};}
    g.action(e,'basic',()=>{for(const u of [...g.units])if(g.hostile(e,u)&&distance(u,t)<=2+u.radius&&g.clearLine(t,u)){const bonus=u===t?primaryBonus:harpoonBonus(g,e,u);if(bonus)g.deal(e,u,84*bonus);}});
    g.effects.push({type:'burst',x:t.x,y:t.y,r:2,theme:e.key,life:.45,maxLife:.45});
   }});return true;

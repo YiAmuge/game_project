@@ -1,3 +1,4 @@
+import * as Don from '../src/don.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -47,8 +48,8 @@ for(const key of ['ryoshu','ahab','sinclair','starbuck'])test(`capture also conf
 test('Queequeg stats follow missing health immediately, including healing and max-HP growth',()=>{
  const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),48);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),12);g.award(p,6900,0);close(g.armor(p),0);close(g.attackRange(p),3);
 });
-test('Don tactical recasts once, keeps the original cooldown and can restart only when ready',()=>{
- const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,12);run(g,1);close(p.qCd,11);assert.ok(g.cast(p,'q',p));close(p.qCd,11,.02);assert.equal(p.state.donBarrage,undefined);assert.equal(g.buff(p,'donGuard'),false);assert.equal(g.cast(p,'q',p),false);
+test('Don tactical starts cooldown on release and rejects another charge until ready',()=>{
+ const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,0);assert.equal(g.cast(p,'q',p),false);run(g,1);assert.ok(Don.release(g,p,{x:45,y:7}));close(p.qCd,12);assert.equal(p.state.donCharge,undefined);assert.equal(g.cast(p,'q',p),false);run(g,12.01);assert.ok(g.cast(p,'q',p));
 });
 test('Don ultimate accepts an empty coordinate and applies seven-second lifesteal',()=>{
  const {g,p}=quiet('don');g.units=[p];assert.equal(skillTargeting(g,p,'r').confirm,false);assert.ok(g.cast(p,'r',{x:45,y:7}));close(p.motion.total,5);close(p.buffs.donLifesteal,7);run(g,.7);close(p.x,45);

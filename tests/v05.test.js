@@ -1,3 +1,4 @@
+import * as Don from '../src/don.js';
 import test from 'node:test';
 import { release as releaseYan } from '../src/yan.js';
 import { release as releaseHohenheim } from '../src/hohenheim.js';
@@ -44,9 +45,8 @@ test('ranged minions and towers have homing flight time, while minion tower resi
 test('creeps never initiate attacks before being hurt and deaggro after 1.85 seconds outside their camp',()=>{
  const {g,p}=quiet();const n=g.makeNeutral(40,7,'side');p.x=41;const hp=p.hp;g.aiNeutral=Game.prototype.aiNeutral;run(g,1);close(p.hp,hp);assert.ok(!n.hostile);g.deal(p,n,1,{fixed:true});assert.ok(n.hostile);run(g,.1);assert.ok(p.hp<hp);n.x=45;g.time+=.1;g.aiNeutral(n,.01);assert.ok(n.hostile);g.time+=1.8;g.aiNeutral(n,.01);assert.ok(!n.returning);g.time+=.06;g.aiNeutral(n,.01);assert.ok(n.returning);assert.equal(n.hostile,false);assert.equal(n.aggro,null);
 });
-test('Don tactical locks its direction while allowing movement and halves frontal damage only',()=>{
- const {g,p,t}=quiet('don');t.x=43;g.cast(p,'q',t);assert.ok(!p.motion);const before=p.x;g.input.y=1;run(g,.3);close(p.x,before);assert.ok(p.y>7);assert.ok(p.state.donBarrage.d.x>.99);assert.equal(g.attack(p,t),false);
- g.input.y=0;t.x=p.x+2;t.y=p.y;let hp=p.hp;g.deal(t,p,100);const front=hp-p.hp;t.x=p.x-2;hp=p.hp;g.deal(t,p,100);close((hp-p.hp)/front,2);run(g,2.5);assert.equal(p.state.donBarrage,undefined);
+test('Don tactical allows slower movement while charging and releases in the current aim direction',()=>{
+ const {g,p,t}=quiet('don');t.x=43;g.input.aim={x:45,y:7};const speed=g.speed(p);g.cast(p,'q',t);assert.ok(!p.motion);close(g.speed(p),speed*.9);close(g.armor(p),50);const before=p.x;g.input.y=1;run(g,.3);close(p.x,before);assert.ok(p.y>7);assert.ok(p.state.donCharge);assert.equal(g.attack(p,t),false);g.input.y=0;assert.ok(Don.release(g,p,t));assert.equal(p.state.donCharge,undefined);close(g.armor(p),0);close(g.speed(p),speed);
 });
 test('Rodion now travels before basic damage and tactical cooldown is twelve seconds',()=>{
  const {g,p,t}=quiet('rodya');t.x=42;g.attack(p,t);close(t.hp,100000);assert.ok(p.motion);run(g,.3);assert.ok(t.hp<100000);assert.equal(CHAMPIONS.rodya.q,12);

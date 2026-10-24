@@ -1,3 +1,4 @@
+import * as Don from '../src/don.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, respawnTime } from '../src/game.js';
@@ -10,11 +11,11 @@ const run=(g,s)=>{for(let i=0;i<Math.ceil(s*60);i++)g.step(1/60);};
 function quiet(key){const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:44,y:7,hp:10000,maxHp:10000});g.units=[p,t];g.minionQueue=[];return {g,p,t};}
 function enemy(g,x=44,y=7){const t=g.makeChampion('faust',1,8);Object.assign(t,{x,y,hp:10000,maxHp:10000});return t;}
 
-test('Don straight barrage covers a side-edge target and reports half width 1.05',()=>{
- const {g,p,t}=quiet('don');Object.assign(t,{x:40+2*Math.cos(.7),y:7+2*Math.sin(.7)});g.cast(p,'q',{x:45,y:7});run(g,.05);assert.ok(t.hp<10000);assert.equal(skillTargeting(g,p,'q').radius,1.05);
+test('Don charged thrust covers a side-edge target and reports half width 1.05',()=>{
+ const {g,p,t}=quiet('don');Object.assign(t,{x:40+2*Math.cos(.7),y:7+2*Math.sin(.7)});g.cast(p,'q',{x:45,y:7});Don.release(g,p,{x:45,y:7});assert.ok(t.hp<10000);assert.equal(skillTargeting(g,p,'q').radius,1.05);
 });
-test('Meursault basic nerf, tactical refill and temporary ultimate armor affect actual combat',()=>{
- const {g,p,t}=quiet('meursault');t.x=41;assert.equal(g.ammoCap(p),3);g.attack(p,t);close(10000-t.hp,233.75*.9);p.ammo=0;g.cast(p,'q',p);assert.equal(p.ammo,1);g.cast(p,'r',t);close(g.armor(p),10);run(g,3.05);close(g.armor(p),0);
+test('Meursault two-hit basic, tactical refill and temporary ultimate armor affect actual combat',()=>{
+ const {g,p,t}=quiet('meursault');t.x=41;assert.equal(g.ammoCap(p),3);g.attack(p,t);close(10000-t.hp,120*.9);run(g,.1);close(10000-t.hp,240*.9);p.ammo=0;g.cast(p,'q',p);assert.equal(p.ammo,1);g.cast(p,'r',t);close(g.armor(p),10);run(g,3.05);close(g.armor(p),0);
 });
 test('Gubo normal shot pierces all three enemies',()=>{
  const {g,p,t}=quiet('gubo'),b=enemy(g,46),c=enemy(g,48);g.attack(p,t);run(g,.8);assert.ok(t.hp<10000);assert.ok(b.hp<10000);assert.ok(c.hp<10000);

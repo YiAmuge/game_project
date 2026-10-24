@@ -1,4 +1,5 @@
 import * as Reworks from './reworks.js';
+import * as Don from './don.js';
 import * as Infestation from './infestation.js';
 import * as Gregor from './gregor.js';
 import * as Sora from './sora.js';
@@ -62,7 +63,7 @@ export function canRecast(g,e,slot){
  if(e.key==='honglu'&&slot==='r'&&g.zones.some(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time))return true;
 
  if(slot==='r'&&(Sora.ready(g,e)||Yan.ready(g,e)))return true;
- if(V12.recast(g,e,slot)||e.key==='don'&&slot==='q'&&e.state.donBarrage?.until>g.time)return true;
+ if(V12.recast(g,e,slot))return true;
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')))||slot==='r'&&e.key==='ezra'&&g.buff(e,'ezraUlt');
 }
@@ -73,6 +74,7 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.state.donCharge)return false;
  if(!Hohenheim.validate(g,e,slot,p)||!Sora.validate(g,e,slot,p)||!Yan.validate(g,e,slot))return false;
  if(!V12.validate(g,e,slot,p))return false;
  if(!V10.validate(g,e,slot,p))return false;
@@ -145,7 +147,7 @@ export function basic(g,e,p,d,options={}){
  }
 }
 export function mentalWhip(g,e,t){
- if(t.kind!=='champion'||!t.alive)return;
+ if(t.kind!=='champion'||!t.alive||g.debuffImmune?.(t))return;
  t.state.mentalWhip??={};const mark=t.state.mentalWhip[e.id]??={hits:0,stage:0,at:-99};
  decayMentalWhip(g,t);if(g.time-mark.at>.5)mark.hits=0;mark.at=g.time;mark.decayAt=g.time+2;
  if(++mark.hits>=5){mark.hits=0;mark.stage=Math.min(3,mark.stage+1);}
@@ -160,9 +162,8 @@ export function cast(g,e,slot,p,d,options={}){
  if(Yan.cast(g,e,slot,p,d)||Sora.cast(g,e,slot,p,d)||V12.cast(g,e,slot,p,d,options)||V10.cast(g,e,slot,p,d,options)||V08.cast(g,e,slot,p,d,options)||New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;
  switch(e.key){
  case 'don':
-  if(slot==='q'){
-   if(state.donBarrage?.until>g.time){delete state.donBarrage;delete e.buffs.donGuard;}else{state.donBarrage={d:{...d},until:g.time+2.5,next:g.time};g.addBuff(e,'donGuard',2.5);}
-  }else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
+  if(slot==='q')Don.start(g,e,p);
+  else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
   return true;
  case 'ryoshu':
   if(slot==='q'){const len=4*(g.buff(e,'amplify')?1.2:1);e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,180,()=>{},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
@@ -193,7 +194,7 @@ export function cast(g,e,slot,p,d,options={}){
  case 'gregor':return Gregor.cast(g,e,slot,d,()=>gregorStack(g,e,2));
  case 'rudolph':
   if(slot==='q'){const spend=Math.min(e.hp-1,e.hp*.1);e.hp-=spend;e.ammo=Math.min(ammoCap(g,e),e.ammo+35);g.addShield(e,spend,`focus-${e.id}`);}
-  else{const spent=e.ammo;e.ammo=0;state.recoveryDuration=1.25;e.channelUntil=g.time+1.25;g.pending.push({type:'global',source:e,x:p.x,y:p.y,r:5.25,at:g.time+1.25,damage:8.5*spent,ignoreWalls:true,onHit:t=>{if(t.kind==='champion'){t.state.mentalWhip??={};t.state.mentalWhip[e.id]={hits:0,stage:3,at:g.time,decayAt:g.time+2};}g.status(t,'slow',.3,1.5,e);}});}
+  else{const spent=e.ammo;e.ammo=0;state.recoveryDuration=1.25;e.channelUntil=g.time+1.25;g.pending.push({type:'global',source:e,x:p.x,y:p.y,r:5.25,at:g.time+1.25,damage:8.5*spent,ignoreWalls:true,onHit:t=>{if(t.kind==='champion'&&!g.debuffImmune?.(t)){t.state.mentalWhip??={};t.state.mentalWhip[e.id]={hits:0,stage:3,at:g.time,decayAt:g.time+2};}g.status(t,'slow',.3,1.5,e);}});}
   return true;
  case 'moses':
   if(slot==='q'){state.smoke=options.direction;if(state.smoke==='down')e.hp=Math.max(1,e.hp*.94);}
@@ -273,7 +274,7 @@ export function interceptDeath(g,e,killer){
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
  const s=e.state;decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);Sora.tick(g,e);Yan.tick(g,e,dt);Hohenheim.tick(g,e,dt);Reworks.tick(g,e);
- if(s.donBarrage){if(s.donBarrage.until<=g.time||g.stat(e,'stun')||g.stat(e,'silence')){delete s.donBarrage;delete e.buffs.donGuard;}else if(g.time+1e-8>=s.donBarrage.next){s.donBarrage.next+=.25;s.donBarrage.hits=(s.donBarrage.hits||0)+1;g.action(e,'skill',()=>Reworks.rectangle(g,e,s.donBarrage.d,4.5,2.1,45,(t,actual)=>{if(s.donBarrage?.hits%4===0)g.heal(e,e,actual*.2,false);}));e.lastAttackAt=g.time;}}
+ Don.tick(g,e);
 
  if(e.key==='alisa'){
   if(s.alisaReloadActive&&!g.buff(e,'alisaReload'))endAlisaReload(g,e);
@@ -299,7 +300,7 @@ export function tick(g,e,dt){
 }
 
 export function applyBurn(g,source,target,explosion=false){
- if(!target.alive||target.hp<=0||target.returning)return;
+ if(!target.alive||target.hp<=0||target.returning||g.debuffImmune?.(target))return;
  if(target.burn?.explosion&&!explosion&&target.burn.until>g.time)return;
  const interval=explosion?.3:.5;target.burn={source,explosion,until:g.time+(explosion?3:2),next:g.time+interval,interval,damage:explosion?15+source.maxHp*.015:25};
 }

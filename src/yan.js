@@ -16,7 +16,7 @@ export function orders(g,e){
  const marks=e.state.falseOrders??={};for(const [id,m] of Object.entries(marks)){const t=g.units.find(u=>u.id===m.target);if(m.until<=g.time||!t?.alive||t.returning)delete marks[id];}return Object.values(marks);
 }
 export function mark(g,e,t,{ultimate=false}={}){
- if(!g.hostile(e,t)||t.kind==='summon'||t.returning)return false;
+ if(!g.hostile(e,t)||t.kind==='summon'||t.returning||g.debuffImmune?.(t))return false;
  if(!ultimate&&(marked(g,e,t)||(e.state.orderLocks?.[t.id]||0)>g.time))return false;
  e.state.falseOrders??={};e.state.orderLocks??={};e.state.falseOrders[t.id]={target:t.id,until:g.time+(ultimate?6:YAN.markDuration)};
  e.state.orderLocks[t.id]=g.time+YAN.reapply;return true;

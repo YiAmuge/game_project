@@ -28,7 +28,7 @@ export function cast(g,e,slot,p,d){
   const origin={x:e.x,y:e.y},destination=trapPoint(g,e,p);e.untargetableUntil=g.time+.7;e.channelUntil=g.time+.7;
   g.effects.push({type:'ring',...origin,r:1,color:'#b4d9ce',life:.7,maxLife:.7},{type:'ring',...destination,r:STARBUCK.rRadius,color:'#b4d9ce',life:.7,maxLife:.7});
   const landingPoint=g.safeLanding(e,destination,8),len=distance(e,landingPoint);g.startMotion(e,direction(e,landingPoint),len,{kind:'leap',ignoreWalls:true,phaseEnemies:true,arcHeight:5,speed:len/.7,maxSpeed:Infinity,minDuration:.7,onComplete:()=>{
-   e.untargetableUntil=0;e.channelUntil=0;
+   e.untargetableUntil=0;e.channelUntil=0;e.state.starbuckLandedAt=g.time;
    const landing=trapPoint(g,e,landingPoint);
    if(!g.blocked(landing.x,landing.y,e.radius)&&canOccupy(g,e,landing,{phaseEnemies:true})){Object.assign(e,landing);settleBody(g,e,origin);}
    const candidates=[];area(g,e,e,STARBUCK.rRadius,0,t=>{const before=t.hp+g.shield(t);g.deal(e,t,STARBUCK.rDamage);if(t.kind==='champion'&&t.alive&&t.hp+g.shield(t)<before)candidates.push(t);});

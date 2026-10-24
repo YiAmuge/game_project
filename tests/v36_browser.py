@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     page=b.new_page(viewport={'width':1440,'height':900});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.36.0')
+    expect(page.locator('.build-tag')).to_contain_text('0.37.0')
     page.wait_for_function('__moba.renderer.atlasV36.naturalWidth>0&&__moba.renderer.weaponAtlas.naturalWidth>0')
     page.click('#training-open');page.get_by_role('button',name='묘 선택',exact=True).click();page.click('#start')
     page.wait_for_function('__moba.renderer.scene25d.skin.ready')

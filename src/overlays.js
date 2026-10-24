@@ -2,6 +2,7 @@ import { paintHealth } from './health-display.js';
 import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
+import * as Don from './don.js';
 import { endurance } from './v08-champions.js';
 import { trap } from './confinement.js';
 import { RULES,AHAB } from './data.js';
@@ -100,6 +101,10 @@ export function championEffects(r,e,g){
  c.restore();
 }
 export function chargePreview(r,e,g){
+ if(e.key==='don'&&e.state.donCharge&&e.alive){
+  const shape=Don.chargeShape(g,e,e.player?g.input.aim:e.state.donCharge.aim),d=shape.d,end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range},side={x:-d.y*shape.width/2,y:d.x*shape.width/2};
+  r.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],'#e8c94a24','#ffe18a');r.text(`충전 ${Math.round(shape.progress*100)}% · 놓아서 찌르기`,e.x,e.y+1.2,'#ffe18a',.3);return;
+ }
  if(e.key!=='heathcliff'||e.state.chargeAt===undefined||!e.alive)return;
  const point=e.player?g.input.aim:e.state.chargeAim,charge=heathCharge(g,e,point),color=charge.ready?'#d9b6f1':'#b4a7c1',c=r.ctx;
  c.save();r.circle(e.x,e.y,charge.range,'#b389d209',color+'88',.045);
@@ -119,7 +124,6 @@ export function championGroundEffects(r,e,g){
  if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,2.5,null,'#d1dcb799',.035);
  if(e.key==='honglu'&&e.player&&e.alive&&g.buff(e,'insight'))r.circle(e.x,e.y,5,null,'#87d8c999',.045);
  if(e.state.yanBarrage?.until>g.time){const q=e.state.yanBarrage,a=Math.atan2(q.d.y,q.d.x),c=r.ctx;c.beginPath();c.arc(e.x,e.y,5,a-Math.PI/2,a+Math.PI/2);c.strokeStyle=color;c.lineWidth=.025;c.stroke();}
- if(e.state.donBarrage?.until>g.time){const d=e.state.donBarrage.d,w=1.05,end={x:e.x+d.x*4.5,y:e.y+d.y*4.5};r.line([{x:e.x-d.y*w,y:e.y+d.x*w},{x:end.x-d.y*w,y:end.y+d.x*w},{x:end.x+d.y*w,y:end.y-d.x*w},{x:e.x+d.y*w,y:e.y-d.x*w}],color,.025);}
 }
 
 export function stackGauge(e,g){

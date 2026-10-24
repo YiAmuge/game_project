@@ -1,3 +1,4 @@
+import * as Don from '../src/don.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game,damageFormula } from '../src/game.js';
@@ -20,8 +21,8 @@ test('Yan receives one instant maximum sword only in the second after natural Q 
 });
 test('Yan distorted sword and Don R cast without coordinate confirmation',()=>{const {g,p}=quiet('yan');p.state.ominous=6;g.cast(p,'r',p);assert.equal(skillTargeting(g,p,'q').confirm,false);const d=quiet('don');assert.equal(skillTargeting(d.g,d.p,'r').confirm,false);assert.ok(d.g.cast(d.p,'r',{x:47,y:7}));assert.ok(d.p.motion);});
 test('Sinclair cannot acquire marks from any source during awakening',()=>{const {g,p}=quiet('sinclair');g.addMark(p,3);assert.ok(g.buff(p,'marks'));g.addMark(p,1);g.addMark(p,3);close(p.marks,0);run(g,4.01);g.addMark(p);close(p.marks,1);});
-test('Don rectangle hits side edges, excludes outside and heals only on each fourth pulse',()=>{
- const {g,p}=quiet('don'),t=target(g,44,8.4),out=target(g,43,8.6);p.hp-=1000;g.cast(p,'q',{x:47,y:7});run(g,.74);const hp=p.hp,enemy=t.hp;close(out.hp,100000);assert.ok(t.hp<100000);run(g,.02);close(p.hp-hp,(enemy-t.hp)*.2);assert.equal(p.state.donBarrage.hits,4);
+test('Don full-charge rectangle hits side edges, excludes outside and refills only once',()=>{
+ const {g,p}=quiet('don'),t=target(g,44,8.4),out=target(g,43,8.6);p.ammo=0;g.cast(p,'q',{x:47,y:7});g.time=1.5;Don.release(g,p,{x:47,y:7});close(out.hp,100000);assert.ok(t.hp<100000);close(p.ammo,2);close(g.stat(t,'stun'),1);
 });
 test('Faust gains nine automatic XP, loses the old earned-XP bonus and keeps max-level basic bonuses',()=>{
  const {g,p}=quiet('faust');run(g,1);close(p.xp,9);g.award(p,100,0);close(p.xp,109);g.kill(p,p);run(g,1);close(p.xp,118);g.award(p,7000,0);close(p.level,10);close(g.ammoCap(p),4);close(g.attackRange(p),7.5);

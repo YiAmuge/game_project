@@ -4,6 +4,7 @@ import { onDeath as releaseReferences } from './v12-champions.js';
 import * as BotAI from './bot-ai.js';
 import { cancelCharge as cancelYan } from './yan.js';
 import { cancelCharge as cancelHohen } from './hohenheim.js';
+import * as Don from './don.js';
 import { RULES,UPGRADES,RUNTIME_CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
 import { canOccupy,settleBody } from './collision.js';
@@ -132,7 +133,7 @@ export function summon(g,key,team,point){
 }
 export function setChampionAI(g,on){
  if(!g.training)return false;g.practice.championAI=Boolean(on);
- if(!on)for(const e of g.champions().filter(e=>e.trainingSummoned)){cancelYan(e);cancelHohen(e);Skills.cancelHeath(e);e.path=[];}
+ if(!on)for(const e of g.champions().filter(e=>e.trainingSummoned)){cancelYan(e);cancelHohen(e);Skills.cancelHeath(e);Don.cancel(g,e);e.path=[];}
  return true;
 }
 export function aiChampion(g,e,dt){

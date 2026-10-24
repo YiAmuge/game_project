@@ -42,6 +42,7 @@ function extract(entry,body){
  if(body){
   frame.heightBasis=entry.heightBasis||'silhouette';frame.referenceHeight=400;frame.crownOffset=entry.heightBasis==='crown'?(entry.crown-sy-top)*scale:0;
   frame.heightScale=out.height/400;frame.foot=[(entry.foot[0]-sx-left)/w,(frame.crownOffset+400)/out.height];
+  if(entry.eyes)frame.eyes=entry.eyes.map(([x,y])=>[(x-sx-left)*scale,(y-sy-top)*scale]);
   frame.face=entry.face.map((v,i)=>Math.round((v-(i===0?sx+left:i===1?sy+top:0))*scale));
   const side=Math.min(frame.face[2],out.width,out.height);frame.face=[Math.max(0,Math.min(out.width-side,frame.face[0])),Math.max(0,Math.min(out.height-side,frame.face[1])),side,side];
  }
