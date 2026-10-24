@@ -15,7 +15,7 @@ import { distance } from './geometry.js';
 import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
 import { FRAMES, THEMES, loadAtlas,visualForm,spriteHeight } from './art.js';
-import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin } from './weapon-art.js';
+import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin,orientWeapon } from './weapon-art.js';
 import { draw as bossPattern } from './boss-patterns.js';
 import { draw as creepPattern } from './creep-patterns.js';
 import { targetingPreview } from './targeting.js';
@@ -149,7 +149,6 @@ export class Renderer {
     if(!this.billboardPass&&game.shield(e)>0)this.circle(e.x,e.y-.65,1.05,'#9fc9d711','#c8e4df99',.055);
     if(!this.billboardPass&&(game.buff(e,'marks')||game.buff(e,'resolve')))this.circle(e.x,e.y,1,null,'#d9be78aa',.09);
     drawBackEquipment(this,e,game,{lift:championPresentation(game,e).lift});
-    if(Math.sin(angle)<-.2)this.weapon(e,game);
     const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
     c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
@@ -163,7 +162,7 @@ export class Renderer {
     else {c.fillStyle=def.color;c.fillRect(-.42,-1.8,.84,.8);c.fillStyle='#273642';c.fillRect(-.38,-1,.76,1);}
     c.restore();
     if(e.naturalHealing){this.text('+',e.x+.85,e.y-1.6+Math.sin(game.time*5)*.1,'#a4e9a1',.55);if(!this.billboardPass)this.circle(e.x,e.y,.8,null,'#a3d89766',.05);}
-    if(Math.sin(angle)>=-.2)this.weapon(e,game);
+    this.weapon(e,game);
     c.restore();
 
     if(e.player&&inBush)this.text(e.revealedUntil>game.time?'노출 중':'수풀 은닉',e.x,e.y+.8,'#a9d890',.32);
@@ -259,7 +258,7 @@ export class Renderer {
     const c=this.ctx,style=game.attackStyle(e),swing=(game.time-(e.attackAt??-10))/.3,attacking=swing>=0&&swing<1,slash=['slash','sweep'].includes(style),side=(e.attackSerial||0)%2?1:-1;
     let a=attacking?(e.attackFacing??e.facing):e.facing??(e.team?Math.PI:0);if(slash&&attacking)a+=e.key==='honglu'?swing*Math.PI*2:(swing-.5)*2.25*side;
     const lunge=!slash&&attacking?Math.sin(swing*Math.PI)*.38:0;
-    c.save();const hand=equipmentPose(game,e,championPresentation(game,e).lift).right;c.translate(hand.x,hand.y);c.rotate(a);c.translate(lunge,0);
+    c.save();const hand=equipmentPose(game,e,championPresentation(game,e).lift).right;c.translate(hand.x,hand.y);orientWeapon(c,a);c.translate(lunge,0);
     if(game.buff(e,'mutant'))c.scale(1.15,1.15);
     if(e.key!=='sora'&&slash){
       const reach={faust:1.9,sinclair:1.93,honglu:1.95,heathcliff:1.7,rodya:1.52,ishmael:1.45,gregor:1.55,nelly:1.3,myo:1.5,dongbaek:1.45,dongrang:2.2,marton:2.03}[e.key]||1.7;

@@ -4,6 +4,11 @@ import { FRAMES,visualForm,spriteHeight } from './art.js';
 import { drawRibbon } from './weapon-trails.js';
 
 export const DASH_TRAIL_FRAMES=5,DASH_TRAIL_FADE=.18;
+export function teleportSamples(g,e){
+ const blink=e.state?.ahabTeleportTrail,age=blink?g.time-blink.at:Infinity;
+ if(!e.alive||e.key!=='ahab'||age<0||age>=DASH_TRAIL_FADE)return null;
+ return Array.from({length:DASH_TRAIL_FRAMES},(_,i)=>{const t=i/(DASH_TRAIL_FRAMES-1);return {x:blink.from.x+(blink.to.x-blink.from.x)*t,y:blink.from.y+(blink.to.y-blink.from.y)*t,height:0,opacity:1,time:blink.at,facing:blink.facing||0,visual:visualForm(g,e)};});
+}
 export function dashSections(samples,time,camera){
  if(samples.length<2)return [];
  const fade=Math.max(0,1-(time-samples.at(-1).time)/DASH_TRAIL_FADE);
@@ -18,6 +23,7 @@ export class DashTrails {
  sync(g){
   if(this.game!==g||g.time<(this.time||0)){this.histories=new WeakMap();this.game=g;}this.time=g.time;
   for(const e of g.champions()){
+   const blink=teleportSamples(g,e);if(blink){this.histories.set(e,{motion:e.state.ahabTeleportTrail,samples:blink,at:e.state.ahabTeleportTrail.at});continue;}
    const m=e.motion,active=e.alive&&m&&!m.forced&&['dash','leap'].includes(m.kind),segment=e.key==='starbuck'&&m?.kind==='leap'?(m.elapsed/(m.minDuration||.7)<.5?0:1):0;
    let h=this.histories.get(e);
    if(active){

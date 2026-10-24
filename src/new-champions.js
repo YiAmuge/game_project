@@ -105,6 +105,7 @@ export function cast(g,e,slot,p,d){
    const isRecast=recast(g,e,slot);s.recastSpent=isRecast;s.recastUntil=0;
    const len=Math.min(6.5,distance(e,p)),dest=trapPoint(g,e,{x:e.x+d.x*len,y:e.y+d.y*len}),execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
    s.ahabUlt={origin:{x:e.x,y:e.y},immune:e.ccImmuneUntil||0,invulnerable:e.invulnerableUntil||0};e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.channelUntil=g.time+.45;
+   s.ahabSlamAt=g.time+.45;s.ahabTeleportTrail={from:{x:e.x,y:e.y},to:{...dest},at:g.time,facing:e.facing};
    e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
    {
     for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{g.effects.push({source:e.id,theme:e.key,slot:'r',damageKind:'skill',type:'ahabSpin',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.28,maxLife:.28});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){g.deal(e,t,180,{nonLethal:execute.has(t.id)});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+5;}});

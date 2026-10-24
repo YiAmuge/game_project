@@ -13,7 +13,7 @@ with sync_playwright() as pw:
     page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
     page.set_content('<iframe id="preview" sandbox="allow-scripts" style="width:100%;height:900px"></iframe>')
     page.evaluate('(html)=>document.querySelector("iframe").srcdoc=html',html)
-    frame=page.frame_locator('#preview');expect(frame.locator('.build-tag')).to_contain_text('0.37.0')
+    frame=page.frame_locator('#preview');expect(frame.locator('.build-tag')).to_contain_text(json.loads((root/'package.json').read_text())['version'])
     frame.locator('#training-open').click();frame.get_by_role('button',name='퀴케그 선택',exact=True).click();frame.locator('#start').click()
     frame.locator('body').evaluate('''async()=>{const at=performance.now();__moba.game.step=()=>{};while(!__moba.renderer.atlasV36.naturalWidth||!__moba.renderer.weaponAtlas.naturalWidth||!__moba.renderer.scene25d.skin.ready){if(performance.now()-at>10000)throw new Error(JSON.stringify({body:__moba.renderer.atlasV36.naturalWidth,weapon:__moba.renderer.weaponAtlas.naturalWidth,skin:__moba.renderer.scene25d.skin.ready,ids:[...document.querySelectorAll('script[id*=v36]')].map(s=>s.id)}));await new Promise(r=>setTimeout(r,30));}__moba.game.addBuff(__moba.game.player,'queequegUlt',4);}''')
     expect(frame.locator('#hud-face')).to_have_attribute('data-form','queequegUlt')

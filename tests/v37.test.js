@@ -8,7 +8,7 @@ import * as Infestation from '../src/infestation.js';
 import * as Sora from '../src/sora.js';
 import * as Yan from '../src/yan.js';
 import { FRAMES } from '../src/art.js';
-import { HAND_ANCHORS,MIDDLE_GRIP,equipmentPose,spriteOrigin,clawMotion,drawEquipment,drawBackEquipment,WEAPON_ART } from '../src/weapon-art.js';
+import { HAND_ANCHORS,MIDDLE_GRIP,equipmentPose,spriteOrigin,clawMotion,drawEquipment,drawBackEquipment,WEAPON_ART,weaponOrientation } from '../src/weapon-art.js';
 import { projectileAsset,projectileAppearance } from '../src/projectile-vfx.js';
 import { fallingSwordHeight,healingRipples } from '../src/champion-vfx.js';
 import { leapLift } from '../src/projection-25d.js';
@@ -32,7 +32,7 @@ test('hand and body origins move by exactly the same Z during jumps and presenta
 });
 test('Sora claws complete left clockwise then right counterclockwise full turns in 0.24 seconds',()=>{
  const a=clawMotion(.06),b=clawMotion(.18),done=clawMotion(.24);close(a.left.angle,Math.PI);assert.ok(a.left.active&&!a.right.active);close(b.left.angle,2*Math.PI);close(b.right.angle,-Math.PI);assert.ok(!b.left.active&&b.right.active);close(done.right.angle,-2*Math.PI);assert.ok(!done.right.active);
- close(WEAPON_ART.sora[1],1.05*.8);close(WEAPON_ART.yan[1],2.5*1.2);assert.equal(WEAPON_ART.ppui[0],'ppuiHand');assert.ok(WEAPON_ART.ppui[1]<.6);
+ close(WEAPON_ART.sora[1],1.05*.8*.75);close(WEAPON_ART.yan[1],2.5*1.2);assert.equal(WEAPON_ART.ppui[0],'ppuiHand');assert.ok(WEAPON_ART.ppui[1]<.6);
 });
 test('Starbuck harpoon points down through descent and the landing impact',()=>{
  const {g,p}=arena('starbuck');p.motion={kind:'leap',elapsed:.6,minDuration:.7,total:3,speed:3};close(equipmentPose(g,p).angle,Math.PI/2);delete p.motion;p.state.starbuckLandedAt=g.time;close(equipmentPose(g,p).angle,Math.PI/2);g.time+=.23;close(equipmentPose(g,p).angle,p.facing||0);
@@ -48,13 +48,13 @@ test('Myo keeps rifle behind her body, swaps exclusively to it for Q, and holds 
  const oldImage=globalThis.Image,oldDocument=globalThis.document;globalThis.Image=class{complete=true;naturalWidth=2048;};globalThis.document={getElementById:()=>null};
  try{const {g,p}=arena('myo');let r=artRecorder();drawBackEquipment(r,p,g);drawEquipment(r,p,g);assert.deepEqual(r.records.map(x=>x.key),['myoRifle','myoDagger']);assert.ok(r.rotations.includes(.95));
   p.castSlot='q';p.castAt=g.time;r=artRecorder();drawBackEquipment(r,p,g);drawEquipment(r,p,g);assert.deepEqual(r.records.map(x=>x.key),['myoRifle']);
-  g.time+=.51;g.addBuff(p,'rabbitFrenzy',4.5);r=artRecorder();drawBackEquipment(r,p,g);drawEquipment(r,p,g);assert.deepEqual(r.records.map(x=>x.key),['myoRifle','myoDagger','myoDagger']);assert.ok(r.rotations.includes(Math.PI+.25)&&r.rotations.includes(Math.PI-.25));
+  g.time+=.51;g.addBuff(p,'rabbitFrenzy',4.5);r=artRecorder();drawBackEquipment(r,p,g);drawEquipment(r,p,g);assert.deepEqual(r.records.map(x=>x.key),['myoRifle','myoDagger','myoDagger']);assert.ok(r.rotations.some(a=>Math.abs(a-weaponOrientation(Math.PI+.25).angle)<1e-9)&&r.rotations.some(a=>Math.abs(a-weaponOrientation(Math.PI-.25).angle)<1e-9));
  }finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });
 test('shield transforms stay fixed during Ishmael attacks and Nelly enlarges only the attacking knife',()=>{
  const oldImage=globalThis.Image,oldDocument=globalThis.document;globalThis.Image=class{complete=true;naturalWidth=2048;};globalThis.document={getElementById:()=>null};
  try{const {g,p}=arena('ishmael');p.facing=0;let r=artRecorder();drawEquipment(r,p,g);const idle=r.rotations.slice(0,3),idleHand=r.translations[0];p.attackAt=0;p.attackFacing=0;p.attackSerial=1;g.time=.1;r=artRecorder();drawEquipment(r,p,g);assert.deepEqual(r.rotations.slice(0,3),idle);const pose=equipmentPose(g,p);close(r.translations[0][0],pose.left.x);assert.ok(r.rotations.some(x=>Math.abs(x)>.1));
-  const n=arena('nelly');r=artRecorder();drawEquipment(r,n.p,n.g);const width=r.scales[0][0];n.p.attackAt=0;n.p.attackSerial=1;n.g.time=.1;r=artRecorder();drawEquipment(r,n.p,n.g);close(r.scales[0][0]/width,1.5);n.g.time=.31;r=artRecorder();drawEquipment(r,n.p,n.g);close(r.scales[0][0],width);
+  const n=arena('nelly');r=artRecorder();drawEquipment(r,n.p,n.g);const width=r.scales[1][0];n.p.attackAt=0;n.p.attackSerial=1;n.g.time=.1;r=artRecorder();drawEquipment(r,n.p,n.g);close(r.scales[1][0]/width,1.5);n.g.time=.31;r=artRecorder();drawEquipment(r,n.p,n.g);close(r.scales[1][0],width);
   assert.ok(idleHand[0]>p.x);assert.ok(FRAMES.nellyKnife.source.includes('b41ae069'));
  }finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });

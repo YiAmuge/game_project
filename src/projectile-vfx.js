@@ -1,7 +1,8 @@
 import { combatStyle } from './combat-style.js';
 import { projectileDimensions } from './projectile-rules.js';
 import { FRAMES,loadAtlas } from './art.js';
-import { drawWeapon,weaponGeometry } from './weapon-art.js';
+import { drawWeapon,weaponGeometry,weaponEmissionPoint,weaponEmissionScreen } from './weapon-art.js';
+import { feetOffset } from './projection-25d.js';
 const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(light<0?n*(1+light):n+(255-n)*light).toString(16).padStart(2,'0');}).join('');
 
 export function projectileAppearance(p,g){
@@ -18,7 +19,14 @@ export function beamAppearance(key){
 export const whipVisualInterval=(g,e)=>g.attackInterval(e)*1.2;
 export const projectileAsset=p=>(p.theme||p.source?.key)==='yi'&&p.damageKind!=='skill'?false:({yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[p.theme||p.source?.key]);
 export class ProjectileVFX {
- constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();}
+ constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();this.muzzles=new WeakMap();}
+ position(p,g,camera,height){
+  const at=camera.worldToScreen(p,height);if(p.source?.key!=='gubo'||!p.origin)return at;
+  let muzzle=this.muzzles.get(p);
+  if(!muzzle){const point=weaponEmissionPoint(g,p.source);muzzle={x:point.x-p.source.x,y:point.y-p.source.y-feetOffset(p.source)};this.muzzles.set(p,muzzle);}
+  const origin=camera.worldToScreen(p.origin,.075),start=camera.worldToScreen(p.origin,height),fade=Math.max(0,1-(g.time-(p.bornAt??g.time))/.14);
+  return {x:at.x+(origin.x+muzzle.x*camera.scale-start.x)*fade,y:at.y+(origin.y+muzzle.y*camera.scale-start.y)*fade};
+ }
  sprite(type,color,{tint=false,asset:override}={}){
   const key=type+color+tint+String(override??'');if(this.sprites.has(key))return this.sprites.get(key);
   if(this.sprites.size>=64)this.sprites.delete(this.sprites.keys().next().value);
@@ -53,12 +61,12 @@ export class ProjectileVFX {
  draw(c,camera,game){
   c.save();
   for(const p of game.projectiles){
-   const style=projectileAppearance(p,game),at=camera.worldToScreen(p,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy??0,p.dx??1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);
+   const style=projectileAppearance(p,game),base=camera.worldToScreen(p,style.height),at=this.position(p,game,camera,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy??0,p.dx??1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);
    const {width,length}=projectileDimensions(style,camera.scale),margin=Math.max(150,Math.hypot(width,length)/2+30);
    if(at.x<-margin||at.x>camera.width+margin||at.y<-margin||at.y>camera.height+margin)continue;
-   let h=this.histories.get(p);if(!h){h=[];this.histories.set(p,h);}if(!h.length||h.at(-1).time!==game.time){h.push({x:p.x,y:p.y,time:game.time});if(h.length>5)h.shift();}
-   const rotation=style.spin?(game.time-(p.bornAt||0))*28:Math.atan2(next.y-at.y,next.x-at.x);
-   if(h.length>1){const tail=camera.worldToScreen(h[0],style.height),dx=at.x-tail.x,dy=at.y-tail.y,n=Math.hypot(dx,dy);if(n>1){c.save();c.translate(tail.x,tail.y);c.rotate(Math.atan2(dy,dx));c.globalAlpha=.16;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),0,-Math.max(1,width*.45),n,Math.max(2,width*.9));c.restore();}}
+   let h=this.histories.get(p);if(!h){h=[];this.histories.set(p,h);}if(!h.length||h.at(-1).time!==game.time){h.push({x:p.x,y:p.y,time:game.time,ox:(at.x-base.x)/camera.scale,oy:(at.y-base.y)/camera.scale});if(h.length>5)h.shift();}
+   const rotation=style.spin?(game.time-(p.bornAt||0))*28:Math.atan2(next.y-base.y,next.x-base.x);
+   if(h.length>1){const tail=camera.worldToScreen(h[0],style.height);tail.x+=h[0].ox*camera.scale;tail.y+=h[0].oy*camera.scale;const dx=at.x-tail.x,dy=at.y-tail.y,n=Math.hypot(dx,dy);if(n>1){c.save();c.translate(tail.x,tail.y);c.rotate(Math.atan2(dy,dx));c.globalAlpha=.16;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),0,-Math.max(1,width*.45),n,Math.max(2,width*.9));c.restore();}}
    c.save();c.translate(at.x,at.y);c.rotate(rotation);
    if(style.aura){c.save();c.globalAlpha=.75;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),-length*.8,-width,length*1.6,width*2);c.restore();}
    const texture=this.sprite(style.type,style.color,{tint:style.tint,asset:projectileAsset(p)}),span=length*Number(texture.dataset.lengthScale||1),height=texture.dataset.spriteAsset?span*texture.height/texture.width:width*1.2;
@@ -88,7 +96,7 @@ export class ProjectileVFX {
    if(!['guboLaser','whipArc'].includes(fx.type)&&!(fx.type==='line'&&fx.theme==='hohenheim'))continue;
    const owner=game.units.find(e=>e.id===fx.source),key=fx.theme||(fx.type==='guboLaser'?'gubo':'rudolph');
    const end=fx.to;if(!end)continue;
-   const from=camera.worldToScreen(fx,key==='gubo'?1.35:.95),to=camera.worldToScreen(end,key==='gubo'?1.25:.5),style=beamAppearance(key);
+   const from=owner&&['gubo','rudolph'].includes(key)?weaponEmissionScreen(game,owner,camera):camera.worldToScreen(fx,key==='gubo'?1.35:.95),to=camera.worldToScreen(end,key==='gubo'?1.25:.5),style=beamAppearance(key);
    c.globalAlpha=Math.max(0,fx.life/fx.maxLife)*.7;c.lineCap='round';
    for(const [w,a,tone] of style.layers){c.save();c.globalAlpha*=a;c.strokeStyle=tone;c.lineWidth=w*camera.scale;c.beginPath();c.moveTo(from.x,from.y);if(key==='rudolph')c.quadraticCurveTo((from.x+to.x)/2,Math.min(from.y,to.y)-camera.scale*1.3,to.x,to.y);else c.lineTo(to.x,to.y);c.stroke();c.restore();}
    if(key==='gubo'&&owner)c.drawImage(this.sprite('bullet','#953247'),to.x-3,to.y-2,6,4);

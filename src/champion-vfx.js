@@ -1,12 +1,13 @@
 import { combatStyle,clipShape } from './combat-style.js';
 import { noise } from './organic-particles.js';
 import { guardAlly } from './new-champions.js';
-import { leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
+import { leapLift,renderAnchor,leapOpacity,levitationLift } from './projection-25d.js';
 import { PROJECTILE_VISUAL_SCALE } from './projectile-rules.js';
 import { FRAMES } from './art.js';
 import { drawWeapon } from './weapon-art.js';
 
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
+const DONGBAEK_AURA_LIFT=.25;
 const FORMULAS=['E = mc²','∇·E = ρ/ε₀','Σ F = ma','Δx·Δp ≥ ℏ/2','∂ψ/∂t = Hψ','F = −∇V'];
 export function fanFlight(f,age){
  const nails=f.type==='nailFan',count=nails?22:28,out=[];
@@ -51,14 +52,14 @@ export function championPresentation(g,e){
  if(buff('redEncouragement'))set('#ad485b','petal');if(buff('insight'))set('#6bb7ad','mist',.75);
  if(buff('rabbitFrenzy'))set('#db8a49','bolt',e.motion?.actionKind==='basic'?.95:.7);
  if(buff('mutant'))set('#5c412d');if(buff('alisaReload'))set('#b86132','flame',.75);
- if(buff('flowerStride')||buff('flowerReload'))set('#dcc66e','petal');
+ if(buff('flowerStride')||buff('flowerReload')){set('#dcc66e','petal');if(e.key==='dongbaek'&&buff('flowerStride'))aura.anchor='feet';}
  if(buff('ishmaelSurvive'))set('#d29b59','glow',.75);
  if(buff('ahabCover')||e.key==='ahab'&&s.order==='guard'||g.champions(e.team).some(a=>a.key==='ahab'&&a.alive&&guardAlly(g,a)===e))set('#3d7472');
  if(e.key==='kim'&&s.counter){set('#233a5d','smoke',.8);dim=.7;}
  if(e.key==='rudolph'&&s.exhaustedUntil>g.time)dim=.67;
  if(e.key==='dongbaek'&&status('disarm'))dim=.7;
  if(status('stun')&&e.status.stun.theme==='rodya')frozen=true;
- return {aura,dim,frozen,lift:e.key==='rudolph'&&e.castSlot==='r'&&e.channelUntil>g.time?.16+.04*Math.sin(g.time*5):0};
+ return {aura,dim,frozen,lift:levitationLift(g,e)};
 }
 export class ChampionVFX {
  constructor(vfx,projectiles,art){this.vfx=vfx;this.projectiles=projectiles;this.art=art;this.previous=new WeakMap();this.effects=[];this.seen=new WeakSet();this.cache=new Map();this.pulse=new WeakMap();}
@@ -117,6 +118,11 @@ export class ChampionVFX {
   }c.putImageData(p,0,0);this.cache.set(key,canvas);return canvas;
  }
  aura(c,a,time){
+  if(a.anchor==='feet'){
+   c.save();c.translate(0,-DONGBAEK_AURA_LIFT);
+   c.save();c.globalAlpha=a.strength*(.92+.08*Math.sin(time*3));c.drawImage(this.rimTexture(a.color,a.form),-1.15,-.16,2.3,.58);c.restore();
+   for(let i=0;i<9;i++){const angle=time*1.7+i*Math.PI*2/9;this.mote(c,'petal',a.color,Math.cos(angle)*.83,.08+Math.sin(angle)*.18,.11,angle,.8,i%4);}c.restore();return;
+  }
   c.save();c.globalAlpha=a.strength*(.92+.08*Math.sin(time*3));c.drawImage(this.rimTexture(a.color,a.form),-1.35,-2.9,2.7,3.2);c.restore();
   for(let i=0;i<3;i++){const x=Math.sin(time*.8+i*2)*.5,y=-.8+Math.cos(time+i)*.2;c.save();c.scale(1,1.45);this.mote(c,a.form==='bolt'?'smoke':a.form,a.color,x,y,1.1+i*.08,time*.15+i,a.strength*.45,i);c.restore();}
  }
@@ -154,10 +160,10 @@ export class ChampionVFX {
    if(e.key==='rudolph'&&e.castSlot==='r'&&e.channelUntil>time)this.electric(c,time,'#d2944e',1,12);
    if(g.buff(e,'queequegUlt'))this.motes(c,'spark','#df5f40',time*1.5,7,.7,.65);
    if(e.bossEmpowered)this.aura(c,{color:'#a797d8',form:'smoke',strength:.45},time);
-   if(e.key==='dongbaek')this.motes(c,'petal','#dbc875',time,7,1,.8);
+   if(e.key==='dongbaek'&&!g.buff(e,'flowerStride'))this.motes(c,'petal','#dbc875',time,7,1,.8);
    if(e.visuals?.hongluShare?.until>time)this.motes(c,'petal','#e8b9c7',time,8,1.15,.85);
    if(s.swordHeldBy)this.motes(c,'spark','#e4dfd5',time*8,7,.3,.8);
-   if(g.shield(e)>0){c.save();c.globalAlpha=.85;c.drawImage(this.rimTexture('#d7edf5','shield'),-1.28,-2.82,2.56,3.04);c.restore();}
+   if(g.shield(e)>0){c.save();c.globalAlpha=.85;if(e.key==='dongbaek'&&g.buff(e,'flowerStride')){c.translate(0,-DONGBAEK_AURA_LIFT);c.drawImage(this.rimTexture('#d7edf5','shield'),-1.15,-.16,2.3,.58);}else c.drawImage(this.rimTexture('#d7edf5','shield'),-1.28,-2.82,2.56,3.04);c.restore();}
    if(e.rodyaSlowUntil>time)this.motes(c,'frost','#d3d8dc',time,6,.8,.65);
    if(s.harpoon?.until>time)this.mote(c,'glow','#e8894c',.08,-1,.24+Math.sin(time*7)*.035,0,.95);
    if(s.counter)this.aura(c,{color:'#233a5d',form:'smoke',strength:.45},time);
