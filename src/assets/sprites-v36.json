@@ -1,0 +1,1567 @@
+{
+  "version": 1,
+  "provenance": {
+    "yanSora": {
+      "file": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sha256": "c65ded669a1d3994fe2d3d038f6ed776969beb5d29a4a149b869a8815f9849fb"
+    },
+    "ppuiKimStarbuck": {
+      "file": "exec-5551e26f-d5bf-4537-9ed3-7bf282930e25.png",
+      "sha256": "2d37d10ec5419b7c9bbaace5825bb76c436f49c5e2b93662c8971ce0404bb7ae"
+    },
+    "sinnersBodies": {
+      "file": "exec-4514bc2e-b8f6-4297-80b2-f84d9fc86aa1.png",
+      "sha256": "c7115e74abf12ba0958bcbec0cc44bdf07ae6deb4ea77a6965072c091939e48d"
+    },
+    "sinnersWeapons": {
+      "file": "exec-a771ab59-ac5d-4f17-b06b-f1b6196f1574.png",
+      "sha256": "76f3797db3468b7956ba42c13082addd65e42b665a7833e567c9acd99bee8750"
+    },
+    "meursaultGroup": {
+      "file": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sha256": "6ffb4705789a6963cd51de38b010055d445b4ba6a2b9c913a47794cd90cf0ecb"
+    },
+    "rodyaGroup": {
+      "file": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sha256": "850896ed99dfd388730ad1a45cc9e94d8a8d745d76b24fa588bfd7cc06f549b3"
+    },
+    "dongBodies": {
+      "file": "exec-44fb13a4-d3a2-473d-9bc1-50d8f87e9ae8.png",
+      "sha256": "87654600d991ef73a56e5261a1b4cc62e1eb8ec7f1916731352ab0e0249e64a6"
+    },
+    "dongWeapons": {
+      "file": "exec-3c8d3b2a-9da7-4a61-971e-919121abdbb6.png",
+      "sha256": "85edd1f17b3e528ab61c27ee0d85d0ab2817ddb7311cf565a0b8f4181908fbe7"
+    },
+    "ahabGroup": {
+      "file": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
+      "sha256": "7f4548b0505dd55cd42d24abc6c8ffc5b9b81e92284a5917df520d92b590ceb2"
+    },
+    "queequegMask": {
+      "file": "exec-f11b4e23-ed81-4eb2-ab7f-8bbb7db92026.png",
+      "sha256": "b1fffad5cba7039a1184eddf51f8165994b05b2ebefc7c0976112247429cc72a"
+    },
+    "guboGroup": {
+      "file": "exec-d563e807-6cee-45e6-9905-515dd4c0998c.png",
+      "sha256": "d78fd8ca37587890efdbb3bdf29dde6cfd7bf1d06283d2378a82eadaed6355e2"
+    },
+    "hohenheimGroup": {
+      "file": "exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png",
+      "sha256": "78c275b4c8ae799bda24dc53630b68eb5ea89a9b2c4c1a204ecd798f77b5f82e"
+    },
+    "myoBodies": {
+      "file": "exec-62c2b150-a0b8-46a7-b262-e885a8b363a3.png",
+      "sha256": "831496d35ba815cc7b875febf71720feb901eae2fb522d7137cc077a320e4246"
+    },
+    "myoWeapons": {
+      "file": "exec-ddcdf24a-b3bb-42b6-90a8-67b799a9e103.png",
+      "sha256": "c807acb31ebd3472b13e05490f2000cef19e47901c4937aba1550675661992a9"
+    }
+  },
+  "frames": {
+    "yan": {
+      "x": 8,
+      "y": 8,
+      "w": 295,
+      "h": 453,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        0,
+        0,
+        450,
+        684
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 51.89189189189189,
+      "heightScale": 1.1325,
+      "foot": [
+        0.5926829268292683,
+        0.9975538452359644
+      ],
+      "face": [
+        78,
+        59,
+        195,
+        195
+      ]
+    },
+    "yanDistorted": {
+      "x": 311,
+      "y": 8,
+      "w": 301,
+      "h": 443,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        450,
+        0,
+        460,
+        684
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 42.52252252252252,
+      "heightScale": 1.1075,
+      "foot": [
+        0.6019184652278178,
+        0.9989221727370712
+      ],
+      "face": [
+        91,
+        53,
+        191,
+        191
+      ]
+    },
+    "sora": {
+      "x": 620,
+      "y": 8,
+      "w": 271,
+      "h": 411,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        915,
+        40,
+        420,
+        644
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 11.636363636363637,
+      "heightScale": 1.0275,
+      "foot": [
+        0.5752688172043011,
+        1.0015483300154833
+      ],
+      "face": [
+        61,
+        23,
+        200,
+        200
+      ]
+    },
+    "soraEgo": {
+      "x": 899,
+      "y": 8,
+      "w": 301,
+      "h": 469,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        1340,
+        0,
+        434,
+        684
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 69.0909090909091,
+      "heightScale": 1.1725,
+      "foot": [
+        0.5265700483091788,
+        1.0001938360147316
+      ],
+      "face": [
+        64,
+        80,
+        200,
+        200
+      ]
+    },
+    "ppui": {
+      "x": 1208,
+      "y": 8,
+      "w": 307,
+      "h": 472,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-5551e26f-d5bf-4537-9ed3-7bf282930e25.png",
+      "sourceRect": [
+        0,
+        0,
+        565,
+        760
+      ],
+      "removedFragments": 249,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 70.47619047619047,
+      "heightScale": 1.18,
+      "foot": [
+        0.5826446280991735,
+        0.9967715899919289
+      ],
+      "face": [
+        65,
+        83,
+        194,
+        194
+      ]
+    },
+    "kim": {
+      "x": 1523,
+      "y": 8,
+      "w": 346,
+      "h": 453,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-5551e26f-d5bf-4537-9ed3-7bf282930e25.png",
+      "sourceRect": [
+        620,
+        50,
+        580,
+        710
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 50.847457627118644,
+      "heightScale": 1.1325,
+      "foot": [
+        0.5440313111545988,
+        0.9952482508324915
+      ],
+      "face": [
+        63,
+        7,
+        237,
+        237
+      ]
+    },
+    "starbuck": {
+      "x": 8,
+      "y": 488,
+      "w": 202,
+      "h": 408,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-5551e26f-d5bf-4537-9ed3-7bf282930e25.png",
+      "sourceRect": [
+        1260,
+        50,
+        514,
+        710
+      ],
+      "removedFragments": 1,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 6.666666666666667,
+      "heightScale": 1.02,
+      "foot": [
+        0.5449101796407185,
+        0.9967320261437909
+      ],
+      "face": [
+        20,
+        22,
+        182,
+        182
+      ]
+    },
+    "yi": {
+      "x": 218,
+      "y": 488,
+      "w": 209,
+      "h": 406,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-4514bc2e-b8f6-4297-80b2-f84d9fc86aa1.png",
+      "sourceRect": [
+        0,
+        0,
+        460,
+        850
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 5.827814569536424,
+      "heightScale": 1.015,
+      "foot": [
+        0.5645569620253165,
+        0.9995758979545232
+      ],
+      "face": [
+        31,
+        27,
+        164,
+        164
+      ]
+    },
+    "faust": {
+      "x": 435,
+      "y": 488,
+      "w": 210,
+      "h": 404,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-4514bc2e-b8f6-4297-80b2-f84d9fc86aa1.png",
+      "sourceRect": [
+        460,
+        0,
+        440,
+        850
+      ],
+      "removedFragments": 5,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 3.1578947368421053,
+      "heightScale": 1.01,
+      "foot": [
+        0.5513784461152882,
+        0.9979155810317873
+      ],
+      "face": [
+        39,
+        24,
+        163,
+        163
+      ]
+    },
+    "ryoshu": {
+      "x": 653,
+      "y": 488,
+      "w": 212,
+      "h": 402,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-4514bc2e-b8f6-4297-80b2-f84d9fc86aa1.png",
+      "sourceRect": [
+        900,
+        0,
+        430,
+        850
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 1.6,
+      "heightScale": 1.005,
+      "foot": [
+        0.5415617128463476,
+        0.9990049751243781
+      ],
+      "face": [
+        37,
+        23,
+        165,
+        165
+      ]
+    },
+    "don": {
+      "x": 873,
+      "y": 488,
+      "w": 207,
+      "h": 401,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-4514bc2e-b8f6-4297-80b2-f84d9fc86aa1.png",
+      "sourceRect": [
+        1330,
+        0,
+        444,
+        850
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 0.5298013245033113,
+      "heightScale": 1.0025,
+      "foot": [
+        0.5487179487179488,
+        0.9988274347244471
+      ],
+      "face": [
+        34,
+        22,
+        164,
+        164
+      ]
+    },
+    "meursault": {
+      "x": 1088,
+      "y": 488,
+      "w": 201,
+      "h": 408,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        0,
+        0,
+        400,
+        635
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 5.378151260504202,
+      "heightScale": 1.02,
+      "foot": [
+        0.5150501672240803,
+        0.9935739001482946
+      ],
+      "face": [
+        13,
+        26,
+        188,
+        188
+      ]
+    },
+    "honglu": {
+      "x": 1297,
+      "y": 488,
+      "w": 340,
+      "h": 432,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        400,
+        0,
+        510,
+        635
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 28.07017543859649,
+      "heightScale": 1.08,
+      "foot": [
+        0.6776859504132231,
+        0.99090318388564
+      ],
+      "face": [
+        111,
+        42,
+        211,
+        211
+      ]
+    },
+    "heathcliff": {
+      "x": 1645,
+      "y": 488,
+      "w": 228,
+      "h": 424,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        950,
+        0,
+        460,
+        635
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 20.689655172413794,
+      "heightScale": 1.06,
+      "foot": [
+        0.49393939393939396,
+        0.9921925829538061
+      ],
+      "face": [
+        6,
+        34,
+        200,
+        200
+      ]
+    },
+    "ishmael": {
+      "x": 8,
+      "y": 928,
+      "w": 366,
+      "h": 411,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        1410,
+        0,
+        573,
+        635
+      ],
+      "removedFragments": 53,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 7.719298245614034,
+      "heightScale": 1.0275,
+      "foot": [
+        0.6245210727969349,
+        0.9920177572885986
+      ],
+      "face": [
+        109,
+        18,
+        211,
+        211
+      ]
+    },
+    "rodya": {
+      "x": 382,
+      "y": 928,
+      "w": 298,
+      "h": 401,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        0,
+        0,
+        540,
+        712
+      ],
+      "removedFragments": 52,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 2.4242424242424243,
+      "heightScale": 1.0025,
+      "foot": [
+        0.5894308943089431,
+        1.0035517267437468
+      ],
+      "face": [
+        97,
+        21,
+        176,
+        176
+      ]
+    },
+    "sinclair": {
+      "x": 688,
+      "y": 928,
+      "w": 207,
+      "h": 405,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        540,
+        0,
+        370,
+        712
+      ],
+      "removedFragments": 28,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 6.666666666666667,
+      "heightScale": 1.0125,
+      "foot": [
+        0.5409356725146199,
+        1.0041152263374487
+      ],
+      "face": [
+        24,
+        28,
+        176,
+        176
+      ]
+    },
+    "outis": {
+      "x": 903,
+      "y": 928,
+      "w": 204,
+      "h": 402,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        930,
+        0,
+        390,
+        712
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 3.7209302325581395,
+      "heightScale": 1.005,
+      "foot": [
+        0.5349544072948328,
+        1.004280920976513
+      ],
+      "face": [
+        29,
+        19,
+        171,
+        171
+      ]
+    },
+    "gregor": {
+      "x": 1115,
+      "y": 928,
+      "w": 223,
+      "h": 405,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        1330,
+        0,
+        444,
+        712
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 6.015037593984962,
+      "heightScale": 1.0125,
+      "foot": [
+        0.5417789757412399,
+        1.0025062656641603
+      ],
+      "face": [
+        31,
+        24,
+        174,
+        174
+      ]
+    },
+    "dongbaek": {
+      "x": 1346,
+      "y": 928,
+      "w": 353,
+      "h": 463,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-44fb13a4-d3a2-473d-9bc1-50d8f87e9ae8.png",
+      "sourceRect": [
+        0,
+        0,
+        780,
+        945
+      ],
+      "removedFragments": 3974,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 61.38364779874214,
+      "heightScale": 1.1575,
+      "foot": [
+        0.5227920227920227,
+        0.9965089585286007
+      ],
+      "face": [
+        107,
+        87,
+        156,
+        156
+      ]
+    },
+    "dongrang": {
+      "x": 1707,
+      "y": 928,
+      "w": 288,
+      "h": 461,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-44fb13a4-d3a2-473d-9bc1-50d8f87e9ae8.png",
+      "sourceRect": [
+        740,
+        55,
+        572,
+        890
+      ],
+      "removedFragments": 3024,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 59.17808219178082,
+      "heightScale": 1.1525,
+      "foot": [
+        0.5276190476190477,
+        0.9960479006329302
+      ],
+      "face": [
+        50,
+        21,
+        203,
+        203
+      ]
+    },
+    "ahab": {
+      "x": 8,
+      "y": 1399,
+      "w": 378,
+      "h": 510,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
+      "sourceRect": [
+        0,
+        0,
+        715,
+        763
+      ],
+      "removedFragments": 1944,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 104.40677966101694,
+      "heightScale": 1.275,
+      "foot": [
+        0.6481149012567325,
+        0.9890329012961115
+      ],
+      "face": [
+        160,
+        91,
+        197,
+        197
+      ]
+    },
+    "queequeg": {
+      "x": 394,
+      "y": 1399,
+      "w": 242,
+      "h": 414,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
+      "sourceRect": [
+        700,
+        0,
+        540,
+        763
+      ],
+      "removedFragments": 312,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 10,
+      "heightScale": 1.035,
+      "foot": [
+        0.6496350364963503,
+        0.9903381642512077
+      ],
+      "face": [
+        71,
+        28,
+        171,
+        171
+      ]
+    },
+    "nelly": {
+      "x": 644,
+      "y": 1399,
+      "w": 277,
+      "h": 470,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
+      "sourceRect": [
+        1240,
+        0,
+        534,
+        763
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 64.91803278688523,
+      "heightScale": 1.175,
+      "foot": [
+        0.6398104265402843,
+        0.9891873038018835
+      ],
+      "face": [
+        87,
+        71,
+        190,
+        190
+      ]
+    },
+    "queequegUlt": {
+      "x": 929,
+      "y": 1399,
+      "w": 240,
+      "h": 407,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-f11b4e23-ed81-4eb2-ab7f-8bbb7db92026.png",
+      "sourceRect": [
+        0,
+        0,
+        1205,
+        1305
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 7.763713080168776,
+      "heightScale": 1.0175,
+      "foot": [
+        0.5887323943661972,
+        1.0018764449144195
+      ],
+      "face": [
+        90,
+        48,
+        138,
+        138
+      ]
+    },
+    "gubo": {
+      "x": 1177,
+      "y": 1399,
+      "w": 320,
+      "h": 410,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-d563e807-6cee-45e6-9905-515dd4c0998c.png",
+      "sourceRect": [
+        0,
+        0,
+        780,
+        880
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 6.459627329192546,
+      "heightScale": 1.025,
+      "foot": [
+        0.6744186046511628,
+        0.9913649447053476
+      ],
+      "face": [
+        137,
+        34,
+        149,
+        149
+      ]
+    },
+    "gahwan": {
+      "x": 1505,
+      "y": 1399,
+      "w": 335,
+      "h": 435,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-d563e807-6cee-45e6-9905-515dd4c0998c.png",
+      "sourceRect": [
+        780,
+        0,
+        756,
+        880
+      ],
+      "removedFragments": 142,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 31.794871794871792,
+      "heightScale": 1.0875,
+      "foot": [
+        0.5712098009188361,
+        0.9926318891836132
+      ],
+      "face": [
+        119,
+        57,
+        154,
+        154
+      ]
+    },
+    "hohenheim": {
+      "x": 8,
+      "y": 1917,
+      "w": 218,
+      "h": 410,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png",
+      "sourceRect": [
+        0,
+        0,
+        625,
+        738
+      ],
+      "removedFragments": 1633,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 8.057553956834532,
+      "heightScale": 1.025,
+      "foot": [
+        0.5687830687830688,
+        0.9952623267239866
+      ],
+      "face": [
+        49,
+        25,
+        161,
+        161
+      ]
+    },
+    "alisa": {
+      "x": 234,
+      "y": 1917,
+      "w": 266,
+      "h": 446,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png",
+      "sourceRect": [
+        630,
+        0,
+        550,
+        738
+      ],
+      "removedFragments": 3,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 48.75,
+      "heightScale": 1.115,
+      "foot": [
+        0.5938967136150235,
+        1.0061659192825112
+      ],
+      "face": [
+        64,
+        55,
+        181,
+        181
+      ]
+    },
+    "marton": {
+      "x": 508,
+      "y": 1917,
+      "w": 290,
+      "h": 453,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png",
+      "sourceRect": [
+        1200,
+        0,
+        574,
+        738
+      ],
+      "removedFragments": 2720,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 50.23255813953488,
+      "heightScale": 1.1325,
+      "foot": [
+        0.5524625267665952,
+        0.9938908568201653
+      ],
+      "face": [
+        86,
+        66,
+        174,
+        174
+      ]
+    },
+    "myo": {
+      "x": 806,
+      "y": 1917,
+      "w": 187,
+      "h": 404,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-62c2b150-a0b8-46a7-b262-e885a8b363a3.png",
+      "sourceRect": [
+        190,
+        220,
+        520,
+        850
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 3.0769230769230766,
+      "heightScale": 1.01,
+      "foot": [
+        0.5192307692307693,
+        0.9977151561309977
+      ],
+      "face": [
+        23,
+        18,
+        164,
+        164
+      ]
+    },
+    "rudolph": {
+      "x": 1001,
+      "y": 1917,
+      "w": 208,
+      "h": 503,
+      "sheet": 9,
+      "rotation": 0,
+      "source": "exec-62c2b150-a0b8-46a7-b262-e885a8b363a3.png",
+      "sourceRect": [
+        730,
+        0,
+        570,
+        1070
+      ],
+      "removedFragments": 0,
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 102.19354838709677,
+      "heightScale": 1.2575,
+      "foot": [
+        0.6004962779156328,
+        0.9983967164753415
+      ],
+      "face": [
+        35,
+        120,
+        170,
+        170
+      ]
+    },
+    "yanSword": {
+      "x": 8,
+      "y": 8,
+      "w": 522,
+      "h": 119,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        0,
+        690,
+        550,
+        197
+      ],
+      "removedFragments": 0
+    },
+    "yanHand": {
+      "x": 538,
+      "y": 8,
+      "w": 338,
+      "h": 186,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        550,
+        684,
+        360,
+        203
+      ],
+      "removedFragments": 0
+    },
+    "soraFists": {
+      "x": 884,
+      "y": 8,
+      "w": 228,
+      "h": 169,
+      "sheet": 10,
+      "rotation": -1.5707963267948966,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        1005,
+        690,
+        260,
+        197
+      ],
+      "removedFragments": 0
+    },
+    "soraClawLeft": {
+      "x": 1120,
+      "y": 8,
+      "w": 191,
+      "h": 181,
+      "sheet": 10,
+      "rotation": -1.5707963267948966,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        1350,
+        684,
+        215,
+        203
+      ],
+      "removedFragments": 13
+    },
+    "soraClawRight": {
+      "x": 1319,
+      "y": 8,
+      "w": 186,
+      "h": 181,
+      "sheet": 10,
+      "rotation": -1.5707963267948966,
+      "source": "exec-fd5af700-ed45-4693-aac6-f6fab193f0e7.png",
+      "sourceRect": [
+        1565,
+        684,
+        209,
+        203
+      ],
+      "removedFragments": 0
+    },
+    "ppuiNail": {
+      "x": 8,
+      "y": 202,
+      "w": 534,
+      "h": 117,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-5551e26f-d5bf-4537-9ed3-7bf282930e25.png",
+      "sourceRect": [
+        0,
+        752,
+        565,
+        135
+      ],
+      "removedFragments": 93
+    },
+    "kimSword": {
+      "x": 550,
+      "y": 202,
+      "w": 599,
+      "h": 84,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-5551e26f-d5bf-4537-9ed3-7bf282930e25.png",
+      "sourceRect": [
+        580,
+        760,
+        625,
+        127
+      ],
+      "removedFragments": 0
+    },
+    "starbuckHarpoon": {
+      "x": 1157,
+      "y": 202,
+      "w": 542,
+      "h": 75,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-5551e26f-d5bf-4537-9ed3-7bf282930e25.png",
+      "sourceRect": [
+        1200,
+        765,
+        574,
+        122
+      ],
+      "removedFragments": 0
+    },
+    "yiDagger": {
+      "x": 1707,
+      "y": 202,
+      "w": 315,
+      "h": 84,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-a771ab59-ac5d-4f17-b06b-f1b6196f1574.png",
+      "sourceRect": [
+        0,
+        630,
+        380,
+        163
+      ],
+      "removedFragments": 0
+    },
+    "faustSword": {
+      "x": 8,
+      "y": 327,
+      "w": 536,
+      "h": 125,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-a771ab59-ac5d-4f17-b06b-f1b6196f1574.png",
+      "sourceRect": [
+        390,
+        625,
+        555,
+        168
+      ],
+      "removedFragments": 0
+    },
+    "ryoshuSword": {
+      "x": 552,
+      "y": 327,
+      "w": 478,
+      "h": 122,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-a771ab59-ac5d-4f17-b06b-f1b6196f1574.png",
+      "sourceRect": [
+        950,
+        630,
+        500,
+        163
+      ],
+      "removedFragments": 0
+    },
+    "donLance": {
+      "x": 1038,
+      "y": 327,
+      "w": 487,
+      "h": 127,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-a771ab59-ac5d-4f17-b06b-f1b6196f1574.png",
+      "sourceRect": [
+        1450,
+        625,
+        533,
+        168
+      ],
+      "removedFragments": 170
+    },
+    "meursaultFist": {
+      "x": 1533,
+      "y": 327,
+      "w": 245,
+      "h": 136,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        0,
+        635,
+        290,
+        158
+      ],
+      "removedFragments": 0
+    },
+    "hongluGlaive": {
+      "x": 8,
+      "y": 471,
+      "w": 634,
+      "h": 142,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        325,
+        635,
+        660,
+        158
+      ],
+      "removedFragments": 0
+    },
+    "heathcliffBat": {
+      "x": 650,
+      "y": 471,
+      "w": 438,
+      "h": 75,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        980,
+        650,
+        460,
+        110
+      ],
+      "removedFragments": 0
+    },
+    "ishmaelMace": {
+      "x": 1096,
+      "y": 471,
+      "w": 391,
+      "h": 151,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        1450,
+        635,
+        420,
+        158
+      ],
+      "removedFragments": 40
+    },
+    "ishmaelShield": {
+      "x": 1495,
+      "y": 471,
+      "w": 100,
+      "h": 222,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "sourceRect": [
+        1870,
+        558,
+        113,
+        235
+      ],
+      "removedFragments": 0
+    },
+    "rodyaAxe": {
+      "x": 1603,
+      "y": 471,
+      "w": 418,
+      "h": 155,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        0,
+        712,
+        460,
+        175
+      ],
+      "removedFragments": 249
+    },
+    "sinclairHalberd": {
+      "x": 8,
+      "y": 701,
+      "w": 502,
+      "h": 160,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        440,
+        712,
+        515,
+        175
+      ],
+      "removedFragments": 87
+    },
+    "outisFalcata": {
+      "x": 518,
+      "y": 701,
+      "w": 364,
+      "h": 105,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        950,
+        725,
+        380,
+        162
+      ],
+      "removedFragments": 13
+    },
+    "gregorClaw": {
+      "x": 890,
+      "y": 701,
+      "w": 425,
+      "h": 153,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+      "sourceRect": [
+        1325,
+        715,
+        449,
+        172
+      ],
+      "removedFragments": 0
+    },
+    "dongbaekFan": {
+      "x": 1323,
+      "y": 701,
+      "w": 463,
+      "h": 380,
+      "sheet": 10,
+      "rotation": 0.45,
+      "source": "exec-3c8d3b2a-9da7-4a61-971e-919121abdbb6.png",
+      "sourceRect": [
+        0,
+        0,
+        1030,
+        848
+      ],
+      "removedFragments": 529
+    },
+    "dongrangScythe": {
+      "x": 8,
+      "y": 1089,
+      "w": 426,
+      "h": 380,
+      "sheet": 10,
+      "rotation": 0.83,
+      "source": "exec-3c8d3b2a-9da7-4a61-971e-919121abdbb6.png",
+      "sourceRect": [
+        985,
+        0,
+        870,
+        848
+      ],
+      "removedFragments": 1315
+    },
+    "ahabHarpoon": {
+      "x": 442,
+      "y": 1089,
+      "w": 640,
+      "h": 124,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
+      "sourceRect": [
+        0,
+        758,
+        715,
+        129
+      ],
+      "removedFragments": 0
+    },
+    "queequegHarpoon": {
+      "x": 1090,
+      "y": 1089,
+      "w": 466,
+      "h": 118,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
+      "sourceRect": [
+        740,
+        763,
+        505,
+        124
+      ],
+      "removedFragments": 0
+    },
+    "nellyKnife": {
+      "x": 1564,
+      "y": 1089,
+      "w": 432,
+      "h": 67,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-b41ae069-3de9-499b-a27d-ccd354ecef02.png",
+      "sourceRect": [
+        1270,
+        780,
+        504,
+        107
+      ],
+      "removedFragments": 0
+    },
+    "guboRifle": {
+      "x": 8,
+      "y": 1477,
+      "w": 640,
+      "h": 97,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-d563e807-6cee-45e6-9905-515dd4c0998c.png",
+      "sourceRect": [
+        0,
+        880,
+        785,
+        144
+      ],
+      "removedFragments": 0
+    },
+    "gahwanSword": {
+      "x": 656,
+      "y": 1477,
+      "w": 640,
+      "h": 115,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-d563e807-6cee-45e6-9905-515dd4c0998c.png",
+      "sourceRect": [
+        790,
+        870,
+        746,
+        154
+      ],
+      "removedFragments": 0
+    },
+    "hohenheimStaff": {
+      "x": 1304,
+      "y": 1477,
+      "w": 580,
+      "h": 141,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png",
+      "sourceRect": [
+        0,
+        738,
+        625,
+        149
+      ],
+      "removedFragments": 0
+    },
+    "alisaClub": {
+      "x": 8,
+      "y": 1626,
+      "w": 506,
+      "h": 71,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png",
+      "sourceRect": [
+        630,
+        745,
+        550,
+        142
+      ],
+      "removedFragments": 0
+    },
+    "martonHammer": {
+      "x": 522,
+      "y": 1626,
+      "w": 551,
+      "h": 168,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-f1afa62f-5593-4621-b98d-bb0bbfa999f1.png",
+      "sourceRect": [
+        1190,
+        710,
+        584,
+        177
+      ],
+      "removedFragments": 816
+    },
+    "myoRifle": {
+      "x": 1081,
+      "y": 1626,
+      "w": 640,
+      "h": 132,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-ddcdf24a-b3bb-42b6-90a8-67b799a9e103.png",
+      "sourceRect": [
+        20,
+        735,
+        720,
+        160
+      ],
+      "removedFragments": 0
+    },
+    "myoDagger": {
+      "x": 8,
+      "y": 1802,
+      "w": 443,
+      "h": 87,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-ddcdf24a-b3bb-42b6-90a8-67b799a9e103.png",
+      "sourceRect": [
+        125,
+        900,
+        465,
+        105
+      ],
+      "removedFragments": 0
+    },
+    "rudolphStaff": {
+      "x": 459,
+      "y": 1802,
+      "w": 640,
+      "h": 241,
+      "sheet": 10,
+      "rotation": 0,
+      "source": "exec-ddcdf24a-b3bb-42b6-90a8-67b799a9e103.png",
+      "sourceRect": [
+        745,
+        710,
+        791,
+        314
+      ],
+      "removedFragments": 0
+    }
+  }
+}

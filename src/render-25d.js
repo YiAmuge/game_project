@@ -14,7 +14,7 @@ import { SkillVFX } from './skill-vfx.js';
 import { THEMES } from './art.js';
 import { projectFeet,leapLift,airborneShadow,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
 
-const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17'];
+const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17','atlasV36','weaponAtlas'];
 const material=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
 function painter(base,canvas){
  const p=Object.create(Object.getPrototypeOf(base));p.canvas=canvas;p.ctx=canvas.getContext('2d');

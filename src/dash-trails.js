@@ -1,8 +1,6 @@
 import { renderAnchor,leapLift,leapOpacity } from './projection-25d.js';
 import { combatStyle } from './combat-style.js';
-import { FRAMES } from './art.js';
-import { ego } from './sora.js';
-import { form } from './yan.js';
+import { FRAMES,visualForm,spriteHeight } from './art.js';
 import { drawRibbon } from './weapon-trails.js';
 
 export const DASH_TRAIL_FRAMES=5,DASH_TRAIL_FADE=.18;
@@ -24,7 +22,7 @@ export class DashTrails {
    let h=this.histories.get(e);
    if(active){
     if(!h||h.motion!==m||h.segment!==segment){h={motion:m,segment,samples:[],at:-Infinity};this.histories.set(e,h);}
-    if(g.time>h.at){const p=renderAnchor(e);h.samples.push({x:p.x,y:p.y,height:leapLift(e),opacity:leapOpacity(e),time:g.time,facing:e.facing||0,visual:ego(g,e)?'soraEgo':form(g,e),large:g.buff(e,'mutant')?1.15:form(g,e)==='yanDistorted'?1.1:1});if(h.samples.length>DASH_TRAIL_FRAMES)h.samples.shift();h.at=g.time;}
+    if(g.time>h.at){const p=renderAnchor(e);h.samples.push({x:p.x,y:p.y,height:leapLift(e),opacity:leapOpacity(e),time:g.time,facing:e.facing||0,visual:visualForm(g,e)});if(h.samples.length>DASH_TRAIL_FRAMES)h.samples.shift();h.at=g.time;}
    }else if(h&&(!e.alive||g.time-h.at>=DASH_TRAIL_FADE))this.histories.delete(e);
   }
  }
@@ -34,9 +32,9 @@ export class DashTrails {
   drawRibbon(c,dashSections(h.samples,g.time,camera),color);
   for(let i=0;i<h.samples.length-1;i++){
    const p=h.samples[i],f=FRAMES[p.visual],atlas=renderer.atlasFor(p.visual);if(!f||!atlas.complete||!atlas.naturalWidth)continue;
-   const t=(i+1)/h.samples.length,scale=.38+.62*t,height=(p.visual==='soraEgo'?2.22:2.1)*p.large*camera.scale*scale,width=height*f.w/f.h,at=camera.worldToScreen(p,.075);
+   const t=(i+1)/h.samples.length,scale=.38+.62*t,height=spriteHeight(p.visual)*camera.scale*scale,width=height*f.w/f.h,at=camera.worldToScreen(p,.075);
    c.save();c.globalAlpha=.28*t**1.5*fade*(p.opacity??1);c.translate(at.x,at.y-p.height*camera.scale);if((Math.cos(p.facing)<0)!==Boolean(f.mirror))c.scale(-1,1);
-   c.drawImage(vfx.tintFrame(atlas,f,color),-width/2,-height,width,height);c.restore();
+   c.drawImage(vfx.tintFrame(atlas,f,color),-width*(f.foot?.[0]??.5),-height*(f.foot?.[1]??1),width,height);c.restore();
   }
  }
 }

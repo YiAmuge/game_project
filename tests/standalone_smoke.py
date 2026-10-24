@@ -36,7 +36,7 @@ with sync_playwright() as p:
     assert frame.locator('script[type="module"], script[src], link[rel="stylesheet"]').count() == 0
     frame.get_by_role('button', name='홍루 선택').click()
     expect(frame.locator('#selected-name')).to_have_text('홍루')
-    assert frame.locator('script[id^=sprite-data]').count() == 9
+    assert frame.locator('script[id^=sprite-data]').count() == 10
     frame.locator('#archive-open').click()
     expect(frame.locator('#roster-list button')).to_have_count(34)
     frame.locator('#roster-search').fill('료슈')

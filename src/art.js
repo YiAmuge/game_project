@@ -1,4 +1,5 @@
-// Generated fan-art atlas; each frame is read from the unchanged transparent PNG.
+import { SPRITE_FRAMES } from './sprites-v36.js';
+// Generated fan-art atlas; source revisions are recorded in assets/sprites-v36.json.
 export const FRAMES = {
   yan:{x:16,y:167,w:347,h:658,sheet:8},yanDistorted:{x:391,y:177,w:373,h:647,sheet:8},yanHand:{x:756,y:355,w:392,h:278,sheet:8},yanSword:{x:1181,y:467,w:571,h:149,sheet:8},
   sora:{x:142,y:92,w:500,h:784,sheet:7},soraEgo:{x:1139,y:47,w:553,h:829,sheet:7},
@@ -24,6 +25,17 @@ export const FRAMES = {
   outis:{"x": 768, "y": 532, "w": 384, "h": 492, "sheet": 1},
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
+Object.assign(FRAMES,SPRITE_FRAMES);
+export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36'];
+const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36'];
+const atlasImages=new Map();
+export function visualForm(g,e){
+ if(e.key==='sora'&&g.buff(e,'soraEgo'))return 'soraEgo';
+ if(e.key==='yan'&&g.buff(e,'yanDistorted'))return 'yanDistorted';
+ if(e.key==='queequeg'&&g.buff(e,'queequegUlt'))return 'queequegUlt';
+ return e.key;
+}
+export const spriteHeight=(key,height=2.1)=>height*(FRAMES[key]?.heightScale||1);
 export const THEMES = {
   yan:{light:'#c3e6ff',dark:'#344d69',accent:'#83c6f6',weapon:'yanSword'},
   sora:{light:'#f2d697',dark:'#32313d',accent:'#f0ba5b',weapon:'restraint'},
@@ -57,15 +69,17 @@ export const THEMES = {
 };
 export function loadAtlas(sheet=0){
   sheet=Number(sheet);
+  if(atlasImages.has(sheet))return atlasImages.get(sheet);
   const image=new Image();
-  const id=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17'][sheet];image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17'][sheet]}.png`;
+  const id=ATLAS_IDS[sheet];image.src=document.getElementById(id)?JSON.parse(document.getElementById(id).textContent):`./src/assets/${ATLAS_FILES[sheet]}.png`;atlasImages.set(sheet,image);
   return image;
 }
 export function portrait(canvas,key,image,extraImage,v05Image,v06Image,v08Image,v10Image,v12Image,v13Image,v17Image){
+  if(FRAMES[key]?.sheet>=9)image=loadAtlas(FRAMES[key].sheet);
   if(FRAMES[key]?.sheet===8)image=v17Image;if(FRAMES[key]?.sheet===7)image=v13Image;if(FRAMES[key]?.sheet===6)image=v12Image;if(FRAMES[key]?.sheet===5)image=v10Image;if(FRAMES[key]?.sheet===4)image=v08Image;if(FRAMES[key]?.sheet===1)image=extraImage;if(FRAMES[key]?.sheet===2)image=v05Image;if(FRAMES[key]?.sheet===3)image=v06Image;
   if(!canvas||!image||!image.complete||!image.naturalWidth)return;
   const c=canvas.getContext('2d'),f=FRAMES[key];c.clearRect(0,0,canvas.width,canvas.height);c.imageSmoothingEnabled=false;
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}
   drawFace(c,key,image,0,0,canvas.width,canvas.height);
 }
-export function drawFace(c,key,image,x,y,w,h=w){const f=FRAMES[key];if(!f||!image?.complete||!image.naturalWidth)return;const side=Math.min(f.w,f.h*.48);c.save();c.imageSmoothingEnabled=false;if(f.mirror){c.translate(x+w,y);c.scale(-1,1);x=0;y=0;}c.drawImage(image,f.x+(f.w-side)/2,f.y+f.h*.025,side,side,x,y,w,h);c.restore();}
+export function drawFace(c,key,image,x,y,w,h=w){const f=FRAMES[key];if(!f||!image?.complete||!image.naturalWidth)return;const side=Math.min(f.w,f.h*.48),face=f.face||[(f.w-side)/2,f.h*.025,side,side];c.save();c.imageSmoothingEnabled=false;if(f.mirror){c.translate(x+w,y);c.scale(-1,1);x=0;y=0;}c.drawImage(image,f.x+face[0],f.y+face[1],face[2],face[3],x,y,w,h);c.restore();}

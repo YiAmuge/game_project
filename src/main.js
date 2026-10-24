@@ -11,7 +11,7 @@ import { canRecast } from './skills.js';
 import { Game } from './game.js';
 import { CHAMPIONS, EXPERIMENTAL_CHAMPIONS, RUNTIME_CHAMPIONS, RULES, UPGRADES, POSITIONS, WORLD } from './data.js';
 import { Renderer } from './render.js';
-import { portrait } from './art.js';
+import { portrait,visualForm } from './art.js';
 import { dragChoice, DRAG_KEYS, EZRA_WEAPONS } from './skills.js';
 import { MONSTERS, GAME_RULES, BUFF_LABELS } from './catalog.js';
 
@@ -35,7 +35,8 @@ function clearInput(){cancelBasicCharge(game.player);delete game.targeting;keys.
 function cancelDrag(){drag=null;$('drag-wheel').classList.add('hidden');}
 function cancelGlobal(){summonChoice=null;globalKind='ultimate';globalTarget=false;globalPoint=null;$('global-target').classList.add('hidden');}
 function showScore(show){scoreOpen=show&&inMatch();$('scoreboard').classList.toggle('hidden',!scoreOpen);if(scoreOpen){cancelBasicCharge(game.player);game.input.fire=false;updateScores();}}
-function renderPortraits(){document.querySelectorAll('.champion-portrait').forEach(c=>portrait(c,c.dataset.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17));portrait($('hud-face'),Sora.ego(game,game.player)?'soraEgo':Yan.form(game,game.player),renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17);}
+function renderPortraits(){document.querySelectorAll('.champion-portrait').forEach(c=>portrait(c,c.dataset.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17));portrait($('hud-face'),visualForm(game,game.player),renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17);}
+renderer.atlasV36.addEventListener('load',renderPortraits);
 renderer.atlas.addEventListener('load',renderPortraits);renderer.atlasExtra.addEventListener('load',renderPortraits);renderer.atlasV05.addEventListener('load',renderPortraits);renderer.atlasV06.addEventListener('load',renderPortraits);renderer.atlasV08.addEventListener('load',renderPortraits);renderer.atlasV10.addEventListener('load',renderPortraits);renderer.atlasV12.addEventListener('load',renderPortraits);renderer.atlasV13.addEventListener('load',renderPortraits);renderer.atlasV17.addEventListener('load',renderPortraits);
 function select(key){
  selected=key;game=new Game(key,position);const c=RUNTIME_CHAMPIONS[key];
@@ -183,7 +184,7 @@ function updateShopInventory(p){
 }
 function updateTeamPortraits(){
  for(const [team,id] of [[0,'ally-portraits'],[1,'enemy-portraits']]){const holder=$(id),list=game.champions(team).filter(e=>!e.trainingDummy),signature=list.map(e=>e.id).join(',');if(holder.dataset.signature!==signature){holder.dataset.signature=signature;holder.replaceChildren();for(const e of list){const wrap=document.createElement('div');wrap.className='match-face';wrap.dataset.unit=e.id;wrap.title=e.name;const face=document.createElement('canvas');face.width=face.height=64;const timer=document.createElement('small'),coin=document.createElement('i');coin.textContent='💰';coin.title='현상금';wrap.append(face,timer,coin);holder.append(wrap);}}
- for(const wrap of holder.children){const e=list.find(e=>e.id===Number(wrap.dataset.unit));wrap.classList.toggle('dead',!e.alive);wrap.querySelector('small').textContent=e.alive?'':Number.isFinite(e.respawnAt)?Math.max(0,Math.ceil(e.respawnAt-game.time)):'∞';wrap.querySelector('i').classList.toggle('hidden',!game.bounty(e));portrait(wrap.querySelector('canvas'),e.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17);}
+ for(const wrap of holder.children){const e=list.find(e=>e.id===Number(wrap.dataset.unit));wrap.classList.toggle('dead',!e.alive);wrap.querySelector('small').textContent=e.alive?'':Number.isFinite(e.respawnAt)?Math.max(0,Math.ceil(e.respawnAt-game.time)):'∞';wrap.querySelector('i').classList.toggle('hidden',!game.bounty(e));portrait(wrap.querySelector('canvas'),visualForm(game,e),renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17);}
  }
 }
 function updatePointer(e){if(!inMatch())return;pointer={x:e.clientX,y:e.clientY};renderer.follow(game,inMatch());game.input.aim=renderer.point(e.clientX,e.clientY);}
@@ -244,7 +245,7 @@ function updateAnnouncement(){
 }
 function updateHud(){
  const p=game.player,c={...RUNTIME_CHAMPIONS[p.key],...Sora.abilityInfo(game,p),...Yan.abilityInfo(game,p),...Hohenheim.abilityInfo(game,p)};
- const form=Sora.ego(game,p)?'soraEgo':Yan.form(game,p);if($('hud-face').dataset.form!==form){$('hud-face').dataset.form=form;renderPortraits();}
+ const form=visualForm(game,p);if($('hud-face').dataset.form!==form){$('hud-face').dataset.form=form;renderPortraits();}
  $('field-title').innerHTML=game.training?'<i class="live-dot"></i> 연습장 <em>/</em> 입체 실험 정원':'<i class="live-dot"></i> 제13구역 <em>/</em> 경계 전장';$('field-objective').textContent=game.training?'G · 무료 상점 / 우측 상단 연습장 옵션 · 시간 제한 없음':'포탑을 파괴하고 적 본진을 공략하세요.';
  document.querySelector('.match-clock>span').textContent=game.training?'TRAINING · 2.5D 실험 정원':'4 VS 4 · 2.5D 전장';
  $('clock').textContent=clock(game.training?game.time:Math.max(0,RULES.timeLimit-game.time));$('phase').textContent=!inMatch()?'출격 대기':game.training?'연습장 · 시간 제한 없음':game.winner!==null?'경기 종료':paused?'일시정지':game.bossSpawned?'남은 시간 · 후반전':'남은 시간 · 전반전';

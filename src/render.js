@@ -13,14 +13,15 @@ import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, FOU
 import { distance } from './geometry.js';
 import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
-import { FRAMES, THEMES, loadAtlas } from './art.js';
+import { FRAMES, THEMES, loadAtlas,visualForm,spriteHeight } from './art.js';
+import { drawEquipment,drawWeapon,WEAPON_ART,weaponGeometry } from './weapon-art.js';
 import { draw as bossPattern } from './boss-patterns.js';
 import { draw as creepPattern } from './creep-patterns.js';
 import { targetingPreview } from './targeting.js';
 import { championHud, championEffects, championGroundEffects, chargePreview, orderMark, threatRanges } from './overlays.js';
 
 export class Renderer {
-  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.scale=1;this.ox=0;this.oy=0;this.resize();}
+  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.scale=1;this.ox=0;this.oy=0;this.resize();}
   resize() {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
@@ -147,15 +148,15 @@ export class Renderer {
     if(!this.billboardPass&&game.shield(e)>0)this.circle(e.x,e.y-.65,1.05,'#9fc9d711','#c8e4df99',.055);
     if(!this.billboardPass&&(game.buff(e,'marks')||game.buff(e,'resolve')))this.circle(e.x,e.y,1,null,'#d9be78aa',.09);
     if(Math.sin(angle)<-.2)this.weapon(e,game);
-    const visual=soraEgo(game,e)?'soraEgo':Yan.form(game,e),f=FRAMES[visual],h=(soraEgo(game,e)?2.22:2.1)*(Yan.distorted(game,e)?1.1:1)*(game.buff(e,'mutant')?1.15:1),w=f?h*f.w/f.h:1.25,bob=Math.sin(game.time*3+e.id)*.025,atlas=this.atlasFor(visual);
+    const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),bob=Math.sin(game.time*3+e.id)*.025,atlas=this.atlasFor(visual);
     const lift=leapLift(e)+championPresentation(game,e).lift;
     c.save();const appearance=championPresentation(game,e);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(e.x,e.y+.3+bob-lift);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
-      c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h,w,h);
-      if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),-w/2,-h,w,h);c.restore();}
-      if(game.buff(e,'queequegUlt')&&this.skillVfx){c.save();c.globalAlpha*=.22;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#c44034'),-w/2,-h,w,h);c.restore();}
-      if(appearance.frozen&&this.skillVfx){c.save();c.globalAlpha*=.28;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#a7d0e5'),-w/2,-h,w,h);c.restore();}
-      const light=this.skillVfx?.lightAt(e);if(light?.strength>.01){c.save();c.globalCompositeOperation='lighter';c.globalAlpha*=light.strength;c.drawImage(this.skillVfx.tintFrame(atlas,f,light.color),-w/2,-h,w,h);c.restore();}
+      c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);
+      if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),left,top,w,h);c.restore();}
+      if(game.buff(e,'queequegUlt')&&this.skillVfx){c.save();c.globalAlpha*=.22;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#c44034'),left,top,w,h);c.restore();}
+      if(appearance.frozen&&this.skillVfx){c.save();c.globalAlpha*=.28;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#a7d0e5'),left,top,w,h);c.restore();}
+      const light=this.skillVfx?.lightAt(e);if(light?.strength>.01){c.save();c.globalCompositeOperation='lighter';c.globalAlpha*=light.strength;c.drawImage(this.skillVfx.tintFrame(atlas,f,light.color),left,top,w,h);c.restore();}
     }
     else {c.fillStyle=def.color;c.fillRect(-.42,-1.8,.84,.8);c.fillStyle='#273642';c.fillRect(-.38,-1,.76,1);}
     c.restore();
@@ -166,8 +167,8 @@ export class Renderer {
     if(e.player&&inBush)this.text(e.revealedUntil>game.time?'노출 중':'수풀 은닉',e.x,e.y+.8,'#a9d890',.32);
   }
   yanHand(e,game){
-    const c=this.ctx,f=FRAMES.yanHand,a=this.atlasV17;if(!a.complete||!a.naturalWidth)return;
-    c.save();c.translate(e.x,e.y-.5);c.rotate((e.facing||0)+Math.PI);const pulse=Math.max(0,1-(game.time-(e.struckAt??-99))/.18);c.scale(1+pulse*.12,1+pulse*.12);c.imageSmoothingEnabled=false;c.drawImage(a,f.x,f.y,f.w,f.h,-1.6,-1.13,3.2,2.27);c.restore();
+    const c=this.ctx,f=FRAMES.yanHand,a=this.atlasFor('yanHand');if(!a.complete||!a.naturalWidth)return;
+    c.save();c.translate(e.x,e.y-.5);c.rotate(e.facing||0);const pulse=Math.max(0,1-(game.time-(e.struckAt??-99))/.18);c.scale(1+pulse*.12,1+pulse*.12);c.imageSmoothingEnabled=false;const h=3.2*f.h/f.w;c.drawImage(a,f.x,f.y,f.w,f.h,-1.6,-h/2,3.2,h);c.restore();
   }
   hohenheimChargePreview(e,game){
     const shape=Hohenheim.chargeShape(game,e,game.input.aim),d=shape.d,side={x:-d.y*shape.width,y:d.x*shape.width},end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range};
@@ -180,8 +181,8 @@ export class Renderer {
     this.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],e.state.yanCharge?'#a6d5f12a':'#a6d5f107',e.state.yanCharge?'#b3e1ffbb':'#b3e1ff33');
     if(e.state.yanCharge)this.text(`충전 ${Math.round(shape.progress*100)}%`,e.x,e.y+1.1,'#c3e6ff',.3);
   }
-  atlasFor(key){return FRAMES[key]?.sheet===8?this.atlasV17:FRAMES[key]?.sheet===7?this.atlasV13:FRAMES[key]?.sheet===6?this.atlasV12:FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
-  corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.form||e.key],atlas=this.atlasFor(e.form||e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=1.7,w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(f.mirror?-1:1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
+  atlasFor(key){return FRAMES[key]?.sheet>=9?loadAtlas(FRAMES[key].sheet):FRAMES[key]?.sheet===8?this.atlasV17:FRAMES[key]?.sheet===7?this.atlasV13:FRAMES[key]?.sheet===6?this.atlasV12:FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
+  corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.form||e.key],atlas=this.atlasFor(e.form||e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=spriteHeight(e.form||e.key,1.7),w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(f.mirror?-1:1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
   draw(game,playing) {
     if(!this.groundPass&&!playing){if(this.scene25d)this.scene25d.canvas.hidden=true;this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);this.ctx.fillStyle='#14252a';this.ctx.fillRect(0,0,this.width,this.height);return;}
     if(!this.groundPass&&game.training25d){this.follow(game,playing);this.scene25d.draw(game,playing);return;}
@@ -252,11 +253,11 @@ export class Renderer {
   }
   weapon(e,game){
     if(e.key==='starbuck'&&e.motion?.kind==='leap')return;
-    if(e.key==='ishmael'&&e.state.ishmaelCast?.windupUntil>game.time){const c=this.ctx,d=e.state.ishmaelCast.d;c.save();c.translate(e.x,e.y-.6);c.rotate(Math.atan2(d.y,d.x));this.line([{x:-.35,y:0},{x:1.5,y:0}],'#839c9d',.12);this.polygon([[1.9,0],[1.35,-.28],[1.48,0],[1.35,.28]],'#dcebe6','#5c9cac');c.restore();return;}
+    if(e.key==='ishmael'&&e.state.ishmaelCast?.windupUntil>game.time){const c=this.ctx,d=e.state.ishmaelCast.d;c.save();c.translate(e.x,e.y-.6);c.rotate(Math.atan2(d.y,d.x));drawWeapon(c,'ishmaelMace',2.05);c.restore();return;}
     if(e.key==='yan'){
       if(Yan.distorted(game,e))return;
-      const c=this.ctx,f=FRAMES.yanSword,a=this.atlasV17,charge=Yan.chargeShape(game,e,game.input.aim),facing=e.facing||0,age=game.time-(e.attackAt??-99);
-      if(!a.complete||!a.naturalWidth)return;c.save();c.translate(e.x,e.y-.55-(e.state.yanCharge?charge.progress*1.2:age>=0&&age<.18?(1-age/.18)*1.2:0));c.rotate(facing-(e.state.yanCharge?.65*charge.progress:age<.3?(.3-age)*3:0));this.weaponTrail(e,game,'sword',{x:.65,y:.145},{x:2.68,y:.145},!e.state.yanCharge&&age>=0&&age<.3);c.imageSmoothingEnabled=false;c.drawImage(a,f.x,f.y,f.w,f.h,.18,-.18,2.5,.65);c.restore();return;
+      const c=this.ctx,a=this.atlasFor('yanSword'),charge=Yan.chargeShape(game,e,game.input.aim),facing=e.facing||0,age=game.time-(e.attackAt??-99);
+      if(!a.complete||!a.naturalWidth)return;c.save();c.translate(e.x,e.y-.55-(e.state.yanCharge?charge.progress*1.2:age>=0&&age<.18?(1-age/.18)*1.2:0));c.rotate(facing-(e.state.yanCharge?.65*charge.progress:age<.3?(.3-age)*3:0));this.weaponTrail(e,game,'sword',{x:.65,y:.145},{x:2.68,y:.145},!e.state.yanCharge&&age>=0&&age<.3);drawWeapon(c,'yanSword',2.5,{x:.18});c.restore();return;
     }
     if(e.key==='kim'&&e.state.swordGrab?.until>game.time)return;
     const c=this.ctx,style=game.attackStyle(e),swing=(game.time-(e.attackAt??-10))/.3,attacking=swing>=0&&swing<1,slash=['slash','sweep'].includes(style),side=(e.attackSerial||0)%2?1:-1;
@@ -264,6 +265,10 @@ export class Renderer {
     const lunge=!slash&&attacking?Math.sin(swing*Math.PI)*.38:0;
     c.save();const age=game.time-(e.attackAt??-99),slam=e.key==='sora'&&!soraEgo(game,e)&&age>=0&&age<.3?Math.sin(Math.min(1,age/.18)*Math.PI)*1.25:0;c.translate(e.x,e.y-.45-slam);c.rotate(a);c.translate(.25+lunge,0);
     if(game.buff(e,'mutant'))c.scale(1.15,1.15);
+    if(drawEquipment(this,e,game,{attacking,swing,angle:a})){
+      if(slash&&attacking){const item=WEAPON_ART[e.key],reach=item?weaponGeometry(...item).span-.1:2.2;this.weaponTrail(e,game,'weapon',{x:.6,y:0},{x:reach,y:0},true);}
+      c.restore();return;
+    }
     if(e.key!=='sora'&&slash){
       const reach={faust:1.9,sinclair:1.93,honglu:1.95,heathcliff:1.7,rodya:1.52,ishmael:1.45,gregor:1.55,nelly:1.3,myo:1.5,dongbaek:1.45,dongrang:2.2,marton:2.03}[e.key]||1.7;
       this.weaponTrail(e,game,'weapon',{x:reach*.4,y:0},{x:reach,y:0},slash&&attacking);

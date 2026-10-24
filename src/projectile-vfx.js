@@ -1,5 +1,7 @@
 import { combatStyle } from './combat-style.js';
 import { projectileDimensions } from './projectile-rules.js';
+import { FRAMES,loadAtlas } from './art.js';
+import { drawWeapon,weaponGeometry } from './weapon-art.js';
 const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(light<0?n*(1+light):n+(255-n)*light).toString(16).padStart(2,'0');}).join('');
 
 export function projectileAppearance(p,g){
@@ -14,11 +16,14 @@ export function beamAppearance(key){
  return {color,layers:[[.2*width,tuned?.18:.09,color],[.075*width,tuned?.8:.6,color],[.023*width,tuned?.95:.8,key==='gubo'?'#bd5266':key==='rudolph'?'#ffe7b8':'#eef1ed']]};
 }
 export const whipVisualInterval=(g,e)=>g.attackInterval(e)*1.2;
+export const projectileAsset=p=>({yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[p.theme||p.source?.key]);
 export class ProjectileVFX {
  constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();}
- sprite(type,color,{tint=false}={}){
-  const key=type+color+tint;if(this.sprites.has(key))return this.sprites.get(key);
+ sprite(type,color,{tint=false,asset:override}={}){
+  const key=type+color+tint+(override||'');if(this.sprites.has(key))return this.sprites.get(key);
   if(this.sprites.size>=64)this.sprites.delete(this.sprites.keys().next().value);
+  const asset=override||{axe:'rodyaAxe',nail:'ppuiNail',knife:'nellyKnife',harpoon:'ahabHarpoon',glass:'yiDagger'}[type],f=FRAMES[asset],atlas=f&&loadAtlas(f.sheet);
+  if(f&&atlas.complete&&atlas.naturalWidth){const canvas=document.createElement('canvas'),geometry=weaponGeometry(asset,256);canvas.width=Math.ceil(geometry.span);canvas.height=Math.max(24,Math.round(256*f.h/f.w));canvas.dataset.spriteAsset=asset;canvas.dataset.lengthScale=String(canvas.width/256);const c=canvas.getContext('2d');drawWeapon(c,asset,256,{y:canvas.height/2});if(tint){c.globalCompositeOperation='source-atop';c.globalAlpha=.5;c.fillStyle=color;c.fillRect(0,0,canvas.width,canvas.height);}this.sprites.set(key,canvas);return canvas;}
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=96;const c=canvas.getContext('2d');c.translate(64,48);
   const metal=c.createLinearGradient(0,-15,0,15);metal.addColorStop(0,tint?tintTone(color,.45):'#fafbfc');metal.addColorStop(.3,color);metal.addColorStop(.52,tint?tintTone(color,.12):'#f4f4f4');metal.addColorStop(1,tint?tintTone(color,-.6):'#4b5057');
   c.fillStyle=metal;c.strokeStyle='#27313b';c.lineWidth=1.2;c.lineJoin='round';
@@ -43,7 +48,7 @@ export class ProjectileVFX {
    c.beginPath();c.moveTo(-39,-7);c.lineTo(12,-7);c.quadraticCurveTo(37,-5,48,0);c.quadraticCurveTo(37,5,12,7);c.lineTo(-39,7);c.closePath();c.fill();c.stroke();
    c.fillStyle=tint?tintTone(color,-.2):'#aeb2b5';c.fillRect(-40,-8,5,16);c.strokeStyle='#3a424b';c.beginPath();c.moveTo(10,-7);c.lineTo(10,7);c.stroke();c.strokeStyle=tint?tintTone(color,.65):'#fff';c.beginPath();c.moveTo(-30,-3);c.lineTo(22,-2);c.stroke();
   }
-  this.sprites.set(key,canvas);return canvas;
+  if(!asset)this.sprites.set(key,canvas);return canvas;
  }
  draw(c,camera,game){
   c.save();
@@ -56,7 +61,8 @@ export class ProjectileVFX {
    if(h.length>1){const tail=camera.worldToScreen(h[0],style.height),dx=at.x-tail.x,dy=at.y-tail.y,n=Math.hypot(dx,dy);if(n>1){c.save();c.translate(tail.x,tail.y);c.rotate(Math.atan2(dy,dx));c.globalAlpha=.16;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),0,-Math.max(1,width*.45),n,Math.max(2,width*.9));c.restore();}}
    c.save();c.translate(at.x,at.y);c.rotate(rotation);
    if(style.aura){c.save();c.globalAlpha=.75;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),-length*.8,-width,length*1.6,width*2);c.restore();}
-   c.globalAlpha=1;c.drawImage(this.sprite(style.type,style.color,{tint:style.tint}),-length/2,-width*.6,length,width*1.2);c.restore();
+   const texture=this.sprite(style.type,style.color,{tint:style.tint,asset:projectileAsset(p)}),span=length*Number(texture.dataset.lengthScale||1),height=texture.dataset.spriteAsset?span*texture.height/texture.width:width*1.2;
+   c.globalAlpha=1;c.drawImage(texture,-span/2,-height/2,span,height);c.restore();
   }
   c.restore();
  }

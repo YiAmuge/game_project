@@ -4,6 +4,7 @@ import { guardAlly } from './new-champions.js';
 import { leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
 import { PROJECTILE_VISUAL_SCALE } from './projectile-rules.js';
 import { FRAMES } from './art.js';
+import { drawWeapon } from './weapon-art.js';
 
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 const FORMULAS=['E = mc²','∇·E = ρ/ε₀','Σ F = ma','Δx·Δp ≥ ℏ/2','∂ψ/∂t = Hψ','F = −∇V'];
@@ -336,7 +337,7 @@ export class ChampionVFX {
  stamp(c,camera,p,r,angle,color,alpha,kind){const at=camera.worldToScreen(p,.12),x=camera.worldToScreen({x:p.x+1,y:p.y},.12),y=camera.worldToScreen({x:p.x,y:p.y+1},.12);c.save();c.globalAlpha=alpha;c.translate(at.x,at.y);c.transform(x.x-at.x,x.y-at.y,y.x-at.x,y.y-at.y,0,0);c.rotate(angle);c.drawImage(this.vfx.strokes.texture(kind,{x:p.x,y:p.y,born:0,color}),-r,-r,r*2,r*2);c.restore();}
  field(c,camera,p,r,color,alpha){const at=camera.worldToScreen(p,.06),x=camera.worldToScreen({x:p.x+1,y:p.y},.06),y=camera.worldToScreen({x:p.x,y:p.y+1},.06);c.save();c.translate(at.x,at.y);c.transform(x.x-at.x,x.y-at.y,y.x-at.x,y.y-at.y,0,0);const shade=c.createRadialGradient(0,0,0,0,0,r);shade.addColorStop(0,color);shade.addColorStop(1,color+'00');c.globalAlpha=alpha;c.fillStyle=shade;c.fillRect(-r,-r,r*2,r*2);c.restore();}
  fallingSword(c,camera,p,height,alpha){
-  const f=FRAMES.yanSword,atlas=this.art?.atlasV17;if(!atlas?.complete||!atlas.naturalWidth)return;
+  const f=FRAMES.yanSword,atlas=this.art?.atlasFor('yanSword');if(!atlas?.complete||!atlas.naturalWidth)return;
   const tip=camera.worldToScreen(p,height+.1),length=camera.scale*6.5,width=length*f.h/f.w;
   c.save();c.globalAlpha=alpha;c.translate(tip.x,tip.y);c.rotate(Math.PI/2);c.drawImage(atlas,f.x,f.y,f.w,f.h,-length,-width/2,length,width);c.restore();
  }
@@ -379,5 +380,5 @@ export class ChampionVFX {
  snowflake(c,p,size,alpha){c.save();c.globalAlpha=alpha;c.strokeStyle='#e5edf1';c.lineWidth=.6;for(let i=0;i<3;i++){const a=i*Math.PI/3;c.beginPath();c.moveTo(p.x-Math.cos(a)*size,p.y-Math.sin(a)*size);c.lineTo(p.x+Math.cos(a)*size,p.y+Math.sin(a)*size);c.stroke();}c.restore();}
  insect(c,p,size,a,time){c.save();c.translate(p.x,p.y);c.rotate(a);c.fillStyle='#76583e';c.beginPath();c.ellipse(0,0,size*.7,size,0,0,Math.PI*2);c.fill();c.strokeStyle='#aa8a65';c.lineWidth=.6;for(const side of [-1,1]){c.beginPath();c.ellipse(side*size*.65,0,size*.7,size*.3,Math.sin(time*48)*.9,0,Math.PI*2);c.stroke();}c.restore();}
  rope(c,camera,a,b){const from=camera.worldToScreen(a,1),to=camera.worldToScreen(b,1),dx=to.x-from.x,dy=to.y-from.y,n=Math.hypot(dx,dy)||1;c.save();for(const side of [-1,1]){c.strokeStyle=side<0?'#765834':'#b49669';c.lineWidth=1.6;c.beginPath();for(let i=0;i<=32;i++){const u=i/32,w=Math.sin(i*1.9)*side*.8,x=from.x+dx*u-dy/n*w,y=from.y+dy*u+dx/n*w+Math.sin(u*Math.PI)*6;i?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();}c.restore();}
- sword(c,camera,e,t){const a=camera.worldToScreen(e,1),b=camera.worldToScreen(t,1.15),dx=b.x-a.x,dy=b.y-a.y,n=Math.hypot(dx,dy);c.save();c.translate(a.x,a.y);c.rotate(Math.atan2(dy,dx));const grad=c.createLinearGradient(0,-3,0,3);grad.addColorStop(0,'#dce9ed');grad.addColorStop(.5,'#6e859b');grad.addColorStop(1,'#edf6fa');c.fillStyle=grad;c.beginPath();c.moveTo(0,-2);c.lineTo(n+10,0);c.lineTo(0,2);c.fill();c.restore();}
+ sword(c,camera,e,t){const a=camera.worldToScreen(e,1),b=camera.worldToScreen(t,1.15),dx=b.x-a.x,dy=b.y-a.y,n=Math.hypot(dx,dy);c.save();c.translate(a.x,a.y);c.rotate(Math.atan2(dy,dx));drawWeapon(c,'kimSword',n+10);c.restore();}
 }
