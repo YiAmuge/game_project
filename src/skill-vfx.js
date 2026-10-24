@@ -2,6 +2,7 @@ import { organicPixels,shapeWarp,noise } from './organic-particles.js';
 import { combatStyle,hitStyle,bodyHeight,visualShape,insideShape,clipShape,CHAMPION_STYLES } from './combat-style.js';
 import { AttackStrokes } from './attack-strokes.js';
 import { leapLift } from './projection-25d.js';
+import { weaponEmissionScreen } from './weapon-art.js';
 // Render-only effects: gameplay X/Y is the ground, Z is height (Three.js Y).
 // Analytic motion uses simulation time, so pause, low FPS and replay stay stable.
 export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384,highlight:.28,lights:8};
@@ -93,7 +94,9 @@ export class SkillVFX {
   for(const p of game.projectiles){
    if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);const origin=p.origin||p.source;if(!origin||!visible(origin))continue;
    const key=p.theme||p.source?.key,s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
-   this.emit('shot',origin,game.time,{...s,angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:p.source?.kind==='champion'?4:2,life:.18});
+   let shotOrigin=origin;
+   if(key==='gubo'&&camera.screenToWorld){const tip=weaponEmissionScreen(game,p.source,camera,origin),ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
+   this.emit('shot',shotOrigin,game.time,{...s,angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:p.source?.kind==='champion'?4:2,life:.18});
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);

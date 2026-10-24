@@ -528,7 +528,7 @@ export class Game {
       if(e.key==='yi') {
         const landing=this.safeLanding(e,point,6.4);Object.assign(e,landing);
         for(const a of this.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5.5)) {this.addBuff(a,'ogamdo',4);this.addShield(a,Math.min(180,a.maxHp*.18),`yi-ult-${e.id}`);}
-        this.support(e);this.effects.push({type:'ring',x:e.x,y:e.y,r:5.5,color:'#cdbb87',life:.8,maxLife:.8});
+        this.support(e);this.effects.push({type:'yiBuffRange',source:e.id,theme:'yi',x:e.x,y:e.y,r:5.5,color:'#cdbb87',life:.45,maxLife:.45});
       }
       if(e.key==='sinclair') {
         let p=destination(6);if(this.blocked(p.x,p.y,e.radius))p={x:e.x,y:e.y};

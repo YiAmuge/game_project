@@ -1,8 +1,7 @@
 import { combatStyle } from './combat-style.js';
 import { projectileDimensions } from './projectile-rules.js';
 import { FRAMES,loadAtlas } from './art.js';
-import { drawWeapon,weaponGeometry,weaponEmissionPoint,weaponEmissionScreen } from './weapon-art.js';
-import { feetOffset } from './projection-25d.js';
+import { drawWeapon,weaponGeometry,weaponEmissionScreen } from './weapon-art.js';
 const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(light<0?n*(1+light):n+(255-n)*light).toString(16).padStart(2,'0');}).join('');
 
 export function projectileAppearance(p,g){
@@ -17,15 +16,28 @@ export function beamAppearance(key){
  return {color,layers:[[.2*width,tuned?.18:.09,color],[.075*width,tuned?.8:.6,color],[.023*width,tuned?.95:.8,key==='gubo'?'#bd5266':key==='rudolph'?'#ffe7b8':'#eef1ed']]};
 }
 export const whipVisualInterval=(g,e)=>g.attackInterval(e)*1.2;
-export const projectileAsset=p=>(p.theme||p.source?.key)==='yi'&&p.damageKind!=='skill'?false:({yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[p.theme||p.source?.key]);
+export function projectileAsset(p){
+ const key=p.theme||p.source?.key;if(key==='yi'&&p.damageKind!=='skill'||p.slot==='r'&&['ishmael','rodya'].includes(key))return false;
+ return {yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[key];
+}
 export class ProjectileVFX {
  constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();this.muzzles=new WeakMap();}
- position(p,g,camera,height){
-  const at=camera.worldToScreen(p,height);if(p.source?.key!=='gubo'||!p.origin)return at;
+ muzzle(p,g,camera,height){
+  if(p.source?.key!=='gubo'||!p.origin)return null;
   let muzzle=this.muzzles.get(p);
-  if(!muzzle){const point=weaponEmissionPoint(g,p.source);muzzle={x:point.x-p.source.x,y:point.y-p.source.y-feetOffset(p.source)};this.muzzles.set(p,muzzle);}
-  const origin=camera.worldToScreen(p.origin,.075),start=camera.worldToScreen(p.origin,height),fade=Math.max(0,1-(g.time-(p.bornAt??g.time))/.14);
-  return {x:at.x+(origin.x+muzzle.x*camera.scale-start.x)*fade,y:at.y+(origin.y+muzzle.y*camera.scale-start.y)*fade};
+  if(!muzzle){
+   const tip=weaponEmissionScreen(g,p.source,camera,p.origin),start=camera.worldToScreen(p.origin,height),next=camera.worldToScreen({x:p.origin.x+p.dx,y:p.origin.y+p.dy},height),dx=next.x-start.x,dy=next.y-start.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n,tx=(tip.x-start.x)/camera.scale,ty=(tip.y-start.y)/camera.scale,along=tx*ux+ty*uy;
+   muzzle={x:tx-along*ux,y:ty-along*uy,along,ux,uy};this.muzzles.set(p,muzzle);
+  }return muzzle;
+ }
+ position(p,g,camera,height){
+  const at=camera.worldToScreen(p,height),muzzle=this.muzzle(p,g,camera,height);if(!muzzle)return at;
+  // A fixed perpendicular offset keeps the entire flight on one straight line.
+  return {x:at.x+muzzle.x*camera.scale,y:at.y+muzzle.y*camera.scale};
+ }
+ clearedMuzzle(p,g,camera,height){
+  const muzzle=this.muzzle(p,g,camera,height);if(!muzzle)return true;const at=camera.worldToScreen(p,height),start=camera.worldToScreen(p.origin,height);
+  return ((at.x-start.x)*muzzle.ux+(at.y-start.y)*muzzle.uy)/camera.scale>=muzzle.along;
  }
  sprite(type,color,{tint=false,asset:override}={}){
   const key=type+color+tint+String(override??'');if(this.sprites.has(key))return this.sprites.get(key);
@@ -64,6 +76,7 @@ export class ProjectileVFX {
    const style=projectileAppearance(p,game),base=camera.worldToScreen(p,style.height),at=this.position(p,game,camera,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy??0,p.dx??1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);
    const {width,length}=projectileDimensions(style,camera.scale),margin=Math.max(150,Math.hypot(width,length)/2+30);
    if(at.x<-margin||at.x>camera.width+margin||at.y<-margin||at.y>camera.height+margin)continue;
+   if(!this.clearedMuzzle(p,game,camera,style.height))continue;
    let h=this.histories.get(p);if(!h){h=[];this.histories.set(p,h);}if(!h.length||h.at(-1).time!==game.time){h.push({x:p.x,y:p.y,time:game.time,ox:(at.x-base.x)/camera.scale,oy:(at.y-base.y)/camera.scale});if(h.length>5)h.shift();}
    const rotation=style.spin?(game.time-(p.bornAt||0))*28:Math.atan2(next.y-base.y,next.x-base.x);
    if(h.length>1){const tail=camera.worldToScreen(h[0],style.height);tail.x+=h[0].ox*camera.scale;tail.y+=h[0].oy*camera.scale;const dx=at.x-tail.x,dy=at.y-tail.y,n=Math.hypot(dx,dy);if(n>1){c.save();c.translate(tail.x,tail.y);c.rotate(Math.atan2(dy,dx));c.globalAlpha=.16;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),0,-Math.max(1,width*.45),n,Math.max(2,width*.9));c.restore();}}

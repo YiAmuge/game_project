@@ -43,10 +43,10 @@ test('gun and staff emission points match the visible tip across body mirroring 
   if(key==='rudolph'){p.castSlot='r';p.channelUntil=2;close(before.y-weaponEmissionPoint(g,p).y,.16);}
  }
 });
-test('Gubo bullets begin visually at the muzzle then blend into unchanged projectile coordinates',()=>{
+test('Gubo bullets stay on the muzzle line without changing projectile collision coordinates',()=>{
  const {g,p}=arena('gubo'),t=target(g,48);g.attack(p,t);const bullet=g.projectiles[0],fields=['x','y','dx','dy','remaining','width','speed','damage'],before=fields.map(k=>bullet[k]),camera=new Camera25D();camera.update(1280,720,p);
- const fx=new ProjectileVFX({}),start=fx.position(bullet,g,camera,.95),muzzle=weaponEmissionScreen(g,p,camera,bullet.origin);close(start.x,muzzle.x);close(start.y,muzzle.y);assert.deepEqual(fields.map(k=>bullet[k]),before);
- g.time=.15;const point=fx.position(bullet,g,camera,.95),raw=camera.worldToScreen(bullet,.95);close(point.x,raw.x);close(point.y,raw.y);assert.deepEqual(fields.map(k=>bullet[k]),before);
+ const fx=new ProjectileVFX({}),start=fx.position(bullet,g,camera,.95),muzzle=weaponEmissionScreen(g,p,camera,bullet.origin);close(start.y,muzzle.y);assert.ok(start.x<muzzle.x);assert.equal(fx.clearedMuzzle(bullet,g,camera,.95),false);assert.deepEqual(fields.map(k=>bullet[k]),before);
+ g.time=.15;const point=fx.position(bullet,g,camera,.95);close(point.x,start.x);close(point.y,start.y);assert.deepEqual(fields.map(k=>bullet[k]),before);
 });
 test('Dongbaek tactical aura moves to her feet while shield and movement rules remain intact',()=>{
  const {g,p}=arena('dongbaek');g.cast(p,'q',p);assert.equal(championPresentation(g,p).aura.anchor,'feet');assert.ok(g.shield(p)>0);assert.ok(g.buff(p,'flowerStride'));g.time=3.01;assert.notEqual(championPresentation(g,p).aura?.anchor,'feet');

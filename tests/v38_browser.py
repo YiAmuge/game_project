@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     page=browser.new_page(viewport={'width':1440,'height':950});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
-    expect(page.locator('.build-tag')).to_contain_text('0.38.0')
+    expect(page.locator('.build-tag')).to_contain_text(json.loads((root/'package.json').read_text())['version'])
     page.click('#training-open');page.click('#start')
     page.wait_for_function('__moba.renderer.atlasV36.naturalWidth&&__moba.renderer.weaponAtlas.naturalWidth&&__moba.renderer.scene25d.skin.ready')
     result=page.evaluate('''async()=>{
@@ -20,7 +20,7 @@ with sync_playwright() as pw:
         const calls=[],rotations=[],image=c.drawImage.bind(c),rotate=c.rotate.bind(c);c.rotate=a=>{rotations.push(a);rotate(a);};c.drawImage=(imageEl,...v)=>{const sheet=imageEl===r.atlasV36?9:imageEl===r.weaponAtlas?10:null,f=Object.entries(A.FRAMES).find(([,f])=>f.sheet===sheet&&v[0]===f.x&&v[1]===f.y&&v[2]===f.w&&v[3]===f.h);calls.push({key:f?.[0],sheet,matrix:['a','b','c','d','e','f'].map(k=>c.getTransform()[k]),args:v});image(imageEl,...v);};
         const camera={scale:100,worldToScreen:p=>({x:230+(p.x-e.x)*100,y:350+(p.y-e.y)*100})},vfx=r.scene25d.championVfx;
         if(fx)vfx.body(c,camera,e,g,false);
-        c.save();c.translate(230,350);c.scale(100,100);c.translate(-e.x,-e.y-.325);const rr=Object.create(r);rr.ctx=c;rr.billboardPass=true;rr.skillVfx=r.scene25d.vfx;rr.weaponTrail=()=>{};rr.unit(e,g);c.restore();
+        c.save();c.translate(230,350);c.scale(100,100);c.translate(-e.x,-e.y-.325);const rr=Object.create(r);rr.ctx=c;rr.camera=camera;rr.billboardPass=true;rr.skillVfx=r.scene25d.vfx;rr.weaponTrail=()=>{};rr.unit(e,g);c.restore();
         if(fx)vfx.body(c,camera,e,g,true);return {canvas,calls,rotations};
       };
       window.sprite38={A,W,D,T,make,draw};let checked=0;
