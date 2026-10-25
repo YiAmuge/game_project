@@ -86,7 +86,7 @@ test('Ahab ultimate grants exactly a five-second recast window for champion kill
  const {g,p}=arena('ahab'),t=hero(g,24);t.hp=1;g.cast(p,'r',t);run(g,.46);close(p.state.recastUntil-(10+.45),5,1/120+.00001);assert.equal(p.state.recastSpent,false);
 });
 test('Honglu shares numerical half-strength buffs and shield amount on a shared two-second timer',()=>{
- const {g,p}=arena('honglu'),ally=hero(g,24,20,0);g.addBuff(p,'blessing',10);close(g.haste(p),.12);close(g.haste(ally),.06);close(p.buffs.blessing,ally.buffs.blessing);close(p.state.copyReady,g.time+2);g.time+=2;g.addShield(p,350,'gift',2);close(g.shield(p),350);close(g.shield(ally),175);
+ const {g,p}=arena('honglu'),ally=hero(g,24,20,0);const own=g.powerScale(p),other=g.powerScale(ally);g.addBuff(p,'amplify',10);close(g.powerScale(p)/own,1.10);close(g.powerScale(ally)/other,1.05);close(p.buffs.amplify,ally.buffs.amplify);close(p.state.copyReady,g.time+2);g.time+=2;g.addShield(p,350,'gift',2);close(g.shield(p),350);close(g.shield(ally),175);
 });
 test('Honglu Q provides a breakable shield, can end on recast and emits its healing wave',()=>{
  const {g,p}=arena('honglu'),t=hero(g),ally=hero(g,24,20,0);p.hp-=1000;ally.hp-=1000;const hp=p.hp;g.cast(p,'q',p);close(g.cooldown(p,'q'),12);close(g.shield(p),350);assert.ok(!(p.invulnerableUntil>g.time));g.deal(t,p,100,{fixed:true,proc:false});close(p.hp,hp);g.deal(t,p,300,{fixed:true,proc:false});close(p.hp,hp-50);assert.ok(g.cast(p,'q',p));close(p.hp,hp+450);close(ally.hp,99500);assert.ok(!g.buff(p,'insight'));assert.equal(p.phaseEnemiesUntil,0);assert.equal(p.state.insightUntil,undefined);

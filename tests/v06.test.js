@@ -24,13 +24,13 @@ test('new rear wings and two flank rooms are walkable and connected; void corner
 test('four two-unit neutral camps and buff health/respawn data match the new rules',()=>{
  const g=new Game();assert.equal(g.units.filter(u=>u.kind==='neutral').length,16);
  const sides=g.campViews().filter(c=>c.kind==='side');assert.equal(sides.length,4);assert.ok(sides.every(c=>c.units.length===2));
- for(const e of g.units.filter(u=>u.kind==='neutral')){if(['central','side'].includes(e.camp))assert.equal(e.respawnDelay,20);else if(['blessing','amplify'].includes(e.camp)){close(e.maxHp,1250*1.33);assert.equal(e.respawnDelay,45);}}
+ for(const e of g.units.filter(u=>u.kind==='neutral')){if(['central','side'].includes(e.camp))assert.equal(e.respawnDelay,20);else if(['blessing','amplify'].includes(e.camp)){close(e.maxHp,e.camp==='amplify'?1700:1600);assert.equal(e.respawnDelay,45);}}
 });
 test('neutral and buff creeps actually respawn after twenty and forty-five seconds',()=>{
  const {g,p}=quiet();for(const [camp,seconds] of [['side',20],['amplify',45],['blessing',45]]){const n=g.makeNeutral(40,7,camp);g.kill(n,p);close(n.respawnAt-g.time,seconds);g.time=n.respawnAt-.02;g.step(.01);assert.equal(n.alive,false);g.step(.02);assert.ok(n.alive);assert.ok(!n.hostile);}
 });
-test('both camp buffs last sixty seconds without extending the separate healing burst',()=>{
- for(const camp of ['amplify','blessing']){const {g,p}=quiet();const n=g.makeNeutral(40,7,camp);g.kill(n,p);close(p.buffs[camp]-g.time,60);if(camp==='blessing')close(p.buffs.blessingHeal-g.time,5);}
+test('both camp buffs last sixty seconds without an immediate healing burst',()=>{
+ for(const camp of ['amplify','blessing']){const {g,p}=quiet();const n=g.makeNeutral(40,7,camp);g.kill(n,p);close(p.buffs[camp]-g.time,60);assert.equal(p.buffs.blessingHeal,undefined);}
 });
 function pattern(camp){const {g,p}=quiet();g.player.x=41;const n=g.makeNeutral(40,7,camp);g.deal(p,n,1,{fixed:true});g.aiNeutral=Game.prototype.aiNeutral;return {g,p,n};}
 test('amplify pattern starts 1.5s after aggro, locks a frontal sector and strikes after 2.65s',()=>{

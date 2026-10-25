@@ -1,3 +1,4 @@
+import { swing,focusedHit } from './camp-buffs.js';
 import { CAMP_RULES } from './data.js';
 import { distance,direction } from './geometry.js';
 
@@ -10,11 +11,16 @@ export function update(g,e,target){
   const p=e.pattern;
   if(g.time+1e-8>=p.at){
    cancel(e);e.exposedUntil=g.time+2;
+   swing(g,e,{x:e.x+p.dx,y:e.y+p.dy});let dealt=0,hits=0;
    for(const t of [...g.units]){
     if(!g.hostile(e,t))continue;
     const inside=distance(p,t)<=p.r+t.radius&&(()=>{const d=direction(p,t);return d.x*p.dx+d.y*p.dy>=Math.cos(p.spread/2);})();
-    if(inside&&g.clearLine(p,t))g.deal(e,t,p.damage);
+    if(inside&&g.clearLine(p,t)){
+     const before=g.shield(t),actual=g.deal(e,t,p.damage),total=actual+Math.max(0,before-g.shield(t));
+     if(total>0){dealt+=total;hits++;}
+    }
    }
+   focusedHit(g,e,dealt,hits);
    g.effects.push({type:'slash',x:p.x,y:p.y,r:p.r,angle:Math.atan2(p.dy,p.dx),spread:p.spread,color:'#9be2df',life:.4,maxLife:.4});
   }
   return true;
@@ -22,13 +28,13 @@ export function update(g,e,target){
  if(target&&g.time+1e-8>=(e.patternReady??Infinity)&&!g.stat(e,'stun')&&!g.stat(e,'silence')){
   const d=direction(e,target);
   e.pattern={kind:e.camp,x:e.x,y:e.y,dx:d.x,dy:d.y,r:4.6,spread:Math.PI*.65,damage:160,startedAt:g.time,at:g.time+2.65};
-  e.channelUntil=e.pattern.at;e.patternReady=g.time+CAMP_RULES.patternEvery;return true;
+  e.facing=Math.atan2(d.y,d.x);e.channelUntil=e.pattern.at;e.patternReady=g.time+CAMP_RULES.patternEvery;return true;
  }
  return false;
 }
 export function draw(r,e,g){
  const p=e.pattern;if(!p||!e.alive||e.returning)return;
- const c=r.ctx,color=p.kind==='amplify'?'#df9cdb':'#9de5e2',left=Math.max(0,p.at-g.time),progress=1-left/(p.at-p.startedAt);
+ const c=r.ctx,color=p.kind==='amplify'?'#d35b65':'#d8c591',left=Math.max(0,p.at-g.time),progress=1-left/(p.at-p.startedAt);
  c.save();c.strokeStyle=color;c.lineWidth=.08;c.fillStyle=color+'25';c.beginPath();
  {const a=Math.atan2(p.dy,p.dx);c.moveTo(p.x,p.y);c.arc(p.x,p.y,p.r,a-p.spread/2,a+p.spread/2);c.closePath();}c.fill();c.stroke();
   {const a=Math.atan2(p.dy,p.dx);r.line([{x:p.x,y:p.y},{x:p.x+Math.cos(a)*p.r*progress,y:p.y+Math.sin(a)*p.r*progress}],color,.1);}

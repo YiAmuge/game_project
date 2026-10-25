@@ -1,3 +1,4 @@
+import { drawClerk,isClerk,CLERK_HEIGHT } from './clerk-art.js';
 import { drawMinimap } from './minimap.js';
 import { paintHealth } from './health-display.js';
 import { combatStyle } from './combat-style.js';
@@ -16,14 +17,13 @@ import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
 import { FRAMES, THEMES, loadAtlas,visualForm,spriteHeight } from './art.js';
 import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin,orientWeapon } from './weapon-art.js';
-import { walkingBodyForm } from './walk-animation.js';
 import { draw as bossPattern } from './boss-patterns.js';
 import { draw as creepPattern } from './creep-patterns.js';
 import { targetingPreview } from './targeting.js';
 import { championHud, championEffects, championGroundEffects, chargePreview, orderMark, threatRanges } from './overlays.js';
 
 export class Renderer {
-  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.walkAtlas=loadAtlas(11);this.scale=1;this.ox=0;this.oy=0;this.resize();}
+  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.scale=1;this.ox=0;this.oy=0;this.resize();}
   resize() {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
@@ -126,7 +126,9 @@ export class Renderer {
       c.restore();return;
     }
     if(e.kind==='neutral') {
-      if(e.camp==='boss') {
+      if(drawClerk(this,e,game)) {
+        // Clerk body and independent held weapon are drawn together.
+      } else if(e.camp==='boss') {
         if(!this.billboardPass)this.circle(e.x,e.y,1.6,'#b788d312','#c6a6dd55');
         this.polygon([[e.x-1.1,e.y-.9],[e.x-.3,e.y-.6],[e.x+.3,e.y-.6],[e.x+1.1,e.y-.9],[e.x+.8,e.y+.4],[e.x,e.y+1],[e.x-.8,e.y+.4]],'#705982',team);
         this.line([{x:e.x-.55,y:e.y-.15},{x:e.x-.2,y:e.y+.05}],'#ead3f0',.14);this.line([{x:e.x+.2,y:e.y+.05},{x:e.x+.55,y:e.y-.15}],'#ead3f0',.14);
@@ -135,7 +137,7 @@ export class Renderer {
       }
 
       if(!this.billboardPass){
-        if(e.exposedUntil>game.time)this.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-1.6,'#edbb97',.25);
+        if(e.exposedUntil>game.time)this.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.9:1.6),'#edbb97',.25);
         if(e.returning)this.text('복귀 중',e.x,e.y+1.5,'#d1dec5',.32);
         if(e.camp==='boss'||['amplify','blessing'].includes(e.camp))this.text(e.name,e.x,e.y+(e.camp==='boss'?1.7:1.05),team,.4);
       }
@@ -150,7 +152,7 @@ export class Renderer {
     if(!this.billboardPass&&game.shield(e)>0)this.circle(e.x,e.y-.65,1.05,'#9fc9d711','#c8e4df99',.055);
     if(!this.billboardPass&&(game.buff(e,'marks')||game.buff(e,'resolve')))this.circle(e.x,e.y,1,null,'#d9be78aa',.09);
     drawBackEquipment(this,e,game,{lift:championPresentation(game,e).lift});
-    const walking=walkingBodyForm(game,e),walkAtlas=walking?loadAtlas(11):null,visual=walking&&walkAtlas.complete&&walkAtlas.naturalWidth?walking:visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
+    const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
     c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
       c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);
@@ -224,7 +226,7 @@ export class Renderer {
       return;
     }
     // Nameplates render after bushes and effects; the player's is always last.
-    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.8,e.y-.65,game);else if(e.kind==='neutral')this.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
+    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.8,e.y-.65,game);else if(e.kind==='neutral')this.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
     for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)).sort((a,b)=>Number(a.player)-Number(b.player))){championEffects(this,e,game);CombatVisuals.front(this,e,game);championHud(this,e,game);CombatVisuals.meter(this,e,game);}
     for(const e of game.champions().filter(e=>e.easterText?.until>game.time))this.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   }

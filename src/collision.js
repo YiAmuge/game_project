@@ -1,7 +1,6 @@
 import { carried,paired,shiftCarried } from './attachments.js';
 import { withinTrap } from './confinement.js';
 import { distance,segmentDistance } from './geometry.js';
-import { recordWalk } from './walk-animation.js';
 
 const structure=e=>['tower','core'].includes(e.kind);
 export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||e.phaseEnemiesUntil>g.time||false}={}){
@@ -23,7 +22,6 @@ export function canOccupy(g,e,p,options={}){
  return (options.includeCarry===false||carryFits(g,e,p))&&(options.ignoreTrap||withinTrap(g,e,p))&&!g.blocked(p.x,p.y,e.radius)&&g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6);
 }
 export function moveBody(g,e,dx,dy,options={}){
- const start={x:e.x,y:e.y};
  const n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.12));
  const safe=p=>carryFits(g,e,p)&&withinTrap(g,e,p)&&!g.blocked(p.x,p.y,e.radius)&&g.units.every(t=>{
   if(!solid(g,e,t,options))return true;
@@ -34,7 +32,6 @@ export function moveBody(g,e,dx,dy,options={}){
   const x={x:e.x+dx/n,y:e.y};if(safe(x)){const from={x:e.x,y:e.y};e.x=x.x;shiftCarried(g,e,from,e);e.bodyMoved=true;}
   const y={x:e.x,y:e.y+dy/n};if(safe(y)){const from={x:e.x,y:e.y};e.y=y.y;shiftCarried(g,e,from,e);e.bodyMoved=true;}
  }
- recordWalk(g,e,Math.hypot(e.x-start.x,e.y-start.y));
 }
 // Resolve only the moving/arriving body; never transfer its overlap into an enemy's movement.
 export function settleBody(g,e,fallback){

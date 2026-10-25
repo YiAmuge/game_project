@@ -46,7 +46,7 @@ const augmentSheets=['combat','survival','tech','mourning','mask','carrier','ant
 const augmentData=(await Promise.all(augmentSheets.map(async key=>{const image=await readFile(resolve(root,`src/assets/augments-${key}.png`));return `<script id="augment-data-${key}" type="application/json">${JSON.stringify('data:image/png;base64,'+image.toString('base64'))}</script>`;}))).join('\n');
 const backstreetImage=await readFile(resolve(root,'src/assets/backstreet-materials.png'));
 const backstreetData=`<script id="backstreet-data" type="application/json">${JSON.stringify('data:image/png;base64,'+backstreetImage.toString('base64'))}</script>`;
-const latestSpriteData=(await Promise.all([['sprite-data-v36','champions-v36'],['weapon-data-v36','weapons-v36'],['walk-data-meursault','meursault-walk']].map(async([id,name])=>`<script id="${id}" type="application/json">${JSON.stringify('data:image/png;base64,'+(await readFile(resolve(root,`src/assets/${name}.png`))).toString('base64'))}</script>`))).join('\n');
+const latestSpriteData=(await Promise.all([['sprite-data-v36','champions-v36'],['weapon-data-v36','weapons-v36'],['clerk-data-v49','clerks-v49']].map(async([id,name])=>`<script id="${id}" type="application/json">${JSON.stringify('data:image/png;base64,'+(await readFile(resolve(root,`src/assets/${name}.png`))).toString('base64'))}</script>`))).join('\n');
 const html = template
   .replace(moduleTag,latestSpriteData+'\n'+moduleTag)
   .replace(styleTag, () => `<style>${css.replace(/<\/style/gi, '<\\/style')}</style>`)

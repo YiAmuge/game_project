@@ -53,7 +53,7 @@ export function tickDummy(g,e,dt){
  const d=e.trainingDummy;
  if(!e.alive){if(g.time>=e.respawnAt)respawnDummy(g,e);return;}
  if(distance(e,d.home)>d.leash)resetDummyPosition(g,e);
- if(d.infinite){e.hp=e.maxHp;if(g.buff(e,'blessingHeal'))g.heal(null,e,30*dt,false,{healingKey:'blessing'});if(g.buff(e,'mosesHeal'))g.heal(null,e,35*dt,false,{healingKey:'moses'});}
+ if(d.infinite){e.hp=e.maxHp;if(g.buff(e,'mosesHeal'))g.heal(null,e,35*dt,false,{healingKey:'moses'});}
  if(e.motion)g.updateMotion(e,dt);
  if(g.stat(e,'stun')||g.stat(e,'root')||e.motion||e.state.swordHeldBy)return;
  if(d.mode==='patrol'){

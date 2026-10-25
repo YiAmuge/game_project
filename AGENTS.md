@@ -13,3 +13,14 @@
 - 같은 기준 높이로 맞출 때 가로폭은 원본 종횡비를 유지하고 장식은 정수리 위로 자연스럽게 돌출시킨다.
 - 캐릭터 몸체와 무기는 각각 사용자가 가장 마지막으로 제작·수정한 버전을 사용한다. 실제 사용 원본은 `src/assets/sprites-v36.json`에서 확인한다.
 - 지정된 부분만 수정하는 요청에서는 다른 얼굴·복장·자세·장비 디자인을 변경하지 않는다.
+
+- 걷기 제작을 다시 요청할 경우에만 적용할 기준: 승인된 4프레임 시드의 좌우 다리 연결·접지·통과 순서를 따르고, 상체 픽셀과 키를 유지한다. 뒤틀린 얀은 걷기 제작 대상에서 제외한다.
+- 신발의 원래 형태·색·장식은 변경하지 않는다. 걷기에서는 신발 위치와 각도만 바꾼다.
+- 걷기의 가까운 오른다리는 밝고 세부가 보이게, 먼 왼다리는 어두운 명암으로 유지한다(오른쪽을 보는 3/4 시점). 앞뒤로 이동해도 다리의 정체성과 겹침 순서를 바꾸지 않는다.
+
+- 사용자가 다시 요청하기 전까지 모든 챔피언(뫼르소 포함)에 걷기/이동 프레임 애니메이션을 사용하지 않는다. 이동 중에도 기존 정지 몸체 스프라이트를 유지한다.
+
+걷기 제작 재개 시 참고할 사용자 프롬프트(현재 게임에 적용하지 않음):
+> 2D game asset, character walking animation, 3/4 side view, loop animation frames. LEG SEPARATION CONTROL: 3D depth illusion. The foreground leg (closer to the camera) is fully illuminated and highly detailed. The background leg (further from the camera) is darker, heavily shadowed, and partially occluded by the body. Clear distinction between the front leg and back leg in every single frame. No leg-swapping errors, no blending, correct walking anatomy physics.
+
+- 르루주·르누아르 점원은 챔피언 시드 비율과 명암을 사용하고 표시 키는 2.4로 맞춘다. 공격 몸체는 충전 완료 타격 순간에만 사용하며, 독립 무기의 손잡이를 각 자세의 오른손 좌표에 붙인다. 일반 공격에는 일반 몸체를 유지한다.

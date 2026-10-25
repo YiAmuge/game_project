@@ -90,7 +90,7 @@ test('boss death cancels pending telegraphs so a dead boss cannot create ground 
  const {g,p,boss}=bossFight();p.maxHp=p.hp=100000;p.level=10;run(g,7.1);assert.ok(boss.bossMarkers.length);g.kill(boss,p);const hp=p.hp;run(g,2.2);assert.equal(boss.bossMarkers.length,0);close(p.hp,hp);
 });
 test('buff creep exposure remains for two seconds after its attack but interrupts do not create it',()=>{
- for(const camp of ['amplify','blessing']){const {g,p}=quiet();g.units=[p];const c=g.makeNeutral(40,7,camp);p.x=43;g.aiNeutral=Game.prototype.aiNeutral;g.deal(p,c,1,{fixed:true});run(g,4.2);assert.ok(c.exposedUntil>g.time&&!c.pattern);const hp=c.hp;g.deal(p,c,100,{fixed:true});close(hp-c.hp,120);g.time=c.exposedUntil+.01;const before=c.hp;g.deal(p,c,100,{fixed:true});close(before-c.hp,100);}
+ for(const camp of ['amplify','blessing']){const {g,p}=quiet();g.units=[p];const c=g.makeNeutral(40,7,camp);p.x=43;g.aiNeutral=Game.prototype.aiNeutral;g.deal(p,c,1,{fixed:true});run(g,4.2);assert.ok(c.exposedUntil>g.time&&!c.pattern);const hp=c.hp+g.shield(c);g.deal(p,c,100,{fixed:true});close(hp-c.hp-g.shield(c),120);g.time=c.exposedUntil+.01;const before=c.hp+g.shield(c);g.deal(p,c,100,{fixed:true});close(before-c.hp-g.shield(c),100);}
 });
 test('steering beside a wall with only a body behind it returns a finite direction without an avoidance record',async()=>{
  const {steer}=await import('../src/navigation.js');const {g,p,t}=quiet();Object.assign(p,{x:16.8,y:15});Object.assign(t,{team:0,x:15.5,y:15});delete p.avoidance;const d=steer(g,p,{x:20,y:15},.1);assert.ok(Number.isFinite(d.x)&&Number.isFinite(d.y));

@@ -1,3 +1,4 @@
+import * as CampBuffs from './camp-buffs.js';
 import * as BossBuff from './boss-buff.js';
 import * as Pings from './pings.js';
 import * as Fountain from './fountain.js';
@@ -72,8 +73,8 @@ export class Game {
     }
   }
   makeNeutral(x,y,camp) {
-    const stats={central:[700,10,80,1.3,CAMP_RULES.neutralRespawn],side:[850,15,100,1.2,CAMP_RULES.neutralRespawn],blessing:[1250*CAMP_RULES.buffHealth,25,100,1.2,CAMP_RULES.buffRespawn],amplify:[1250*CAMP_RULES.buffHealth,25,120,1.2,CAMP_RULES.buffRespawn],boss:[BossPatterns.BOSS_RULES.health,60,BossPatterns.BOSS_RULES.attack,1.5,BossBuff.BOSS_BUFF.respawn]}[camp];
-    return this.entity({kind:'neutral',team:2,camp,x,y,home:{x,y},campId:camp==='central'?'central':`${camp}-${x}`,campCenter:camp==='central'?MAP_CENTER:{x,y},campRadius:['central','boss'].includes(camp)?4.7:CAMP_RULES.radius,maxHp:stats[0],armor:stats[1],damage:stats[2],interval:stats[3],respawnDelay:stats[4],range:camp==='boss'?2.8:1.4,radius:camp==='boss'?1.2:.5,name:{central:'중앙 크립',side:'측면 크립',blessing:'가호',amplify:'증폭',boss:'중앙 보스'}[camp],sweep:2.5});
+    const clerk=CampBuffs.BUFF_CREEPS[camp],stats=clerk?[clerk.health,clerk.armor,clerk.damage,clerk.interval,CAMP_RULES.buffRespawn]:{central:[700,10,80,1.3,CAMP_RULES.neutralRespawn],side:[850,15,100,1.2,CAMP_RULES.neutralRespawn],boss:[BossPatterns.BOSS_RULES.health,60,BossPatterns.BOSS_RULES.attack,1.5,BossBuff.BOSS_BUFF.respawn]}[camp];
+    return this.entity({kind:'neutral',team:2,camp,x,y,home:{x,y},campId:camp==='central'?'central':`${camp}-${x}`,campCenter:camp==='central'?MAP_CENTER:{x,y},campRadius:['central','boss'].includes(camp)?4.7:CAMP_RULES.radius,maxHp:stats[0],armor:stats[1],damage:stats[2],interval:stats[3],respawnDelay:stats[4],range:camp==='boss'?2.8:1.4,radius:camp==='boss'?1.2:.5,name:{central:'중앙 크립',side:'측면 크립',blessing:CampBuffs.BUFF_CREEPS.blessing.name,amplify:CampBuffs.BUFF_CREEPS.amplify.name,boss:'중앙 보스'}[camp],sweep:2.5});
   }
   makeChampion(key,team,index,position=POSITION_ORDER[index%4]) {
     const c=CHAMPIONS[key];
@@ -165,9 +166,9 @@ export class Game {
     }return [...groups.values()];
   }
   addBuff(e,key,seconds,{copy=true,strength=1}={}){
-    if(this.buff(e,key)&&(e.buffPotency?.[key]??1)>strength)return;e.buffPotency??={};e.buffPotency[key]=strength;
+    const wasActive=this.buff(e,key);if(wasActive&&(e.buffPotency?.[key]??1)>strength)return;e.buffPotency??={};e.buffPotency[key]=strength;
     e.buffs[key]=this.time+seconds;e.buffHistory[key]={order:++this.buffSequence,until:e.buffs[key]};
-    e.visuals[key]={until:this.time+seconds,theme:e.key,at:this.time};
+    e.visuals[key]={until:this.time+seconds,theme:e.key,at:this.time};CampBuffs.onBuff(this,e,key,wasActive);
     if(copy&&e.key==='honglu'&&(e.state.copyReady||0)<=this.time){e.state.copyReady=this.time+2;for(const a of this.champions(e.team).filter(a=>a!==e&&a.alive&&distance(a,e)<=8.5)){this.addBuff(a,key,seconds,{copy:false,strength:strength*.5});a.visuals.hongluShare={until:this.time+seconds,theme:'honglu',at:this.time};}this.support(e);}
   }
   activeBuffs(e){
@@ -178,7 +179,7 @@ export class Game {
   selfDamage(e,amount,{nonLethal=false,ignoreRegen=false}={}){e.hp=Math.max(nonLethal?1:0,e.hp-amount);if(!ignoreRegen)e.lastDamageAt=this.time;if(e.hp<=0)this.kill(e,e);}
   heal(source,e,amount,scale=true,{natural=false,healingKey,startedAt}={}){if(!e.alive||e.state?.posthumous)return 0;const value=Math.max(0,scale&&source?.kind==='champion'?damageFormula(amount,CHAMPIONS[source.key].power,1)*this.powerScale(source):amount);const unlimited=Boolean(e.trainingDummy?.infinite&&e.team===0),actual=unlimited?value:Math.min(e.maxHp-e.hp,value);if(e.key==='dongrang'&&!natural)e.totalHealingReceived=(e.totalHealingReceived||0)+value;e.hp=unlimited?e.maxHp:e.hp+actual;if(this.training&&!natural)Training.recordMetric(this,e,'healing',actual,{source,healingKey,startedAt});if(e.key==='queequeg')e.state.endurance=V08.endurance(e);if(actual>0&&source?.team===e.team&&source!==e)e.supporters[source.id]=this.time;return actual;}
   combatPower(e){return CHAMPIONS[e.key].power*this.powerScale(e)*(1-this.powerWeak(e));}
-  powerScale(e){return (CHAMPIONS[e.key].powerMultiplier??1)*(1+CHAMPIONS[e.key].growth.power*(e.level-1))*(1+e.upgrades.power*.04*(e.key==='moses'?.5:1))*(1+Augments.powerRate(this,e))*(1+Augments.resentment(e))*(this.buff(e,'bossBuff')?1.15:1)*(e.key==='queequeg'?1+.04*(V08.endurance(e)):1)*(Sora.ego(this,e)?1.25:1)*(Yan.distorted(this,e)?.9:1)*(this.buff(e,'faustUlt')?1+.1*(e.ultStacks||0):1);}
+  powerScale(e){return (CHAMPIONS[e.key].powerMultiplier??1)*(1+CHAMPIONS[e.key].growth.power*(e.level-1))*(1+e.upgrades.power*.04*(e.key==='moses'?.5:1))*(1+Augments.powerRate(this,e))*(1+Augments.resentment(e))*(this.buff(e,'bossBuff')?1.15:1)*(1+this.buffValue(e,'amplify',CampBuffs.CAMP_BUFFS.power))*(e.key==='queequeg'?1+.04*(V08.endurance(e)):1)*(Sora.ego(this,e)?1.25:1)*(Yan.distorted(this,e)?.9:1)*(this.buff(e,'faustUlt')?1+.1*(e.ultStacks||0):1);}
   allyExecuteThreshold(e){return this.buff(e,'guboReload')?RULES.allyExecuteBuffThreshold:RULES.allyExecuteThreshold;}
   canGuboHitAlly(source,target){return source.key==='gubo'&&target!==source&&target.team===source.team&&target.kind==='champion'&&target.alive&&!this.hidden(target)&&target.hp>0&&target.hp<=target.maxHp*this.allyExecuteThreshold(source)+1e-8;}
   powerWeak(e){return Math.max(this.stat(e,'weak'),this.stat(e,'yanLock'),Math.max(0,...Object.values(e.state?.ishmaelWeak||{}))*.02);}
@@ -237,10 +238,10 @@ export class Game {
   }
   reloadRate(e){return this.reloadPaused(e)?(Augments.has(e,'wisdom')?.5:0):1;}
   discipline(e){return this.shield(e)>0&&e.shields.some(s=>s.value>0&&s.until>this.time&&s.source.startsWith('sword-'));}
-  haste(e) { return Math.max(0,e.upgrades.haste*.05+this.buffValue(e,'blessing',.12)+this.extraRate(e)+(this.discipline(e)?.12:0)+this.buffValue(e,'augBattleHaste',.15)+(Augments.has(e,'forceBattery')&&this.shield(e)>=e.maxHp*.1-1e-8?.1:0)-this.stat(e,'hasteWeak')); }
+  haste(e) { return Math.max(0,e.upgrades.haste*.05+this.extraRate(e)+(this.discipline(e)?.12:0)+this.buffValue(e,'augBattleHaste',.15)+(Augments.has(e,'forceBattery')&&this.shield(e)>=e.maxHp*.1-1e-8?.1:0)-this.stat(e,'hasteWeak')); }
   extraRate(e){return (e.key==='ryoshu'&&this.time-e.lastCombat>=2?.2:0)+this.buffValue(e,'ishmaelSurvive',.2)+(this.buff(e,'coins')?(e.state.coinHeads||0)*.08:0)+this.buffValue(e,'mosesWhite',.15)+(e.key==='moses'?e.upgrades.power*.04*.5*.6:0);}
   reloadInterval(e) {
-    return RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*Math.max(e.key==='moses'?.85:.2,1+e.upgrades.reload*.05+Augments.resentment(e)+Augments.reloadRate(this,e)+(Augments.has(e,'blackOrb')?.15:0)+(Sora.ego(this,e)?.3:0)+(e.key==='ahab'?.15:0)+this.buffValue(e,'queequegUlt',.4)+this.buffValue(e,'explore',.2)+this.buffValue(e,'marks',.2)+this.buffValue(e,'blessing',.12)+this.buffValue(e,'guboReload',.35)+this.extraRate(e)+(this.discipline(e)?.12:0)+(this.buff(e,'rabbitHunt')?(e.state.rabbitStacks||0)*.2:0)+this.buffValue(e,'rabbitFrenzy',.6)+this.buffValue(e,'alisaReload',.3)+(e.key==='dongbaek'&&e.qCd<=0?.2:0)+this.buffValue(e,'flowerReload',.2)+this.buffValue(e,'outisReload',.3)+(Augments.has(e,'reloadStacks')?(e.state.augReloadStacks||0)*.05:0)+(e.key==='ahab'&&this.buff(e,'ahabCover')?(e.state.coverStacks||0)*.2:0)-this.stat(e,'reloadWeak')));
+    return RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*Math.max(e.key==='moses'?.85:.2,1+e.upgrades.reload*.05+Augments.resentment(e)+Augments.reloadRate(this,e)+(Augments.has(e,'blackOrb')?.15:0)+(Sora.ego(this,e)?.3:0)+(e.key==='ahab'?.15:0)+this.buffValue(e,'queequegUlt',.4)+this.buffValue(e,'explore',.2)+this.buffValue(e,'marks',.2)+this.buffValue(e,'guboReload',.35)+this.extraRate(e)+(this.discipline(e)?.12:0)+(this.buff(e,'rabbitHunt')?(e.state.rabbitStacks||0)*.2:0)+this.buffValue(e,'rabbitFrenzy',.6)+this.buffValue(e,'alisaReload',.3)+(e.key==='dongbaek'&&e.qCd<=0?.2:0)+this.buffValue(e,'flowerReload',.2)+this.buffValue(e,'outisReload',.3)+(Augments.has(e,'reloadStacks')?(e.state.augReloadStacks||0)*.05:0)+(e.key==='ahab'&&this.buff(e,'ahabCover')?(e.state.coverStacks||0)*.2:0)-this.stat(e,'reloadWeak')));
   }
   support() {}
   addShield(target,value,source,seconds=3,copy=true) {
@@ -278,9 +279,10 @@ export class Game {
       this.effects.push({type:'ring',x:e.x,y:e.y,r:2,color:'#d9be78',life:1,maxLife:1});
     }
   }
-  deal(source,target,base,{fixed=false,proc=true,allowFriendly=false,damageKind=source.actionKind||'skill',nonLethal=false,transferred=false}={}) {
+  deal(source,target,base,{fixed=false,proc=true,allowFriendly=false,damageKind=source.actionKind||'skill',nonLethal=false,transferred=false,campBonus=true}={}) {
     const alliedAllowed=allowFriendly&&this.canGuboHitAlly(source,target);
     if(!target.alive||target.state?.posthumous||target.returning||(source.team===target.team&&!alliedAllowed)||this.hidden(target)||this.training&&target===this.player&&this.practice.invincible||target.invulnerableUntil>this.time||this.locked(target)||this.winner!==null) return 0;
+    const pulsing=source.kind==='champion'&&this.buff(source,'amplify');
     let amount=base,bypass=0;
     if(!fixed) {
       if(source.kind==='champion'&&!source.trainingDummy) {
@@ -301,16 +303,16 @@ export class Game {
       }
     }
     amount+=bypass;
-    if(['tower','core'].includes(target.kind)) {
+    if(campBonus&&['tower','core'].includes(target.kind)) {
       const nearby=this.units.filter(u=>u.alive&&u.team!==target.team&&u.team!==2&&['champion','minion'].includes(u.kind)&&distance(u,target)<=target.range);
       if(!nearby.length)return 0;
       if(source.kind==='champion'&&!nearby.some(u=>u.kind==='minion'))amount*=.2;
       if(source.siege)amount*=1.35*1.08;
     }
-    if(target.kind==='neutral'&&(target.pattern||target.exposedUntil>this.time))amount*=1.2;
-    if(target.kind==='minion'&&target.siege&&!['tower','core'].includes(source.kind))amount*=.925;
-    if(source.key==='starbuck'&&target.kind==='neutral')amount*=1.12;
-    if(!transferred)amount*=Skills.coverMultiplier(this,source,target);
+    if(campBonus&&target.kind==='neutral'&&(target.pattern||target.exposedUntil>this.time))amount*=1.2;
+    if(campBonus&&target.kind==='minion'&&target.siege&&!['tower','core'].includes(source.kind))amount*=.925;
+    if(campBonus&&source.key==='starbuck'&&target.kind==='neutral')amount*=1.12;
+    if(!transferred&&campBonus)amount*=Skills.coverMultiplier(this,source,target);
     source.lastCombat=this.time;target.lastCombat=this.time;
     target.lastDamageAt=this.time;
     if(amount>0)this.cancelRecall(target);
@@ -322,7 +324,7 @@ export class Game {
       if(target.kind==='neutral')target.aggro=source.id;
     }
     if(target.kind==='neutral'&&amount>0){if(target.camp==='boss')BossPatterns.engage(this,target);else CreepPatterns.engage(this,target);target.aggro=source.id;}
-    if(!transferred){amount=Skills.transfer(this,source,target,amount,damageKind);amount=V08.transfer(this,source,target,amount,damageKind);}
+    if(!transferred&&campBonus){amount=Skills.transfer(this,source,target,amount,damageKind);amount=V08.transfer(this,source,target,amount,damageKind);}
     if(this.buff(target,'queequegUlt')||target.state?.counter)nonLethal=true;
     let remaining=amount;
     for(const s of target.shields) {if(s.until<=this.time)continue;const take=Math.min(s.value,remaining);s.value-=take;remaining-=take;}
@@ -353,10 +355,7 @@ export class Game {
       source.passiveReady=this.time+1.5;
     }
     if(target.alive&&target.hp<=0&&!target.state?.posthumous&&!Skills.interceptDeath(this,target,Combat.creditedKiller(this,target,source)||source))this.kill(target,source);
-    if(proc&&target.alive&&source.kind==='champion'&&this.buff(source,'amplify')&&(source.ampTargets?.[target.id]||0)<=this.time) {
-      source.ampTargets??={};source.ampTargets[target.id]=this.time+1;
-      this.status(target,'slow',this.buffValue(source,'amplify',.12),1,source);this.deal(source,target,this.buffValue(source,'amplify',35),{fixed:true,proc:false});
-    }
+    CampBuffs.afterDamage(this,source,target,actual+absorbed,{campBonus:campBonus&&pulsing,transferred});
     return actual;
   }
   kill(e,killer,{absolute=false}={}) {
@@ -404,7 +403,7 @@ export class Game {
         this.award(killer,(['central','side'].includes(e.camp)?56.25:112.5)*(killer.key==='starbuck'?1.1:1),['central','side'].includes(e.camp)?18:40);
         e.respawnAt=this.time+e.respawnDelay;
         if(killer.kind==='champion'&&e.camp==='amplify')this.addBuff(killer,'amplify',CAMP_RULES.buffDuration);
-        if(killer.kind==='champion'&&e.camp==='blessing'){this.addBuff(killer,'blessing',CAMP_RULES.buffDuration);this.addBuff(killer,'blessingHeal',5,{copy:false});}
+        if(killer.kind==='champion'&&e.camp==='blessing')this.addBuff(killer,'blessing',CAMP_RULES.buffDuration);
       }
     }
   }
@@ -612,6 +611,7 @@ export class Game {
     }
   }
   simpleAttack(e,t) {
+    if(e.kind==='neutral')e.facing=Math.atan2(t.y-e.y,t.x-e.x);
     if(e.kind==='tower'||e.kind==='core'||e.kind==='minion'&&(e.ranged||e.siege)){this.projectiles.push({source:e,target:t,homing:true,x:e.x,y:e.y,damage:e.kind==='tower'?Towers.shotDamage(this,e,t):e.damage,speed:e.kind==='minion'?12:14,remaining:4,width:e.kind==='minion'?.12:.24,color:e.team===0?'#83e5f4':'#ee9b84'});return;}
     this.effects.push({type:'line',x:e.x,y:e.y,to:{x:t.x,y:t.y},color:e.team===0?'#6fb8c7':e.team===1?'#d18178':'#bd9e64',life:.16,maxLife:.16});
     this.deal(e,t,e.damage);
@@ -635,7 +635,7 @@ export class Game {
     if(e.camp==='boss'){BossPatterns.update(this,e,dt);return;}
     if(e.hostile&&distance(e,e.campCenter)>e.campRadius)e.outsideSince??=this.time;else delete e.outsideSince;
     if(!e.returning&&(e.outsideSince!==undefined&&this.time-e.outsideSince>=CAMP_RULES.leashDelay)){
-      e.returning=true;e.hostile=false;e.exposedUntil=0;e.aggro=null;CreepPatterns.cancel(e);e.status={};e.path=[];delete e.motion;
+      e.returning=true;e.hostile=false;e.swingUntil=0;e.exposedUntil=0;e.aggro=null;CreepPatterns.cancel(e);e.status={};e.path=[];delete e.motion;
     }
     if(e.returning){
       this.moveToward(e,e.home,dt,{speed:CAMP_RULES.returnSpeed,ignoreCC:true});e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.7*dt);
@@ -724,14 +724,14 @@ export class Game {
     for(const e of this.units)e.bodyOrigin={x:e.x,y:e.y};
     for(const e of this.units) {
       Infestation.tick(this,e);if(e.alive)Skills.tickBurn(this,e);e.attackCd=Math.max(0,e.attackCd-dt);
-      if(e.trainingDummy){Training.tickDummy(this,e,dt);continue;}
+      if(e.trainingDummy){Training.tickDummy(this,e,dt);if(e.alive)CampBuffs.tick(this,e);continue;}
       if(e.kind==='champion') {
         e.gold+=dt;this.award(e,(e.key==='faust'?9:RULES.passiveXpPerSecond)*dt,0,{passive:true});e.qCd=Math.max(0,e.qCd-dt);e.rCd=Math.max(0,e.rCd-dt);
         if(!e.alive&&this.time>=e.respawnAt){e.alive=true;e.hp=e.maxHp;Object.assign(e,this.spawnPoint(e));e.ammo=this.ammoCap(e);e.reloadProgress=0;e.retreat=false;e.path=[];e.laneEntered=false;e.lastAttackAt=this.time-3;e.lastDamageAt=this.time-3;
           if(e.state.executedReturn){this.addBuff(e,'executedHaste',3);delete e.state.executedReturn;}
           if(e.state.fastReturn){this.addBuff(e,'alisaHaste',5);delete e.state.fastReturn;}Skills.onRespawn(this,e);
         }
-      } else if(e.kind==='neutral'&&!e.alive&&this.time>=e.respawnAt&&!(e.camp==='central'&&this.bossSpawned)){e.alive=true;e.hp=e.maxHp;e.x=e.home.x;e.y=e.home.y;e.aggro=null;e.hostile=false;e.returning=false;CreepPatterns.cancel(e);delete e.outsideSince;delete e.patternReady;if(e.camp==='boss')BossPatterns.cancel(e);delete e.burn;e.status={};e.shields=[];e.lastCombat=-99;}
+      } else if(e.kind==='neutral'&&!e.alive&&this.time>=e.respawnAt&&!(e.camp==='central'&&this.bossSpawned)){e.alive=true;e.hp=e.maxHp;e.x=e.home.x;e.y=e.home.y;e.aggro=null;e.hostile=false;e.returning=false;CreepPatterns.cancel(e);e.swingUntil=0;delete e.outsideSince;delete e.patternReady;if(e.camp==='boss')BossPatterns.cancel(e);delete e.burn;e.status={};e.shields=[];e.lastCombat=-99;}
       if(!e.alive)continue;Fountain.tick(this,e,dt);if(!e.alive)continue;
       if(e.kind==='summon'){Yan.tickHand(this,e,dt);continue;}
       if(e.kind==='core'&&e.hp/e.maxHp<.35&&this.time-(e.lastDamageAt||0)>=10){let ward=e.shields.find(s=>s.source==='core-ward');if(!ward){ward={source:'core-ward',until:Infinity,value:0};e.shields.push(ward);}ward.value=e.maxHp*.15;}
@@ -746,7 +746,7 @@ export class Game {
         if(natural&&e.hp<e.maxHp)this.heal(null,e,e.maxHp*RULES.naturalHealRate*dt,false,{natural:true});
         else if(!natural&&this.inSpawn(e)&&e.hp<e.maxHp)this.heal(null,e,e.maxHp*.12*dt,false);
         if(!e.alive)continue;
-        if(this.buff(e,'blessingHeal'))this.heal(null,e,this.buffValue(e,'blessingHeal',30)*dt,false);
+        CampBuffs.tick(this,e);
         if(this.buff(e,'mosesHeal'))this.heal(null,e,this.buffValue(e,'mosesHeal',35)*dt,false);
         Skills.tick(this,e,dt);V08.tick(this,e,dt);Augments.tick(this,e,dt);if(!e.alive)continue;
         if(V08.controlTaunt(this,e,dt))continue;
