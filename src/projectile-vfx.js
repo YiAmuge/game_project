@@ -6,10 +6,10 @@ const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice
 
 export function projectileAppearance(p,g){
  const key=p.theme||p.source?.key,style=combatStyle(key,g,p.source,{kind:p.damageKind==='basic'?'basic':'projectile',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});
- const type=p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
+ const type=key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?.45:p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
- return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:empowered?'#a32b44':null};
+ return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(type==='swordRay'?{visualWidth:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:empowered?'#a32b44':null};
 }
 export function beamAppearance(key){
  const width=key==='gubo'?2.5:key==='rudolph'?3.5:1,color=key==='gubo'?'#74192e':key==='rudolph'?'#dc9852':'#a3d6d2',tuned=['gubo','rudolph'].includes(key);
@@ -40,7 +40,11 @@ export class ProjectileVFX {
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=96;const c=canvas.getContext('2d');c.translate(64,48);
   const metal=c.createLinearGradient(0,-15,0,15);metal.addColorStop(0,tint?tintTone(color,.45):'#fafbfc');metal.addColorStop(.3,color);metal.addColorStop(.52,tint?tintTone(color,.12):'#f4f4f4');metal.addColorStop(1,tint?tintTone(color,-.6):'#4b5057');
   c.fillStyle=metal;c.strokeStyle='#27313b';c.lineWidth=1.2;c.lineJoin='round';
-  if(type==='wave'){
+  if(type==='swordRay'){
+   const ray=c.createLinearGradient(-58,0,58,0);ray.addColorStop(0,color+'00');ray.addColorStop(.3,color+'99');ray.addColorStop(.72,'#f1f6f4');ray.addColorStop(1,color+'00');
+   c.fillStyle=ray;c.beginPath();c.moveTo(-58,0);c.bezierCurveTo(-25,-30,22,-22,59,0);c.bezierCurveTo(22,22,-25,30,-58,0);c.fill();
+   c.strokeStyle='#f4fbf8';c.lineWidth=3;c.beginPath();c.moveTo(-27,0);c.lineTo(54,0);c.stroke();
+  }else if(type==='wave'){
    for(let i=0;i<7;i++){c.beginPath();c.moveTo(-25-i*2,-40+i*3);c.bezierCurveTo(35+i,0,35+i,0,-25-i*2,40-i*3);c.strokeStyle=i%2?color:'#f2f5fa';c.lineWidth=5-i*.6;c.globalAlpha=.8-i*.08;c.stroke();}c.globalAlpha=1;
   }else if(type==='axe'){
    c.save();c.rotate(.6);c.fillStyle='#554b42';c.fillRect(-36,-3,65,6);c.fillStyle=metal;c.beginPath();c.moveTo(5,-5);c.bezierCurveTo(9,-28,40,-36,49,-15);c.lineTo(34,9);c.lineTo(9,4);c.closePath();c.fill();c.stroke();

@@ -4,7 +4,7 @@ import { Game } from '../src/game.js';
 import { WORLD } from '../src/data.js';
 import { skillCharges,gregorStack,releaseHeath } from '../src/skills.js';
 import * as Yan from '../src/yan.js';
-import { equipmentPose,soraOrbitPose,outisSpinPose,heathSlamPose,yanWeaponAngle,WEAPON_ART } from '../src/weapon-art.js';
+import { equipmentPose,soraOrbitPose,outisSpinPose,heathSlamPose,yanWeaponAngle,swingProgress,WEAPON_ART } from '../src/weapon-art.js';
 import { ChampionVFX,championPresentation } from '../src/champion-vfx.js';
 import { canOccupy } from '../src/collision.js';
 
@@ -15,19 +15,19 @@ function target(g,x=44,y=7,team=1){const t=g.makeChampion('faust',team,9);Object
 
 test('Sora claws keep opposite orbital positions and fixed individual orientation through one full turn',()=>{
  const {g,p}=arena('sora');g.addBuff(p,'soraEgo',20);p.attackAt=0;p.attackFacing=.4;let previous;
- for(let i=0;i<=24;i++){g.time=i*.299/24;const pose=equipmentPose(g,p),orbit=soraOrbitPose(p,pose),center={x:pose.origin.x,y:pose.origin.y-.8};assert.ok(orbit.active);close(orbit.left.hand.x+orbit.right.hand.x,2*center.x);close(orbit.left.hand.y+orbit.right.hand.y,2*center.y);const radius=Math.hypot(orbit.right.hand.x-center.x,orbit.right.hand.y-center.y);assert.ok(radius>=.9-1e-7&&radius<=1.1+1e-7);if(i===0)close(radius,.9);if(i===12)assert.ok(radius>1.099);close(orbit.left.angle,.4+Math.PI);close(orbit.right.angle,.4);if(previous)assert.ok(Math.hypot(orbit.right.hand.x-previous.x,orbit.right.hand.y-previous.y)>.1);previous=orbit.right.hand;}
+ for(let i=0;i<=24;i++){g.time=i*.299/24;const pose=equipmentPose(g,p),orbit=soraOrbitPose(p,pose),center={x:pose.origin.x,y:pose.origin.y-.8};assert.ok(orbit.active);close(orbit.left.hand.x+orbit.right.hand.x,2*center.x);close(orbit.left.hand.y+orbit.right.hand.y,2*center.y);const radius=Math.hypot(orbit.right.hand.x-center.x,orbit.right.hand.y-center.y);assert.ok(radius>=.9-1e-7&&radius<=1.1+1e-7);if(i===0)close(radius,.9);if(i===12)assert.ok(radius>1.099);close(orbit.left.angle,.4+Math.PI);close(orbit.right.angle,.4);if(previous)assert.ok(Math.hypot(orbit.right.hand.x-previous.x,orbit.right.hand.y-previous.y)>.02);previous=orbit.right.hand;}
  g.time=.3;assert.equal(soraOrbitPose(p,equipmentPose(g,p)).active,false);
 });
 test('Outis starts one body-centered orbit only after her tactical dash lands',()=>{
  const {g,p}=arena('outis');g.cast(p,'q',{x:47,y:7});assert.equal(outisSpinPose(g,p,equipmentPose(g,p)),null);run(g,.4);assert.equal(p.motion,undefined);assert.ok(p.state.outisSpinAt>0);const start=p.state.outisSpinAt;
- for(const progress of [0,.25,.5,.75,.999]){g.time=start+progress*.4;const body=equipmentPose(g,p),pose=outisSpinPose(g,p,body);close(Math.hypot(pose.hand.x-body.origin.x,pose.hand.y-body.origin.y+.8),.5);close(pose.angle,progress*Math.PI*2);}
+ for(const progress of [0,.25,.5,.75,.999]){g.time=start+progress*.4;const body=equipmentPose(g,p),pose=outisSpinPose(g,p,body);close(Math.hypot(pose.hand.x-body.origin.x,pose.hand.y-body.origin.y+.8),.5);close(pose.angle,swingProgress(progress)*Math.PI*2);}
  g.time=start+.401;assert.equal(outisSpinPose(g,p,equipmentPose(g,p)),null);
 });
 test('Heathcliff holds his bat overhead and brings its tip to the floor on the actual landing frame',()=>{
  for(const duration of [.2,1.5]){const {g,p}=arena('heathcliff');g.cast(p,'q',{x:47,y:7});close(heathSlamPose(g,p,equipmentPose(g,p)).angle,-Math.PI/2);g.time=duration;assert.ok(releaseHeath(g,p,{x:47,y:7}));const m=p.motion;m.elapsed=Math.max(m.minDuration,m.total/m.speed)*.3;close(heathSlamPose(g,p,equipmentPose(g,p)).angle,-Math.PI/2);m.elapsed=0;let guard=0;while(p.motion&&guard++<300)g.step(1/120);assert.ok(guard<300);close(p.state.heathSlamAt,g.time);const body=equipmentPose(g,p),slam=heathSlamPose(g,p,body);close(slam.angle,Math.PI/2);close(slam.hand.y+WEAPON_ART.heathcliff[1]*.88,body.origin.y+.06);assert.ok(g.effects.some(f=>f.type==='burst'&&f.theme==='heathcliff'));run(g,.19);assert.equal(heathSlamPose(g,p,equipmentPose(g,p)),null);}
 });
 test('Yan finishes his basic downstroke twice as fast and the ground effect keeps the exact attack rectangle',()=>{
- const {g,p}=arena('yan');g.attack(p,{x:47,y:7});p.state.yanCharge.progress=1.5;Yan.release(g,p,{x:47,y:7});g.time=.075;close(Math.abs(yanWeaponAngle(p,equipmentPose(g,p))),.45);g.time=.151;close(yanWeaponAngle(p,equipmentPose(g,p)),0);const vfx=new ChampionVFX({});vfx.sync(g);const ground=vfx.effects.find(f=>f.type==='yanGroundSlam'),hit=g.effects.find(f=>f.type==='yanCleave');assert.ok(ground);close(ground.range,6.5);close(ground.width,1.8);close(ground.range,Math.hypot(hit.to.x-hit.x,hit.to.y-hit.y));assert.deepEqual(ground.shape,{kind:'rect',range:6.5,width:1.8,angle:0});
+ const {g,p}=arena('yan');g.attack(p,{x:47,y:7});p.state.yanCharge.progress=1.5;Yan.release(g,p,{x:47,y:7});g.time=.075;close(Math.abs(yanWeaponAngle(p,equipmentPose(g,p))),.9*(1-swingProgress(.5)));g.time=.151;close(yanWeaponAngle(p,equipmentPose(g,p)),0);const vfx=new ChampionVFX({});vfx.sync(g);const ground=vfx.effects.find(f=>f.type==='yanGroundSlam'),hit=g.effects.find(f=>f.type==='yanCleave');assert.ok(ground);close(ground.range,6.5);close(ground.width,1.8);close(ground.range,Math.hypot(hit.to.x-hit.x,hit.to.y-hit.y));assert.deepEqual(ground.shape,{kind:'rect',range:6.5,width:1.8,angle:0});
 });
 test('multi-charge skills expose the next recharge timer while a usable charge remains',()=>{
  for(const key of ['nelly','sora']){const {g,p}=arena(key);if(key==='sora'){p.state.unlock=5;g.cast(p,'r',p);}assert.deepEqual(skillCharges(g,p,'q'),{current:2,max:2,remaining:0});assert.ok(g.cast(p,'q',{x:41,y:7}));run(g,.2);const partial=skillCharges(g,p,'q');assert.equal(partial.current,1);assert.ok(partial.remaining>4.7&&partial.remaining<4.9);close(p.qCd,0);assert.ok(g.cast(p,'q',{x:42,y:7}));run(g,.2);assert.equal(skillCharges(g,p,'q').current,0);assert.ok(p.qCd>4);run(g,4.61);assert.equal(skillCharges(g,p,'q').current,1);assert.ok(skillCharges(g,p,'q').remaining>4.9);close(p.qCd,0);run(g,5);assert.deepEqual(skillCharges(g,p,'q'),{current:2,max:2,remaining:0});assert.equal(skillCharges(g,p,'r'),null);}

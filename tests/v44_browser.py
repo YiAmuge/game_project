@@ -25,14 +25,14 @@ with sync_playwright() as pw:
       const handScreen=(e,hand)=>({x:320+(hand.x-e.x)*100,y:300+(hand.y-e.y-.325)*100});
       const pivot=(out,e,length,angle,p=.12)=>{const call=out.calls.find(a=>a.key===W.WEAPON_ART[e.key][0]),m=W.weaponGeometry(call.key,length);return {x:call.m.e-Math.cos(angle)*(.5-p)*m.span*100,y:call.m.f-Math.sin(angle)*(.5-p)*m.span*100,call};};
       const cards=[],card=(label,e)=>{const out=draw(e);cards.push([label,out]);return out;};let cases=0;
-      for(const [key,label] of [['faust','휘두르기 · 12% 확대 / 바깥 이동'],['don','찌르기 · 확대'],['honglu','홍루 · 허리 축 / 휩쓸기']]){
-        const e=make(key);e.attackAt=99.85;e.attackFacing=0;e.attackSerial=1;const out=card(label,e),p=W.equipmentPose(g,e),length=W.WEAPON_ART[key][1]*1.12,at=pivot(out,e,length,p.angle,W.gripPivot(key)),hand=handScreen(e,p.right),offset=key==='faust'?.12:key==='don'?.38:0;
+      for(const [key,label] of [['faust','휘두르기 · 20% 확대 / 바깥 이동'],['don','찌르기 · 확대'],['honglu','홍루 · 허리 축 / 휩쓸기']]){
+        const e=make(key);e.attackAt=99.85;e.attackFacing=0;e.attackSerial=1;const out=card(label,e),p=W.equipmentPose(g,e),length=W.WEAPON_ART[key][1]*1.20,at=pivot(out,e,length,p.angle,W.gripPivot(key)),hand=handScreen(e,p.right),offset=key==='faust'?.18:key==='don'?.38:0;
         close(at.x,hand.x+Math.cos(p.angle)*offset*100);close(at.y,hand.y+Math.sin(p.angle)*offset*100);close(Math.hypot(at.call.m.a,at.call.m.b),W.weaponGeometry(W.WEAPON_ART[key][0],length).scale*100);cases++;
       }
       const ry=make('ryoshu');let out=card('료슈 · 검 가운데 역수 대기',ry),weapon=out.calls.find(c=>c.key==='ryoshuSword'),hand=out.calls.find(c=>c.hand&&c.layer==='front');close(weapon.m.e,hand.m.e);close(weapon.m.f,hand.m.f);if(weapon.m.a>=0)throw new Error('Ryoshu idle is not reverse grip');ry.attackAt=99.85;ry.attackFacing=0;ry.attackSerial=1;out=card('료슈 · 공격 손잡이 축',ry);if(out.calls.find(c=>c.key==='ryoshuSword').m.a<=0)throw new Error('Ryoshu attack kept reverse grip');cases+=2;
       for(const key of ['sinclair','ryoshu','outis']){
         const e=make(key);if(key==='sinclair'){e.state.sinclairSpinAt=100;e.state.sinclairSpinFacing=0;}else if(key==='ryoshu')g.cast(e,'r',{x:29,y:23});else{e.state.outisSpinAt=100;e.state.outisSpinFacing=0;}
-        g.time=100.2;const out=card(key+' · 몸체 중심 360도 휩쓸기',e),p=W.equipmentPose(g,e),spin=key==='outis'?W.outisSpinPose(g,e,p):W.ultimateOrbitPose(g,e,p),at=pivot(out,e,W.WEAPON_ART[key][1]*1.12,spin.angle,W.gripPivot(key)),expected=handScreen(e,spin.hand);close(at.x,expected.x);close(at.y,expected.y);cases++;
+        g.time=100.2;const out=card(key+' · 몸체 중심 360도 휩쓸기',e),p=W.equipmentPose(g,e),spin=key==='outis'?W.outisSpinPose(g,e,p):W.ultimateOrbitPose(g,e,p),at=pivot(out,e,W.WEAPON_ART[key][1]*1.20,spin.angle,W.gripPivot(key)),expected=handScreen(e,spin.hand);close(at.x,expected.x);close(at.y,expected.y);cases++;
       }
       for(const slot of ['q','r']){
         const e=make('gahwan');g.cast(e,slot,{x:29,y:23});g.time=100+(slot==='q'?.13:.16);const out=card('가환 · '+slot+' 한 번 휘두르기',e);if(out.trails.filter(s=>s==='skill-'+slot).length!==1)throw new Error('Gahwan sweep missing');for(const age of [.4,.75,1.5]){g.time=100+age;if(draw(e).trails.some(s=>s.startsWith('skill-')))throw new Error('Gahwan repeated the weapon sweep');}cases++;

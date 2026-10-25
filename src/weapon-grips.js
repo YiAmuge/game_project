@@ -16,7 +16,7 @@ export function gripAppearance(key){
  if(UNCHANGED_HANDS.has(key))return null;
  const material=BLACK_GLOVES.has(key)?'black':BROWN_GLOVES.has(key)?'brown':key==='ahab'?'white':BARE_HAND_COLORS[key]?'skin':null;
  if(!material)return null;const base=BARE_HAND_COLORS[key];
- return {material,...(material==='skin'?{base,shadow:mix(base,-.24),light:mix(base,.24),outline:'#302620'}:GLOVE_PALETTES[material])};
+ return {material,...(key==='alisa'?{base:'#5a292b',shadow:'#30191e',light:'#824044',outline:'#211014'}:material==='skin'?{base,shadow:mix(base,-.24),light:mix(base,.24),outline:'#302620'}:GLOVE_PALETTES[material])};
 }
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
@@ -52,8 +52,11 @@ function handTexture(palette,kind,layer){
  const key=[palette.material,palette.base,kind,layer].join('/');if(textures.has(key))return textures.get(key);
  const canvas=document.createElement('canvas');canvas.width=canvas.height=48;canvas.dataset.gripMaterial=palette.material;canvas.dataset.gripKind=kind;canvas.dataset.gripLayer=layer;canvas.dataset.gripColor=palette.base;
  const c=canvas.getContext('2d'),p=palette;
- // A single flat disk, without fingers, wrist or anatomical detail.
- c.beginPath();c.arc(24,24,20,0,Math.PI*2);c.fillStyle=p.base;c.fill();c.strokeStyle=p.outline;c.lineWidth=2.5;c.stroke();
+ // Keep the small round silhouette, with quiet upper-left/lower-right facets.
+ c.beginPath();c.arc(24,24,20,0,Math.PI*2);c.fillStyle=p.base;c.fill();c.save();c.clip();
+ c.globalAlpha=.22;c.fillStyle=p.shadow;c.beginPath();c.moveTo(24,44);c.lineTo(44,44);c.lineTo(44,13);c.lineTo(29,28);c.closePath();c.fill();
+ c.globalAlpha=.18;c.fillStyle=p.light;c.beginPath();c.moveTo(4,4);c.lineTo(30,4);c.lineTo(23,17);c.lineTo(9,26);c.lineTo(4,32);c.closePath();c.fill();c.restore();
+ c.beginPath();c.arc(24,24,20,0,Math.PI*2);c.strokeStyle=p.outline;c.lineWidth=2.5;c.stroke();
  textures.set(key,canvas);return canvas;
 }
 export function drawGripHands(c,key,asset,m,pivot,layer,{centered=false}={}){

@@ -14,8 +14,8 @@ export function validate(g,e,slot,p){
 export function beforeBasic(g,e,p){if(e.key!=='ppui')return true;const ally=targetAt(g,e,p,g.attackRange(e),e.team,a=>a!==e);return !ally||!(ally.state.ppuiEmpowerReady>g.time);}
 export function basic(g,e,p,d){
  if(e.key==='kim'){
-  if(e.state.followSlashUntil>g.time){delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e)*1.2*1.08,1.9*1.3*1.2*1.08,210);g.addShield(e,100,`draw-${e.id}`,3);}
-  else{e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2*1.3,75));}return true;
+  if(e.state.followSlashUntil>g.time){e.state.kimWideSlashSerial=e.attackSerial;delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e)*1.2*1.08,1.9*1.3*1.2*1.08,210);g.addShield(e,100,`draw-${e.id}`,3);}
+  else{delete e.state.kimWideSlashSerial;e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2*1.3,75));}return true;
  }
  if(e.key==='ppui'){
   const ally=targetAt(g,e,p,g.attackRange(e),e.team,a=>a!==e);
@@ -28,11 +28,11 @@ export function releaseGrab(g,e,throwDirection){
  const grab=e.state.swordGrab;if(!grab)return;delete e.state.swordGrab;
  const t=grab.target;if(t.status.stun?.grabOwner===e.id)delete t.status.stun;if(t.state.swordHeldBy===e.id)delete t.state.swordHeldBy;
  settleBody(g,t,t.bodySafe);
- if(throwDirection&&t.alive){g.deal(e,t,KIM.throwDamage);g.startMotion(t,throwDirection,2.5,{kind:'knock'});}
+ if(throwDirection&&t.alive){e.state.kimThrowAt=g.time;e.state.kimThrowFacing=Math.atan2(throwDirection.y,throwDirection.x);g.deal(e,t,KIM.throwDamage);g.startMotion(t,throwDirection,2.5,{kind:'knock'});}
 }
 function counterWave(g,e,counter){
  const s=e.state.counter;if(!s)return;if(counter)g.effects.push({type:'counterSignal',source:e.id,theme:'kim',x:e.x,y:e.y,r:1,life:.25,maxLife:.25});delete e.state.counter;e.channelUntil=0;e.ccImmuneUntil=s.immune;
- const fire=()=>g.bullet(e,{x:Math.cos(s.angle),y:Math.sin(s.angle)},counter?KIM.counterDamage:KIM.rDamage,counter?8:6,{slot:'r',damageKind:'skill',width:counter?KIM_COUNTER_HALF_WIDTH:KIM_WAVE_HALF_WIDTH,pierce:Infinity,theme:'kim',swordWave:true,onHit:t=>{if(counter)g.status(t,'slow',.25,1.5,e);}});
+ const fire=()=>{e.state.kimWaveAt=g.time;e.state.kimWaveFacing=s.angle;e.state.kimWaveDuration=counter?.115:.24;e.state.kimWaveSerial=(e.state.kimWaveSerial||0)+1;g.bullet(e,{x:Math.cos(s.angle),y:Math.sin(s.angle)},counter?KIM.counterDamage:KIM.rDamage,counter?8:6,{slot:'r',damageKind:'skill',width:counter?KIM_COUNTER_HALF_WIDTH:KIM_WAVE_HALF_WIDTH,pierce:Infinity,theme:'kim',swordWave:true,onHit:t=>{if(counter)g.status(t,'slow',.25,1.5,e);}});};
  fire();if(counter)for(let i=1;i<4;i++)g.schedule(e,i*.125,fire);
  g.effects.push({source:e.id,slot:'r',damageKind:'skill',type:'slash',x:e.x,y:e.y,r:(counter?5:3)/1.5,angle:s.angle,spread:counter?2.2:1.1,theme:'kim',life:.5,maxLife:.5});
 }
@@ -47,7 +47,7 @@ export function cast(g,e,slot,p,d){
     const fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);
     if(t.state.swordHeldBy){const owner=g.units.find(a=>a.id===t.state.swordHeldBy);if(owner)releaseGrab(g,owner);}
     if(t.state.swordGrab)releaseGrab(g,t);
-    delete t.motion;t.status.stun.grabOwner=e.id;t.state.swordHeldBy=e.id;e.state.swordGrab={target:t,until:t.status.stun.until};
+    delete t.motion;t.status.stun.grabOwner=e.id;t.state.swordHeldBy=e.id;e.state.swordGrab={target:t,until:t.status.stun.until,at:g.time};
    });
   }else{releaseGrab(g,e);e.state.counter={until:g.time+.5,angle:Math.atan2(d.y,d.x),immune:e.ccImmuneUntil||0};e.channelUntil=g.time+.5;e.ccImmuneUntil=g.time+.5;const counter=e.state.counter;g.schedule(e,.5,()=>{if(e.state.counter===counter)counterWave(g,e,false);});}
   return true;

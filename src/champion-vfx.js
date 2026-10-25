@@ -1,6 +1,6 @@
 import { combatStyle,clipShape } from './combat-style.js';
 import { noise } from './organic-particles.js';
-import { guardAlly } from './new-champions.js';
+import { guardAlly,ahabMarkPresentation } from './new-champions.js';
 import { leapLift,renderAnchor,leapOpacity,levitationLift } from './projection-25d.js';
 import { PROJECTILE_VISUAL_SCALE } from './projectile-rules.js';
 import { FRAMES } from './art.js';
@@ -162,7 +162,9 @@ export class ChampionVFX {
    if(s.swordHeldBy)this.motes(c,'spark','#e4dfd5',time*8,7,.3,.8);
    if(g.shield(e)>0&&!(e.key==='dongbaek'&&g.buff(e,'flowerStride'))){c.save();c.globalAlpha=.85;c.drawImage(this.rimTexture('#d7edf5','shield'),-1.28,-2.82,2.56,3.04);c.restore();}
    if(e.rodyaSlowUntil>time)this.motes(c,'frost','#d3d8dc',time,6,.8,.65);
-   if(s.harpoon?.until>time)this.mote(c,'glow','#e8894c',.08,-1,.24+Math.sin(time*7)*.035,0,.95);
+   const harpoon=ahabMarkPresentation(g,e);
+   if(harpoon.active)this.ahabHarpoonMark(c,time,harpoon.bonusReady);
+   else if(s.harpoon?.until>time)this.mote(c,'glow','#e8894c',.08,-1,.24+Math.sin(time*7)*.035,0,.95);
    if(s.counter)this.aura(c,{color:'#233a5d',form:'smoke',strength:.45},time);
    if(g.stat(e,'yanLock')){c.save();c.translate(0,-1.05);c.globalAlpha=.8;c.strokeStyle='#8798aa';c.fillStyle='#c9cdd1';c.lineWidth=.035;c.beginPath();c.arc(0,-.14,.13,Math.PI,Math.PI*2);c.stroke();c.fillRect(-.18,-.12,.36,.28);c.strokeRect(-.18,-.12,.36,.28);c.fillStyle='#697b8e';c.fillRect(-.025,-.035,.05,.1);c.restore();}
    if(g.champions().some(a=>a.alive&&a.key==='gubo'&&a.state.guboAim?.target===e&&a.state.guboAim.until>time)){
@@ -170,6 +172,19 @@ export class ChampionVFX {
    }
    if(e.key==='rodya'&&time-(s.coinAt??-99)<2.2)this.coins(c,e,g);
    if(e.key==='don'&&e.motion?.actionKind==='skill'&&e.castSlot==='r'){c.save();c.rotate(e.facing||0);c.globalAlpha=.65;c.drawImage(this.vfx.strokes.texture('pierce',{x:e.x,y:e.y,born:e.castAt,color:'#a43944'}),0,-1,3,1);c.restore();}
+  }
+  c.restore();
+ }
+ ahabHarpoonMark(c,time,ready){
+  c.save();c.translate(0,-.9);c.lineWidth=.055;c.strokeStyle='#28150f';c.fillStyle='#492116aa';c.beginPath();c.arc(0,0,.26,0,Math.PI*2);c.fill();c.stroke();
+  c.strokeStyle='#ffc06b';c.lineWidth=.035;c.beginPath();c.arc(0,0,.25,0,Math.PI*2);c.stroke();
+  for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;c.beginPath();c.moveTo(Math.cos(a)*.22,Math.sin(a)*.22);c.lineTo(Math.cos(a)*.34,Math.sin(a)*.34);c.stroke();}
+  this.mote(c,'glow','#ef9b51',0,0,.33,0,.7);
+  for(let i=0;i<3;i++)this.mote(c,'mist','#c77a3b',Math.sin(time*2+i*2.1)*.19,Math.cos(time*2+i*2.1)*.15,.13,0,.5,i);
+  if(ready){
+   c.rotate(-.4);c.scale(.85,.85);c.strokeStyle='#152b2d';c.lineWidth=.045;const metal=c.createLinearGradient(-.16,-.3,.18,.3);metal.addColorStop(0,'#eff5e5');metal.addColorStop(.4,'#95c5bb');metal.addColorStop(1,'#3b6667');c.fillStyle=metal;
+   c.beginPath();c.moveTo(0,-.4);c.lineTo(.18,-.05);c.lineTo(.065,-.09);c.lineTo(.065,.29);c.lineTo(-.065,.29);c.lineTo(-.065,-.09);c.lineTo(-.18,-.05);c.closePath();c.fill();c.stroke();
+   c.strokeStyle='#f4e8bb';c.lineWidth=.025;c.beginPath();c.moveTo(0,-.3);c.lineTo(0,.24);c.stroke();
   }
   c.restore();
  }

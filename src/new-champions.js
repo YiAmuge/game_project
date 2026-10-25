@@ -23,8 +23,16 @@ export function transfer(g,source,target,amount,kind){
  const share=Math.min(amount*.3,Math.max(0,ally.hp-ally.maxHp*.2));
  if(share>0)g.deal(source,ally,share,{fixed:true,proc:false,transferred:true,damageKind:kind,nonLethal:true});return amount-share;
 }
+function harpoonEligible(g,t){return t.alive&&!t.returning&&!t.state?.posthumous&&!(t.invulnerableUntil>g.time)&&!g.locked(t)&&!(g.training&&t===g.player&&g.practice.invincible);}
+export function harpoonBonusReady(g,e,t){return harpoonEligible(g,t)&&((e.basicHits[t.id]||0)+1)%3===0;}
+export function ahabMarkPresentation(g,t){
+ if(!t.state?.harpoon&&!t.state?.harpoons)return {active:false,bonusReady:false};
+ let active=false,bonusReady=false;
+ for(const captain of g.champions().filter(a=>a.key==='ahab'))if(harpoonMark(g,t,captain)){active=true;if(captain.alive&&harpoonBonusReady(g,captain,t))bonusReady=true;}
+ return {active,bonusReady};
+}
 function harpoonBonus(g,e,t){
- if(!t.alive||t.returning||t.state?.posthumous||t.invulnerableUntil>g.time||g.locked(t)||g.training&&t===g.player&&g.practice.invincible)return 0;
+ if(!harpoonEligible(g,t))return 0;
  e.basicHits[t.id]=(e.basicHits[t.id]||0)+1;const bonus=e.basicHits[t.id]%3===0?1.3:1;
  if(bonus>1)g.effects.push({type:'burst',x:t.x,y:t.y,r:1,theme:'ahab',life:.35,maxLife:.35});return bonus;
 }

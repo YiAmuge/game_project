@@ -2,7 +2,7 @@ import { organicPixels,shapeWarp,noise } from './organic-particles.js';
 import { combatStyle,hitStyle,bodyHeight,visualShape,insideShape,clipShape,CHAMPION_STYLES } from './combat-style.js';
 import { AttackStrokes } from './attack-strokes.js';
 import { leapLift } from './projection-25d.js';
-import { guboEffectAxis } from './weapon-art.js';
+import { guboEffectAxis,weaponEmissionScreen,myoFiring } from './weapon-art.js';
 // Render-only effects: gameplay X/Y is the ground, Z is height (Three.js Y).
 // Analytic motion uses simulation time, so pause, low FPS and replay stay stable.
 export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384,highlight:.28,lights:8};
@@ -100,9 +100,9 @@ export class SkillVFX {
    if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);const origin=p.origin||p.source;if(!origin||!visible(origin))continue;
    const key=p.theme||p.source?.key,s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
    let shotOrigin=origin;
-   if(key==='gubo'&&camera.screenToWorld){const tip=guboEffectAxis(game,p.source,camera,origin,{angle:Math.atan2(p.dy,p.dx)}).start,ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
-   const muzzle=key==='gubo'&&p.damageKind==='basic';
-   this.emit('shot',shotOrigin,game.time,{...s,...(muzzle?{color:'#71172c',accent:'#bd354e',dark:'#1b080f',height:.875,ownerId:p.source.id,muzzle:true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:.18});
+   const myo=key==='myo'&&p.slot==='q'&&myoFiring(game,p.source),muzzle=key==='gubo'&&p.damageKind==='basic'||myo;
+   if((key==='gubo'||myo)&&camera.screenToWorld){const tip=myo?weaponEmissionScreen(game,p.source,camera,origin):guboEffectAxis(game,p.source,camera,origin,{angle:Math.atan2(p.dy,p.dx)}).start,ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
+   this.emit(key==='outis'&&p.damageKind==='basic'?'pierce':'shot',shotOrigin,myo?(p.bornAt??game.time):game.time,{...s,...(muzzle?{color:myo?'#d56827':'#71172c',accent:myo?'#ffb45c':'#bd354e',dark:myo?'#4b2012':'#1b080f',height:.875,ownerId:p.source.id,muzzle:myo?'myo':true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:myo?.05:.18});
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
@@ -192,15 +192,15 @@ export class SkillVFX {
  }
  drawMuzzleBurst(c,camera,e){
   const t=(this.time-e.born)/e.life;if(t<0||t>=1)return;
-  const owner=this.game?.units.find(a=>a.id===e.ownerId),origin=camera.worldToScreen(e,e.height),target=e.aimPoint?camera.worldToScreen(e.aimPoint,1.25):undefined,axis=owner?guboEffectAxis(this.game,owner,camera,e.axisOrigin||owner,{height:e.axisHeight??.95,angle:e.angle,to:target}):null,at=axis?.start||origin,next=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.height),size=camera.scale*e.radius*(.65+Math.sin(t*Math.PI)*.5),alpha=(1-t)**.7;
-  c.save();c.translate(at.x,at.y);c.rotate(axis?Math.atan2(axis.uy,axis.ux):Math.atan2(next.y-origin.y,next.x-origin.x));c.globalAlpha=alpha;
+  const owner=this.game?.units.find(a=>a.id===e.ownerId),origin=camera.worldToScreen(e,e.height),target=e.aimPoint?camera.worldToScreen(e.aimPoint,1.25):undefined,direct=e.muzzle==='myo'&&owner?weaponEmissionScreen(this.game,owner,camera):null,axis=owner&&e.muzzle!=='myo'?guboEffectAxis(this.game,owner,camera,e.axisOrigin||owner,{height:e.axisHeight??.95,angle:e.angle,to:target}):null,at=direct||axis?.start||origin,next=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.height),size=camera.scale*e.radius*(.65+Math.sin(t*Math.PI)*.5),alpha=(1-t)**.7;
+  c.save();c.translate(at.x,at.y);c.rotate(direct?owner.facing:axis?Math.atan2(axis.uy,axis.ux):Math.atan2(next.y-origin.y,next.x-origin.x));c.globalAlpha=alpha;
   c.save();c.globalCompositeOperation='lighter';c.globalAlpha=alpha*.65;
-  const glow=c.createRadialGradient(0,0,0,0,0,size*2);glow.addColorStop(0,'#ed536da6');glow.addColorStop(.3,'#bc274d70');glow.addColorStop(1,'#650f3100');c.fillStyle=glow;c.fillRect(-size*2,-size*2,size*4,size*4);c.restore();
+  const glow=c.createRadialGradient(0,0,0,0,0,size*2);glow.addColorStop(0,css(rgb(e.accent),.65));glow.addColorStop(.3,css(rgb(e.color),.44));glow.addColorStop(1,css(rgb(e.dark),0));c.fillStyle=glow;c.fillRect(-size*2,-size*2,size*4,size*4);c.restore();
   for(const [scale,color] of [[1.2,e.dark],[.95,e.color],[.55,e.accent]]){
    c.beginPath();for(let i=0;i<24;i++){const a=i*Math.PI/12,r=size*scale*(i%2?.45:1)*(1+.12*Math.sin(i*4.7)),x=Math.cos(a)*r*1.25,y=Math.sin(a)*r*.8;i?c.lineTo(x,y):c.moveTo(x,y);}c.closePath();c.fillStyle=color;c.fill();
   }
   c.fillStyle=e.dark;c.beginPath();c.ellipse(-size*.12,0,size*.3,size*.22,0,0,Math.PI*2);c.fill();
-  c.save();c.globalCompositeOperation='lighter';c.globalAlpha=alpha*.75;const core=c.createRadialGradient(0,0,0,0,0,size*.42);core.addColorStop(0,'#ffd1bb');core.addColorStop(.25,'#ee6879');core.addColorStop(1,'#ad254800');c.fillStyle=core;c.fillRect(-size*.42,-size*.42,size*.84,size*.84);c.restore();
+  c.save();c.globalCompositeOperation='lighter';c.globalAlpha=alpha*.75;const core=c.createRadialGradient(0,0,0,0,0,size*.42);core.addColorStop(0,e.muzzle==='myo'?'#fff0cf':'#ffd1bb');core.addColorStop(.25,e.muzzle==='myo'?'#ffb45c':'#ee6879');core.addColorStop(1,css(rgb(e.color),0));c.fillStyle=core;c.fillRect(-size*.42,-size*.42,size*.84,size*.84);c.restore();
   c.strokeStyle=e.accent;c.lineWidth=Math.max(1,camera.scale*.025);c.lineCap='round';
   for(let i=0;i<6;i++){const a=-1.2+i*.48,r=size*(1+t),length=size*.35*(1-t);c.beginPath();c.moveTo(Math.cos(a)*r,Math.sin(a)*r*.8);c.lineTo(Math.cos(a)*(r+length),Math.sin(a)*(r+length)*.8);c.stroke();}
   c.restore();

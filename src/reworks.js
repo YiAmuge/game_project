@@ -48,6 +48,7 @@ export function outis(g,e,d){
  let victim=null,finished=false;
  const blast=()=>{
   if(finished)return;finished=true;
+  s.outisRecoilAt=g.time;s.outisRecoilFacing=Math.atan2(d.y,d.x);
   const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,t=>{if(!t.alive&&e.alive){g.addBuff(e,'outisReload',3,{copy:false});e.rCd=Math.max(0,e.rCd-g.cooldown(e,'r')*.3);}},{exclude:new Set(victim?[victim.id]:[])});
   g.effects.push({type:'outisShotgun',source:e.id,slot:'r',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:6.5,spread:Math.PI*2/3,theme:'outis',life:.5,maxLife:.5});
   if(victim){if(!g.startMotion(e,backward,2.5,{speed:18,maxSpeed:18,phaseEnemies:true,onComplete:finish}))finish();}else finish();
