@@ -50,26 +50,22 @@ export function gripLayout(key,asset,m,pivot){
 const textures=new Map();
 function handTexture(palette,kind,layer){
  const key=[palette.material,palette.base,kind,layer].join('/');if(textures.has(key))return textures.get(key);
- const canvas=document.createElement('canvas');canvas.width=24;canvas.height=28;canvas.dataset.gripMaterial=palette.material;canvas.dataset.gripKind=kind;canvas.dataset.gripLayer=layer;canvas.dataset.gripColor=palette.base;
- const c=canvas.getContext('2d'),rect=(x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(x,y,w,h);},p=palette;
- if(layer==='back'){
-  rect(6,6,12,17,p.outline);rect(4,9,16,11,p.outline);rect(7,22,10,4,p.outline);
-  rect(6,8,12,13,p.base);rect(8,21,8,4,p.base);rect(15,9,3,13,p.shadow);rect(6,9,2,10,p.light);rect(8,24,8,1,p.shadow);
- }else if(kind==='gun'){
-  rect(11,5,12,4,p.outline);rect(12,6,10,2,p.base);rect(12,6,7,1,p.light);
-  rect(7,10,13,13,p.outline);rect(8,11,11,11,p.base);rect(10,15,7,1,p.shadow);rect(10,19,6,1,p.shadow);
-  rect(4,9,7,9,p.outline);rect(5,10,5,7,p.base);rect(5,10,2,4,p.light);rect(7,16,3,1,p.shadow);
- }else{
-  rect(4,7,16,9,p.outline);rect(5,8,14,7,p.base);rect(5,8,13,1,p.light);rect(9,9,1,5,p.shadow);rect(14,9,1,5,p.shadow);
-  rect(14,15,7,6,p.outline);rect(15,16,5,4,p.base);rect(15,16,2,1,p.light);rect(16,19,4,1,p.shadow);
- }
+ const canvas=document.createElement('canvas');canvas.width=64;canvas.height=72;canvas.dataset.gripMaterial=palette.material;canvas.dataset.gripKind=kind;canvas.dataset.gripLayer=layer;canvas.dataset.gripColor=palette.base;
+ const c=canvas.getContext('2d'),p=palette;
+ // The fingers curl inward behind the handle. Only the rounded dorsum and
+ // wrist face the camera; there are no exposed finger bars or palm creases.
+ const silhouette=()=>{c.beginPath();c.moveTo(23,64);c.bezierCurveTo(23,57,16,56,13,48);c.bezierCurveTo(8,38,9,22,15,15);c.bezierCurveTo(20,8,27,8,33,9);c.bezierCurveTo(42,7,49,12,52,20);c.bezierCurveTo(57,32,54,46,48,52);c.bezierCurveTo(43,57,41,59,42,64);c.quadraticCurveTo(33,68,23,64);c.closePath();};silhouette();
+ c.fillStyle=p.base;c.fill();c.save();c.clip();
+ c.globalAlpha=.55;c.fillStyle=p.shadow;c.beginPath();c.ellipse(48,38,13,24,-.12,0,Math.PI*2);c.fill();
+ c.globalAlpha=.5;c.fillStyle=p.light;c.beginPath();c.ellipse(26,24,10,12,.2,0,Math.PI*2);c.fill();c.restore();
+ silhouette();c.strokeStyle=p.outline;c.lineWidth=2.5;c.stroke();
  textures.set(key,canvas);return canvas;
 }
 export function drawGripHands(c,key,asset,m,pivot,layer){
  const palette=gripAppearance(key);if(!palette||typeof document==='undefined'||!document.createElement)return;
  const atlas=loadAtlas(m.frame.sheet);if(!atlas.complete||!atlas.naturalWidth)return;
  for(const point of gripLayout(key,asset,m,pivot)){
-  if(point.kind==='shield'&&layer==='front')continue;
-  const texture=handTexture(palette,point.kind,layer),anchor=point.kind==='gun'?7:12;c.save();c.imageSmoothingEnabled=false;c.translate(point.x,point.y);if(point.offHand)c.scale(-1,1);c.drawImage(texture,-.15,-.32*anchor/28,.30,.32);c.restore();
+  if(point.kind==='shield'?layer!=='back':layer!=='front')continue;
+  const texture=handTexture(palette,point.kind,layer),width=TWO_HANDED_GRIPS.has(key)?.35:.42,height=.48,anchor=point.kind==='gun'?22:34;c.save();c.imageSmoothingEnabled=false;c.translate(point.x,point.y);if(point.offHand)c.scale(-1,1);c.drawImage(texture,-width/2,-height*anchor/72,width,height);c.restore();
  }
 }

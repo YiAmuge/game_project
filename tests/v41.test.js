@@ -29,7 +29,7 @@ test('grips match the actual drawn shaft slices after extension, source rotation
   assert.ok(drawWeapon(c,asset,length,{pivot}));for(const p of points){const sx=m.frame.x+p.source[0]*m.frame.w,sy=m.frame.y+p.source[1]*m.frame.h,call=calls.find(({rect:r})=>sx>=r[0]&&sx<=r[0]+r[2]&&sy>=r[1]&&sy<=r[1]+r[3]);assert.ok(call,key);const {rect:r,m:t}=call,x=r[4]+(sx-r[0])/r[2]*r[6],y=r[5]+(sy-r[1])/r[3]*r[7];close(t[0]*x+t[2]*y+t[4],p.x);close(t[1]*x+t[3]*y+t[5],p.y);}
  }}finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });
-test('gun grips use the trigger area and all compact hand palettes have valid light and shadow colors',()=>{
+test('gun grips use the trigger area and all hand palettes have valid light and shadow colors',()=>{
  for(const [key,asset,pivot,source] of [['gubo','guboRifle',.12,[.27,.60]],['myo','myoRifle',.32,[.25,.77]]]){const p=gripLayout(key,asset,weaponGeometry(asset,2.4),pivot)[0];assert.equal(p.kind,'gun');close(p.source[0],source[0]);close(p.source[1],source[1]);}
  for(const key of Object.keys(CHAMPIONS)){const p=gripAppearance(key);if(!p)continue;for(const k of ['base','light','shadow','outline'])assert.match(p[k],/^#[0-9a-f]{6}$/i);for(const i of [1,3,5]){const n=k=>parseInt(p[k].slice(i,i+2),16);assert.ok(n('shadow')<=n('base')&&n('light')>=n('base'),key);}}
 });

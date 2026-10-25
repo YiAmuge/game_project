@@ -1,4 +1,4 @@
-"""Native hand layers, post-extension grips, glove colors and weapon state swaps."""
+"""Native hand back layers, post-extension grips, glove colors and weapon state swaps."""
 import json,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
@@ -29,7 +29,7 @@ with sync_playwright() as pw:
         const profile=H.gripAppearance(key);if(hands.some(c=>c.material!==profile.material||c.color!==profile.base))throw new Error('Wrong glove or skin '+key);const body=out.calls.findIndex(c=>c.sheet===9);if(out.calls.some((c,i)=>c.material&&i<body))throw new Error('New grip behind body '+key);
         const [asset,base]=W.WEAPON_ART[key],length=base*(key==='nelly'&&state==='attack'?1.5:1),m=W.weaponGeometry(asset,length),points=H.gripLayout(key,asset,m,W.gripPivot(key)),weapon=out.calls.filter(c=>c.key===asset);if(front.length!==points.length)throw new Error('Wrong number of gripping hands '+key);
         for(let i=0;i<points.length;i++){const p=points[i],sx=m.frame.x+p.source[0]*m.frame.w,sy=m.frame.y+p.source[1]*m.frame.h,s=weapon.find(c=>sx>=c.args[0]&&sx<=c.args[0]+c.args[2]),a=s.args,t=s.m,x=a[4]+(sx-a[0])/a[2]*a[6],y=a[5]+(sy-a[1])/a[3]*a[7];close(front[i].m[4],t[0]*x+t[2]*y+t[4]);close(front[i].m[5],t[1]*x+t[3]*y+t[5]);anchors++;}
-        for(const h of hands){textures.add(h.image);const index=out.calls.indexOf(h);if(h.layer==='front'&&index<out.calls.indexOf(weapon.at(-1)))throw new Error('Fingers beneath handle '+key);if(h.layer==='back'&&index>out.calls.indexOf(weapon[0]))throw new Error('Palm above handle '+key);}cases++;
+        for(const h of hands){textures.add(h.image);const index=out.calls.indexOf(h);if(h.layer==='front'&&index<out.calls.indexOf(weapon.at(-1)))throw new Error('Hand back beneath handle '+key);if(h.layer==='back'&&index>out.calls.indexOf(weapon[0]))throw new Error('Shield hand above handle '+key);}cases++;
       }
       const myo=make('myo');if(draw(myo).calls.filter(c=>c.material&&c.layer==='front').length!==1)throw new Error('Back rifle has a phantom hand');myo.castSlot='q';myo.castAt=100;let fire=draw(myo).calls.filter(c=>c.material&&c.layer==='front');if(fire.length!==1||fire[0].kind!=='gun')throw new Error('Myo did not grip rifle for Q');g.time=100.6;g.addBuff(myo,'rabbitFrenzy',4.5);if(draw(myo).calls.filter(c=>c.material&&c.layer==='front').length!==2)throw new Error('Myo dual daggers lost a hand');
       const yan=make('yan');g.addBuff(yan,'yanDistorted',20);if(draw(yan).calls.some(c=>c.material))throw new Error('Distorted Yan got a normal glove');
