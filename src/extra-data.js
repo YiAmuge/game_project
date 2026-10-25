@@ -39,7 +39,7 @@ export const EXTRA_CHAMPIONS = {
     "attackTime": 0.43,
     "q": 12,
     "r": 45,
-    "passive": "무차별적 예술",
+    "passive": "담.탐",
     "basic": "그려내기",
     "tactical": "흩뿌리기",
     "ultimate": "삼라염상",

@@ -67,8 +67,8 @@ test('champion death leaves a corpse at the death location before the living uni
 test('dead upgrades work up to five/three stages without healing a dead champion',()=>{
  const {g,p,t}=quiet();g.kill(p,t);p.gold=10000;for(const u of UPGRADES){for(let i=0;i<u.max;i++)assert.ok(g.buy(p,u.key),u.key);assert.equal(g.buy(p,u.key),false);}assert.equal(p.hp,0);assert.equal(g.buy(p,'potion'),false);assert.equal(p.upgrades.health,5);assert.equal(p.upgrades.haste,3);
 });
-test('augment gates, unique ownership, four slots, refund and repurchase are enforced',()=>{
- const {g,p}=quiet();p.alive=false;p.hp=0;p.gold=10000;assert.equal(g.buyAugment(p,'power15'),false);p.upgrades.power=3;p.upgrades.health=3;p.upgrades.speed=3;for(const k of ['power15','blackOrb','magazine2','cooldown15'])assert.ok(g.buyAugment(p,k));assert.equal(g.buyAugment(p,'power15'),false);assert.equal(g.buyAugment(p,'range7'),false);const gold=p.gold;assert.ok(g.sellAugment(p,'power15'));close(p.gold-gold,350);assert.ok(g.buyAugment(p,'range7'));assert.equal(p.hp,0);
+test('augment gates, unique ownership, six slots, refund and repurchase are enforced',()=>{
+ const {g,p}=quiet();p.alive=false;p.hp=0;p.gold=10000;assert.equal(g.buyAugment(p,'power15'),false);p.upgrades.power=3;p.upgrades.health=3;p.upgrades.speed=3;for(const k of ['power15','blackOrb','magazine2','cooldown15','glaive','kAmpule'])assert.ok(g.buyAugment(p,k));assert.equal(g.buyAugment(p,'power15'),false);assert.equal(g.buyAugment(p,'range7'),false);const gold=p.gold;assert.ok(g.sellAugment(p,'power15'));close(p.gold-gold,350);assert.ok(g.buyAugment(p,'range7'));assert.equal(p.hp,0);
 });
 test('every augment can be purchased after its own category unlock and stat augments change real combat stats',()=>{
  for(const item of AUGMENTS){const {g,p}=quiet();p.alive=false;p.gold=10000;Object.assign(p.upgrades,{power:3,health:3,speed:1,reload:1,haste:1});assert.ok(g.buyAugment(p,item.key),item.key);}

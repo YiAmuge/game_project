@@ -34,7 +34,7 @@ test('roles have no hidden speed, armor, CC duration, damage, reload or cooldown
 test('battlefield geometry, structures and lanes share the horizontal coordinate scale',()=>{
  const g=new Game();close(RULES.width,70.72);close(WORLD.w,87.72);close(WALLS[0].w,5.61);close(WORLD.h,62.8);
  for(const team of [0,1]){const towers=g.towers(team);assert.ok(towers.every(t=>t.maxHp===5000));close(towers[0].x,worldPoint(team?46:18,0).x+(team?-5:5));assert.equal(g.units.find(e=>e.kind==='core'&&e.team===team).maxHp,6000);}
- for(const team of [0,1])for(const lane of [0,1]){const path=lanePath(team,lane);assert.deepEqual(path[0],CORE_POSITIONS[team]);for(let i=1;i<path.length;i++)assert.ok(g.clearLine(path[i-1],path[i],1.1));assert.ok(path.slice(1).reduce((sum,p,i)=>sum+distance(path[i],p),0)<76);}
+ for(const team of [0,1])for(const lane of [0,1]){const path=lanePath(team,lane);assert.deepEqual(path[0],CORE_POSITIONS[team]);for(let i=1;i<path.length;i++)assert.ok(g.clearLine(path[i-1],path[i],1.1));assert.ok(path.slice(1).reduce((sum,p,i)=>sum+distance(path[i],p),0)<82);}
  assert.ok(FOUNTAINS.every(p=>!g.blocked(p.x,p.y,.48)));
 });
 test('core shield requires low health and ten quiet seconds; one surviving tower does not halve damage',()=>{

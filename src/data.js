@@ -17,13 +17,21 @@ export const MAP_CENTER=worldPoint(32,18);
 // Preserve the central battlefield coordinates; add only rear wings and the two flank rooms.
 export const WORLD={x:-8.5,y:-8,w:87.72,h:62.8};
 export const TERRAIN=[{x:0,y:0,w:83.2,h:46.8},{x:-10,y:16.4,w:12,h:14},{x:81.2,y:16.4,w:12,h:14},{x:29.6,y:-8,w:24,h:9.5},{x:29.6,y:45.3,w:24,h:9.5}].map(p=>({...p,x:p.x*MAP_X,w:p.w*MAP_X}));
-export const terrainContains=(x,y)=>TERRAIN.some(p=>x>=p.x&&x<=p.x+p.w&&y>=p.y&&y<=p.y+p.h);
+// Stop the diagonal walls outside the fountain rectangle, including their footing.
+export const APPROACH={tipX:16.2,tipY:20.9,stopX:TERRAIN[1].x+TERRAIN[1].w+.8,stopY:TERRAIN[1].y};
+const approachEnd={x:APPROACH.stopX,y:APPROACH.tipY*(1-APPROACH.stopX/APPROACH.tipX)};
+const approachCutout=[[0,0],[APPROACH.tipX,0],[approachEnd.x,approachEnd.y],[APPROACH.stopX,APPROACH.stopY],[0,APPROACH.stopY]];
+export const APPROACH_CUTOUTS=[...Array(4)].map((_,i)=>approachCutout.map(([x,y])=>[i&1?RULES.width-x:x,i&2?RULES.height-y:y]));
+export const inApproachCutout=(x,y)=>{const xx=Math.min(x,RULES.width-x),yy=Math.min(y,RULES.height-y);return xx>=0&&yy>=0&&xx<APPROACH.tipX&&yy<APPROACH.tipY*(1-xx/APPROACH.tipX)&&!(xx<APPROACH.stopX&&yy>=APPROACH.stopY);};
+export const terrainContains=(x,y)=>!inApproachCutout(x,y)&&TERRAIN.some(p=>x>=p.x&&x<=p.x+p.w&&y>=p.y&&y<=p.y+p.h);
 export const FOUNTAINS=[{x:-6.7*MAP_X,y:MAP_CENTER.y},{x:89.9*MAP_X,y:MAP_CENTER.y}];
 export const MINIONS={size:1.15*1.2,health:{melee:680,ranged:480,siege:1320},spawnGap:.35,growthEvery:120,maxGrowth:6,hpGrowth:.06,attackGrowth:.05};
 export const CAMP_RULES={radius:3.4,leashDistance:3.4,leashDelay:1.85,returnSpeed:9,neutralRespawn:20,buffRespawn:45,buffHealth:1.33,buffDuration:60,patternEvery:5,firstPattern:1.5};
-export const CORE_POSITIONS=[{x:10.2*MAP_X,y:MAP_CENTER.y},{x:RULES.width-10.2*MAP_X,y:MAP_CENTER.y}];
-export const WELL_ROOMS=[{x:-3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width+3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:1}];
+export const BASE_DIVIDERS=[{x:15*MAP_X,y:18.8,w:1.4*MAP_X,h:9.2,baseDivider:true},{x:RULES.width-16.4*MAP_X,y:18.8,w:1.4*MAP_X,h:9.2,baseDivider:true}];
 export const FOUNTAIN_AREAS=TERRAIN.slice(1,3).map((p,team)=>({...p,team}));
+// Center the core in the clear gap between the fountain's battlefield edge and the near wall face.
+export const CORE_POSITIONS=BASE_DIVIDERS.map((wall,team)=>{const area=FOUNTAIN_AREAS[team],fountainEdge=team?area.x:area.x+area.w,wallFace=team?wall.x+wall.w:wall.x;return{x:(fountainEdge+wallFace)/2,y:MAP_CENTER.y};});
+export const WELL_ROOMS=[{x:-3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width+3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:1}];
 export function inWell(e,team=e.team){const w=FOUNTAIN_AREAS[team];return Boolean(w&&e.x>=w.x&&e.x<=w.x+w.w&&e.y>=w.y&&e.y<=w.y+w.h);}
 export const CHAMPIONS = {
   faust: { id: 2, name: '파우스트', tag: 'FAUST', role: '저격', color: '#c9d8df', icon: 'F', power: 4, health: 3, speed: 2, ammo: 3, reload: 3, range: 7.5, damage: 180, attackTime: .46, q: 11, r: 48,
@@ -89,23 +97,31 @@ export const WALLS = [...leftWalls, ...leftWalls.map(w => ({ ...w, x: 64 - w.x -
   x:((w.x+w.w/2)*MAP_SCALE-w.w*1.1/2)*MAP_X,y:(w.y+w.h/2)*MAP_SCALE-w.h*1.1/2,w:w.w*1.1*MAP_X,h:w.h*1.1,
 }));
 // Leave entrances above and below; separate the fountain approach from side camps.
-WALLS.push({x:15*MAP_X,y:18.8,w:1.4*MAP_X,h:9.2,baseDivider:true},{x:RULES.width-16.4*MAP_X,y:18.8,w:1.4*MAP_X,h:9.2,baseDivider:true});
+WALLS.push(...BASE_DIVIDERS);
+function diagonalWall(a,b){const w=Math.hypot(b.x-a.x,b.y-a.y),h=1.1;return{x:(a.x+b.x-w)/2,y:(a.y+b.y-h)/2,w,h,angle:Math.atan2(b.y-a.y,b.x-a.x),approach:true};}
+for(const team of [0,1])for(const bottom of [false,true]){const mirror=(x,y)=>({x:team?RULES.width-x:x,y:bottom?RULES.height-y:y});WALLS.push(diagonalWall(mirror(approachEnd.x,approachEnd.y),mirror(APPROACH.tipX,0)));}
+
 // Green connectors in the user's original sketch, mirrored around x=32.
 const leftBushes = [
   { x: 18.8, y: 10.1, w: 2, h: 1.6 },
   { x: 18.8, y: 24.3, w: 2, h: 1.6 },
   { x: 26.3, y: 16, w: 1.35, h: 4 },
 ];
-export const BUSHES = [
-  { x: 28, y: 8.65, w: 8, h: 1.35 },
-  { x: 28, y: 26, w: 8, h: 1.35 },
-  { x: 30, y: 13, w: 4, h: 1.35 },
-  { x: 30, y: 21.65, w: 4, h: 1.35 },
-  ...leftBushes, ...leftBushes.map(b => ({ ...b, x: 64-b.x-b.w })),
-].map((b,id) => ({x:b.x*MAP_SCALE*MAP_X,y:b.y*MAP_SCALE,w:b.w*MAP_SCALE*MAP_X,h:b.h*MAP_SCALE,id}));
+const horizontalMist=(a,b)=>({x:a.x+a.w,y:a.y,w:b.x-a.x-a.w,h:a.h});
+export const BUSHES=[
+ ...[[1,8],[3,10],[5,12],[6,13]].map(([a,b])=>horizontalMist(WALLS[a],WALLS[b])),
+ ...[...leftBushes,...leftBushes.map(b=>({...b,x:64-b.x-b.w}))].map(b=>({x:b.x*MAP_SCALE*MAP_X,y:b.y*MAP_SCALE,w:b.w*MAP_SCALE*MAP_X,h:b.h*MAP_SCALE})),
+].map((b,id)=>({...b,id}));
 // Outer lane hedges and bushes inside the added horizontal flank rooms.
-for(const y of [1.2,43.8])for(const x of [15,55.2])BUSHES.push({id:BUSHES.length,x:x*MAP_X,y,w:13*MAP_X,h:1.6});
-for(const y of [-6.6,51.8])BUSHES.push({id:BUSHES.length,x:33.6*MAP_X,y,w:16*MAP_X,h:1.6});
+for(const y of [0,RULES.height-1.6])for(const side of [false,true]){const x=APPROACH.tipX,w=TERRAIN[3].x-x;BUSHES.push({id:BUSHES.length,x:side?RULES.width-x-w:x,y,w,h:1.6});}
+// Concealment follows the walls of side camps, the central diagonals and flank rooms.
+function mist(x,y,w,h){BUSHES.push({id:BUSHES.length,x,y,w,h});}
+for(const x of [14.15,24.35])for(const side of [false,true])mist(side?RULES.width-x-1.35:x,18.7,1.35,9.4);
+// Fill each diagonal opening from the full end face of one wall to the next wall's end face.
+const sideWall=WALLS[4],capWall=WALLS[5];
+const centralMist=[[sideWall.x,sideWall.y],[sideWall.x+sideWall.w,sideWall.y],[capWall.x,capWall.y+capWall.h],[capWall.x,capWall.y]];
+for(const side of [false,true])for(const bottom of [false,true]){const polygon=centralMist.map(([x,y])=>[side?RULES.width-x:x,bottom?RULES.height-y:y]),xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]),x=Math.min(...xs),y=Math.min(...ys);BUSHES.push({id:BUSHES.length,x,y,w:Math.max(...xs)-x,h:Math.max(...ys)-y,polygon});}
+for(const [i,room]of TERRAIN.slice(3).entries()){const thickness=1.35,capY=i?room.y+room.h-thickness:room.y;mist(room.x,capY,room.w,thickness);for(const x of [room.x,room.x+room.w-thickness])mist(x,i?room.y:room.y+thickness,thickness,room.h-thickness);}
 export const lanePath = (team, lane) => {
   const y=lane===0?7.15:39.65;
   const points=[{...CORE_POSITIONS[0]},{x:16,y}, {x:RULES.width-16,y},{...CORE_POSITIONS[1]}];
@@ -117,7 +133,7 @@ export const CHAMPION_ROLES={
 for(const [key,values] of Object.entries(CHAMPION_ROLES)){const c=CHAMPIONS[key];c.roles=values.slice(0,-1);c.role=c.roles[0];c.recommendedPosition=values.at(-1);}
 CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
 
-export const AUGMENT_RULES={cost:500,refund:.7,slots:4,categorySlots:2};
+export const AUGMENT_RULES={cost:500,refund:.7,slots:6,categorySlots:2};
 export const AUGMENTS=[
  {key:'finalBullet',group:'combat',name:'마탄',text:'7초마다 적 챔피언 적중 시 최종 체력 피해의 7% 고정 피해'},
  {key:'power15',group:'combat',name:'신검합일',text:'전투력 +10% · 방어관통 +10%'},
@@ -131,14 +147,14 @@ export const AUGMENTS=[
  {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:'2초간 피해를 받지 않으면 초당 최대 체력의 13% 보호막 충전, 최대 30%. 최대 체력의 10% 이상 보호막 보유 중 스킬 가속 +10%'},
  {key:'blackOrb',group:'survival',name:'흑수환',text:'최대 체력·이동속도·장전속도 +15%'},
  {key:'antimatter',group:'survival',name:'반물질 옷',text:'최대 체력 +10% · 사거리 1.6의 적에게 0.5초마다 20 고정 피해'},
- {key:'writtenOrder',group:'survival',name:'쪽지로 전해진 지령',text:'공격 적중 시 방어력 +5%, 최대 5중첩. 각 중첩은 5초 유지. 최대 중첩 중 일반 피해의 10%를 고정 피해로 전환'},
- {key:'traumaGuard',group:'survival',name:'트라우마 방지장',text:'최대 체력 +5% · 군중제어를 받을 때 해당 효과를 무효화하고 탄창 1개 충전. 재사용 대기시간 16초'},
+ {key:'writtenOrder',group:'survival',name:'쪽지로 전해진 지령',text:'공격 적중 시 방어력 +5%, 최대 5중첩. 각 중첩은 5초 유지. 최대 중첩 중 일반 피해의 10%를 고정 피해로 전환하고 해당 고정 피해만큼 5초 보호막 획득, 최대 500 누적'},
+ {key:'traumaGuard',group:'survival',name:'트라우마 방지장',text:'최대 체력 +5% · 방어력 +5% · 군중제어를 받을 때 해당 효과를 무효화하고 탄창 1개 충전. 재사용 대기시간 16초'},
  {key:'battleHaste',group:'tech',name:'사랑과 증오의 이름으로',text:'전투를 3초 이상 유지하면 스킬 가속 +15%. 비전투 시 해제'},
  {key:'cooldown15',group:'tech',name:'주민등록 마이크로칩',text:'전술기·궁극기 기본 재사용 대기시간 −15%'},
  {key:'magazine2',group:'tech',name:'카포를 위하여',text:'최대 탄창 +2'},
- {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'증강 보유 한도 +1. 이 증강은 보유 한도를 차지하지 않는다. 기술 카테고리 보유 수 제한을 받지 않으며 일반 경기에서 판매 불가'},
- {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'기술 사용 시 이동속도·장전속도 +6%, 최대 2중첩. 각 중첩은 5초 유지'},
- {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 전술기·궁극기 기본 재사용 대기시간 −5%'},
+ {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'카테고리별 증강 2개 제한을 해제한다. 전체 보유 한도 6개에는 포함된다'},
+ {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'적에게 상태이상·디버프를 부여하면 남은 스킬 재사용 대기시간 20% 감소 및 빈 탄창 1개 충전. 재사용 대기시간 10초'},
+ {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 방어력 +7%. 부활소 안에서 귀환이 침투로 변경: 부활 지점 중심 60 거리 이내 위치를 지도에서 선택하고 2초 후 순간이동, 이후 2초간 이동속도 +10%. 재사용 대기시간 75초. 시전 중 귀환 버튼으로 취소 시 재사용 대기시간 1.5초'},
  {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:'비전투 이동속도 +15% · 전투 중 +7%'},
 ];
 

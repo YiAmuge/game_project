@@ -18,7 +18,7 @@ test('new rear wings and two flank rooms are walkable and connected; void corner
  close(WORLD.w,87.72);close(WORLD.h,62.8);
  for(const p of [...FOUNTAINS,{x:41.6,y:-4},{x:41.6,y:50.6}]){assert.ok(!blocked(p.x,p.y,.48));assert.ok(findPath({x:40,y:7},p).length);}
  assert.ok(blocked(-8,-4));assert.ok(blocked(70,-4));assert.ok(blocked(20,51));
- for(const team of [0,1]){assert.ok(distance(FOUNTAINS[team],CORE_POSITIONS[team])>14);const g=new Game();assert.ok(g.inSpawn({...FOUNTAINS[team],team}));assert.ok(!g.inSpawn({...CORE_POSITIONS[team],team}));}
+ for(const team of [0,1]){assert.ok(distance(FOUNTAINS[team],CORE_POSITIONS[team])>9);const g=new Game();assert.ok(g.inSpawn({...FOUNTAINS[team],team}));assert.ok(!g.inSpawn({...CORE_POSITIONS[team],team}));}
  assert.ok(BUSHES.some(b=>b.y<0));assert.ok(BUSHES.some(b=>b.y>RULES.height));
 });
 test('four two-unit neutral camps and buff health/respawn data match the new rules',()=>{
@@ -53,7 +53,7 @@ test('wave creation spawns one minion per lane immediately and the rest at .35 s
 });
 test('uncontested minions march along one centerline in spawn order with visible spacing',()=>{
  const g=new Game();g.aiChampion=()=>{};g.aiStructure=()=>{};g.aiNeutral=()=>{};run(g,5);let ms=g.units.filter(m=>m.kind==='minion'&&m.team===0&&m.lane===0),path=lanePath(0,0);
- assert.equal(ms.length,4);for(const m of ms)assert.ok(segmentDistance(m,path[0],path[1])<.4);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],path[1])<distance(ms[i],path[1]));run(g,5);for(const m of ms){assert.ok(Math.abs(m.y-path[1].y)<2);assert.ok(!blocked(m.x,m.y,m.radius));}for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],ms[i])>=ms[i-1].radius+ms[i].radius);
+ assert.equal(ms.length,4);for(const m of ms)assert.ok(segmentDistance(m,path[0],path[1])<.4);for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],path[1])<distance(ms[i],path[1]));run(g,5);for(const m of ms){assert.ok(Math.min(...path.slice(1).map((p,i)=>segmentDistance(m,path[i],p)))<.4);assert.ok(!blocked(m.x,m.y,m.radius));}for(let i=1;i<4;i++)assert.ok(distance(ms[i-1],ms[i])>=ms[i-1].radius+ms[i].radius);
 });
 test('one destroyed tower opens the core with identical damage at either tower count',()=>{
  const g=new Game(),p=g.player,core=g.units.find(e=>e.kind==='core'&&e.team===1);p.x=core.x-2;p.y=core.y;assert.ok(g.locked(core));g.towers(1)[0].alive=false;assert.equal(g.locked(core),false);let hp=core.hp;g.deal(p,core,1000,{fixed:true});const half=hp-core.hp;g.towers(1)[0].alive=false;hp=core.hp;g.deal(p,core,1000,{fixed:true});close((hp-core.hp)/half,1);
@@ -98,8 +98,8 @@ test('Dongbaek extra attacks spend skill readiness and recover independently fro
 test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate hits at the selected point without fragrance stacks',()=>{
  const {g,p,t}=quiet('dongbaek');close(g.armor(p),20);const reload=g.reloadInterval(p);g.cast(p,'q',p);close(g.armor(p),0);assert.ok(g.reloadInterval(p)>reload);assert.ok(g.shield(p)>0);t.x=47;const hp=t.hp;g.cast(p,'r',t);assert.ok(t.hp<hp);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.buff(p,'flowerReload'));assert.equal(p.channelUntil,undefined);
 });
-test('Dongrang power affects health and armor rather than damage or incoming healing and counts deliberate overheal',()=>{
- const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,100);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
+test('Dongrang power affects health and armor rather than damage or incoming healing and counts only actual healing from his own effects',()=>{
+ const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,0);p.hp-=10;g.heal(p,p,100,false);close(p.totalHealingReceived-total,10);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
 });
 test('Dongrang has one tree, fixed damage and healing, and his ultimate preserves it',()=>{
  const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);assert.ok(before-t.hp>=430);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,1);

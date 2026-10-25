@@ -84,6 +84,7 @@ export function refreshOptions(g){
  if(o.infiniteAmmo){p.ammo=g.ammoCap(p);p.reloadProgress=0;if(p.state.exhaustedUntil){delete p.state.exhaustedUntil;delete p.status.silence;}}
  if(o.noCooldown){
   p.qCd=p.rCd=0;
+  if(p.key==='ryoshu'){p.state.ryoshuCharges=2;p.state.ryoshuReady=Infinity;}
   if(p.key==='nelly'){p.state.knifeCharges=2;p.state.knifeReady=Infinity;p.state.qDelayUntil=0;}
   if(p.key==='sora'&&Sora.ego(g,p)){p.state.egoQCharges=2;p.state.egoQReady=Infinity;}
  }

@@ -1,14 +1,16 @@
-import { WALLS, WORLD, RULES, terrainContains } from './data.js';
+import { WALLS, WORLD, RULES, terrainContains,inApproachCutout } from './data.js';
 export const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 export const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 export const direction = (a,b) => { const d = distance(a,b) || 1; return {x:(b.x-a.x)/d,y:(b.y-a.y)/d}; };
 export function blocked(x,y,r=.4,map) {
   if(map){const b=map.bounds;if(x<b.x+r||y<b.y+r||x>b.x+b.w-r||y>b.y+b.h-r)return true;}
+  if(!map&&inApproachCutout(x,y))return true;
   const interior=x>=r&&y>=r&&x<=RULES.width-r&&y<=RULES.height-r;
   const footprint=interior?[]:[[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.707,r*.707],[-r*.707,r*.707],[r*.707,-r*.707],[-r*.707,-r*.707]];
   return (!map&&!interior&&footprint.some(([dx,dy])=>!terrainContains(x+dx,y+dy))) || (map?.walls||WALLS).some(w => {
-    const px=clamp(x,w.x,w.x+w.w), py=clamp(y,w.y,w.y+w.h);
-    return Math.hypot(x-px,y-py) < r;
+    if(!w.angle){const px=clamp(x,w.x,w.x+w.w),py=clamp(y,w.y,w.y+w.h);return Math.hypot(x-px,y-py)<r;}
+    const cx=w.x+w.w/2,cy=w.y+w.h/2,angle=w.angle||0,c=Math.cos(angle),s=Math.sin(angle),dx=x-cx,dy=y-cy,lx=dx*c+dy*s,ly=-dx*s+dy*c;
+    return Math.hypot(lx-clamp(lx,-w.w/2,w.w/2),ly-clamp(ly,-w.h/2,w.h/2))<r;
   });
 }
 export function clearLine(a,b,r=.12,map) {
@@ -48,4 +50,13 @@ export function findPath(start,goal,r=.48,map) {
   const path=[];
   for(let k=found;k!==origin;k=prev.get(k)) path.push({x:k%cols+.5+bounds.x,y:Math.floor(k/cols)+.5+bounds.y});
   return path.reverse();
+}
+
+export function wallCorners(w){const cx=w.x+w.w/2,cy=w.y+w.h/2,c=Math.cos(w.angle||0),s=Math.sin(w.angle||0);return[[-w.w/2,-w.h/2],[w.w/2,-w.h/2],[w.w/2,w.h/2],[-w.w/2,w.h/2]].map(([x,y])=>({x:cx+x*c-y*s,y:cy+x*s+y*c}));}
+
+// Concealment strips are rectangles or convex polygons with matching visual/collision footprints.
+export function regionContains(region,p){
+ if(p.x<region.x||p.x>region.x+region.w||p.y<region.y||p.y>region.y+region.h)return false;
+ if(!region.polygon)return true;
+ let sign=0;for(let i=0;i<region.polygon.length;i++){const a=region.polygon[i],b=region.polygon[(i+1)%region.polygon.length],cross=(b[0]-a[0])*(p.y-a[1])-(b[1]-a[1])*(p.x-a[0]);if(Math.abs(cross)<1e-8)continue;if(sign&&sign*cross<0)return false;sign=Math.sign(cross);}return true;
 }

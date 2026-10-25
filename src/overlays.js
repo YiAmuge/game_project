@@ -1,3 +1,4 @@
+import { drawDebuffs } from './debuff-ui.js';
 import { paintHealth } from './health-display.js';
 import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import * as Yan from './yan.js';
@@ -28,7 +29,7 @@ export function stackInfo(e,g){
  if(e.key==='faust'&&g.buff(e,'faustUlt'))return {label:'권태',value:e.ultStacks||0,max:4,color:'#b8edf2',shape:'mirror'};
  if(e.key==='ezra'&&g.buff(e,'ezraUlt'))return {label:'총공',value:e.state.ultAttacks||0,max:4,color:'#f4cd96',shape:'claw'};
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt'))return {label:'시체자루 연장',value:e.state.heathExtensions||0,max:4,color:'#c9a5e5',shape:'flame'};
- const gaze=Object.values(e.state.gaze||{}).find(m=>m.until>g.time&&m.n>0);if(gaze)return {label:'시선',value:gaze.n,max:5,color:'#efd069',shape:'mirror'};
+
  return null;
 }
 export function championHud(r,e,g){
@@ -37,6 +38,8 @@ export function championHud(r,e,g){
  paintHealth(c,e,g,x,y,width,.34,e.player?'#7bd387':e.team===0?'#79bbc9':'#d7877e');
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
+ drawDebuffs(r,e,g,y);
+ if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1500)),sx,sy+.43,'#e8e9b6',.24);}
  if(e.trainingDummy){r.text(e.name,e.x,e.y-3.05,e.team===0?'#a7d8df':'#edb2a4',.29);c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);
  if(e.key==='hohenheim'){
@@ -86,18 +89,11 @@ export function championEffects(r,e,g){
 
  if(e.visuals.nellyMark?.until>g.time){const y=e.y-4.65;r.polygon([[e.x-.1,y+.45],[e.x+.05,y+.45],[e.x+.05,y],[e.x+.17,y-.2],[e.x+.1,y-.65],[e.x-.08,y-.5]],'#cbd0d4',e.visuals.nellyMark.forced?'#ac3f4c':'#777f88');}
  if(e.visuals.contempt?.until>g.time)r.text('경멸',e.x,e.y-4.2,'#c9b16f',.23);
- const mental=Object.values(e.state.mentalWhip||{}).find(m=>m.stage>0);if(mental)r.text(`정신채찍 +${mental.stage*15}%`,e.x,e.y-4.4,'#d6a46f',.24);
  if(e.recall)r.text(`귀환 ${Math.max(0,e.recall.until-g.time).toFixed(1)}s`,e.x,e.y+1.1,'#bed6de',.3);
  if(e.state.detonatesAt>g.time)r.text(`자폭 ${(e.state.detonatesAt-g.time).toFixed(1)}s`,e.x,e.y-5,'#dba57a',.33);
  if(e.state.jackpot&&g.time-(e.state.coinAt??-99)<1.5)r.text('JACKPOT!',e.x,e.y-5.2,'#ddc788',.38);
  if(g.stat(e,'stun'))for(let i=0;i<3;i++){const a=g.time*5+i*Math.PI*2/3;star(r,e.x+Math.cos(a)*.6,e.y-4.15+Math.sin(a)*.15,.14,'#d9c48a');}
- if(g.stat(e,'root'))r.text('속박',e.x,e.y-4.6,'#c7d0d2',.24);
- if(g.stat(e,'disarm'))r.text('무장해제',e.x,e.y-4.5,'#d5beb0',.24);
- if(g.stat(e,'silence'))r.text('침묵',e.x,e.y-4.8,'#c8c0d1',.24);
- if(g.stat(e,'captured'))r.text('결박',e.x,e.y-4.5,'#a6c9c7',.24);
- if(g.stat(e,'yanLock'))r.text('▣ 잠금',e.x,e.y-4.5,'#bfcbd1',.24);
  if(trap(g,e)){for(let i=0;i<5;i++){const x=e.x-.5+i*.25;r.line([{x,y:e.y-.6},{x:x+.3,y:e.y+.15}],'#9fae9c99',.035);r.line([{x,y:e.y+.15},{x:x+.3,y:e.y-.6}],'#9fae9c99',.035);}}
- if(e.plague?.until>g.time)r.text(`해충 −${e.plague.stacks*3}%`,e.x,e.y-4.2,'#b4977d',.22);
  c.restore();
 }
 export function chargePreview(r,e,g){
@@ -127,6 +123,7 @@ export function championGroundEffects(r,e,g){
 }
 
 export function stackGauge(e,g){
+ if(e.key==='dongrang')return null;
  const info=stackInfo(e,g);let state=info;
  if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))state={label:'광폭한 칼날'};
  if(!state)return null;
@@ -138,7 +135,6 @@ export function stackGauge(e,g){
  const color=THEMES[e.key]?.light||state.color||'#bdd1db';
  if(total)return {color,ratio:Math.max(0,Math.min(1,remaining/total)),label:`${entry?{sinclair:'표지 각성',gregor:'변이',sora:'대행',yan:'뒤틀림',myo:'광폭한 칼날'}[e.key]:state.label.split(' ')[0]} ${remaining.toFixed(1)}s`,timer:true};
  const max=state.max||1,value=state.value??1;
- if(e.key==='dongrang')return {color,ratio:((e.totalHealingReceived||0)%1500)/1500,label:state.label,max:1};
  return {color,ratio:Math.max(0,Math.min(1,value/max)),label:state.textOnly?state.label:`${state.label} ${value}/${max}`,max};
 }
 function flameHealthBorder(r,e,g,x,y,width){

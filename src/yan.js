@@ -18,7 +18,7 @@ export function orders(g,e){
 export function mark(g,e,t,{ultimate=false}={}){
  if(!g.hostile(e,t)||t.kind==='summon'||t.returning||g.debuffImmune?.(t))return false;
  if(!ultimate&&(marked(g,e,t)||(e.state.orderLocks?.[t.id]||0)>g.time))return false;
- e.state.falseOrders??={};e.state.orderLocks??={};e.state.falseOrders[t.id]={target:t.id,until:g.time+(ultimate?6:YAN.markDuration)};
+ g.triggerDisrupt(e,t);e.state.falseOrders??={};e.state.orderLocks??={};e.state.falseOrders[t.id]={target:t.id,until:g.time+(ultimate?6:YAN.markDuration)};
  e.state.orderLocks[t.id]=g.time+YAN.reapply;return true;
 }
 export function afterDamage(g,source,t,actual,proc,absorbed=0){

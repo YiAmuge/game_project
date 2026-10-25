@@ -1,3 +1,4 @@
+import { drawMist,CAMP_RANGE_COLOR } from './mist.js';
 import { drawClerk,isClerk,CLERK_HEIGHT } from './clerk-art.js';
 import { drawMinimap } from './minimap.js';
 import { paintHealth } from './health-display.js';
@@ -84,7 +85,7 @@ export class Renderer {
   camps(game){
     const c=this.ctx;
     for(const camp of game.campViews()){
-      const color=camp.kind==='boss'?'#ae83c4':camp.kind==='blessing'?'#74abb1':camp.kind==='amplify'?'#b587a5':'#92966e';
+      const color=['boss','blessing','amplify'].includes(camp.kind)?CAMP_RANGE_COLOR:'#92966e';
       this.circle(camp.home.x,camp.home.y,camp.radius,color+'12',color+'55',.065);c.setLineDash([.15,.22]);this.circle(camp.home.x,camp.home.y,camp.radius+.15,null,color+'44',.04);c.setLineDash([]);
       this.text(camp.name+' 캠프',camp.home.x,camp.home.y+camp.radius+.45,color,.29);
     }
@@ -188,6 +189,7 @@ export class Renderer {
   atlasFor(key){return FRAMES[key]?.sheet>=9?loadAtlas(FRAMES[key].sheet):FRAMES[key]?.sheet===8?this.atlasV17:FRAMES[key]?.sheet===7?this.atlasV13:FRAMES[key]?.sheet===6?this.atlasV12:FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
   corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.form||e.key],atlas=this.atlasFor(e.form||e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=spriteHeight(e.form||e.key,1.7),w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(f.mirror?-1:1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
   draw(game,playing) {
+    this.fogTime=game.time;
     if(!this.groundPass&&!playing){if(this.scene25d)this.scene25d.canvas.hidden=true;this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);this.ctx.fillStyle='#14252a';this.ctx.fillRect(0,0,this.width,this.height);return;}
     if(!this.groundPass&&game.training25d){this.follow(game,playing);this.scene25d.draw(game,playing);return;}
     this.follow(game,playing);
@@ -231,16 +233,7 @@ export class Renderer {
     for(const e of game.champions().filter(e=>e.easterText?.until>game.time))this.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   }
   shard(x,y,r,a,color){const c=this.ctx;c.save();c.translate(x,y);c.rotate(a);this.polygon([[-r,0],[0,-r*.35],[r,0],[0,r*.65]],color,'#f2ffff');c.restore();}
-  bush(b,front=false){
-    const c=this.ctx;
-    if(!front){c.fillStyle='#122a20';c.fillRect(b.x-.1,b.y-.1,b.w+.2,b.h+.2);}
-    for(let x=b.x+.16;x<b.x+b.w;x+=.4)for(let y=b.y+.15;y<b.y+b.h;y+=.4){
-      if(front&&y<b.y+b.h-.45)continue;
-      const n=Math.floor((x*17+y*13)%5),offset=Math.sin(x*9+y*3)*.06;
-      this.polygon([[x-.23,y+.15],[x-.25,y-.12],[x-.1,y-.4+offset],[x+.04,y-.18],[x+.21,y-.34],[x+.27,y+.06],[x+.15,y+.25]],['#354333','#45513a','#536144','#3b4b35','#5c6947'][n],'#1a3c28');
-      this.line([{x,y:y+.15},{x:x+.02,y:y-.18}],'#8b9a4d77',.03);
-    }
-  }
+  bush(b,front=false){drawMist(this,b,front,this.fogTime||0);}
   chain(from,to,color='#b8bccc'){
     const c=this.ctx,len=distance(from,to),angle=Math.atan2(to.y-from.y,to.x-from.x),n=Math.max(1,Math.ceil(len/.26));
     c.save();c.translate(from.x,from.y);c.rotate(angle);c.strokeStyle=color;c.lineWidth=.055;

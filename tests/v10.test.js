@@ -63,7 +63,7 @@ test('attacking dashes stop at both friendly and enemy buildings',()=>{
  for(const team of [0,1]){const {g,p}=quiet('myo');g.units=[p];const tower=g.entity({kind:'tower',team,x:42,y:7,maxHp:10000,radius:.9,range:9});g.attack(p,{x:46,y:7});run(g,.5);assert.ok(p.x<42);assert.ok(distance(p,tower)>=p.radius+tower.radius);close(tower.x,42);}
 });
 test('phasing cannot cross a wall or terrain edge when settling from an overlap',()=>{
- for(const edge of [false,true]){const {g,p,t}=quiet('myo'),wall=WALLS[0];if(edge){Object.assign(p,{x:.7,y:7});Object.assign(t,{x:.5,y:7});}else{Object.assign(p,{x:wall.x-2,y:wall.y+wall.h/2});Object.assign(t,{x:wall.x-.75,y:p.y});}const enemy={x:t.x,y:t.y};dash(g,p,{x:edge?-1:1,y:0},5,100);run(g,1);assert.equal(blocked(p.x,p.y,p.radius),false);close(t.x,enemy.x);close(t.y,enemy.y);assert.ok(distance(p,t)>=p.radius+t.radius-.001);}
+ for(const edge of [false,true]){const {g,p,t}=quiet('myo'),wall=WALLS[0];if(edge){Object.assign(p,{x:20,y:.7});Object.assign(t,{x:20,y:.5});}else{Object.assign(p,{x:wall.x-2,y:wall.y+wall.h/2});Object.assign(t,{x:wall.x-.75,y:p.y});}const enemy={x:t.x,y:t.y};dash(g,p,{x:edge?0:1,y:edge?-1:0},5,100);run(g,1);assert.equal(blocked(p.x,p.y,p.radius),false);close(t.x,enemy.x);close(t.y,enemy.y);assert.ok(distance(p,t)>=p.radius+t.radius-.001);}
 });
 test('non-attacking Alisa tactical movement does not phase through an enemy',()=>{
  const {g,p,t}=quiet('alisa');t.x=41.4;g.cast(p,'q',{x:48,y:7});run(g,.5);assert.ok(p.x<t.x);close(t.x,41.4);

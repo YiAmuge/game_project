@@ -23,4 +23,6 @@
 걷기 제작 재개 시 참고할 사용자 프롬프트(현재 게임에 적용하지 않음):
 > 2D game asset, character walking animation, 3/4 side view, loop animation frames. LEG SEPARATION CONTROL: 3D depth illusion. The foreground leg (closer to the camera) is fully illuminated and highly detailed. The background leg (further from the camera) is darker, heavily shadowed, and partially occluded by the body. Clear distinction between the front leg and back leg in every single frame. No leg-swapping errors, no blending, correct walking anatomy physics.
 
-- 르루주·르누아르 점원은 챔피언 시드 비율과 명암을 사용하고 표시 키는 2.4로 맞춘다. 공격 몸체는 충전 완료 타격 순간에만 사용하며, 독립 무기의 손잡이를 각 자세의 오른손 좌표에 붙인다. 일반 공격에는 일반 몸체를 유지한다.
+- 르루주·르누아르 점원은 챔피언 시드 비율과 명암을 사용하고 표시 키는 2.76으로 맞춘다. 공격 몸체는 충전 완료 타격 순간에만 사용하며, 독립 무기의 손잡이를 각 자세의 오른손 좌표에 붙인다. 일반 공격에는 일반 몸체를 유지한다.
+
+- 본진·포탑은 2D 표시를 유지한다. 점원 스프라이트의 발 기준점은 지면에 맞추고, 은신 지형은 푸른 안개로 표시한다.

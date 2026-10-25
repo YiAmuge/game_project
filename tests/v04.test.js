@@ -18,7 +18,7 @@ test('battlefield uses compressed horizontal geometry and preserves entity sizes
  assert.equal(WALLS.filter(w=>w.baseDivider).length,2);assert.ok(g.units.every(u=>!blocked(u.x,u.y,u.radius)));
  assert.equal(g.player.radius,.48);assert.equal(g.towers(0)[0].radius,.9);assert.equal(g.towers(0)[0].range,8.5);
  const side=g.units.find(e=>e.camp==='side');assert.equal(clearLine(FOUNTAINS[0],side),false);assert.ok(findPath(FOUNTAINS[0],side).length>0);
- const expanded=findPath({x:64,y:40},{x:69,y:43});assert.ok(expanded.length>0);assert.ok(expanded.every(p=>!blocked(p.x,p.y,.48)));
+ const expanded=findPath({x:57,y:36},{x:62,y:34});assert.ok(expanded.length>0);assert.ok(expanded.every(p=>!blocked(p.x,p.y,.48)));
 });
 test('35 percent additional reload reduction applies to all runtime and future roster champions',()=>{
  close(RULES.reloadEfficiency,.8*.65);const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));

@@ -1,5 +1,5 @@
 import {FRAMES,loadAtlas} from './art.js';
-export const CLERK_HEIGHT=2.4;
+export const CLERK_HEIGHT=2.4*1.15;
 export const CLERK_ART={
  amplify:{idle:'leRougeIdle',attack:'leRougeAttack',weapon:'leRougeBlade',size:1.55,axis:'width',idleAngle:-.10},
  blessing:{idle:'leNoirIdle',attack:'leNoirAttack',weapon:'leNoirCase',size:.70,axis:'height',idleAngle:0},
@@ -10,7 +10,7 @@ export function clerkPresentation(g,e){
  const striking=!e.returning&&!e.pattern&&e.swingUntil>g.time,key=striking?spec.attack:spec.idle,f=FRAMES[key],weapon=FRAMES[spec.weapon],h=CLERK_HEIGHT*f.heightScale,w=h*f.w/f.h,left=-w*f.foot[0],top=-h*f.foot[1];
  const t=striking?Math.max(0,Math.min(1,(g.time-e.swingAt)/.28)):0,progress=1-(1-t)**3;
  const angle=striking?(e.camp==='amplify'?-.90+1.20*progress:-1.55+.45*progress):spec.idleAngle;
- return{key,f,weaponKey:spec.weapon,weapon,h,w,left,top,striking,hand:{x:left+f.hand[0]*h/f.h,y:top+f.hand[1]*h/f.h},weaponScale:spec.size/(spec.axis==='width'?weapon.w:weapon.h),angle:angle-weapon.forwardAngle};
+ return{key,f,weaponKey:spec.weapon,weapon,h,w,left,top,striking,hand:{x:left+f.hand[0]*h/f.h,y:top+f.hand[1]*h/f.h},weaponScale:spec.size*1.15/(spec.axis==='width'?weapon.w:weapon.h),angle:angle-weapon.forwardAngle};
 }
 export function drawClerk(r,e,g){
  if(!isClerk(e))return false;

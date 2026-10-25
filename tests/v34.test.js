@@ -13,9 +13,9 @@ const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 function arena(key='faust'){const g=new Game(key,'bottom',{mode:'training',seed:31}),p=g.player;g.units=[p];g.time=10;g.practice.lineStopped=true;Object.assign(p,{x:25,y:38,lastDamageAt:100,lastAttackAt:100});return {g,p};}
 function hero(g,team,x=29,y=38){const e=g.makeChampion('faust',team,8+g.nextId,'top');Object.assign(e,{x,y,player:false,maxHp:100000,hp:100000,lastDamageAt:100});return e;}
 function unlock(p){p.upgrades={power:3,health:3,speed:1,reload:1,haste:1};}
-test('carrier bypasses two ordinary technology augments while retaining normal two-category and five-slot limits',()=>{
- const {g,p}=arena();unlock(p);assert.ok(g.buyAugment(p,'magazine2'));assert.ok(g.buyAugment(p,'maskDeLu'));assert.ok(g.buyAugment(p,'carrier'));assert.equal(A.categoryCount(p,'tech'),2);assert.equal(g.buyAugment(p,'highRisk'),false);
- assert.ok(g.buyAugment(p,'glaive'));assert.ok(g.buyAugment(p,'resentment'));assert.ok(g.buyAugment(p,'antimatter'));assert.equal(p.augments.length,6);assert.equal(g.buyAugment(p,'power15'),false);
+test('carrier removes every category cap while retaining the six-slot limit',()=>{
+ const {g,p}=arena();unlock(p);assert.ok(g.buyAugment(p,'magazine2'));assert.ok(g.buyAugment(p,'maskDeLu'));assert.ok(g.buyAugment(p,'carrier'));assert.equal(A.categoryCount(p,'tech'),3);assert.ok(g.buyAugment(p,'highRisk'));
+ assert.ok(g.buyAugment(p,'glaive'));assert.ok(g.buyAugment(p,'resentment'));assert.equal(g.buyAugment(p,'antimatter'),false);assert.equal(p.augments.length,6);assert.equal(g.buyAugment(p,'power15'),false);
 });
 test('buy and sale remain forbidden outside a live match fountain while browsing has no simulation gate',()=>{const {g,p}=arena();unlock(p);g.training=false;p.gold=10000;assert.equal(g.canUpgrade(p),false);assert.equal(g.buy(p,'power'),false);assert.equal(g.buyAugment(p,'carrier'),false);p.augments=['glaive'];assert.equal(g.sellAugment(p,'glaive'),false);});
 test('training procedures independently buy and sell all tiers without changing augments',()=>{const {g,p}=arena();p.augments=['glaive'];const gold=p.gold;assert.ok(Training.procedures(g,true));assert.deepEqual(Object.values(p.upgrades).sort(),[3,3,3,5,5]);assert.equal(p.gold,gold);Training.procedures(g,false);assert.ok(Object.values(p.upgrades).every(n=>n===0));assert.deepEqual(p.augments,['glaive']);g.training=false;assert.equal(Training.procedures(g,true),false);});

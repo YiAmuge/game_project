@@ -34,7 +34,7 @@ test('Dongbaek third extra attack lands then applies exactly 2.85 seconds of bas
  const {g,p,t}=quiet('dongbaek');t.x=41;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;assert.ok(g.attack(p,t));}assert.equal(p.state.petals,0);close(p.status.disarm.until-g.time,2.85);p.ammo=3;p.attackCd=0;assert.equal(g.attack(p,t),false);p.qCd=0;assert.ok(g.cast(p,'q',p));run(g,2.9);assert.ok(g.attack(p,t));
 });
 test('Dongrang non-charge trees can coexist and only damage grows every 1500 healing',()=>{
- const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);g.heal(null,p,1500,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1500);close(ultGrowth(p).damage,230);g.heal(null,p,1500,false);close(ultGrowth(p).damage,280);
+ const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);p.hp-=3000;g.heal(p,p,1500,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1500);close(ultGrowth(p).damage,230);p.hp-=1500;g.heal(p,p,1500,false);close(ultGrowth(p).damage,280);
 });
 
 test('Hohenheim death state lasts 2.5 seconds, cannot move, heal or ult, and only awards one kill',()=>{

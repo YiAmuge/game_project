@@ -27,7 +27,7 @@ export function basic(g,e,p,d){
   for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t)){
    const td=direction(e,t);if(td.x*d.x+td.y*d.y<Math.cos(.65))continue;
    let hits=e.state.flowerHits[t.id];if(!hits||hits.at<g.time-4)hits=e.state.flowerHits[t.id]={n:0,at:g.time};
-   g.deal(e,t,165*(1+.12*Math.min(4,hits.n)));hits.n++;hits.at=g.time;
+   g.deal(e,t,165*(e.state.usedPetal?1.1:1)*(1+.12*Math.min(4,hits.n)));hits.n++;hits.at=g.time;
   }
   if(e.state.usedPetal&&e.state.petals===0)e.status.disarm={amount:1,until:g.time+2.85,theme:e.key};
   g.effects.push({source:e.id,damageKind:'basic',type:'petalFan',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),spread:1.3,r:g.attackRange(e),shape:{kind:'cone',range:g.attackRange(e),spread:1.3,angle:Math.atan2(d.y,d.x)},theme:e.key,life:.48,maxLife:.48});return true;

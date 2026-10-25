@@ -18,9 +18,9 @@ test('screen-to-world aim follows movement without moving the pointer',()=>{
   const after=camera.screenToWorld(1000,300);close(after.x-before.x,5);close(after.y-before.y,2);
   const point=camera.worldToScreen(after);close(point.x,1000);close(point.y,300);
 });
-test('bush layout is symmetric and includes inner, outer and flank green connectors',()=>{
-  assert.equal(BUSHES.length,16);
-  for(const b of BUSHES)assert.ok(BUSHES.some(m=>Math.abs(m.x-(RULES.width-b.x-b.w))<1e-7&&m.y===b.y&&m.w===b.w&&m.h===b.h));
+test('bush layout is symmetric and includes inner, outer and flank blue-mist connectors',()=>{
+  assert.equal(BUSHES.length,28);
+  for(const b of BUSHES)assert.ok(BUSHES.some(m=>Math.abs(m.x-(RULES.width-b.x-b.w))<1e-7&&Math.abs(m.y-b.y)<1e-7&&Math.abs(m.w-b.w)<1e-7&&Math.abs(m.h-b.h)<1e-7));
 });
 function setup(){
   const g=new Game(),enemy=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8),patch=BUSHES[0];

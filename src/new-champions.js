@@ -53,18 +53,18 @@ export function nellyFrontLanding(g,e,t){
 export function receivedMultiplier(g,e,t,kind){return e.key==='gahwan'&&kind==='skill'&&t.state?.contempt?.[e.id]>g.time?1.12:1;}
 function gaze(g,e,t,n=1){
  if(t.kind!=='champion'||!t.alive||t.hp<=0||g.debuffImmune?.(t))return;
- t.state.gaze??={};const mark=t.state.gaze[e.id]??={n:0,until:0};if(mark.until<=g.time)mark.n=0;mark.n+=n;mark.until=g.time+5;
+ g.triggerDisrupt(e,t);t.state.gaze??={};const mark=t.state.gaze[e.id]??={n:0,until:0};if(mark.until<=g.time)mark.n=0;mark.n+=n;mark.until=g.time+5;
  if(mark.n>=5){mark.n=0;t.state.contempt??={};t.state.contempt[e.id]=g.time+3;t.revealedUntil=g.time+3;t.visuals.contempt={until:g.time+3,theme:'gahwan'};g.triggerDisrupt(e,t);}
 }
 function refundKnife(g,e){const s=e.state;if(Number.isFinite(s.knifeReady))s.knifeReady=g.time+Math.max(0,s.knifeReady-g.time)*.5;}
 function nellyMark(g,e,t,force=false){
  if(g.debuffImmune?.(t))return;
  t.state.nellyMarks??={};let mark=t.state.nellyMarks[e.id];
- if(force){t.state.nellyMarks[e.id]={active:true,ready:Infinity,hold:3,until:g.time+7};t.visuals.nellyMark={until:g.time+7,theme:'nelly',forced:true};return;}
+ if(force){g.triggerDisrupt(e,t);t.state.nellyMarks[e.id]={active:true,ready:Infinity,hold:3,until:g.time+7};t.visuals.nellyMark={until:g.time+7,theme:'nelly',forced:true};return;}
  if(mark?.active&&mark.until>g.time){
   if(mark.hold>0){mark.hold--;return;}
   g.effects.push({type:'nellyProc',source:e.id,target:t.id,theme:'nelly',x:t.x,y:t.y,r:.9,life:.3,maxLife:.3});mark.active=false;mark.ready=g.time+3;delete t.visuals.nellyMark;if(!e.state.knifeRefundCast)refundKnife(g,e);if(t.hp>0)g.deal(e,t,t.maxHp*.07,{fixed:true,proc:false});
- }else if(!mark||mark.ready<=g.time){t.state.nellyMarks[e.id]={active:true,ready:g.time+3,until:g.time+6};t.visuals.nellyMark={until:g.time+6,theme:'nelly'};}
+ }else if(!mark||mark.ready<=g.time){g.triggerDisrupt(e,t);t.state.nellyMarks[e.id]={active:true,ready:g.time+3,until:g.time+6};t.visuals.nellyMark={until:g.time+6,theme:'nelly'};}
 }
 export function afterDamage(g,e,t,actual,proc){
  if(!proc||actual<=0||e.kind!=='champion'||t.kind!=='champion'||t.hp<=0)return;

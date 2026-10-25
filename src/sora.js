@@ -18,7 +18,7 @@ export function mark(g,e,t,origin='passive'){
  if(!t?.alive||t.camp==='boss'||!g.hostile(e,t)||!['neutral','champion'].includes(t.kind)||g.debuffImmune?.(t))return false;
  const active=orders(g,e),previous=e.state.orders[t.id];
  if(origin==='passive'&&!previous&&active.filter(m=>m.origin==='passive').length>=SORA.passiveCap)return false;
- e.state.orders[t.id]={target:t.id,until:g.time+SORA.markDuration,origin:origin==='ultimate'||previous?.origin==='ultimate'?'ultimate':'passive'};
+ g.triggerDisrupt(e,t);e.state.orders[t.id]={target:t.id,until:g.time+SORA.markDuration,origin:origin==='ultimate'||previous?.origin==='ultimate'?'ultimate':'passive'};
  g.effects.push({type:'ring',x:t.x,y:t.y-.65,r:.7,color:'#46cfff',life:.4,maxLife:.4});return true;
 }
 export function ultimateTarget(g,e){

@@ -4,7 +4,7 @@ import { drawWorld as drawPings } from './pings.js';
 import * as THREE from './vendor/three.js';
 import { Camera25D } from './camera-25d.js';
 import { TRAINING_25D as MAP } from './training-25d-map.js';
-import { WORLD,WALLS,TERRAIN,FOUNTAINS,FOUNTAIN_AREAS,BUSHES,lanePath } from './data.js';
+import { WORLD,WALLS,TERRAIN,APPROACH_CUTOUTS,FOUNTAINS,FOUNTAIN_AREAS,BUSHES,lanePath } from './data.js';
 import * as Training from './training.js';
 import { championHud,orderMark,championEffects,towerMark } from './overlays.js';
 import * as CombatVisuals from './combat-visuals.js';
@@ -67,11 +67,11 @@ export class Renderer25D {
    for(const x of [a.x,a.x+a.w])this.box(.06,.03,a.h,x,.035,a.y+a.h/2,a.color);
   }
   for(const w of this.layout.walls){
-   this.box(w.w+.22,.18,w.h+.22,w.x+w.w/2,.09,w.y+w.h/2,'#1d303b');
+   const footing=this.box(w.w+.22,.18,w.h+.22,w.x+w.w/2,.09,w.y+w.h/2,'#1d303b');footing.rotation.y=-(w.angle||0);
    const wall=this.box(w.w,1.25,w.h,w.x+w.w/2,.78,w.y+w.h/2,'#657a7b');
-   this.skin.box(wall,'wall');this.skin.decorateWall(wall,w,this.walls.length/2);wall.material.transparent=true;this.walls.push({mesh:wall,rect:w});
+   wall.rotation.y=-(w.angle||0);this.skin.box(wall,'wall');this.skin.decorateWall(wall,w,this.walls.length/2);wall.material.transparent=true;this.walls.push({mesh:wall,rect:w});
    const cap=this.box(w.w+.08,.1,w.h+.08,w.x+w.w/2,1.455,w.y+w.h/2,'#a5b2a4');
-   this.skin.box(cap,'wall','#c8d0d1');cap.material.transparent=true;this.walls.push({mesh:cap,rect:w});
+   cap.rotation.y=-(w.angle||0);this.skin.box(cap,'wall','#c8d0d1');cap.material.transparent=true;this.walls.push({mesh:cap,rect:w});
   }
   // Perimeter rails sit outside the playable rectangle; they add no hidden obstacles.
   for(const z of [b.y-.35,b.y+b.h+.35])this.box(b.w+.7,.45,.35,b.x+b.w/2,.18,z,'#71817d');
@@ -97,9 +97,10 @@ export class Renderer25D {
   const b=this.layout.bounds;
   c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();if(this.layout.terrain){c.beginPath();for(const t of this.layout.terrain)c.rect(t.x,t.y,t.w,t.h);c.clip();}
   this.skin.floor(c,b);
+  if(!game.training){c.fillStyle='#141919';for(const points of APPROACH_CUTOUTS){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();}}
   for(const a of this.layout.areas){r.text(`${String(a.id).padStart(2,'0')} / ${a.name}`,a.x+a.w/2,a.y+1.2,a.color,.52);}
   const f=this.layout.spawn;r.circle(f.x,f.y,2.45,'#a8f2e91c','#bbf7e1aa',.08);r.circle(f.x,f.y,1.65,null,'#dcffef66',.055);r.text('부활소',f.x,f.y+3.1,'#c3e9dc',.42);
-  if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);r.text('부활소 · 적에게 1000 고정 피해 / 0.5초',a.x+a.w/2,a.y+1.1,a.team?'#f5bba4':'#c7fff1',.27);}for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#a6a09214',3.2);for(const bush of BUSHES){c.fillStyle='#45524088';c.fillRect(bush.x,bush.y,bush.w,bush.h);}c.restore();return;}
+  if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);r.text('부활소 · 적에게 1000 고정 피해 / 0.5초',a.x+a.w/2,a.y+1.1,a.team?'#f5bba4':'#c7fff1',.27);}for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#a6a09214',3.2);for(const bush of BUSHES)r.bush(bush);c.restore();return;}
   const h=this.layout.hazard;c.fillStyle='#b3574d70';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle='#f1b18d';c.lineWidth=.07;c.strokeRect(h.x,h.y,h.w,h.h);
   for(let i=.35;i<h.w;i+=.7)r.line([{x:h.x+i,y:h.y+.2},{x:h.x+i,y:h.y+h.h-.2}],'#efae8c55',.04);
   r.text('피해 장판 · 초당 3.3%',h.x+h.w/2,h.y+h.h/2,'#ffe1b8',.32);
@@ -136,37 +137,14 @@ export class Renderer25D {
  unitsFrame(game){
   this.units.clear();
   for(const e of game.units){
-   if(['tower','core'].includes(e.kind))continue;
+
    const s=this.camera.worldToScreen(e),visible=e.alive&&(!game.hidden(e)||e.motion?.kind==='leap')&&game.visibleTo(0,e)&&s.x>-220&&s.x<this.base.width+220&&s.y>-220&&s.y<this.base.height+220;
    if(visible)this.units.set(e.id,{entity:e,feet:projectFeet(this.camera,e)});
   }
  }
- makeTower(e){
-  const group=new THREE.Group(),team=e.team===0?'#88c9ca':'#cf9278',skin=this.skin;
-  const box=(w,h,d,x,y,z,kind='metal',tint)=>skin.box(this.box(w,h,d,x,y,z,'#7b8078',group),kind,tint);
-  const cylinder=(r,h,x,y,z,kind='metal',tint)=>skin.cylinder(this.cylinder(r,h,x,y,z,'#6d776d',group),kind,tint);
-  if(e.kind==='core'){
-   cylinder(1.6,.35,0,.175,0,'wall');box(1.9,1.75,1.75,0,1.17,0);box(2.15,.2,1.95,0,2.12,0);
-   for(const side of [-1,1])box(.22,2.15,.24,side*1.2,1.25,.1,'wall');
-   skin.facade(group,'vent',1.4,1.25,0,1.15,.89);skin.facade(group,e.team?'amber':'teal',.9,.48,0,2.45,.15);
-   const beacon=this.cylinder(.27,.25,0,2.78,0,team,group);beacon.material.emissive=new THREE.Color(team);beacon.material.emissiveIntensity=.35;
-  }else{
-   cylinder(1.05,.22,0,.11,0,'wall');cylinder(.8,.35,0,.35,0);
-   box(1,1.5,.95,0,1.23,0,'wall');box(1.45,.52,1.15,0,2.18,0);
-   skin.facade(group,'vent',.8,.7,0,1.35,.49);
-   const barrel=this.cylinder(.13,.8,(e.team?-.65:.65),2.3,0,'#4d5552',group);barrel.rotation.z=Math.PI/2;skin.cylinder(barrel,'metal');
-   const beacon=this.cylinder(.22,.24,0,2.6,0,team,group);beacon.material.emissive=new THREE.Color(team);beacon.material.emissiveIntensity=.35;
-   box(1.55,.12,1.2,0,2.78,0);
-  }
-  group.position.set(e.x,0,e.y);group.traverse(o=>{if(o.material)o.material.transparent=true;});this.scene.add(group);return group;
- }
- structureFrame(game){
-  const keep=new Set();
-  for(const e of game.units.filter(e=>e.kind==='tower'||e.kind==='core')){
-   keep.add(e.id);let group=this.structures.get(e.id);if(!group){group=this.makeTower(e);this.structures.set(e.id,group);this.sceneryDirty=true;}
-   const sy=e.alive?1:.12;if(group.scale.y!==sy){group.scale.y=sy;this.sceneryDirty=true;}
-  }
-  for(const [id,group] of this.structures)if(!keep.has(id)){dispose(group);this.structures.delete(id);this.sceneryDirty=true;}
+ structureFrame(){
+  // All structures are upright Canvas2D actors; no 3D structure meshes remain.
+  if(this.structures.size){for(const group of this.structures.values())dispose(group);this.structures.clear();this.sceneryDirty=true;}
  }
  occlusion(game){
   const champions=game.champions().filter(e=>e.alive&&!game.hidden(e)&&game.visibleTo(0,e));
@@ -200,12 +178,12 @@ export class Renderer25D {
   const old=r.billboardPass,oldVfx=r.skillVfx;r.billboardPass=true;r.skillVfx=this.vfx;
   const actors=[...this.units.values()].map(a=>({e:a.entity,tree:false}));for(const z of game.zones)if(z.kind==='desireTree'&&z.until>game.time)actors.push({e:z,tree:true});
   try{for(const {e,tree} of actors.sort((a,b)=>a.e.y-b.e.y||(a.e.id||0)-(b.e.id||0))){
-   this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
+   this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>['tower','core'].includes(e.kind)?r.structure(e,game):r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:isClerk(e)?CLERK_HEIGHT+.18:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.5:1.55),'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.85:2),'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}
    else if(e.kind==='minion')r.bar(e,.8,e.y-.65,game);
-   else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-3.5,game);towerMark(r,e,game);
+   else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-(e.kind==='core'?1.45:1.1),game);towerMark(r,e,game);
   });
   for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&(!game.hidden(e)||e.motion?.kind==='leap')).sort((a,b)=>Number(a.player)-Number(b.player)))at(e,()=>{
    championEffects(r,e,game);CombatVisuals.front(r,e,game);championHud(r,e,game);CombatVisuals.meter(r,e,game);
