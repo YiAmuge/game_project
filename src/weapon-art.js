@@ -1,5 +1,6 @@
 import { FRAMES,loadAtlas,visualForm } from './art.js';
 import { leapLift,levitationLift,feetOffset } from './projection-25d.js';
+import { drawGripHands } from './weapon-grips.js';
 
 // Shaft extensions are geometric slices of the latest source art. The metal
 // heads keep their source shape and size; only the handle interval gains length.
@@ -134,7 +135,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=gripPivot(e.key),{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0}={})=>{
   const m=weaponGeometry(key,length);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust,0);if(flipY!==1)c.scale(1,flipY);drawWeapon(c,key,length,{pivot,straighten});
+  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust,0);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back');drawWeapon(c,key,length,{pivot,straighten});drawGripHands(c,e.key,key,m,pivot,'front');
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='gubo'){
