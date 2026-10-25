@@ -66,9 +66,24 @@ export function weaponEmissionScreen(g,e,camera,origin=e){
  const tip=weaponEmissionPoint(g,e,camera);if(!tip)return null;const at=camera.worldToScreen(origin,.075);
  return {x:at.x+(tip.x-e.x)*camera.scale,y:at.y+(tip.y-e.y-feetOffset(e))*camera.scale};
 }
-export function clawMotion(age){
- const phase=(start,sign)=>{const p=Math.max(0,Math.min(1,(age-start)/.12));return {angle:sign*Math.PI*2*p,active:age>=start&&age<start+.12};};
- return {left:phase(0,1),right:phase(.12,-1)};
+export function bodyOrbit(p,angle,radius=.65){
+ return {x:p.origin.x+Math.cos(angle)*radius,y:p.origin.y-.8+Math.sin(angle)*radius};
+}
+export function soraOrbitPose(e,p){
+ const facing=(p.attacking?e.attackFacing:undefined)??p.facing,angle=facing+p.swing*Math.PI*2,radius=.9+.2*Math.sin(Math.max(0,Math.min(1,p.swing))*Math.PI);
+ return p.attacking?{left:{hand:bodyOrbit(p,angle+Math.PI,radius),angle:facing+Math.PI},right:{hand:bodyOrbit(p,angle,radius),angle:facing},active:true}:{left:{hand:p.left,angle:facing},right:{hand:p.right,angle:facing},active:false};
+}
+export function outisSpinPose(g,e,p){
+ const age=g.time-(e.state.outisSpinAt??-99);if(age<0||age>=.4)return null;
+ const angle=(e.state.outisSpinFacing??p.facing)+age/.4*Math.PI*2;return {hand:bodyOrbit(p,angle,.5),angle};
+}
+export function heathSlamPose(g,e,p){
+ const m=e.motion,air=m?.kind==='leap'&&m.actionKind==='skill',after=g.time-(e.state.heathSlamAt??-99),charging=e.state.chargeAt!==undefined;
+ if(!charging&&!air&&(after<0||after>=.18))return null;
+ const duration=air?Math.max(.01,m.minDuration||0,m.total/m.speed):0,window=Math.min(.14,duration*.6),swing=air?Math.max(0,Math.min(1,1-(duration-m.elapsed)/window)):charging?0:1;
+ const recover=!air&&!charging?Math.max(0,Math.min(1,(after-.04)/.14)):0,side=weaponOrientation(air?Math.atan2(m.dy,m.dx):e.state.heathSlamFacing??p.facing).flip,angle=-Math.PI/2+side*Math.PI*swing**1.8;
+ const hand={x:p.right.x,y:p.right.y+(p.origin.y+.06-WEAPON_ART.heathcliff[1]*.88-p.right.y)*swing**2};
+ return {hand:{x:hand.x,y:hand.y+(p.right.y-hand.y)*recover},angle:angle+(p.facing-angle)*recover};
 }
 export function gregorThrust(g,e){
  const cast=e.visualCast,age=g.time-(cast?.at??-99);if(cast?.slot!=='q'||age<0||age>=.4)return null;
@@ -82,7 +97,7 @@ export function gahwanSlash(g,e){
  return {angle:cast.angle+(phase/duration-.5)*2.5*(index%2?-1:1)*weaponOrientation(cast.angle).flip,part:`skill-${cast.slot}-${index}`};
 }
 export function yanWeaponAngle(e,p){
- const base=p.attacking?(e.attackFacing??p.facing):p.facing,progress=e.state.yanCharge?.progress/1.5||0,raise=e.state.yanCharge?.65*progress:p.attacking?(.3-p.age)*3:0;
+ const base=p.attacking?(e.attackFacing??p.facing):p.facing,progress=e.state.yanCharge?.progress/1.5||0,raise=e.state.yanCharge?.65*progress:p.attacking?Math.max(0,.3-p.age*2)*3:0;
  return base-weaponOrientation(base).flip*raise;
 }
 const GREGOR_SPINE=[[0,.61],[.12,.52],[.28,.4],[.45,.37],[.62,.43],[.76,.54],[.9,.76],[1,1]];
@@ -128,13 +143,17 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   const strike=gregorThrust(g,e);held(entry[0],strike?.length??entry[1],p.right,strike?.angle??p.angle,undefined,{flipY:-1,straighten:strike?.straighten||0,thrust:strike?.thrust||0,trail:!strike&&slash&&attacking});
  }else if(e.key==='gahwan'&&gahwanSlash(g,e)){
   const cut=gahwanSlash(g,e);held(entry[0],entry[1],p.right,cut.angle,undefined,{trail:true,part:cut.part});
+ }else if(e.key==='outis'&&outisSpinPose(g,e,p)){
+  const spin=outisSpinPose(g,e,p);held(entry[0],entry[1],spin.hand,spin.angle,undefined,{trail:true,part:'outis-spin'});
+ }else if(e.key==='heathcliff'&&heathSlamPose(g,e,p)){
+  const slam=heathSlamPose(g,e,p);held(entry[0],entry[1],slam.hand,slam.angle,undefined,{trail:true,part:'heath-slam'});
  }else if(e.key==='sora'&&!g.buff(e,'soraEgo')){
   // Keep the existing central cuff pivot and raised slam, following body Z.
   const slam=attacking?Math.sin(Math.min(1,age/.18)*Math.PI)*1.25:0;
   c.save();c.translate(e.x,p.origin.y-.75-slam);orientWeapon(c,p.angle);c.translate(.18+(attacking?Math.sin(p.swing*Math.PI)*.22:0),0);drawWeapon(c,'soraFists',entry[1],{pivot:.5});c.restore();
  }else if(e.key==='sora'){
-  const claws=clawMotion(age),facing=(attacking?e.attackFacing:undefined)??p.facing;held('soraClawLeft',SORA_CLAW_LENGTH,p.left,facing+claws.left.angle,.12,{trail:claws.left.active,part:'claw-left'});
-  held('soraClawRight',SORA_CLAW_LENGTH,p.right,facing+claws.right.angle,.12,{trail:claws.right.active,part:'claw-right'});
+  const orbit=soraOrbitPose(e,p),pivot=orbit.active?.5:.12;held('soraClawLeft',SORA_CLAW_LENGTH,orbit.left.hand,orbit.left.angle,pivot,{trail:orbit.active,part:'claw-left'});
+  held('soraClawRight',SORA_CLAW_LENGTH,orbit.right.hand,orbit.right.angle,pivot,{trail:orbit.active,part:'claw-right'});
  }else if(e.key==='ppui'){
   held('ppuiHand',entry[1],p.right,p.facing,.12,{trail:false,part:'palm-right'});held('ppuiHand',entry[1],p.left,p.facing,.12,{trail:false,part:'palm-left'});
  }else if(e.key==='meursault'){
@@ -160,7 +179,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   if(e.key==='yan')angle=yanWeaponAngle(e,p);
   if(e.key==='nelly'&&attacking)thrust=Math.sin(p.swing*Math.PI)*.6;
   if(e.key==='don'&&g.time-(e.state.donThrust?.at??-99)<.24)thrust=Math.sin((g.time-e.state.donThrust.at)/.24*Math.PI)*.8;
-  held(entry[0],entry[1]*(e.key==='nelly'&&attacking?1.5:1),p.right,angle,undefined,{thrust});
+  held(entry[0],entry[1]*(e.key==='nelly'&&attacking?1.5:1),p.right,angle,undefined,{thrust,trail:slash&&attacking&&(e.key!=='yan'||age<.15)});
  }
  return true;
 }

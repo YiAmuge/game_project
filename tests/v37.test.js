@@ -8,7 +8,7 @@ import * as Infestation from '../src/infestation.js';
 import * as Sora from '../src/sora.js';
 import * as Yan from '../src/yan.js';
 import { FRAMES } from '../src/art.js';
-import { HAND_ANCHORS,MIDDLE_GRIP,equipmentPose,spriteOrigin,clawMotion,drawEquipment,drawBackEquipment,WEAPON_ART,weaponOrientation } from '../src/weapon-art.js';
+import { HAND_ANCHORS,MIDDLE_GRIP,equipmentPose,spriteOrigin,soraOrbitPose,drawEquipment,drawBackEquipment,WEAPON_ART,weaponOrientation } from '../src/weapon-art.js';
 import { projectileAsset,projectileAppearance } from '../src/projectile-vfx.js';
 import { fallingSwordHeight,healingRipples } from '../src/champion-vfx.js';
 import { leapLift } from '../src/projection-25d.js';
@@ -30,8 +30,8 @@ test('every body has a mirrored anatomical right-hand anchor independent of aim 
 test('hand and body origins move by exactly the same Z during jumps and presentation levitation',()=>{
  for(const key of ['don','myo','starbuck','rudolph']){const {g,p}=arena(key),base=equipmentPose(g,p,.2);p.motion={kind:'leap',elapsed:.5,minDuration:1,total:3,speed:3,arcHeight:3};const flying=equipmentPose(g,p,.2);close(base.right.y-flying.right.y,leapLift(p));close(base.left.y-flying.left.y,leapLift(p));close(base.origin.y-flying.origin.y,leapLift(p));close(spriteOrigin(g,p,.2).y,flying.origin.y);}
 });
-test('Sora claws complete left clockwise then right counterclockwise full turns in 0.24 seconds',()=>{
- const a=clawMotion(.06),b=clawMotion(.18),done=clawMotion(.24);close(a.left.angle,Math.PI);assert.ok(a.left.active&&!a.right.active);close(b.left.angle,2*Math.PI);close(b.right.angle,-Math.PI);assert.ok(!b.left.active&&b.right.active);close(done.right.angle,-2*Math.PI);assert.ok(!done.right.active);
+test('Sora claws orbit simultaneously from opposite sides without spinning each hand',()=>{
+ const {g,p}=arena('sora');p.attackAt=0;p.attackFacing=0;for(const time of [0,.075,.15,.225,.299]){g.time=time;const pose=equipmentPose(g,p),orbit=soraOrbitPose(p,pose);assert.ok(orbit.active);close(orbit.left.hand.x+orbit.right.hand.x,pose.origin.x*2);close(orbit.left.hand.y+orbit.right.hand.y,(pose.origin.y-.8)*2);close(orbit.left.angle,Math.PI);close(orbit.right.angle,0);}g.time=.3;assert.ok(!soraOrbitPose(p,equipmentPose(g,p)).active);
  close(WEAPON_ART.sora[1],1.05*.8*.75);close(WEAPON_ART.yan[1],2.5*1.2);assert.equal(WEAPON_ART.ppui[0],'ppuiHand');assert.ok(WEAPON_ART.ppui[1]<.6);
 });
 test('Starbuck harpoon points down through descent and the landing impact',()=>{

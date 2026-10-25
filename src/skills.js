@@ -49,6 +49,11 @@ export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
 }
 export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
+export function skillCharges(g,e,slot){
+ if(slot!=='q')return null;
+ const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
+ if(!values)return null;const [current,max,ready]=values;return {current,max,remaining:current<max&&Number.isFinite(ready)?Math.max(0,ready-g.time):0};
+}
 export const cancelHeath=Reworks.cancelHeath;
 export function targetAt(g,e,p,r,team=1-e.team,eligible=()=>true){
  return g.champions(team).filter(t=>t.alive&&!g.hidden(t)&&eligible(t)&&g.visibleTo(e.team,t)&&distance(e,t)<=r+t.radius&&distance(p,t)<2&&g.clearLine(e,t)).sort((a,b)=>distance(p,a)-distance(p,b))[0];
@@ -188,7 +193,7 @@ export function cast(g,e,slot,p,d,options={}){
   }else{const ice=p=>g.zones.push({kind:'ice',source:e,...p,r:4.725,until:g.time+3.5,nextTick:g.time,tickEvery:.5,damage:50,slow:.5,reloadWeak:.5,weak:.5,firstDebuffOnly:true,debuffDuration:1.3,championsOnly:true});g.bullet(e,d,360,8,{width:.36,visualScale:1.2,onHit:(t,b)=>{if(b.lastHpRatio>=.5)g.deal(e,t,108);g.status(t,'stun',1,1,e);ice({x:t.x,y:t.y});},onEnd:ice});}
   return true;
  case 'outis':
-  if(slot==='q')dash(g,e,d,3,0,()=>{},{offensive:true,onComplete:()=>{g.effects.push({type:'outisSpin',source:e.id,theme:'outis',slot:'q',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.4,maxLife:.4});let hit=false;area(g,e,e,2.5,180,t=>{g.status(t,'slow',.2,1.5,e);if(t.kind==='champion')hit=true;});if(hit)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}});
+  if(slot==='q')dash(g,e,d,3,0,()=>{},{offensive:true,onComplete:()=>{e.state.outisSpinAt=g.time;e.state.outisSpinFacing=Math.atan2(d.y,d.x);g.effects.push({type:'outisSpin',source:e.id,theme:'outis',slot:'q',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.4,maxLife:.4});let hit=false;area(g,e,e,2.5,180,t=>{g.status(t,'slow',.2,1.5,e);if(t.kind==='champion')hit=true;});if(hit)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}});
   else return Reworks.outis(g,e,d);
   return true;
  case 'gregor':return Gregor.cast(g,e,slot,d,()=>gregorStack(g,e,2));
@@ -244,7 +249,7 @@ export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
 export function gregorStack(g,e,n=1){
  if(!e.alive||g.buff(e,'mutant')||(e.state.mutateReady||0)>g.time)return;
  e.state.mutations=(e.state.mutations||0)+n;
- if(e.state.mutations>=12){e.state.mutations=0;e.state.mutateReady=g.time+15;e.state.transformed=true;e.state.mutantExtension=0;e.ammo=Math.min(ammoCap(g,e),e.ammo+2);e.qCd=0;const hp=e.maxHp;g.addBuff(e,'mutant',5);e.maxHp=g.maxHp(e);e.hp+=e.maxHp-hp;e.radius=.48*1.15;e.state.mutantTick=g.time+.5;}
+ if(e.state.mutations>=12){e.state.mutations=0;e.state.mutateReady=g.time+30;e.state.transformed=true;e.state.mutantExtension=0;e.ammo=Math.min(ammoCap(g,e),e.ammo+2);e.qCd=0;const hp=e.maxHp;g.addBuff(e,'mutant',5);e.maxHp=g.maxHp(e);e.hp+=e.maxHp-hp;e.radius=.48*1.15;e.state.mutantTick=g.time+.5;}
 }
 export function takedown(g,e,victim,direct){
  if(!e||e.kind!=='champion')return;

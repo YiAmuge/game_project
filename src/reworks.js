@@ -24,6 +24,7 @@ export function releaseHeath(g,e,p){
  if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.stat(e,'root')||g.stat(e,'captured')||e.motion||g.hidden(e)){cancelHeath(e);return false;}
  const shape=heathCharge(g,e,p||e.state.chargeAim),d=direction(e,shape.landing);cancelHeath(e);e.qCd=g.cooldown(e,'q');e.lastAttackAt=g.time;
  return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{kind:'leap',ignoreWalls:true,arcHeight:3,minDuration:distance(e,shape.landing)/RULES.dashSpeed,phaseEnemies:true,onComplete:()=>{
+  e.state.heathSlamAt=g.time;e.state.heathSlamFacing=Math.atan2(d.y,d.x);
   area(g,e,e,shape.radius,shape.damage,t=>{if(shape.stun)g.status(t,'stun',1,shape.stun,e);});g.effects.push({type:'burst',x:e.x,y:e.y,r:shape.radius,theme:'heathcliff',life:.5,maxLife:.5});
  }}));
 }
