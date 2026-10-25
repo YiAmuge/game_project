@@ -1597,5 +1597,100 @@
       ],
       "removedFragments": 0
     }
+  },
+  "animations": {
+    "meursaultWalk": {
+      "source": "exec-c695953f-e4ce-4253-a8da-f81fed871cb9.png",
+      "sha256": "e74cac9ce6254a402b149b9330f1f2090aa2678626be2b7f526f3b54930e5920",
+      "upperSource": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "atlas": "meursault-walk.png",
+      "frames": [
+        "meursaultWalk0",
+        "meursaultWalk1",
+        "meursaultWalk2",
+        "meursaultWalk3",
+        "meursaultWalk4",
+        "meursaultWalk5"
+      ],
+      "waistRow": 289,
+      "padding": [
+        27,
+        8
+      ],
+      "registration": [
+        {
+          "sourceRect": [
+            0,
+            0,
+            362,
+            724
+          ],
+          "sourceBuckle": 225.5,
+          "sourceCrown": 31,
+          "sourceSole": 675,
+          "scale": 0.6211180124223602
+        },
+        {
+          "sourceRect": [
+            362,
+            0,
+            362,
+            724
+          ],
+          "sourceBuckle": 581.5,
+          "sourceCrown": 31,
+          "sourceSole": 675,
+          "scale": 0.6211180124223602
+        },
+        {
+          "sourceRect": [
+            724,
+            0,
+            362,
+            724
+          ],
+          "sourceBuckle": 934,
+          "sourceCrown": 31,
+          "sourceSole": 671,
+          "scale": 0.625
+        },
+        {
+          "sourceRect": [
+            1086,
+            0,
+            362,
+            724
+          ],
+          "sourceBuckle": 1307.5,
+          "sourceCrown": 31,
+          "sourceSole": 671,
+          "scale": 0.625
+        },
+        {
+          "sourceRect": [
+            1448,
+            0,
+            362,
+            724
+          ],
+          "sourceBuckle": 1659,
+          "sourceCrown": 31,
+          "sourceSole": 675,
+          "scale": 0.6211180124223602
+        },
+        {
+          "sourceRect": [
+            1810,
+            0,
+            362,
+            724
+          ],
+          "sourceBuckle": 2011,
+          "sourceCrown": 31,
+          "sourceSole": 674,
+          "scale": 0.6220839813374806
+        }
+      ]
+    }
   }
 }

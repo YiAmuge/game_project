@@ -1,4 +1,5 @@
 import { SPRITE_FRAMES } from './sprites-v36.js';
+import { WALK_FRAMES } from './walking-sprites.js';
 // Generated fan-art atlas; source revisions are recorded in assets/sprites-v36.json.
 export const FRAMES = {
   yan:{x:16,y:167,w:347,h:658,sheet:8},yanDistorted:{x:391,y:177,w:373,h:647,sheet:8},yanHand:{x:756,y:355,w:392,h:278,sheet:8},yanSword:{x:1181,y:467,w:571,h:149,sheet:8},
@@ -25,9 +26,9 @@ export const FRAMES = {
   outis:{"x": 768, "y": 532, "w": 384, "h": 492, "sheet": 1},
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
-Object.assign(FRAMES,SPRITE_FRAMES);
-export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36'];
-const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36'];
+Object.assign(FRAMES,SPRITE_FRAMES,WALK_FRAMES);
+export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','meursault-walk'];
+const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','walk-data-meursault'];
 const atlasImages=new Map();
 export function visualForm(g,e){
  if(e.key==='sora'&&g.buff(e,'soraEgo'))return 'soraEgo';
