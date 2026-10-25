@@ -1,4 +1,4 @@
-"""Native Canvas checks for muzzle alignment, limb deformation and skill poses."""
+"""Native Canvas checks for muzzle anchors, limb deformation and skill poses."""
 import json,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
@@ -28,7 +28,7 @@ with sync_playwright() as pw:
       for(const angle of [0,.4,1.4,Math.PI,Math.PI*1.3,-.7]){
         const e=make('gubo',angle),out=draw(e),image=out.calls.find(c=>c.key==='guboRifle'),f=A.FRAMES.guboRifle,[u,v]=W.EMISSION_ANCHORS.gubo,[a,b,c,d,x,y]=image.m,tip=W.weaponEmissionScreen(g,e,out.camera),px=(u-.5)*f.w,py=(v-.5)*f.h;
         close(a*px+c*py+x,tip.x);close(b*px+d*py+y,tip.y);const zero=out.camera.worldToScreen(e,.95),next=out.camera.worldToScreen({x:e.x+Math.cos(angle),y:e.y+Math.sin(angle)},.95),dx=next.x-zero.x,dy=next.y-zero.y;
-        close((a*dy-b*dx)/Math.hypot(a,b)/Math.hypot(dx,dy),0);muzzleCases++;
+        close(a/Math.hypot(a,b),Math.cos(angle));close(b/Math.hypot(a,b),Math.sin(angle));muzzleCases++;
       }
       const dong=make('dongbaek');g.cast(dong,'q',dong);const petals=draw(dong,true),body=petals.calls.findIndex(c=>c.key==='dongbaek'),rims=petals.calls.map((c,i)=>({c,i})).filter(({c})=>[vfx.rimTexture('#dcc66e','petal'),vfx.rimTexture('#d7edf5','shield')].includes(c.image));if(rims.length!==2||rims.some(({i})=>i>=body))throw new Error('Dongbaek persistent effect is in front');
       const greg=make('gregor'),idle=draw(greg).calls.find(c=>c.key==='gregorClaw');if(idle.m[3]>=0)throw new Error('Gregor is not vertically flipped');g.cast(greg,'q',{x:31,y:23});g.time+=.1;const straight=draw(greg).calls.filter(c=>c.key==='gregorClaw');if(straight.length<100)throw new Error('Gregor source was not deformed');close(Math.abs(straight[0].m[3]),Math.abs(idle.m[3]));
@@ -41,7 +41,7 @@ with sync_playwright() as pw:
     assert result['gl']==0,result
     page.evaluate('''()=>{
       const {make,draw,g,r}=sprite39,wrap=document.createElement('div');wrap.id='proof39';Object.assign(wrap.style,{position:'absolute',zIndex:99999,left:0,top:0,width:'1800px',display:'grid',gridTemplateColumns:'repeat(2,900px)',background:'#34424a',color:'white',font:'20px sans-serif'});document.body.append(wrap);
-      const cases=[['구보 · 총구와 같은 직선','gubo',{angle:.4}],['구보 · 왼쪽 조준','gubo',{angle:Math.PI}],['동백 · 몸체 뒤 지속 효과','dongbaek',{flower:true}],['그레고르 · 상하 반전','gregor',{}],['그레고르 · 곧게 편 찌르기','gregor',{q:.1}],['그레고르 · 벌레팔 회수','gregor',{q:.3}],['가환 · 전술기 베기','gahwan',{q:.025}],['가환 · 궁극기 베기','gahwan',{r:.17}],['넬리 · 손에서 나이프 뻗기','nelly',{attack:.15}],['동랑 · 낫 크기 150%','dongrang',{}],['얀 · 오른쪽 검 들어올리기','yan',{charge:true}],['얀 · 왼쪽 검 들어올리기','yan',{charge:true,angle:Math.PI}],['묘 · 역수 대기','myo',{frenzy:true}],['묘 · 기본 공격 정수','myo',{frenzy:true,attack:.15}],['이스마엘 · 궁극기 작살','ishmael',{missile:'harpoon'}],['로쟈 · 궁극기 얼음도끼','rodya',{missile:'axe'}]];
+      const cases=[['구보 · 오른손 조준','gubo',{angle:.4}],['구보 · 왼쪽 조준','gubo',{angle:Math.PI}],['동백 · 몸체 뒤 지속 효과','dongbaek',{flower:true}],['그레고르 · 상하 반전','gregor',{}],['그레고르 · 곧게 편 찌르기','gregor',{q:.1}],['그레고르 · 벌레팔 회수','gregor',{q:.3}],['가환 · 전술기 베기','gahwan',{q:.025}],['가환 · 궁극기 베기','gahwan',{r:.17}],['넬리 · 손에서 나이프 뻗기','nelly',{attack:.15}],['동랑 · 낫 크기 150%','dongrang',{}],['얀 · 오른쪽 검 들어올리기','yan',{charge:true}],['얀 · 왼쪽 검 들어올리기','yan',{charge:true,angle:Math.PI}],['묘 · 역수 대기','myo',{frenzy:true}],['묘 · 기본 공격 정수','myo',{frenzy:true,attack:.15}],['이스마엘 · 궁극기 작살','ishmael',{missile:'harpoon'}],['로쟈 · 궁극기 얼음도끼','rodya',{missile:'axe'}]];
       for(const [label,key,s] of cases){const e=make(key,s.angle||0);if(s.flower)g.cast(e,'q',e);if(s.frenzy)g.addBuff(e,'rabbitFrenzy',4.5);if(s.charge)e.state.yanCharge={progress:1.5};for(const slot of ['q','r'])if(s[slot]!==undefined){g.cast(e,slot,{x:e.x+6,y:e.y});g.time+=s[slot];}if(s.attack!==undefined){e.attackAt=g.time-s.attack;e.attackFacing=e.facing;e.attackSerial=1;}const {canvas}=draw(e,Boolean(s.flower));if(s.missile){const c=canvas.getContext('2d'),tex=r.scene25d.projectileVfx.sprite(s.missile,key==='rodya'?'#c0d8e7':'#416e70',{asset:false});c.drawImage(tex,420,170,360,150);}const title=document.createElement('div'),card=document.createElement('div');title.textContent=label;canvas.style.cssText='width:900px;height:450px;max-height:none;aspect-ratio:auto';card.append(title,canvas);wrap.append(card);}
     }''')
     page.locator('#proof39').screenshot(path=str(art/'v39-sprite-poses.png'));page.evaluate('document.querySelector("#proof39").remove()')

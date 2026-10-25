@@ -25,7 +25,6 @@ export function orientWeapon(c,angle){const pose=weaponOrientation(angle);c.scal
 export const SORA_CLAW_LENGTH=1.65*.8;
 export const ISHMAEL_SHIELD_LENGTH=.38;
 export const EMISSION_ANCHORS={gubo:[.99,.32],rudolph:[.94,.48]};
-export const GUBO_SHOT_HEIGHT=.95;
 // Anatomical hands in crown-to-sole world units, independent of hair/ornaments.
 export const HAND_ANCHORS={yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
@@ -50,16 +49,12 @@ export function ahabSlamPose(g,e,p){
  return groundStrikePose(p,WEAPON_ART.ahab[1],.12,.13-remaining,{impact:.1,recovery:.02,depth:.06,head:.99});
 }
 export function guboWeaponPose(g,e,camera,p=equipmentPose(g,e)){
- if(!camera)return {hand:p.right,angle:p.angle};
- const at=camera.worldToScreen(e,.075),line=camera.worldToScreen(e,GUBO_SHOT_HEIGHT),next=camera.worldToScreen({x:e.x+Math.cos(p.angle),y:e.y+Math.sin(p.angle)},GUBO_SHOT_HEIGHT),angle=Math.atan2(next.y-line.y,next.x-line.x),normal={x:-Math.sin(angle),y:Math.cos(angle)},m=weaponGeometry(...WEAPON_ART.gubo),[u,v]=EMISSION_ANCHORS.gubo;
- const side=weaponOrientation(angle).flip,barrelY=(v-.5)*m.height*m.scale*side;
- const lineY=e.y+feetOffset(e)+(line.y-at.y)/camera.scale+p.origin.y-e.y-.3;
- const offset=(p.right.x-e.x)*normal.x+(p.right.y-lineY)*normal.y+barrelY;
- return {hand:{x:p.right.x-offset*normal.x,y:p.right.y-offset*normal.y},angle};
+ // Keep the rifle on the anatomical hand, with the shared basic attack push.
+ return {hand:p.right,angle:p.angle,thrust:p.attacking?Math.sin(p.swing*Math.PI)*.38:0};
 }
 export function weaponEmissionPoint(g,e,camera){
  if(!['gubo','rudolph'].includes(e.key))return null;
- const p=equipmentPose(g,e),shot=e.key==='gubo'?guboWeaponPose(g,e,camera,p):{hand:p.right,angle:p.angle},[key,length]=WEAPON_ART[e.key],m=weaponGeometry(key,length),[u,v]=EMISSION_ANCHORS[e.key],thrust=e.key!=='gubo'&&p.attacking?Math.sin(p.swing*Math.PI)*.38:0;
+ const p=equipmentPose(g,e),shot=e.key==='gubo'?guboWeaponPose(g,e,camera,p):{hand:p.right,angle:p.angle},[key,length]=WEAPON_ART[e.key],m=weaponGeometry(key,length),[u,v]=EMISSION_ANCHORS[e.key],thrust=shot.thrust??(p.attacking?Math.sin(p.swing*Math.PI)*.38:0);
  const x=m.span*(u-gripPivot(e.key))+thrust,y=(v-.5)*m.height*m.scale,pose=weaponOrientation(shot.angle),c=Math.cos(pose.angle),s=Math.sin(pose.angle);
  return {x:shot.hand.x+pose.flip*(x*c-y*s),y:shot.hand.y+x*s+y*c};
 }
@@ -139,7 +134,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='gubo'){
-  const shot=guboWeaponPose(g,e,camera,p);held(entry[0],entry[1],shot.hand,shot.angle,undefined,{trail:false});
+  const shot=guboWeaponPose(g,e,camera,p);held(entry[0],entry[1],shot.hand,shot.angle,undefined,{thrust:shot.thrust,trail:false});
  }else if(e.key==='gregor'){
   const strike=gregorThrust(g,e);held(entry[0],strike?.length??entry[1],p.right,strike?.angle??p.angle,undefined,{flipY:-1,straighten:strike?.straighten||0,thrust:strike?.thrust||0,trail:!strike&&slash&&attacking});
  }else if(e.key==='gahwan'&&gahwanSlash(g,e)){

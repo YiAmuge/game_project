@@ -43,9 +43,9 @@ test('gun and staff emission points match the visible tip across body mirroring 
   if(key==='rudolph'){p.castSlot='r';p.channelUntil=2;close(before.y-weaponEmissionPoint(g,p).y,.16);}
  }
 });
-test('Gubo bullets stay on the muzzle line without changing projectile collision coordinates',()=>{
+test('Gubo bullets start at the original body origin without changing projectile collision coordinates',()=>{
  const {g,p}=arena('gubo'),t=target(g,48);g.attack(p,t);const bullet=g.projectiles[0],fields=['x','y','dx','dy','remaining','width','speed','damage'],before=fields.map(k=>bullet[k]),camera=new Camera25D();camera.update(1280,720,p);
- const fx=new ProjectileVFX({}),start=fx.position(bullet,g,camera,.95),muzzle=weaponEmissionScreen(g,p,camera,bullet.origin);close(start.y,muzzle.y);assert.ok(start.x<muzzle.x);assert.equal(fx.clearedMuzzle(bullet,g,camera,.95),false);assert.deepEqual(fields.map(k=>bullet[k]),before);
+ const fx=new ProjectileVFX({}),start=fx.position(bullet,g,camera,.95),origin=camera.worldToScreen(bullet.origin,.95);assert.deepEqual(start,origin);assert.deepEqual(fields.map(k=>bullet[k]),before);
  g.time=.15;const point=fx.position(bullet,g,camera,.95);close(point.x,start.x);close(point.y,start.y);assert.deepEqual(fields.map(k=>bullet[k]),before);
 });
 test('Dongbaek tactical body rim suppresses floating petals while shield and movement rules remain intact',()=>{

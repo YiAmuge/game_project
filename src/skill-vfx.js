@@ -50,12 +50,12 @@ export class SkillVFX {
   let n=0;for(const p of this.particles){if(time-p.born<p.life)this.particles[n++]=p;else this.free.push(p);}this.particles.length=n;
   this.emitters=this.emitters.filter(e=>time-e.born<e.life);
  }
- emit(kind,point,time,{radius=1,angle=0,color='#e6e7e9',accent=color,dark='#2a272c',element='metal',seed,count,height=0,shape=null,body=false,ownerId=null,follow=false,beam=false,pressure=false,life:lifeOverride,light:lightOverride}={}){
+ emit(kind,point,time,{radius=1,angle=0,color='#e6e7e9',accent=color,dark='#2a272c',element='metal',seed,count,height=0,shape=null,body=false,ownerId=null,follow=false,beam=false,pressure=false,muzzle=false,life:lifeOverride,light:lightOverride}={}){
   const preset=VFX_PRESETS[kind];if(!preset||!Number.isFinite(time)||![point.x,point.y,radius,angle].every(Number.isFinite)||!/^#[\da-f]{6}$/i.test(color))return null;
   if(!/^#[\da-f]{6}$/i.test(accent))accent=color;if(!/^#[\da-f]{6}$/i.test(dark))dark='#2a272c';
   radius=clamp(radius,.05,32);const scale=kind==='explosion'?clamp(radius/4,.5,1.8):1,motion=ELEMENT_MOTION[element]||{};
   let state=(seed??++this.serial)>>>0;const random=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
-  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,height,shape,body,ownerId,follow,beam,pressure,life:lifeOverride||preset.life*(motion.life||1),light:lightOverride??preset.light,ring:!body&&preset.ring};
+  const emitter={kind,x:point.x,y:point.y,born:time,radius,angle,color,accent,dark,element,height,shape,body,ownerId,follow,beam,pressure,muzzle,life:lifeOverride||preset.life*(motion.life||1),light:lightOverride??preset.light,ring:!body&&preset.ring};
   if(this.emitters.length>=VFX_LIMITS.emitters)this.emitters.shift();this.emitters.push(emitter);
   const total=clamp(Math.round(count??(body?9:preset.count)),0,VFX_LIMITS.particles);
   for(let i=0;i<total;i++){
@@ -96,7 +96,8 @@ export class SkillVFX {
    const key=p.theme||p.source?.key,s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
    let shotOrigin=origin;
    if(key==='gubo'&&camera.screenToWorld){const tip=weaponEmissionScreen(game,p.source,camera,origin),ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
-   this.emit('shot',shotOrigin,game.time,{...s,angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:p.source?.kind==='champion'?4:2,life:.18});
+   const muzzle=key==='gubo'&&p.damageKind==='basic';
+   this.emit('shot',shotOrigin,game.time,{...s,...(muzzle?{color:'#71172c',accent:'#bd354e',dark:'#1b080f',height:.875,ownerId:p.source.id,muzzle:true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:.18});
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
@@ -173,6 +174,7 @@ export class SkillVFX {
  drawFlashes(ctx,camera){
   ctx.save();ctx.globalCompositeOperation='source-over';
   for(const e of this.emitters){
+   if(e.muzzle){this.drawMuzzleBurst(ctx,camera,e);continue;}
    const age=this.time-e.born;if(e.body||e.pressure)continue;if(age<0||age>.12||!['shot','pierce','impact','explosion'].includes(e.kind))continue;
    const s=camera.worldToScreen(e,e.kind==='shot'?.8:.2),toward=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.kind==='shot'?.8:.2);
    const size=camera.scale*(e.kind==='explosion'?.85:e.kind==='impact'?.45:.5)*(1-age/.12);
@@ -182,6 +184,21 @@ export class SkillVFX {
    ctx.drawImage(this.sprite(form,e.color,0,e,1),-size,-size,size*2,size*2);ctx.restore();
   }
   ctx.restore();
+ }
+ drawMuzzleBurst(c,camera,e){
+  const t=(this.time-e.born)/e.life;if(t<0||t>=1)return;
+  const owner=this.game?.units.find(a=>a.id===e.ownerId),origin=camera.worldToScreen(e,e.height),at=owner?weaponEmissionScreen(this.game,owner,camera):origin,next=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.height),size=camera.scale*e.radius*(.65+Math.sin(t*Math.PI)*.5),alpha=(1-t)**.7;
+  c.save();c.translate(at.x,at.y);c.rotate(Math.atan2(next.y-origin.y,next.x-origin.x));c.globalAlpha=alpha;
+  c.save();c.globalCompositeOperation='lighter';c.globalAlpha=alpha*.65;
+  const glow=c.createRadialGradient(0,0,0,0,0,size*2);glow.addColorStop(0,'#ed536da6');glow.addColorStop(.3,'#bc274d70');glow.addColorStop(1,'#650f3100');c.fillStyle=glow;c.fillRect(-size*2,-size*2,size*4,size*4);c.restore();
+  for(const [scale,color] of [[1.2,e.dark],[.95,e.color],[.55,e.accent]]){
+   c.beginPath();for(let i=0;i<24;i++){const a=i*Math.PI/12,r=size*scale*(i%2?.45:1)*(1+.12*Math.sin(i*4.7)),x=Math.cos(a)*r*1.25,y=Math.sin(a)*r*.8;i?c.lineTo(x,y):c.moveTo(x,y);}c.closePath();c.fillStyle=color;c.fill();
+  }
+  c.fillStyle=e.dark;c.beginPath();c.ellipse(-size*.12,0,size*.3,size*.22,0,0,Math.PI*2);c.fill();
+  c.save();c.globalCompositeOperation='lighter';c.globalAlpha=alpha*.75;const core=c.createRadialGradient(0,0,0,0,0,size*.42);core.addColorStop(0,'#ffd1bb');core.addColorStop(.25,'#ee6879');core.addColorStop(1,'#ad254800');c.fillStyle=core;c.fillRect(-size*.42,-size*.42,size*.84,size*.84);c.restore();
+  c.strokeStyle=e.accent;c.lineWidth=Math.max(1,camera.scale*.025);c.lineCap='round';
+  for(let i=0;i<6;i++){const a=-1.2+i*.48,r=size*(1+t),length=size*.35*(1-t);c.beginPath();c.moveTo(Math.cos(a)*r,Math.sin(a)*r*.8);c.lineTo(Math.cos(a)*(r+length),Math.sin(a)*(r+length)*.8);c.stroke();}
+  c.restore();
  }
  drawBodyHits(c,camera){
   for(const e of this.emitters.filter(e=>e.body)){
@@ -195,7 +212,7 @@ export class SkillVFX {
  }
  drawGround(ctx,camera){
   ctx.save();
-  for(const e of this.emitters.filter(e=>!e.body&&!e.beam)){ctx.save();clipShape(ctx,camera,e);this.strokes.draw(ctx,camera,e,this.time);ctx.restore();}
+  for(const e of this.emitters.filter(e=>!e.body&&!e.beam&&!e.muzzle)){ctx.save();clipShape(ctx,camera,e);this.strokes.draw(ctx,camera,e,this.time);ctx.restore();}
   for(const e of this.emitters.filter(e=>!e.body).sort((a,b)=>b.light-a.light).slice(0,VFX_LIMITS.lights)){
    const age=this.time-e.born;if(age<0)continue;const power=e.light*Math.exp(-age*6),range=e.radius*(e.kind==='explosion'?1.65:1.2)+1;
    if(power>.005)this.groundDisc(ctx,camera,e,range,()=>{
