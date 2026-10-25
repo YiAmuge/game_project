@@ -14,6 +14,7 @@ import * as New from './new-champions.js';
 import { has } from './augments.js';
 import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS, WORLD, terrainContains } from './data.js';
 import { distance,direction,segmentDistance,clamp } from './geometry.js';
+import { startRudolphWeapon,tickRudolphWeapon } from './rudolph-weapon.js';
 
 function pushTarget(g,t,dx,dy,options={}){const length=Math.hypot(dx,dy);return g.startMotion(t,{x:dx/(length||1),y:dy/(length||1)},length,{kind:'knock',...options});}
 
@@ -127,12 +128,13 @@ export function basic(g,e,p,d,options={}){
  case 'outis':g.bullet(e,d,215,g.attackRange(e),{width:.16});return true;
  case 'gregor':if(g.buff(e,'mutant'))dash(g,e,d,dashLength(e,2.5),210,()=>{},{hitWidth:1.08,onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8*1.3*1.2,210,()=>{},{exclude:hitIds})});else cone(g.attackRange(e),1.8,210);return true;
  case 'gubo':{
-  const base=360*(g.buff(e,'guboReload')?1.2:1);let count=0;g.bullet(e,d,base,g.attackRange(e),{guboEmpowered:g.buff(e,'guboReload'),pierce:Infinity,ignoreTerrain:true,allowFriendly:true,beforeHit:(t,b)=>b.damage=base*(t.team===e.team?1:1-Math.min(.3,count*.05)),onHit:t=>{if(t.team!==e.team)count++;}});
+  const base=360*(g.buff(e,'guboReload')?1.2:1);let count=0;g.bullet(e,d,base,g.attackRange(e),{guboEmpowered:g.buff(e,'guboReload'),pierce:Infinity,ignoreTerrain:true,allowFriendly:true,beforeHit:(t,b)=>b.damage=base*(t.team===e.team?1:1-Math.min(.65,count*.15)),onHit:t=>{if(t.team!==e.team)count++;}});
   return true;
  }
  case 'alisa':e.state.heat=Math.min(5,(e.state.heat||0)+1);cone(g.attackRange(e),1.1,100*(1+.1*e.state.heat),t=>applyBurn(g,e,t));return true;
  case 'rudolph':
   // 3 hits/s and 10 SP/s; top up basic's 1 SP charge to 10/3 per tick.
+  startRudolphWeapon(g,e);
   e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(10/3-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'whipArc',source:e.id,x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:2.1675,color:'#ed883d',life:.2,maxLife:.2});area(g,e,whipPoint,2.1675,t=>{decayMentalWhip(g,t);return 48*(1+.15*(t.state?.mentalWhip?.[e.id]?.stage||0));},t=>mentalWhip(g,e,t));return true;
  case 'moses':{
   const color=e.state.smoke;e.state.smoke=null;cone(g.attackRange(e),1.1,180,t=>{if(color==='down')g.status(t,'stun',1,.7,e);if(color==='left'){g.status(t,'slow',.2,3,e);g.status(t,'vulnerable',.12,3,e);}});
@@ -297,6 +299,7 @@ export function tick(g,e,dt){
  }
  if(e.key==='ezra'&&s.ultMode&&!g.buff(e,'ezraUlt'))endEzra(g,e);
  if(e.key==='rudolph'){
+  tickRudolphWeapon(g,e);
   if(s.exhaustedUntil){if(s.exhaustedUntil>g.time)return;delete s.exhaustedUntil;delete s.exhaustedAt;delete s.recoveryDuration;e.ammo=ammoCap(g,e);return;}
   if(e.ammo<=0){const duration=s.recoveryDuration||2.5;s.exhaustedAt=g.time;s.recoveryDuration=duration;s.exhaustedUntil=g.time+duration;g.status(e,'silence',1,duration);g.status(e,'disarm',1,duration);return;}
   if(g.reloadRate(e)>0&&(g.time-e.lastAttackAt>.4||has(e,'wisdom')))e.ammo=Math.min(ammoCap(g,e),e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt*g.reloadRate(e));

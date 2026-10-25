@@ -1,7 +1,8 @@
 import { FRAMES,loadAtlas,visualForm } from './art.js';
 import { leapLift,levitationLift,feetOffset } from './projection-25d.js';
-import { drawGripHands } from './weapon-grips.js';
+import { drawGripHands,gripSourcePoint } from './weapon-grips.js';
 import { carried } from './attachments.js';
+import { rudolphWeaponProgress,RUDOLPH_WEAPON } from './rudolph-weapon.js';
 
 // Shaft extensions are geometric slices of the latest source art. The metal
 // heads keep their source shape and size; only the handle interval gains length.
@@ -48,25 +49,47 @@ export function weaponMotionAccent(key,mode,progress){
  return {scale:1+.20*pulse,outward:mode==='swing'?.18*pulse:0};
 }
 export function basicWeaponAccent(g,e,p=equipmentPose(g,e)){
- if(e.key==='rudolph')return {scale:rudolphForwardPose(g,e,p)?1.20:1,outward:0};
+ if(e.key==='rudolph')return {scale:rudolphForwardPose(g,e,p)?.scale??1,outward:0};
  const style=g.attackStyle(e),mode=p.attacking?(p.slash?(e.key==='honglu'||e.key==='sora'?'orbit':'swing'):['thrust','whip'].includes(style)?'thrust':null):null;
  const accent=weaponMotionAccent(e.key,mode,e.key==='yan'?p.age/.15:p.swing);
  if(mode&&e.key==='kim'&&e.state.kimWideSlashSerial===e.attackSerial)accent.scale+=.12*Math.sin(p.swing*Math.PI);
  return accent;
 }
 export function rudolphForwardPose(g,e,p=equipmentPose(g,e)){
- if(e.key!=='rudolph'||!e.alive||e.ammo<=0||g.stat(e,'stun')||g.stat(e,'disarm')||e.channelUntil>g.time||p.age<0||p.age>g.attackInterval(e)*1.3||e.player&&!g.input.fire&&!p.attacking)return null;
- return {angle:p.attacking?(e.attackFacing??p.facing):p.facing,thrust:.45};
+ if(e.key!=='rudolph'||!e.alive||e.channelUntil>g.time)return null;
+ const progress=rudolphWeaponProgress(g,e);if(progress<=0)return null;
+ return {angle:p.attacking?(e.attackFacing??p.facing):p.facing,thrust:RUDOLPH_WEAPON.reach*progress,scale:1+.20*progress,progress};
+}
+export function rudolphChantPose(g,e,p=equipmentPose(g,e)){
+ if(e.key!=='rudolph'||e.castSlot!=='r'||!(e.channelUntil>g.time))return null;
+ return {hand:{x:p.origin.x,y:p.origin.y-.60},angle:-Math.PI/2};
 }
 export function groundStrikePose(p,length,pivot,age,{impact=.11,recovery=.19,depth=.2,head=.9}={}){
  const down=Math.max(0,Math.min(1,age/impact)),recover=Math.max(0,Math.min(1,(age-impact)/recovery));
  const headY=p.origin.y-1.1+(1.1+depth)*down**2-.55*recover;
  return {hand:{x:p.right.x,y:headY-(head-pivot)*length},angle:Math.PI/2,headY};
 }
-export function ahabSlamPose(g,e,p){
+export function frontGroundPoint(e,p,camera,{distance=.85,angle=e.attackFacing??p.facing}={}){
+ const front={x:e.x+Math.cos(angle)*distance,y:e.y+Math.sin(angle)*distance};if(!camera)return {x:front.x,y:front.y+feetOffset(e)};
+ const at=camera.worldToScreen(e,.075),to=camera.worldToScreen(front,.075);return {x:e.x+(to.x-at.x)/camera.scale,y:e.y+feetOffset(e)+(to.y-at.y)/camera.scale};
+}
+export function forwardGroundStrikePose(g,e,p,camera,age,{impact=.11,recovery=.19,depth=.02,head=[.9,.5],progress=age/.3,angle=e.attackFacing??p.facing}={}){
+ const point=frontGroundPoint(e,p,camera,{angle}),down=Math.max(0,Math.min(1,age/impact)),recover=Math.max(0,Math.min(1,(age-impact)/recovery)),accent=weaponMotionAccent(e.key,'swing',progress),[key,length]=WEAPON_ART[e.key],m=weaponGeometry(key,length*accent.scale),tip=gripSourcePoint(head,m,gripPivot(e.key)),headY=point.y-1.1+(1.1+depth)*down**2-.55*recover;
+ return {hand:{x:point.x+tip.y,y:headY-tip.x-accent.outward},angle:Math.PI/2,headY,groundY:point.y,impactPoint:point,progress};
+}
+export function ahabSlamPose(g,e,p,camera){
  // Finish the fast strike before the scheduled return dash begins.
  const remaining=(e.state.ahabSlamAt??-99)-g.time;if(remaining>.13||remaining<=.01)return null;
- return {...groundStrikePose(p,WEAPON_ART.ahab[1],.12,.13-remaining,{impact:.1,recovery:.02,depth:.06,head:.99}),progress:(.13-remaining)/.12};
+ return forwardGroundStrikePose(g,e,p,camera,.13-remaining,{impact:.1,recovery:.02,depth:.06,head:[.99,.5],progress:(.13-remaining)/.12,angle:e.visualCast?.angle??p.facing});
+}
+export function starbuckSlamPose(g,e,p,camera){
+ if(e.key!=='starbuck')return null;
+ const m=e.motion,air=m?.kind==='leap',after=g.time-(e.state.starbuckLandedAt??-99);let progress,headY;
+ const point=frontGroundPoint(e,p,camera,{angle:air?Math.atan2(m.dy,m.dx):e.visualCast?.angle??p.facing});
+ if(air){const phase=m.elapsed/Math.max(.01,m.minDuration||.7);if(phase<=.5)return null;progress=Math.min(1,(phase-.5)*2);headY=point.y-leapLift(e)-(1-progress);}
+ else{if(after<0||after>=.22)return null;progress=after/.22;headY=point.y-.55*progress;}
+ const accent=weaponMotionAccent(e.key,'swing',progress),geometry=weaponGeometry(WEAPON_ART.starbuck[0],WEAPON_ART.starbuck[1]*accent.scale),tip=gripSourcePoint([.99,.46],geometry,gripPivot('starbuck'));
+ return {hand:{x:point.x+tip.y,y:headY-tip.x-accent.outward},angle:Math.PI/2,headY,groundY:point.y,impactPoint:point,progress};
 }
 export function guboWeaponPose(g,e,camera,p=equipmentPose(g,e)){
  // Keep the rifle on the anatomical hand, with the shared basic attack push.
@@ -74,7 +97,7 @@ export function guboWeaponPose(g,e,camera,p=equipmentPose(g,e)){
 }
 export function weaponEmissionPoint(g,e,camera){
  if(!['gubo','rudolph','myo'].includes(e.key)||e.key==='myo'&&!myoFiring(g,e))return null;
- const p=equipmentPose(g,e),forward=rudolphForwardPose(g,e,p),shot=e.key==='gubo'?guboWeaponPose(g,e,camera,p):{hand:p.right,angle:forward?.angle??p.facing,thrust:forward?.thrust||0},[key,length]=e.key==='myo'?['myoRifle',2.15]:WEAPON_ART[e.key],accent=e.key==='myo'?{scale:1,outward:0}:basicWeaponAccent(g,e,p),m=weaponGeometry(key,length*accent.scale),[u,v]=EMISSION_ANCHORS[e.key],thrust=(shot.thrust||0)+accent.outward,pivot=e.key==='myo'?.32:gripPivot(e.key);
+ const p=equipmentPose(g,e),forward=rudolphForwardPose(g,e,p),chant=rudolphChantPose(g,e,p),shot=e.key==='gubo'?guboWeaponPose(g,e,camera,p):{hand:chant?.hand??p.right,angle:chant?.angle??forward?.angle??p.facing,thrust:forward?.thrust||0},[key,length]=e.key==='myo'?['myoRifle',2.15]:WEAPON_ART[e.key],accent=e.key==='myo'?{scale:1,outward:0}:basicWeaponAccent(g,e,p),m=weaponGeometry(key,length*accent.scale),[u,v]=EMISSION_ANCHORS[e.key],thrust=(shot.thrust||0)+accent.outward,pivot=e.key==='myo'?.32:gripPivot(e.key);
  const x=m.span*(u-pivot)+thrust,y=(v-.5)*m.height*m.scale,pose=weaponOrientation(shot.angle),c=Math.cos(pose.angle),s=Math.sin(pose.angle);
  return {x:shot.hand.x+pose.flip*(x*c-y*s),y:shot.hand.y+x*s+y*c};
 }
@@ -154,7 +177,7 @@ export function skillWeaponPose(g,e,p=equipmentPose(g,e),camera){
  }
  if(e.key!=='kim')return null;
  const held=carried(g,e);
- if(held){const target=targetTorsoPoint(g,e,held,camera),dx=target.x-p.right.x,dy=target.y-p.right.y;return {angle:Math.atan2(dy,dx),mode:null,thrust:Math.hypot(dx,dy)-(.72-.12)*WEAPON_ART.kim[1],part:'kim-embedded',trail:false,target};}
+ if(held){const target=targetTorsoPoint(g,e,held,camera),dx=target.x-p.right.x,dy=target.y-p.right.y,distance=Math.hypot(dx,dy)||.001,angle=Math.atan2(dy,dx),reach=Math.max(distance,.45+(.25-.12)*WEAPON_ART.kim[1]+.018),hand={x:p.right.x-Math.cos(angle)*(reach-distance),y:p.right.y-Math.sin(angle)*(reach-distance)},shake=Math.sin(g.time*86+e.id)*.012+Math.sin(g.time*117+e.id*.7)*.006,thrust=Math.max(.45,reach-(.72-.12)*WEAPON_ART.kim[1])+shake;return {hand,angle,mode:null,thrust,shake,bladeFraction:.12+(reach-thrust)/WEAPON_ART.kim[1],part:'kim-embedded',trail:false,target};}
  const throwAge=g.time-(e.state.kimThrowAt??-99);if(throwAge>=0&&throwAge<.26&&e.state.kimThrowAt>=(e.state.kimWaveAt??-99))return cut(e.state.kimThrowFacing,throwAge/.26,'kim-throw');
  const waveAge=g.time-(e.state.kimWaveAt??-99),duration=e.state.kimWaveDuration||.24;
  if(waveAge>=0&&waveAge<duration)return cut(e.state.kimWaveFacing,waveAge/duration,`kim-wave-${e.state.kimWaveSerial}`);
@@ -189,18 +212,32 @@ export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0
  }else c.drawImage(image,f.x,f.y,f.w,f.h,dx,-f.h/2,f.w,f.h);
  c.restore();return true;
 }
+export function hohenheimWeaponCharge(g,e){return e.key==='hohenheim'?e.state.posthumous?1:Math.max(0,Math.min(1,(e.state.hohenCharge?.progress||0)/1.5)):0;}
+export function drawWeaponCharge(c,r,g,e,m,pivot){
+ const progress=hohenheimWeaponCharge(g,e);if(!progress||!r.skillVfx)return;
+ const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#4dafff');
+ c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);const w=m.width*m.scale,h=m.height*m.scale,alpha=c.globalAlpha;
+ c.globalCompositeOperation='lighter';c.globalAlpha=alpha*.10*progress;c.drawImage(tint,-w*.515,-h*.55,w*1.03,h*1.1);c.globalAlpha=alpha*.40*progress;c.drawImage(tint,-w/2,-h/2,w,h);
+ const arcs=[[.58,.48,.77,.22],[.68,.75,.89,.70],[.77,.20,.94,.30],[.45,.50,.64,.46],[.72,.8,.9,.85],[.8,.30,.83,.68]];
+ const count=2+Math.floor(progress*4);c.scale(m.scale,m.scale);c.lineJoin='round';c.lineCap='round';
+ for(let i=0;i<count;i++){
+  const [u,v,x,y]=arcs[i];c.beginPath();for(let j=0;j<=5;j++){const t=j/5,jitter=j===0||j===5?0:Math.sin(g.time*34+i*2.7+j*4.3)*4,px=(u+(x-u)*t-.5)*f.w,py=(v+(y-v)*t-.5)*f.h+jitter;j?c.lineTo(px,py):c.moveTo(px,py);}
+  c.globalAlpha=alpha*.45*progress;c.strokeStyle='#3195ff';c.lineWidth=.035/m.scale;c.stroke();c.globalAlpha=alpha*.85*progress;c.strokeStyle='#d5f6ff';c.lineWidth=.012/m.scale;c.stroke();
+ }
+ c.restore();
+}
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const c=r.ctx,entry=WEAPON_ART[e.key];if(!entry)return false;
  if(e.key==='yan'&&g.buff(e,'yanDistorted')||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=gripPivot(e.key),{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,0);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});drawWeapon(c,key,displayLength,{pivot,straighten});drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
+  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,0);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});drawWeapon(c,key,displayLength,{pivot,straighten});drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  const skill=skillWeaponPose(g,e,p,camera);
  if(skill){
-  held(entry[0],entry[1],p.right,skill.angle,undefined,{mode:skill.mode,progress:skill.progress,thrust:skill.thrust||0,trail:skill.trail,part:skill.part});
+  held(entry[0],entry[1],skill.hand??p.right,skill.angle,undefined,{mode:skill.mode,progress:skill.progress,thrust:skill.thrust||0,trail:skill.trail,part:skill.part});
  }else if(ultimateOrbitPose(g,e,p)){
   const spin=ultimateOrbitPose(g,e,p);held(entry[0],entry[1],spin.hand,spin.angle,undefined,{mode:'orbit',progress:spin.progress,trail:true,part:'ultimate-orbit'});
  }else if(e.key==='honglu'&&attacking){
@@ -212,7 +249,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='gubo'){
   const shot=guboWeaponPose(g,e,camera,p);held(entry[0],entry[1],shot.hand,shot.angle,undefined,{thrust:shot.thrust,trail:false});
  }else if(e.key==='rudolph'){
-  const forward=rudolphForwardPose(g,e,p);held(entry[0],entry[1],p.right,forward?.angle??p.facing,undefined,{mode:forward?'thrust':null,progress:forward?.5:0,thrust:forward?.thrust||0,trail:false});
+  const chant=rudolphChantPose(g,e,p),forward=rudolphForwardPose(g,e,p);held(entry[0],entry[1]*(forward?.scale??1),chant?.hand??p.right,chant?.angle??forward?.angle??p.facing,undefined,{mode:null,thrust:forward?.thrust||0,trail:false});
  }else if(e.key==='gregor'){
   const strike=gregorThrust(g,e);held(entry[0],strike?.length??entry[1],p.right,strike?.angle??p.angle,undefined,{...(strike?{mode:'thrust',progress:(g.time-e.visualCast.at)/.4}:{}),flipY:-1,straighten:strike?.straighten||0,thrust:strike?.thrust||0,trail:!strike&&slash&&attacking});
  }else if(e.key==='gahwan'&&gahwanSlash(g,e)){
@@ -242,10 +279,12 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   const d=e.state.ishmaelCast?.d,angle=e.state.ishmaelCast?.windupUntil>g.time?Math.atan2(d.y,d.x):p.angle;held('ishmaelMace',2.05,p.right,angle,.12);
  }else if(e.key==='starbuck'&&e.motion?.kind==='leap'&&e.motion.elapsed/Math.max(.01,e.motion.minDuration)<=.5){
   return true;
+ }else if(e.key==='starbuck'&&starbuckSlamPose(g,e,p,camera)){
+  const strike=starbuckSlamPose(g,e,p,camera);held(entry[0],entry[1],strike.hand,strike.angle,undefined,{mode:'swing',progress:strike.progress,trail:false});
  }else if(e.key==='marton'&&attacking&&e.state.martonGroundStrike===e.attackSerial){
-  const strike=groundStrikePose(p,entry[1],gripPivot(e.key),age);c.save();c.beginPath();c.rect(p.origin.x-8,p.origin.y-10,16,10.02);c.clip();held(entry[0],entry[1],strike.hand,strike.angle,undefined,{trail:false});c.restore();
- }else if(e.key==='ahab'&&ahabSlamPose(g,e,p)){
-  const strike=ahabSlamPose(g,e,p);c.save();c.beginPath();c.rect(p.origin.x-8,p.origin.y-10,16,10.02);c.clip();held(entry[0],entry[1],strike.hand,strike.angle,undefined,{mode:'swing',progress:strike.progress,trail:false});c.restore();
+  const strike=forwardGroundStrikePose(g,e,p,camera,age);c.save();c.beginPath();c.rect(p.origin.x-8,p.origin.y-10,16,strike.groundY+.02-(p.origin.y-10));c.clip();held(entry[0],entry[1],strike.hand,strike.angle,undefined,{trail:false});c.restore();
+ }else if(e.key==='ahab'&&ahabSlamPose(g,e,p,camera)){
+  const strike=ahabSlamPose(g,e,p,camera);c.save();c.beginPath();c.rect(p.origin.x-8,p.origin.y-10,16,strike.groundY+.02-(p.origin.y-10));c.clip();held(entry[0],entry[1],strike.hand,strike.angle,undefined,{mode:'swing',progress:strike.progress,trail:false});c.restore();
  }else if(e.key==='ahab'&&attacking&&!e.state.ahabUlt){
   return true;
  }else{

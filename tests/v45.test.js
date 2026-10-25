@@ -9,6 +9,7 @@ import { projectileDimensions } from '../src/projectile-rules.js';
 import { ahabMarkPresentation,harpoonBonusReady } from '../src/new-champions.js';
 import { gripAppearance } from '../src/weapon-grips.js';
 import { SkillVFX } from '../src/skill-vfx.js';
+import { tickRudolphWeapon } from '../src/rudolph-weapon.js';
 
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*240);i++)g.step(1/240);};
@@ -33,9 +34,9 @@ test('Faust Q is one broad fast-then-slow sweep within the same 0.36 second wind
 test('Kim wide follow-up grows by thirty-two percent, and the next ordinary attack resets the bonus',()=>{
  const {g,e}=arena('kim');g.attack(e,{x:36,y:20});g.time=.15;close(basicWeaponAccent(g,e).scale,1.2);e.attackCd=0;g.attack(e,{x:36,y:20});g.time=.3;close(basicWeaponAccent(g,e).scale,1.32);assert.equal(e.state.kimWideSlashSerial,e.attackSerial);g.time=2;e.attackCd=0;e.ammo=2;g.attack(e,{x:36,y:20});g.time=2.15;close(basicWeaponAccent(g,e).scale,1.2);
 });
-test('Kim pins a fixed blade point into the held torso while carrying, then sweeps only on the throw',()=>{
+test('Kim keeps the held torso inside the forward blade while carrying, then sweeps only on the throw',()=>{
  const {g,e}=arena('kim'),t=target(g,32);g.cast(e,'q',t);assert.equal(skillWeaponPose(g,e).part,'kim-thrust');run(g,.2);assert.equal(e.state.swordGrab?.target,t);const camera=new Camera25D();
- for(let i=0;i<2;i++){camera.update(1440,900,e);const p=equipmentPose(g,e),pose=skillWeaponPose(g,e,p,camera),torso=targetTorsoPoint(g,e,t,camera),reach=pose.thrust+(.72-.12)*WEAPON_ART.kim[1];assert.equal(pose.part,'kim-embedded');close(p.right.x+Math.cos(pose.angle)*reach,torso.x);close(p.right.y+Math.sin(pose.angle)*reach,torso.y);g.input.y=1;run(g,.15);g.input.y=0;}
+ for(let i=0;i<2;i++){camera.update(1440,900,e);const p=equipmentPose(g,e),pose=skillWeaponPose(g,e,p,camera),torso=targetTorsoPoint(g,e,t,camera),reach=pose.thrust+(pose.bladeFraction-.12)*WEAPON_ART.kim[1];assert.equal(pose.part,'kim-embedded');close(pose.hand.x+Math.cos(pose.angle)*reach,torso.x);close(pose.hand.y+Math.sin(pose.angle)*reach,torso.y);g.input.y=1;run(g,.15);g.input.y=0;}
  g.cast(e,'q',{x:e.x+6,y:e.y});assert.equal(e.state.swordGrab,undefined);assert.equal(skillWeaponPose(g,e).part,'kim-throw');assert.ok(t.motion?.forced);g.time+=.261;assert.equal(skillWeaponPose(g,e),null);
 });
 test('Kim counter wave gives each of its four projectiles a separate sword sweep event',()=>{
@@ -45,8 +46,8 @@ test('Hohenheim Q keeps the staff pointed forward through dash and recoil',()=>{
  const {g,e}=arena('hohenheim');target(g,32);g.cast(e,'q',{x:36,y:20});run(g,.03);let p=skillWeaponPose(g,e);assert.equal(p.part,'hohenheim-thrust');assert.ok(p.thrust>0);close(p.angle,0);run(g,.15);p=skillWeaponPose(g,e);if(p)close(p.angle,0);
 });
 test('Rudolph keeps the same forward staff offset and size across attack ticks, then rests when released',()=>{
- const {g,e}=arena('rudolph');g.attack(e,{x:36,y:20});g.input.fire=true;const samples=[];for(const time of [.02,.12,.28,.36]){g.time=time;const p=rudolphForwardPose(g,e);assert.ok(p);close(p.thrust,.45);close(basicWeaponAccent(g,e).scale,1.2);samples.push(weaponEmissionPoint(g,e));}for(const s of samples){close(s.x-samples[0].x,0);}
- g.input.fire=false;assert.equal(rudolphForwardPose(g,e),null);close(basicWeaponAccent(g,e).scale,1);
+ const {g,e}=arena('rudolph');g.attack(e,{x:36,y:20});g.input.fire=true;const samples=[];for(const time of [.12,.20,.28,.36]){g.time=time;const p=rudolphForwardPose(g,e);assert.ok(p);close(p.thrust,.225);close(basicWeaponAccent(g,e).scale,1.2);samples.push(weaponEmissionPoint(g,e));}for(const s of samples){close(s.x-samples[0].x,0);}
+ g.input.fire=false;tickRudolphWeapon(g,e);g.time+=.15;assert.equal(rudolphForwardPose(g,e),null);close(basicWeaponAccent(g,e).scale,1);
 });
 test('Ahab readied harpoon presentation follows the next third hit and never consumes hit counts',()=>{
  const {g,e}=arena('ahab'),t=target(g),mark={source:e.id,team:e.team,until:4};t.state.harpoon=mark;t.state.harpoons={[e.id]:mark};assert.deepEqual(ahabMarkPresentation(g,t),{active:true,bonusReady:false});e.basicHits[t.id]=2;assert.ok(harpoonBonusReady(g,e,t));assert.deepEqual(ahabMarkPresentation(g,t),{active:true,bonusReady:true});assert.equal(e.basicHits[t.id],2);t.invulnerableUntil=1;assert.deepEqual(ahabMarkPresentation(g,t),{active:true,bonusReady:false});t.invulnerableUntil=0;g.time=4.01;assert.deepEqual(ahabMarkPresentation(g,t),{active:false,bonusReady:false});

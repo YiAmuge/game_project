@@ -1,0 +1,53 @@
+"""Native Canvas proof for charged equipment, colored dashes and forward ground strikes."""
+import json,os
+from pathlib import Path
+from playwright.sync_api import sync_playwright,expect
+root=Path(__file__).resolve().parents[1];art=root/'artifacts';art.mkdir(exist_ok=True)
+with sync_playwright() as pw:
+    browser=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
+    page=browser.new_page(viewport={'width':1440,'height':950});errors=[]
+    page.on('pageerror',lambda e:errors.append(str(e)))
+    page.goto(os.environ.get('MOBA_TEST_URL','http://127.0.0.1:5180')+'/?debug=1',wait_until='networkidle')
+    expect(page.locator('.build-tag')).to_contain_text(json.loads((root/'package.json').read_text())['version'])
+    page.click('#training-open');page.click('#start')
+    page.wait_for_function('__moba.renderer.atlasV36.naturalWidth&&__moba.renderer.weaponAtlas.naturalWidth&&__moba.renderer.scene25d.skin.ready')
+    result=page.evaluate('''async()=>{
+      const A=await import('./src/art.js'),W=await import('./src/weapon-art.js'),P=await import('./src/projectile-vfx.js'),V=await import('./src/skill-vfx.js'),N=await import('./src/new-champions.js'),R=await import('./src/rudolph-weapon.js'),D=await import('./src/dash-trails.js'),H=await import('./src/weapon-grips.js');
+      const g=__moba.game,r=__moba.renderer,cv=r.scene25d.championVfx;const step=g.step.bind(g);g.step=()=>{};g.map={bounds:g.bounds,walls:[]};g.minionQueue=[];for(const k of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[k]=()=>{};
+      const close=(a,b)=>{if(Math.abs(a-b)>.02)throw new Error(a+' != '+b);};
+      const make=(key,angle=0)=>{g.time=100;g.effects=[];g.projectiles=[];g.zones=[];g.events=[];g.pending=[];g.input.fire=false;g.input.x=0;g.input.y=0;const e=g.makeChampion(key,0,0);Object.assign(e,{x:25,y:23,facing:angle,player:true});g.units=[e];g.player=e;g.input.aim={x:e.x+6*Math.cos(angle),y:e.y+6*Math.sin(angle)};return e;};
+      const target=(e,dx=2)=>{const t=g.makeChampion('faust',1,9);Object.assign(t,{x:e.x+dx,y:e.y,hp:100000,maxHp:100000,facing:Math.PI});g.units.push(t);return t;};
+      const run=s=>{for(let i=0;i<Math.round(s*240);i++)step(1/240);};
+      const draw=e=>{
+        const real=r.scene25d.camera;real.update(1440,950,e);const zero=real.worldToScreen(e,.075),ratio=100/real.scale,camera={scale:100,width:720,height:420,worldToScreen:(p,h=0)=>{const a=real.worldToScreen(p,h);return {x:320+(a.x-zero.x)*ratio,y:300+(a.y-zero.y)*ratio};},screenToWorld:(x,y)=>real.screenToWorld(zero.x+(x-320)/ratio,zero.y+(y-300)/ratio)};
+        const canvas=document.createElement('canvas');canvas.width=720;canvas.height=420;const c=canvas.getContext('2d');c.fillStyle='#34424a';c.fillRect(0,0,720,420);const calls=[],trails=[],strokes=[],image=c.drawImage.bind(c);
+        c.drawImage=(im,...a)=>{const sheet=im===r.atlasV36?9:im===r.weaponAtlas?10:null,f=Object.entries(A.FRAMES).find(([,f])=>f.sheet===sheet&&a[0]>=f.x&&a[0]<f.x+f.w&&a[1]===f.y&&a[3]===f.h);calls.push({image:im,key:f?.[0],args:a,m:c.getTransform(),hand:im.dataset?.gripMaterial,layer:im.dataset?.gripLayer,alpha:c.globalAlpha});image(im,...a);};
+        const stroke=c.stroke.bind(c);c.stroke=()=>{strokes.push({color:c.strokeStyle,m:c.getTransform(),alpha:c.globalAlpha});stroke();};
+        const paint=t=>{const at=camera.worldToScreen(t,.075);c.save();c.translate(at.x,at.y);c.scale(100,100);c.translate(-t.x,-t.y-.325);const rr=Object.create(r);rr.ctx=c;rr.camera=camera;rr.billboardPass=true;rr.skillVfx=r.scene25d.vfx;rr.weaponTrail=(e,g,part,a,b,active)=>{if(active)trails.push(part);};rr.unit(t,g);c.restore();};paint(e);return {canvas,c,calls,trails,camera,paint,strokes};
+      };
+      const cards=[],card=(label,out)=>cards.push([label,out]);let cases=0;
+      const bladePoint=(out,key,u,v)=>{const f=A.FRAMES[key],x=f.x+u*f.w,y=f.y+v*f.h,call=out.calls.find(c=>c.key===key&&x>=c.args[0]&&x<=c.args[0]+c.args[2]),a=call.args,m=call.m,px=a[4]+(x-a[0])/a[2]*a[6],py=a[5]+(y-a[1])/a[3]*a[7];return {x:m.e+m.a*px+m.c*py,y:m.f+m.b*px+m.d*py};};
+      const kim=make('kim'),victim=target(kim);g.cast(kim,'q',victim);run(.2);let out=draw(kim),previous;
+      for(let i=0;i<3;i++){out=draw(kim);const p=W.equipmentPose(g,kim),pose=W.skillWeaponPose(g,kim,p,out.camera),at=bladePoint(out,'kimSword',pose.bladeFraction,.5),expected={x:320+(pose.target.x-kim.x)*100,y:300+(pose.target.y-kim.y-.325)*100};close(at.x,expected.x);close(at.y,expected.y);if(pose.thrust<=.4)throw new Error('Kim is not extending his sword');const weapon=out.calls.find(c=>c.key==='kimSword');if(previous){const d=Math.hypot(weapon.m.e-previous.e,weapon.m.f-previous.f);if(d<.001||d>5)throw new Error('Kim tremor is missing or too large '+d);}previous=weapon.m;out.paint(victim);card('김삿갓 · 전방 유지 / 미세한 떨림 '+(i+1),out);g.time+=.013;cases++;}
+      for(const [key,color] of [['ryoshu','#c3424a'],['sinclair','#b2dc70']]){const e=make(key);g.cast(e,'q',{x:31,y:23});const trails=new D.DashTrails();for(let i=0;i<5;i++){step(1/60);trails.sync(g);}out=draw(e);out.c.fillStyle='#34424a';out.c.fillRect(0,0,720,420);trails.draw(out.c,out.camera,e,g,r,r.scene25d.vfx);out.paint(e);const h=trails.histories.get(e);if(h.appearance.color!==color||h.appearance.opacity!==.52)throw new Error('Wrong dash profile');const wind=out.strokes.filter(s=>s.color==='#eaf5ec');if(wind.length<2)throw new Error('No forward wind resistance');const tip=out.camera.worldToScreen({x:e.x+e.motion.dx*.65,y:e.y+e.motion.dy*.65},.95);close(wind[0].m.e,tip.x);close(wind[0].m.f,tip.y);card(key==='ryoshu'?'료슈 · 붉은 돌진 잔상 / 공기 저항':'싱클레어 · 연두색 돌진 잔상 / 공기 저항',out);cases++;}
+      const ho=make('hohenheim');g.attack(ho,{x:31,y:23});let score=-1,head;
+      for(const progress of [0,.5,1]){ho.state.hohenCharge.progress=progress*1.5;out=draw(ho);let bodySparks=0;const electric=cv.electric;cv.electric=(...a)=>{bodySparks++;electric.apply(cv,a);};cv.body(out.c,out.camera,ho,g,true);cv.electric=electric;if(bodySparks)throw new Error('Charging sparks still on torso');const data=out.c.getImageData(370,100,240,220).data;let next=0;for(let i=2;i<data.length;i+=4)next+=data[i];if(next<=score&&progress>0)throw new Error('Weapon is not brighter with more charge');score=next;const pixels=out.c.getImageData(240,30,130,130).data;if(head&&!head.every((v,i)=>v===pixels[i]))throw new Error('Charge modified the body instead of the weapon');head=pixels.slice();if(progress>0){const weapon=out.calls.find(c=>c.key==='hohenheimStaff'),sparks=out.strokes.filter(s=>s.color==='#3195ff');if(!sparks.length)throw new Error('No weapon sparks');for(const s of sparks){close(s.m.a,weapon.m.a);close(s.m.b,weapon.m.b);close(s.m.e,weapon.m.e);close(s.m.f,weapon.m.f);}}card('호엔하임 · 무기 충전 '+progress*100+'%',out);cases++;}
+      for(const angle of [.7,Math.PI]){ho.facing=angle;out=draw(ho);const weapon=out.calls.find(c=>c.key==='hohenheimStaff'),spark=out.strokes.find(s=>s.color==='#3195ff');close(spark.m.a,weapon.m.a);close(spark.m.b,weapon.m.b);close(spark.m.e,weapon.m.e);card('호엔하임 · 스파크가 무기 회전을 따라감',out);cases++;}
+      const ru=make('rudolph');g.input.fire=true;g.attack(ru,g.input.aim);let elapsed=0;
+      for(const t of [0,.05,.11,.36]){run(t-elapsed);elapsed=t;out=draw(ru);if(t>=.11)close(W.rudolphForwardPose(g,ru).thrust,.225);const hands=out.calls.filter(c=>c.hand&&c.layer==='front');if(hands.length!==2)throw new Error('Rudolph does not use both hands');const m=W.weaponGeometry('rudolphStaff',2.5*W.basicWeaponAccent(g,ru).scale),points=H.gripLayout('rudolph','rudolphStaff',m,.25),at=bladePoint(out,'rudolphStaff',points[1].source[0],points[1].source[1]);close(at.x,hands[1].m.e);close(at.y,hands[1].m.f);card('루돌프 · 내밀기 / 유지 '+t+'초',out);cases++;}
+      g.input.fire=false;step(1/240);run(.07);out=draw(ru);if(W.rudolphForwardPose(g,ru).thrust>=.15)throw new Error('Rudolph did not begin retracting');card('루돌프 · 공격 종료 후 회수',out);run(.08);if(W.rudolphForwardPose(g,ru))throw new Error('Rudolph never finishes retracting');cases++;
+      g.cast(ru,'r',{x:31,y:23});out=draw(ru);const chant=W.rudolphChantPose(g,ru),shaft=out.calls.find(c=>c.key==='rudolphStaff'),tip=W.weaponEmissionScreen(g,ru,out.camera);close(shaft.m.a,0);if(shaft.m.b>=0)throw new Error('Staff tip is not raised');if(out.calls.filter(c=>c.hand&&c.layer==='front').length!==2)throw new Error('Chant lost a hand');const expectedX=320+(chant.hand.x-ru.x)*100;if(Math.abs(out.calls.find(c=>c.hand&&c.layer==='front').m.e-expectedX)>5)throw new Error('Chant staff not at body center');card('루돌프 · 양손으로 스태프를 세워 영창',out);cases++;
+      for(const key of ['marton','ahab','starbuck'])for(const facing of [0,Math.PI]){const e=make(key,facing);let depth=0,u,v;
+        if(key==='marton'){const t=target(e,5*Math.cos(facing));g.attack(e,t);g.time+=.11;depth=.02;u=.9;v=.5;}
+        else if(key==='ahab'){g.cast(e,'r',{x:e.x+3*Math.cos(facing),y:e.y});g.time+=.42;depth=.06;u=.99;v=.5;}
+        else{g.cast(e,'r',{x:e.x+4*Math.cos(facing),y:e.y});let guard=0;while(e.state.starbuckLandedAt===undefined&&guard++<400)step(1/240);if(guard>=400)throw new Error('Starbuck never landed');u=.99;v=.46;}
+        out=draw(e);const head=bladePoint(out,W.WEAPON_ART[key][0],u,v),front=out.camera.worldToScreen({x:e.x+Math.cos(facing)*.85,y:e.y+Math.sin(facing)*.85},.075);close(head.x,front.x);close(head.y,front.y+depth*100);card(key+' · 공격 방향 앞에 내려찍기 '+(facing===0?'오른쪽':'왼쪽'),out);cases++;
+      }
+      const wrap=document.createElement('div');wrap.id='proof46';Object.assign(wrap.style,{position:'absolute',zIndex:99999,left:0,top:0,width:'2160px',display:'grid',gridTemplateColumns:'repeat(3,720px)',background:'#34424a',color:'white',font:'20px sans-serif'});for(const [label,out] of cards){const card=document.createElement('div'),title=document.createElement('div');title.textContent=label;out.canvas.style.cssText='width:720px;height:420px;max-height:none;aspect-ratio:auto';card.append(title,out.canvas);wrap.append(card);}document.body.append(wrap);
+      return {cases,cards:cards.length,gl:r.scene25d.webgl.getContext().getError()};
+    }''')
+    page.locator('#proof46').screenshot(path=str(art/'v46-weapon-effects.png'));page.locator('#proof46>div').nth(15).screenshot(path=str(art/'v46-rudolph-chant.png'));page.evaluate('document.querySelector("#proof46").remove()')
+    for w,h in [(390,844),(1920,1080)]:
+        page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(100);assert page.evaluate('__moba.renderer.scene25d.webgl.getContext().getError()')==0
+    assert not errors,errors
+    browser.close();print(json.dumps({'result':result,'errors':errors},ensure_ascii=False))

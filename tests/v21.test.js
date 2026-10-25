@@ -34,8 +34,8 @@ test('Faust semicircle knocks near and far enemies beyond radius three at speed 
 test('Faust R automatically detonates after 1.25 seconds at ten and stacks power and armor for five seconds without reload or haste',()=>{
  const {g,p}=quiet('faust');p.level=10;const t=target(g,45),power=g.powerScale(p),reload=g.reloadInterval(p),haste=g.haste(p);g.cast(p,'r',t);close(p.channelUntil,g.time);g.updateDelayed(0);assert.equal(g.buff(p,'faustUlt'),false);run(g,1.25);assert.ok(g.buff(p,'faustUlt'));close(g.powerScale(p)/power,1.1);close(g.armor(p),10);close(g.reloadInterval(p),reload);close(g.haste(p),haste);close(p.buffs.faustUlt-g.time,5);
 });
-test('Gubo bullet crosses terrain and every enemy with linear five-percent decay capped at thirty',()=>{
- const {g,p}=quiet('gubo');p.range=20;p.sniperReady=100;const ts=Array.from({length:9},(_,i)=>target(g,42+i*1.5));g.map.walls=[{x:44,y:4,w:.4,h:6}];g.attack(p,{x:65,y:7});run(g,1.3);ts.forEach((t,i)=>close(100000-t.hp,expected(g,p,360)*(1-Math.min(.3,i*.05))));
+test('Gubo bullet crosses terrain and every enemy with linear fifteen-percent decay capped at sixty-five',()=>{
+ const {g,p}=quiet('gubo');p.range=20;p.sniperReady=100;const ts=Array.from({length:9},(_,i)=>target(g,42+i*1.5));g.map.walls=[{x:44,y:4,w:.4,h:6}];g.attack(p,{x:65,y:7});run(g,1.3);ts.forEach((t,i)=>close(100000-t.hp,expected(g,p,360)*(1-Math.min(.65,i*.15))));
 });
 test('Gubo always deals full damage to an eligible ally after piercing enemies',()=>{const {g,p}=quiet('gubo');target(g,42);target(g,44);const a=target(g,46,7,0);a.hp=20000;g.attack(p,{x:50,y:7});run(g,.5);close(20000-a.hp,expected(g,p,360));});
 for(const [slot,ratio] of [['basic',.2],['r',.25]])test(`Gubo ${slot} allied execution has one uncapped 14.7 cone using current power`,()=>{

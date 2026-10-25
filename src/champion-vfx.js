@@ -153,7 +153,6 @@ export class ChampionVFX {
   }else{
    if(e.burn?.until>time||e.key==='alisa'&&(s.heat||0)>0)this.motes(c,'flame','#cf8a4a',time*2,8,.65,.9);
    if(e.key==='ryoshu'&&time-e.lastCombat>=2){c.save();c.translate(0,-1.7);this.mote(c,'smoke','#d4d2cf',.12,-.08,.3+Math.sin(time)*.025,0,.55,Math.floor(time)%4);c.restore();}
-   if(e.key==='hohenheim'&&(s.hohenCharge||s.posthumous)){const progress=s.posthumous?1:Math.min(1,s.hohenCharge.progress/1.5),stage=Math.min(3,1+Math.floor((progress+1e-8)/.3));this.electric(c,time,'#8dc8c6',stage*.3,stage*3);}
    if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))this.electric(c,time,'#d79954',.7,8);
    if(e.key==='rudolph'&&e.castSlot==='r'&&e.channelUntil>time)this.electric(c,time,'#d2944e',1,12);
    if(g.buff(e,'queequegUlt'))this.motes(c,'spark','#df5f40',time*1.5,7,.7,.65);

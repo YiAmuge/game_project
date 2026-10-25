@@ -33,14 +33,14 @@ test('Ahab keeps an instant relocation and adds an origin-to-destination visual 
  const trails=new DashTrails();trails.sync(g);assert.equal(trails.histories.get(p).samples.length,5);g.time=DASH_TRAIL_FADE/2;trails.sync(g);close(trails.histories.get(p).at,0);g.time=DASH_TRAIL_FADE+.001;trails.sync(g);assert.equal(teleportSamples(g,p),null);assert.equal(trails.histories.get(p),undefined);
 });
 test('Ahab completes her fast harpoon slam before the unchanged 0.45-second return',()=>{
- const {g,p}=arena('ahab');g.cast(p,'r',{x:46,y:7});assert.equal(ahabSlamPose(g,p,equipmentPose(g,p)),null);g.time=.33;const high=ahabSlamPose(g,p,equipmentPose(g,p));g.time=.42;const impact=ahabSlamPose(g,p,equipmentPose(g,p));assert.ok(high.headY<impact.headY);close(impact.angle,Math.PI/2);close(impact.headY-equipmentPose(g,p).origin.y,.06);
+ const {g,p}=arena('ahab');g.cast(p,'r',{x:46,y:7});assert.equal(ahabSlamPose(g,p,equipmentPose(g,p)),null);g.time=.33;const high=ahabSlamPose(g,p,equipmentPose(g,p));g.time=.42;const impact=ahabSlamPose(g,p,equipmentPose(g,p));assert.ok(high.headY<impact.headY);close(impact.angle,Math.PI/2);close(impact.headY-impact.groundY,.06);
  for(const time of [.441,.45,.46]){g.time=time;assert.equal(ahabSlamPose(g,p,equipmentPose(g,p)),null);}
  const b=arena('ahab'),t=target(b.g,46);b.g.cast(b.p,'r',t);run(b.g,.46);assert.ok(b.p.motion);assert.equal(b.p.motion.kind,'dash');assert.equal(ahabSlamPose(b.g,b.p,equipmentPose(b.g,b.p)),null);assert.deepEqual(b.p.state.ahabUlt.origin,{x:40,y:7});
 });
 test('gun and staff emission points match the visible tip across body mirroring and Z levitation',()=>{
  for(const key of ['gubo','rudolph']){const {g,p}=arena(key);for(const angle of [0,.6,Math.PI,Math.PI*1.3]){p.facing=angle;const pose=equipmentPose(g,p),tip=weaponEmissionPoint(g,p),m=weaponGeometry(...WEAPON_ART[key]),[u,v]=EMISSION_ANCHORS[key],dx=tip.x-pose.right.x,dy=tip.y-pose.right.y;close(dx*Math.cos(angle)+dy*Math.sin(angle),m.span*(u-gripPivot(key)));close(-dx*Math.sin(angle)+dy*Math.cos(angle),weaponOrientation(angle).flip*(v-.5)*m.height*m.scale);}
   p.facing=0;const before=weaponEmissionPoint(g,p);p.motion={kind:'leap',elapsed:.5,minDuration:1,arcHeight:3,total:3,speed:3};close(before.y-weaponEmissionPoint(g,p).y,3);delete p.motion;
-  if(key==='rudolph'){p.castSlot='r';p.channelUntil=2;close(before.y-weaponEmissionPoint(g,p).y,.16);}
+  if(key==='rudolph'){p.castSlot='r';p.channelUntil=2;assert.ok(weaponEmissionPoint(g,p).y<before.y-1);}
  }
 });
 test('Gubo bullets start at the original body origin without changing projectile collision coordinates',()=>{

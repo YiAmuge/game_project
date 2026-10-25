@@ -194,7 +194,7 @@ export class Game {
   attackInterval(e){const c=CHAMPIONS[e.key];return c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier);}
   reloadPaused(e){if(e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(Sora.ego(this,e)||e.key==='alisa'&&this.buff(e,'alisaReload'))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||Boolean(e.state.donCharge)||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
   ammoCap(e){return Skills.ammoCap(this,e);}
-  attackRange(e){if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='ryoshu'&&this.buff(e,'amplify')?1.2:1)*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)*(e.key==='gubo'&&this.buff(e,'guboReload')?1.2:1)+(Augments.has(e,'range7')?(Skills.dashBasic(this,e)?1:2.5):0);}
+  attackRange(e){if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='ryoshu'&&this.buff(e,'amplify')?1.2:1)*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)+(Augments.has(e,'range7')?(Skills.dashBasic(this,e)?1:2.5):0);}
   bonusStats(e){
     const power=this.powerScale(e)*Skills.damageBonus(this,e,{hp:e.hp,maxHp:e.maxHp})*(this.buff(e,'marks')?1.12:1)*(1-this.powerWeak(e));
     return {power:Math.round((power-1)*100),health:Math.round((e.maxHp/RULES.health[CHAMPIONS[e.key].health]-1)*100+1e-8),speed:Math.round((this.speed(e)/RULES.speed[CHAMPIONS[e.key].speed]-1)*100),haste:Math.round(this.haste(e)*100),reload:Math.round((RULES.reload[Skills.reloadGrade(e)]/this.reloadInterval(e)-1)*100)};
@@ -486,7 +486,7 @@ export class Game {
     if(Skills.basic(this,e,point,d,options))return true;
     if(e.key==='faust')this.bullet(e,d,180,this.attackRange(e),{width:FAUST_WAVE_HALF_WIDTH,pierce:e.level===RULES.maxLevel?Infinity:0});
     if(e.key==='yi')for(const offset of this.buff(e,'ogamdo')?[-.71,-.475,-.24,0,.24,.475,.71]:[-.305,0,.305])this.bullet(e,{x:Math.cos(e.facing+offset),y:Math.sin(e.facing+offset)},95,this.attackRange(e),{width:.27,pierce:Infinity,visualScale:1.5});
-    if(e.key==='sinclair')this.cone(e,d,this.attackRange(e),1.6,210,t=>{
+    if(e.key==='sinclair')this.cone(e,d,this.attackRange(e),Math.PI,210,t=>{
       if(t.kind==='champion'&&!this.buff(e,'marks')){e.basicHits[t.id]=(e.basicHits[t.id]||0)+2;if(e.basicHits[t.id]>=4){e.basicHits[t.id]-=4;this.addMark(e);}}
       if(t.kind==='neutral'&&['central','side'].includes(t.camp)&&t.hp<=t.maxHp*.1&&t.alive)this.deal(e,t,t.hp,{fixed:true});
     });

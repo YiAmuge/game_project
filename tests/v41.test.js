@@ -13,9 +13,9 @@ test('all held weapons have the requested glove or body skin tone, with the five
  for(const key of Object.keys(CHAMPIONS)){const p=gripAppearance(key);if(UNCHANGED_HANDS.has(key)){assert.equal(p,null,key);continue;}assert.ok(p,key);assert.equal(p.material,black.includes(key)?'black':brown.includes(key)?'brown':key==='ahab'?'white':'skin',key);if(p.material==='skin')assert.equal(p.base,BARE_HAND_COLORS[key]);}
  assert.equal(Object.keys(BARE_HAND_COLORS).length,13);
 });
-test('only Sinclair, Marton, Honglu, Dongrang and Hohenheim use a clustered support hand',()=>{
- assert.deepEqual([...TWO_HANDED_GRIPS].sort(),['sinclair','marton','honglu','dongrang','hohenheim'].sort());
- for(const key of Object.keys(CHAMPIONS)){const [asset,length]=WEAPON_ART[key],points=gripLayout(key,asset,weaponGeometry(asset,length),gripPivot(key));assert.equal(points.length,UNCHANGED_HANDS.has(key)?0:TWO_HANDED_GRIPS.has(key)?2:1,key);if(points.length===2){close(points[1].x-points[0].x,.27);assert.equal(points[1].offHand,true);}for(const p of points){assert.ok(Math.abs(p.x)<.5&&Math.abs(p.y)<.35,key);}}
+test('two-handed shafts include a middle support hand for Rudolph',()=>{
+ assert.deepEqual([...TWO_HANDED_GRIPS].sort(),['sinclair','marton','honglu','dongrang','hohenheim','rudolph'].sort());
+ for(const key of Object.keys(CHAMPIONS)){const [asset,length]=WEAPON_ART[key],points=gripLayout(key,asset,weaponGeometry(asset,length),gripPivot(key));assert.equal(points.length,UNCHANGED_HANDS.has(key)?0:TWO_HANDED_GRIPS.has(key)?2:1,key);if(points.length===2){if(key==='rudolph')close(points[1].x,(.5-gripPivot(key))*weaponGeometry(asset,length).span);else close(points[1].x-points[0].x,.27);assert.equal(points[1].offHand,true);}for(const p of points){assert.ok(Math.abs(p.x)<(key==='rudolph'?.9:.5)&&Math.abs(p.y)<.35,key);}}
 });
 test('every chosen grip touches opaque handle pixels in the latest independent weapon source',async()=>{
  const png=decodePNG(await readFile(new URL('../src/assets/weapons-v36.png',import.meta.url)));

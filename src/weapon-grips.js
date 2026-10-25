@@ -1,7 +1,7 @@
 import { loadAtlas } from './art.js';
 
 export const UNCHANGED_HANDS=new Set(['meursault','sora','ppui','queequeg','gregor']);
-export const TWO_HANDED_GRIPS=new Set(['sinclair','marton','honglu','dongrang','hohenheim']);
+export const TWO_HANDED_GRIPS=new Set(['sinclair','marton','honglu','dongrang','hohenheim','rudolph']);
 const BLACK_GLOVES=new Set(['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim']);
 const BROWN_GLOVES=new Set(['alisa','dongrang']);
 // Midtones sampled from the latest body faces, independent of team tint.
@@ -44,7 +44,7 @@ export function gripLayout(key,asset,m,pivot){
  const cacheKey=[key,asset,m.scale,pivot].join('/');if(layouts.has(cacheKey))return layouts.get(cacheKey);
  const [a,b]=GRIP_PATHS[asset],at=t=>gripSourcePoint([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],m,pivot),first=at(0),last=at(1),kind=asset==='guboRifle'||asset==='myoRifle'?'gun':asset==='ishmaelShield'?'shield':'shaft';
  const nearest=x=>{let low=0,high=1;const target=Math.max(Math.min(first.x,last.x),Math.min(Math.max(first.x,last.x),x));for(let i=0;i<24;i++){const t=(low+high)/2;if((at(t).x<target)===(last.x>=first.x))low=t;else high=t;}return {...at((low+high)/2),kind};};
- const primary=nearest(0),points=TWO_HANDED_GRIPS.has(key)?[primary,{...nearest(primary.x+.27),offHand:true}]:[primary];
+ const primary=nearest(0),support=key==='rudolph'?{...gripSourcePoint([.50,.53],m,pivot),kind,offHand:true}:{...nearest(primary.x+.27),offHand:true},points=TWO_HANDED_GRIPS.has(key)?[primary,support]:[primary];
  if(layouts.size>=64)layouts.delete(layouts.keys().next().value);layouts.set(cacheKey,points);return points;
 }
 const textures=new Map();
@@ -64,6 +64,6 @@ export function drawGripHands(c,key,asset,m,pivot,layer,{centered=false}={}){
  const atlas=loadAtlas(m.frame.sheet);if(!atlas.complete||!atlas.naturalWidth)return;
  for(const point of centered?[{x:0,y:0,kind:'shaft'}]:gripLayout(key,asset,m,pivot)){
   if(point.kind==='shield'?layer!=='back':layer!=='front')continue;
-  const texture=handTexture(palette,point.kind,layer),diameter=TWO_HANDED_GRIPS.has(key)?.27:.36;c.save();c.imageSmoothingEnabled=false;c.translate(point.x,point.y);c.drawImage(texture,-diameter/2,-diameter/2,diameter,diameter);c.restore();
+  const texture=handTexture(palette,point.kind,layer),diameter=TWO_HANDED_GRIPS.has(key)&&key!=='rudolph'?.27:.36;c.save();c.imageSmoothingEnabled=false;c.translate(point.x,point.y);c.drawImage(texture,-diameter/2,-diameter/2,diameter,diameter);c.restore();
  }
 }

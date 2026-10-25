@@ -34,7 +34,7 @@ export const CHAMPIONS = {
     passive: '기억의 조각', basic: '깃털', tactical: '침묵', ultimate: '오감도',
     brief: '거울 파편과 보호막으로 아군을 지원',
   },
-  sinclair: { id: 3, name: '싱클레어', tag: 'SINCLAIR', role: '암살', color: '#e0c374', icon: 'S', power: 3, health: 2, speed: 4, ammo: 2, reload: 5, range: 1.8, damage: 210, attackTime: .4, q: 9, r: 42,
+  sinclair: { id: 3, name: '싱클레어', tag: 'SINCLAIR', role: '암살', color: '#e0c374', icon: 'S', power: 3, health: 2, speed: 4, ammo: 2, reload: 5, range: 2, damage: 210, attackTime: .4, q: 9, r: 42,
     passive: '어느 표지', basic: '연속 베기', tactical: '공포를 이기는 용기', ultimate: '지식나무의 가지',
     brief: '표식을 쌓아 돌파하는 근접 암살자',
   },

@@ -13,8 +13,8 @@ test('ordinary manually aimed Gubo bullets damage a 21% ally only on arrival, wi
 test('healthy allies and the shooter never intercept a Gubo shot; ordinary attacks still hit enemies',()=>{
  const {g,p,a}=fixture();a.hp=421;p.hp=1;p.lastDamageAt=0;const t=g.makeChampion('faust',1,8);Object.assign(t,{x:46,y:7,hp:10000,maxHp:10000});g.attack(p,t);run(g,.5);close(a.hp,421);close(p.hp,1);assert.ok(t.hp<10000);
 });
-test('35% ally becomes a valid projectile and R target during Q, and Q damage/range apply equally',()=>{
- const {g,p,a}=fixture();a.hp=700;a.x=51;assert.equal(g.cast(p,'r',a),false);g.cast(p,'q',p);assert.ok(g.canGuboHitAlly(p,a));g.attack(p,a);run(g,.6);assert.ok(a.hp<700);assert.ok(g.cast(p,'r',a));assert.equal(p.state.guboAim.target,a);
+test('35% ally becomes a valid projectile and R target during Q while range stays fixed',()=>{
+ const {g,p,a}=fixture();a.hp=700;a.x=48;const range=g.attackRange(p);assert.equal(g.cast(p,'r',a),false);g.cast(p,'q',p);close(g.attackRange(p),range);assert.ok(g.canGuboHitAlly(p,a));g.attack(p,a);run(g,.6);assert.ok(a.hp<700);assert.ok(g.cast(p,'r',a));assert.equal(p.state.guboAim.target,a);
 });
 test('crossing above the live health threshold while the shot travels prevents allied damage',()=>{
  const {g,p,a}=fixture();g.attack(p,a);a.hp=421;run(g,.3);close(a.hp,421);
