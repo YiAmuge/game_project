@@ -2,7 +2,7 @@ import { organicPixels,shapeWarp,noise } from './organic-particles.js';
 import { combatStyle,hitStyle,bodyHeight,visualShape,insideShape,clipShape,CHAMPION_STYLES } from './combat-style.js';
 import { AttackStrokes } from './attack-strokes.js';
 import { leapLift } from './projection-25d.js';
-import { weaponEmissionScreen } from './weapon-art.js';
+import { guboEffectAxis } from './weapon-art.js';
 // Render-only effects: gameplay X/Y is the ground, Z is height (Three.js Y).
 // Analytic motion uses simulation time, so pause, low FPS and replay stay stable.
 export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384,highlight:.28,lights:8};
@@ -80,6 +80,11 @@ export class SkillVFX {
    if(fx.type==='whipArc'){observed.add(key);continue;}
    // Dedicated barrage rendering owns its dark red footprint and sigils.
    if(fx.type==='guboBlast'){observed.add(key);continue;}
+   if(fx.type==='guboLaser'&&source&&camera.screenToWorld){
+    const to=camera.worldToScreen(fx.to,1.25),axis=guboEffectAxis(game,source,camera,fx,{height:1.35,to}),ground=camera.worldToScreen(fx,0),raised=camera.worldToScreen(fx,.875),point=camera.screenToWorld(axis.start.x,axis.start.y-(raised.y-ground.y)),angle=Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x);
+    const flash=this.emit('shot',point,game.time,{color:'#71172c',accent:'#bd354e',dark:'#1b080f',height:.875,ownerId:source.id,muzzle:true,light:.16,angle,radius:.45,count:0,life:.18});
+    Object.assign(flash,{axisHeight:1.35,aimPoint:fx.to,axisOrigin:{x:fx.x,y:fx.y}});observed.add(key);continue;
+   }
    if(key==='ppui'&&fx.damageKind==='basic'&&['slash','thrust'].includes(fx.type)){observed.add(key);continue;}
    if(key==='dongbaek'&&fx.type==='burst')continue;
    if(['ppui','outis'].includes(key)&&fx.slot==='r'&&['slash','thrust'].includes(fx.type))continue;
@@ -95,7 +100,7 @@ export class SkillVFX {
    if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);const origin=p.origin||p.source;if(!origin||!visible(origin))continue;
    const key=p.theme||p.source?.key,s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
    let shotOrigin=origin;
-   if(key==='gubo'&&camera.screenToWorld){const tip=weaponEmissionScreen(game,p.source,camera,origin),ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
+   if(key==='gubo'&&camera.screenToWorld){const tip=guboEffectAxis(game,p.source,camera,origin,{angle:Math.atan2(p.dy,p.dx)}).start,ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
    const muzzle=key==='gubo'&&p.damageKind==='basic';
    this.emit('shot',shotOrigin,game.time,{...s,...(muzzle?{color:'#71172c',accent:'#bd354e',dark:'#1b080f',height:.875,ownerId:p.source.id,muzzle:true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:.18});
   }
@@ -187,8 +192,8 @@ export class SkillVFX {
  }
  drawMuzzleBurst(c,camera,e){
   const t=(this.time-e.born)/e.life;if(t<0||t>=1)return;
-  const owner=this.game?.units.find(a=>a.id===e.ownerId),origin=camera.worldToScreen(e,e.height),at=owner?weaponEmissionScreen(this.game,owner,camera):origin,next=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.height),size=camera.scale*e.radius*(.65+Math.sin(t*Math.PI)*.5),alpha=(1-t)**.7;
-  c.save();c.translate(at.x,at.y);c.rotate(Math.atan2(next.y-origin.y,next.x-origin.x));c.globalAlpha=alpha;
+  const owner=this.game?.units.find(a=>a.id===e.ownerId),origin=camera.worldToScreen(e,e.height),target=e.aimPoint?camera.worldToScreen(e.aimPoint,1.25):undefined,axis=owner?guboEffectAxis(this.game,owner,camera,e.axisOrigin||owner,{height:e.axisHeight??.95,angle:e.angle,to:target}):null,at=axis?.start||origin,next=camera.worldToScreen({x:e.x+Math.cos(e.angle),y:e.y+Math.sin(e.angle)},e.height),size=camera.scale*e.radius*(.65+Math.sin(t*Math.PI)*.5),alpha=(1-t)**.7;
+  c.save();c.translate(at.x,at.y);c.rotate(axis?Math.atan2(axis.uy,axis.ux):Math.atan2(next.y-origin.y,next.x-origin.x));c.globalAlpha=alpha;
   c.save();c.globalCompositeOperation='lighter';c.globalAlpha=alpha*.65;
   const glow=c.createRadialGradient(0,0,0,0,0,size*2);glow.addColorStop(0,'#ed536da6');glow.addColorStop(.3,'#bc274d70');glow.addColorStop(1,'#650f3100');c.fillStyle=glow;c.fillRect(-size*2,-size*2,size*4,size*4);c.restore();
   for(const [scale,color] of [[1.2,e.dark],[.95,e.color],[.55,e.accent]]){

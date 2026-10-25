@@ -24,7 +24,7 @@ export const GRIP_PATHS={
  yiDagger:[[.075,.49],[.33,.49]],faustSword:[[.035,.49],[.175,.49]],sinclairHalberd:[[.16,.39],[.62,.37]],
  donLance:[[.04,.49],[.22,.49]],ryoshuSword:[[.07,.36],[.245,.37]],hongluGlaive:[[.11,.19],[.37,.25]],
  heathcliffBat:[[.055,.47],[.30,.48]],ishmaelMace:[[.06,.53],[.43,.52]],rodyaAxe:[[.07,.53],[.50,.31]],
- outisFalcata:[[.075,.50],[.225,.47]],gahwanSword:[[.035,.50],[.15,.50]],nellyKnife:[[.065,.44],[.35,.41]],ahabHarpoon:[[.12,.50],[.53,.50]],
+ outisFalcata:[[.075,.37],[.175,.32]],gahwanSword:[[.035,.50],[.15,.50]],nellyKnife:[[.065,.44],[.35,.41]],ahabHarpoon:[[.12,.50],[.53,.50]],
  myoDagger:[[.07,.43],[.32,.43]],rudolphStaff:[[.07,.525],[.43,.53]],dongbaekFan:[[.17,.82],[.205,.78]],
  dongrangScythe:[[.035,.97],[.51,.33]],hohenheimStaff:[[.07,.54],[.55,.415]],alisaClub:[[.035,.50],[.23,.50]],
  martonHammer:[[.075,.565],[.64,.55]],starbuckHarpoon:[[.115,.46],[.30,.45]],kimSword:[[.055,.49],[.20,.49]],yanSword:[[.07,.48],[.155,.48]],
@@ -56,10 +56,10 @@ function handTexture(palette,kind,layer){
  c.beginPath();c.arc(24,24,20,0,Math.PI*2);c.fillStyle=p.base;c.fill();c.strokeStyle=p.outline;c.lineWidth=2.5;c.stroke();
  textures.set(key,canvas);return canvas;
 }
-export function drawGripHands(c,key,asset,m,pivot,layer){
+export function drawGripHands(c,key,asset,m,pivot,layer,{centered=false}={}){
  const palette=gripAppearance(key);if(!palette||typeof document==='undefined'||!document.createElement)return;
  const atlas=loadAtlas(m.frame.sheet);if(!atlas.complete||!atlas.naturalWidth)return;
- for(const point of gripLayout(key,asset,m,pivot)){
+ for(const point of centered?[{x:0,y:0,kind:'shaft'}]:gripLayout(key,asset,m,pivot)){
   if(point.kind==='shield'?layer!=='back':layer!=='front')continue;
   const texture=handTexture(palette,point.kind,layer),diameter=TWO_HANDED_GRIPS.has(key)?.27:.36;c.save();c.imageSmoothingEnabled=false;c.translate(point.x,point.y);c.drawImage(texture,-diameter/2,-diameter/2,diameter,diameter);c.restore();
  }

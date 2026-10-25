@@ -4,7 +4,7 @@ import { Game } from '../src/game.js';
 import { WORLD } from '../src/data.js';
 import { Camera25D } from '../src/camera-25d.js';
 import { FRAMES } from '../src/art.js';
-import { guboWeaponPose,weaponEmissionScreen,equipmentPose,gregorThrust,gregorCenterline,drawWeapon,gahwanSlash,yanWeaponAngle,WEAPON_ART,weaponGeometry,gripPivot } from '../src/weapon-art.js';
+import { guboWeaponPose,guboEffectAxis,equipmentPose,gregorThrust,gregorCenterline,drawWeapon,gahwanSlash,yanWeaponAngle,WEAPON_ART,weaponGeometry,gripPivot } from '../src/weapon-art.js';
 import { ProjectileVFX,projectileAsset } from '../src/projectile-vfx.js';
 import { SkillVFX } from '../src/skill-vfx.js';
 
@@ -19,10 +19,10 @@ test('Gubo holds the rifle at the right hand while bullets fly straight from the
   for(let j=1;j<samples.length;j++)close(((samples[j].x-samples[j-1].x)*ux+(samples[j].y-samples[j-1].y)*uy)/(times[j]-times[j-1]),n*bullet.speed);
  }
 });
-test('Gubo basic fire emits one short dark red burst at the painted muzzle with either ammunition state',()=>{
+test('Gubo basic fire emits one short dark red burst on the central firing ray with either ammunition state',()=>{
  for(const buffed of [false,true])for(const angle of [0,.7,Math.PI,4]){
   const {g,p}=arena('gubo'),camera=new Camera25D();camera.update(1440,900,p);if(buffed)g.addBuff(p,'guboReload',4);g.attack(p,{x:p.x+Math.cos(angle)*7,y:p.y+Math.sin(angle)*7});
-  const vfx=new SkillVFX(),tip=weaponEmissionScreen(g,p,camera),random=g.randomState;vfx.sync(g,camera);const flash=vfx.emitters.find(e=>e.muzzle),at=camera.worldToScreen(flash,flash.height);
+  const vfx=new SkillVFX(),tip=guboEffectAxis(g,p,camera,g.projectiles[0].origin,{angle:Math.atan2(g.projectiles[0].dy,g.projectiles[0].dx)}).start,random=g.randomState;vfx.sync(g,camera);const flash=vfx.emitters.find(e=>e.muzzle),at=camera.worldToScreen(flash,flash.height);
   close(at.x,tip.x);close(at.y,tip.y);assert.equal(flash.kind,'shot');assert.equal(flash.color,'#71172c');assert.equal(flash.accent,'#bd354e');assert.equal(flash.dark,'#1b080f');assert.equal(flash.life,.18);assert.equal(g.randomState,random);
   vfx.sync(g,camera);assert.equal(vfx.emitters.filter(e=>e.muzzle).length,1);vfx.advance(g.time+.181);assert.equal(vfx.emitters.length,0);
  }
@@ -39,8 +39,8 @@ test('Gregor deformation puts the curved source spine on one line without increa
  try{const f=FRAMES.gregorClaw,calls=[],scales=[],c={save(){},restore(){},translate(){},rotate(){},scale(x,y){scales.push([x,y]);},drawImage(...a){calls.push(a);}};drawWeapon(c,'gregorClaw',6,{straighten:1,pivot:.12});assert.ok(calls.length>100);close(scales.at(-1)[1],WEAPON_ART.gregor[1]/6);for(const a of calls){const u=(a[1]-f.x+a[3]/2)/f.w;close(a[6]+gregorCenterline(u)*f.h,0);}}
  finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });
-test('Gahwan weapon cuts follow all five tactical pulses and three ultimate pulses, then stop',()=>{
- for(const slot of ['q','r']){const {g,p}=arena('gahwan');g.cast(p,slot,{x:46,y:7});const period=slot==='q'?.13:.75,count=slot==='q'?5:3,duration=slot==='q'?.13:.24;for(let i=0;i<count;i++){g.time=i*period+.015;const a=gahwanSlash(g,p);g.time=i*period+duration-.015;const b=gahwanSlash(g,p);assert.ok(a&&b);assert.ok(Math.abs(a.angle-b.angle)>1);assert.equal(a.part,`skill-${slot}-${i}`);}g.time=(count-1)*period+duration+.001;assert.equal(gahwanSlash(g,p),null);}
+test('Gahwan draws exactly one weapon sweep for either skill while their later damage pulses keep their schedule',()=>{
+ for(const slot of ['q','r']){const {g,p}=arena('gahwan');g.cast(p,slot,{x:46,y:7});const duration=slot==='q'?.26:.32;g.time=.015;const a=gahwanSlash(g,p);g.time=duration-.015;const b=gahwanSlash(g,p);assert.ok(a&&b);assert.ok(Math.abs(a.angle-b.angle)>2);assert.equal(a.part,`skill-${slot}`);for(const time of [duration+.001,.75,1.5,2]){g.time=time;assert.equal(gahwanSlash(g,p),null);}}
 });
 test('Yan raises the sword upward for both left-facing and right-facing charge and basic animations',()=>{
  for(const facing of [0,Math.PI]){const {g,p}=arena('yan');p.facing=facing;p.state.yanCharge={progress:1.5};assert.ok(Math.sin(yanWeaponAngle(p,equipmentPose(g,p)))<-.1);delete p.state.yanCharge;p.attackAt=0;p.attackFacing=facing;for(const time of [.01,.05,.1]){g.time=time;assert.ok(Math.sin(yanWeaponAngle(p,equipmentPose(g,p)))<0);}g.time=.31;close(yanWeaponAngle(p,equipmentPose(g,p)),facing);}

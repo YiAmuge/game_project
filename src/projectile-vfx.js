@@ -1,7 +1,7 @@
 import { combatStyle } from './combat-style.js';
 import { projectileDimensions } from './projectile-rules.js';
 import { FRAMES,loadAtlas } from './art.js';
-import { drawWeapon,weaponGeometry,weaponEmissionScreen } from './weapon-art.js';
+import { drawWeapon,weaponGeometry,weaponEmissionScreen,guboEffectAxis } from './weapon-art.js';
 const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(light<0?n*(1+light):n+(255-n)*light).toString(16).padStart(2,'0');}).join('');
 
 export function projectileAppearance(p,g){
@@ -21,10 +21,16 @@ export function projectileAsset(p){
  return {yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[key];
 }
 export class ProjectileVFX {
- constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();}
+ constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();this.guboRanges=new WeakMap();}
  position(p,g,camera,height){
   // Bullets use their original simulation origin and straight flight path.
   return camera.worldToScreen(p,height);
+ }
+ effectVisible(p,g,camera,height){
+  if(p.source?.key!=='gubo'||!p.origin)return true;
+  let reach=this.guboRanges.get(p);if(reach===undefined){reach=guboEffectAxis(g,p.source,camera,p.origin,{height,angle:Math.atan2(p.dy,p.dx)}).reach;this.guboRanges.set(p,reach);}
+  const start=camera.worldToScreen(p.origin,height),at=camera.worldToScreen(p,height);
+  return Math.hypot(at.x-start.x,at.y-start.y)+1e-7>=reach*camera.scale;
  }
  sprite(type,color,{tint=false,asset:override}={}){
   const key=type+color+tint+String(override??'');if(this.sprites.has(key))return this.sprites.get(key);
@@ -63,6 +69,7 @@ export class ProjectileVFX {
    const style=projectileAppearance(p,game),base=camera.worldToScreen(p,style.height),at=this.position(p,game,camera,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy??0,p.dx??1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);
    const {width,length}=projectileDimensions(style,camera.scale),margin=Math.max(150,Math.hypot(width,length)/2+30);
    if(at.x<-margin||at.x>camera.width+margin||at.y<-margin||at.y>camera.height+margin)continue;
+   if(!this.effectVisible(p,game,camera,style.height))continue;
    let h=this.histories.get(p);if(!h){h=[];this.histories.set(p,h);}if(!h.length||h.at(-1).time!==game.time){h.push({x:p.x,y:p.y,time:game.time,ox:(at.x-base.x)/camera.scale,oy:(at.y-base.y)/camera.scale});if(h.length>5)h.shift();}
    const rotation=style.spin?(game.time-(p.bornAt||0))*28:Math.atan2(next.y-base.y,next.x-base.x);
    if(h.length>1){const tail=camera.worldToScreen(h[0],style.height);tail.x+=h[0].ox*camera.scale;tail.y+=h[0].oy*camera.scale;const dx=at.x-tail.x,dy=at.y-tail.y,n=Math.hypot(dx,dy);if(n>1){c.save();c.translate(tail.x,tail.y);c.rotate(Math.atan2(dy,dx));c.globalAlpha=.16;c.drawImage(this.vfx.strokes.texture('pierce',{...style,x:p.x,y:p.y,born:p.bornAt||0}),0,-Math.max(1,width*.45),n,Math.max(2,width*.9));c.restore();}}
@@ -95,7 +102,7 @@ export class ProjectileVFX {
    if(!['guboLaser','whipArc'].includes(fx.type)&&!(fx.type==='line'&&fx.theme==='hohenheim'))continue;
    const owner=game.units.find(e=>e.id===fx.source),key=fx.theme||(fx.type==='guboLaser'?'gubo':'rudolph');
    const end=fx.to;if(!end)continue;
-   const from=owner&&['gubo','rudolph'].includes(key)?weaponEmissionScreen(game,owner,camera):camera.worldToScreen(fx,key==='gubo'?1.35:.95),to=camera.worldToScreen(end,key==='gubo'?1.25:.5),style=beamAppearance(key);
+   const to=camera.worldToScreen(end,key==='gubo'?1.25:.5),from=key==='gubo'&&owner?guboEffectAxis(game,owner,camera,fx,{height:1.35,to}).start:owner&&key==='rudolph'?weaponEmissionScreen(game,owner,camera):camera.worldToScreen(fx,key==='gubo'?1.35:.95),style=beamAppearance(key);
    c.globalAlpha=Math.max(0,fx.life/fx.maxLife)*.7;c.lineCap='round';
    for(const [w,a,tone] of style.layers){c.save();c.globalAlpha*=a;c.strokeStyle=tone;c.lineWidth=w*camera.scale;c.beginPath();c.moveTo(from.x,from.y);if(key==='rudolph')c.quadraticCurveTo((from.x+to.x)/2,Math.min(from.y,to.y)-camera.scale*1.3,to.x,to.y);else c.lineTo(to.x,to.y);c.stroke();c.restore();}
    if(key==='gubo'&&owner)c.drawImage(this.sprite('bullet','#953247'),to.x-3,to.y-2,6,4);

@@ -1277,21 +1277,21 @@ export const SPRITE_FRAMES={
   "outisFalcata": {
     "x": 518,
     "y": 701,
-    "w": 364,
-    "h": 105,
+    "w": 640,
+    "h": 95,
     "sheet": 10,
     "rotation": 0,
-    "source": "exec-7f3e21e2-d51b-4f93-9345-73810f05be49.png",
+    "source": "exec-b33e7a4c-81a3-4a3b-a5a9-dc35ffeea2f3.png",
     "sourceRect": [
-      950,
-      725,
-      380,
-      162
+      0,
+      0,
+      2172,
+      724
     ],
-    "removedFragments": 13
+    "removedFragments": 0
   },
   "gregorClaw": {
-    "x": 890,
+    "x": 1166,
     "y": 701,
     "w": 425,
     "h": 153,
@@ -1307,8 +1307,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "dongbaekFan": {
-    "x": 1323,
-    "y": 701,
+    "x": 8,
+    "y": 869,
     "w": 463,
     "h": 380,
     "sheet": 10,
@@ -1323,8 +1323,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 529
   },
   "dongrangScythe": {
-    "x": 8,
-    "y": 1089,
+    "x": 479,
+    "y": 869,
     "w": 426,
     "h": 380,
     "sheet": 10,
@@ -1339,8 +1339,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 1315
   },
   "ahabHarpoon": {
-    "x": 442,
-    "y": 1089,
+    "x": 913,
+    "y": 869,
     "w": 640,
     "h": 124,
     "sheet": 10,
@@ -1355,8 +1355,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "queequegHarpoon": {
-    "x": 1090,
-    "y": 1089,
+    "x": 1561,
+    "y": 869,
     "w": 466,
     "h": 118,
     "sheet": 10,
@@ -1371,8 +1371,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "nellyKnife": {
-    "x": 1564,
-    "y": 1089,
+    "x": 8,
+    "y": 1257,
     "w": 432,
     "h": 67,
     "sheet": 10,
@@ -1387,8 +1387,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "guboRifle": {
-    "x": 8,
-    "y": 1477,
+    "x": 448,
+    "y": 1257,
     "w": 640,
     "h": 97,
     "sheet": 10,
@@ -1403,8 +1403,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "gahwanSword": {
-    "x": 656,
-    "y": 1477,
+    "x": 1096,
+    "y": 1257,
     "w": 640,
     "h": 115,
     "sheet": 10,
@@ -1419,8 +1419,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "hohenheimStaff": {
-    "x": 1304,
-    "y": 1477,
+    "x": 8,
+    "y": 1380,
     "w": 580,
     "h": 141,
     "sheet": 10,
@@ -1435,8 +1435,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "alisaClub": {
-    "x": 8,
-    "y": 1626,
+    "x": 596,
+    "y": 1380,
     "w": 506,
     "h": 71,
     "sheet": 10,
@@ -1451,8 +1451,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "martonHammer": {
-    "x": 522,
-    "y": 1626,
+    "x": 1110,
+    "y": 1380,
     "w": 551,
     "h": 168,
     "sheet": 10,
@@ -1467,8 +1467,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 816
   },
   "myoRifle": {
-    "x": 1081,
-    "y": 1626,
+    "x": 8,
+    "y": 1556,
     "w": 640,
     "h": 132,
     "sheet": 10,
@@ -1483,8 +1483,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "myoDagger": {
-    "x": 8,
-    "y": 1802,
+    "x": 656,
+    "y": 1556,
     "w": 443,
     "h": 87,
     "sheet": 10,
@@ -1499,8 +1499,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "rudolphStaff": {
-    "x": 459,
-    "y": 1802,
+    "x": 1107,
+    "y": 1556,
     "w": 640,
     "h": 241,
     "sheet": 10,
@@ -1515,8 +1515,8 @@ export const SPRITE_FRAMES={
     "removedFragments": 0
   },
   "ppuiHand": {
-    "x": 1107,
-    "y": 1802,
+    "x": 8,
+    "y": 1805,
     "w": 539,
     "h": 298,
     "sheet": 10,

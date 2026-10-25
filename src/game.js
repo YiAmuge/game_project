@@ -533,7 +533,7 @@ export class Game {
       if(e.key==='sinclair') {
         let p=destination(6);if(this.blocked(p.x,p.y,e.radius))p={x:e.x,y:e.y};
         const healthy=e.hp/e.maxHp>=.5,len=distance(e,p),travel=Math.max(.05,len/24);e.untargetableUntil=this.time+travel;
-        this.startMotion(e,direction(e,p),len,{kind:'dash',speed:24,maxSpeed:24,minDuration:travel,phaseEnemies:true,onComplete:()=>{e.untargetableUntil=0;Skills.area(this,e,e,3.8,390);this.effects.push({type:'burst',x:e.x,y:e.y,r:3.8,theme:e.key,life:.65,maxLife:.65});}});
+        this.startMotion(e,direction(e,p),len,{kind:'dash',speed:24,maxSpeed:24,minDuration:travel,phaseEnemies:true,onComplete:()=>{e.untargetableUntil=0;e.state.sinclairSpinAt=this.time;e.state.sinclairSpinFacing=e.visualCast?.angle??e.facing;Skills.area(this,e,e,3.8,390);this.effects.push({type:'burst',x:e.x,y:e.y,r:3.8,theme:e.key,life:.65,maxLife:.65});}});
         if(healthy)this.addMark(e,3);else {this.addShield(e,e.maxHp*.15,`branch-${e.id}`);e.rCd*=.8;}
       }
       if(e.key==='meursault'){this.effects.push({type:'coneRange',x:e.x,y:e.y,angle:e.facing,r:8,spread:Math.PI*100/180,color:'#b3d9e6',life:.9,maxLife:.9});e.state.chainRecoveryUntil=this.time+.275;this.addBuff(e,'chainArmor',3);this.cone(e,d,8,Math.PI*100/180,270,t=>{this.status(t,'root',1,1.25);this.status(t,'weak',.12,4);});}

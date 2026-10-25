@@ -16,6 +16,7 @@ export const SOURCES={
  myoBodies:'exec-62c2b150-a0b8-46a7-b262-e885a8b363a3.png',
  myoWeapons:'exec-ddcdf24a-b3bb-42b6-90a8-67b799a9e103.png',
  ppuiHand:'exec-070ea042-73f1-4624-8141-8ce2faeb476c.png',
+ outisFalcata44:'exec-b33e7a4c-81a3-4a3b-a5a9-dc35ffeea2f3.png',
 };
 // crown: anatomical skull crown (excludes horns/hat/branches); foot: ground center.
 // face: square portrait crop in source pixels, independent of hair/hat extent.
@@ -62,7 +63,7 @@ export const WEAPONS=[
  weapon('ppuiNail','ppuiKimStarbuck',[0,752,565,135]),weapon('kimSword','ppuiKimStarbuck',[580,760,625,127]),weapon('starbuckHarpoon','ppuiKimStarbuck',[1200,765,574,122]),
  weapon('yiDagger','sinnersWeapons',[0,630,380,163]),weapon('faustSword','sinnersWeapons',[390,625,555,168],{exclude:[[590,625,355,42]]}),weapon('ryoshuSword','sinnersWeapons',[950,630,500,163]),weapon('donLance','sinnersWeapons',[1450,625,533,168]),
  weapon('meursaultFist','meursaultGroup',[0,635,290,158]),weapon('hongluGlaive','meursaultGroup',[325,635,660,158]),weapon('heathcliffBat','meursaultGroup',[980,650,460,110]),weapon('ishmaelMace','meursaultGroup',[1450,635,420,158]),weapon('ishmaelShield','meursaultGroup',[1870,558,113,235],{largestOnly:true,exclude:[[1870,558,18,35]]}),
- weapon('rodyaAxe','rodyaGroup',[0,712,460,175]),weapon('sinclairHalberd','rodyaGroup',[440,712,515,175]),weapon('outisFalcata','rodyaGroup',[950,725,380,162]),weapon('gregorClaw','rodyaGroup',[1325,715,449,172]),
+ weapon('rodyaAxe','rodyaGroup',[0,712,460,175]),weapon('sinclairHalberd','rodyaGroup',[440,712,515,175]),weapon('outisFalcata','outisFalcata44',[0,0,2172,724]),weapon('gregorClaw','rodyaGroup',[1325,715,449,172]),
  weapon('dongbaekFan','dongWeapons',[0,0,1030,848],{rotation:.45,largestOnly:true,exclude:[[970,745,60,103]]}),weapon('dongrangScythe','dongWeapons',[985,0,870,848],{rotation:.83,largestOnly:true}),
  weapon('ahabHarpoon','ahabGroup',[0,758,715,129],{exclude:[[0,758,400,25]]}),weapon('queequegHarpoon','ahabGroup',[740,763,505,124]),weapon('nellyKnife','ahabGroup',[1270,780,504,107]),
  weapon('guboRifle','guboGroup',[0,880,785,144]),weapon('gahwanSword','guboGroup',[790,870,746,154]),
