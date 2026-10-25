@@ -55,7 +55,7 @@ export class Game {
   }
   blocked(x,y,r=.4){return blocked(x,y,r,this.map);}
   clearLine(a,b,r=.12){return clearLine(a,b,r,this.map);}
-  findPath(a,b,r=.48){return findPath(a,b,r,this.map);}
+  findPath(a,b,r=.48,obstacles=[]){return findPath(a,b,r,this.map,obstacles);}
   spawnPoint(e){return this.training?(e.trainingDummy?e.trainingDummy.home:e.trainingHome||Training.spawn(this)):FOUNTAINS[e.team];}
   entity(values) {
     const e={id:this.nextId++,alive:true,attackCd:0,radius:.35,armor:0,shields:[],status:{},lastCombat:-99,...values};
@@ -100,6 +100,7 @@ export class Game {
   bushAt(e) {return (this.training?[]:BUSHES).find(b=>regionContains(b,e));}
   visibleTo(team,e) {
     if(e.kind!=='champion'||e.team===team)return true;
+    if(this.towers(team).some(t=>distance(t,e)<=t.range))return true;
     const bush=this.bushAt(e);
     if(!bush||e.revealedUntil>this.time||this.time-e.lastCombat<=1.25)return true;
     return this.champions(team).some(a=>a.alive&&!this.hidden(a)&&(distance(a,e)<=2.5||this.bushAt(a)?.id===bush.id));
@@ -185,7 +186,7 @@ export class Game {
   powerScale(e){return (CHAMPIONS[e.key].powerMultiplier??1)*(1+CHAMPIONS[e.key].growth.power*(e.level-1))*(1+e.upgrades.power*.04*(e.key==='moses'?.5:1))*(1+Augments.powerRate(this,e))*(1+Augments.resentment(e))*(this.buff(e,'bossBuff')?1.15:1)*(1+this.buffValue(e,'amplify',CampBuffs.CAMP_BUFFS.power))*(e.key==='queequeg'?1+.04*(V08.endurance(e)):1)*(Sora.ego(this,e)?1.25:1)*(Yan.distorted(this,e)?.9:1)*(this.buff(e,'faustUlt')?1+.1*(e.ultStacks||0):1);}
   allyExecuteThreshold(e){return this.buff(e,'guboReload')?RULES.allyExecuteBuffThreshold:RULES.allyExecuteThreshold;}
   canGuboHitAlly(source,target){return source.key==='gubo'&&target!==source&&target.team===source.team&&target.kind==='champion'&&target.alive&&!this.hidden(target)&&target.hp>0&&target.hp<=target.maxHp*this.allyExecuteThreshold(source)+1e-8;}
-  powerWeak(e){return Math.max(this.stat(e,'weak'),this.stat(e,'yanLock'),Math.max(0,...Object.values(e.state?.ishmaelWeak||{}))*.02);}
+  powerWeak(e){return Math.max(this.stat(e,'weak'),this.stat(e,'yanLock'),Math.max(0,...Object.values(e.state?.ishmaelWeak||{}).filter(v=>v.until>this.time).map(v=>v.stacks))*.02);}
   desireEfficiency(e){return e.key==='dongrang'?1+[0,.06,.13,.20,.27,.34][CHAMPIONS[e.key].power]+Math.max(0,this.powerScale(e)-1):1;}
   armor(e){const armor=(e.armor||0)+(e.kind==='champion'&&e.key==='queequeg'?12*(V08.endurance(e)):0)+this.buffValue(e,'tetherArmor',30)+(e.key==='dongbaek'&&e.qCd<=0?20:0);return ((100+armor)*(1+Augments.resentment(e)+Augments.armorRate(this,e))*this.desireEfficiency(e)*(1+this.buffValue(e,'chainArmor',.1))*(1+this.buffValue(e,'tetherGuard',.1))*(e.key==='ahab'&&e.state.order==='guard'?1.12:1)*(Yan.distorted(this,e)?1.12:1)*(this.buff(e,'faustUlt')?1+.1*(e.ultStacks||0):1)*(this.buff(e,'queegAttack')?1.07:1)*(e.state?.donCharge?1.5:1)-100)*(1-this.stat(e,'armorWeak'));}
   rewindCooldowns(e,seconds){e.qCd+=seconds;e.rCd+=seconds;for(const key of ['knifeReady','treeReady','ryoshuReady','egoQReady'])if(Number.isFinite(e.state[key]))e.state[key]+=seconds;if(['nelly','dongrang'].includes(e.key))e.state.qDelayUntil=Math.max(this.time,e.state.qDelayUntil||0)+seconds;}
@@ -451,8 +452,9 @@ export class Game {
     if(e.state?.posthumous||e.state?.ahabUlt||e.motion||e.recall||!ignoreCC&&(this.stat(e,'root')||this.stat(e,'stun')||this.hidden(e)||e.channelUntil>this.time&&!e.state.alisaUltimateChannel))return;
     if(distance(e,goal)<.05)return;
     let target=goal;
-    if(!this.clearLine(e,goal,e.radius)) {
-      if(this.time>=e.pathAt||!e.path?.length||distance(e.pathGoal||goal,goal)>2) {e.path=this.findPath(e,goal,e.radius);e.pathAt=this.time+1;e.pathGoal={x:goal.x,y:goal.y};}
+    const structures=this.units.filter(t=>t.alive&&['tower','core'].includes(t.kind)&&distance(goal,t)>e.radius+t.radius+.08);
+    if(!this.clearLine(e,goal,e.radius)||structures.some(t=>segmentDistance(t,e,goal)<e.radius+t.radius+.08)) {
+      if(this.time>=e.pathAt||!e.path?.length||distance(e.pathGoal||goal,goal)>2) {e.path=this.findPath(e,goal,e.radius,structures);e.pathAt=this.time+1;e.pathGoal={x:goal.x,y:goal.y};}
       while(e.path?.length&&distance(e,e.path[0])<.3)e.path.shift();
       target=e.path?.[0]||goal;
     }

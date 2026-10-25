@@ -64,7 +64,7 @@ test('Dongrang passive power purchases apply health immediately and augment remo
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);
 });
 test('natural healing is excluded while direct healing advances 1500-point Dongrang growth',()=>{
- const {g,p}=quiet('dongrang');p.hp-=3000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(p,p,1500,false);assert.equal(ultGrowth(p).damage,230);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,230);
+ const {g,p}=quiet('dongrang');p.hp-=3000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(p,p,1500,false);assert.equal(ultGrowth(p).damage,200);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,200);
 });
 
 test('each desire tree converts at 350 actual damage, heals one for one, stops attacking and lasts ten more seconds',()=>{
@@ -77,8 +77,8 @@ test('Dongrang ultimate travels four units at visible speed and preserves its tr
  const {g,p,t}=quiet('dongrang');t.x=60;p.hp-=2000;p.lastDamageAt=100;g.zones=[{kind:'desireTree',source:p,x:44,y:7,until:10,nextTick:100},{kind:'desireTree',source:p,x:43,y:7,until:10,nextTick:100,golden:true}];const hp=p.hp;assert.ok(skillTargeting(g,p,'r').confirm);g.cast(p,'r',{x:60,y:7});close(p.x,40);run(g,.1);assert.ok(p.x>40&&p.x<44);run(g,1);close(p.x,48.5);assert.equal(g.zones.length,2);close(p.hp,hp);
 });
 
-test('Ishmael basic power debuff caps at two and clears on target death',()=>{
- const {g,p,t}=quiet('ishmael');t.x=41;for(let i=0;i<3;i++){p.attackCd=0;g.attack(p,t);}close(g.powerWeak(t),.04);g.time=100;close(g.powerWeak(t),.04);g.kill(t,p);close(g.powerWeak(t),0);
+test('Ishmael basic power debuff caps at two and expires after 1.5 seconds',()=>{
+ const {g,p,t}=quiet('ishmael');t.x=41;for(let i=0;i<3;i++){p.attackCd=0;g.attack(p,t);}close(g.powerWeak(t),.04);g.time=1.499;close(g.powerWeak(t),.04);g.time=1.5;close(g.powerWeak(t),0);g.kill(t,p);close(g.powerWeak(t),0);
 });
 test('Ishmael survival shield is 25 percent and shock hits farther enemies, reducing R by five per champion',()=>{
  const {g,p,t}=quiet('ishmael');p.hp=p.maxHp*.29;g.deal(t,p,1,{fixed:true});close(g.shield(p),p.maxHp*.25);p.shields=[];g.cast(p,'q',p);p.rCd=25;const b=enemy(g,40,11);g.cast(p,'q',p);assert.ok(t.hp<10000&&b.hp<10000);close(p.rCd,25-10);

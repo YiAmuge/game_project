@@ -86,7 +86,7 @@ test('Dongrang can place overlapping trees and golden trees with radius 3.8',()=
  const {g,p}=quiet('dongrang');g.cast(p,'q',{x:44,y:7});g.zones[0].golden=true;p.qCd=0;assert.ok(g.cast(p,'q',{x:44,y:7}));assert.equal(g.zones.length,2);assert.ok(g.zones.every(z=>z.r===3.8));close(p.qCd,10);
 });
 test('Dongrang ultimate scales damage every 1500 healing with fixed impact radius',()=>{
- const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1500*21;assert.deepEqual(ultGrowth(p),{radius:3.2,damage:1230});g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
+ const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1500*21;assert.deepEqual(ultGrowth(p),{radius:3.2,damage:600});g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
 });
 test('Dongbaek refills all three petals every ten seconds and pauses ammo recovery throughout disarm',()=>{
  const {g,p,t}=quiet('dongbaek');t.x=41.5;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;g.attack(p,t);}close(p.state.petals,0);run(g,2.8);close(p.reloadProgress,0);close(p.ammo,0);run(g,.1);assert.ok(p.reloadProgress>0);run(g,7.08);close(p.state.petals,0);run(g,.04);close(p.state.petals,3);assert.equal(p.state.petalReady,Infinity);

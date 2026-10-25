@@ -100,7 +100,6 @@ export class Renderer {
     const color=e.team===0?'#8bb8c2':'#c4897e',dark=e.team===0?'#3b6169':'#704941';
     if(!e.alive){this.circle(e.x,e.y,e.radius,'#151f22','#536058');this.line([{x:e.x-.5,y:e.y-.5},{x:e.x+.5,y:e.y+.5}],'#64705a',.12);return;}
     const locked=game.locked(e);
-    if(game.player.alive&&e.team!==0&&distance(e,game.player)<e.range+2){const c=this.ctx;c.setLineDash([.2,.22]);this.circle(e.x,e.y,e.range,'#b66b5520','#c4816b70',.055);c.setLineDash([]);}
     this.circle(e.x,e.y+.15,e.radius+.3,'#101b1f');
     if(e.kind==='core') {
       this.circle(e.x,e.y,1.9,`${dark}55`,`${color}66`);this.circle(e.x,e.y,1.45,dark,color,.1);this.circle(e.x,e.y,1.1,'#192b2c',color,.06);

@@ -17,8 +17,9 @@ export const MAP_CENTER=worldPoint(32,18);
 // Preserve the central battlefield coordinates; add only rear wings and the two flank rooms.
 export const WORLD={x:-8.5,y:-8,w:87.72,h:62.8};
 export const TERRAIN=[{x:0,y:0,w:83.2,h:46.8},{x:-10,y:16.4,w:12,h:14},{x:81.2,y:16.4,w:12,h:14},{x:29.6,y:-8,w:24,h:9.5},{x:29.6,y:45.3,w:24,h:9.5}].map(p=>({...p,x:p.x*MAP_X,w:p.w*MAP_X}));
-// Stop the diagonal walls outside the fountain rectangle, including their footing.
-export const APPROACH={tipX:16.2,tipY:20.9,stopX:TERRAIN[1].x+TERRAIN[1].w+.8,stopY:TERRAIN[1].y};
+// The battlefield ends at the former diagonal walls' inner face, leaving the fountain intact.
+const approachSlope=20.9/16.2,approachTipY=20.9+.55*Math.hypot(1,approachSlope);
+export const APPROACH={tipX:approachTipY/approachSlope,tipY:approachTipY,stopX:TERRAIN[1].x+TERRAIN[1].w+.8,stopY:TERRAIN[1].y};
 const approachEnd={x:APPROACH.stopX,y:APPROACH.tipY*(1-APPROACH.stopX/APPROACH.tipX)};
 const approachCutout=[[0,0],[APPROACH.tipX,0],[approachEnd.x,approachEnd.y],[APPROACH.stopX,APPROACH.stopY],[0,APPROACH.stopY]];
 export const APPROACH_CUTOUTS=[...Array(4)].map((_,i)=>approachCutout.map(([x,y])=>[i&1?RULES.width-x:x,i&2?RULES.height-y:y]));
@@ -98,20 +99,17 @@ export const WALLS = [...leftWalls, ...leftWalls.map(w => ({ ...w, x: 64 - w.x -
 }));
 // Leave entrances above and below; separate the fountain approach from side camps.
 WALLS.push(...BASE_DIVIDERS);
-function diagonalWall(a,b){const w=Math.hypot(b.x-a.x,b.y-a.y),h=1.1;return{x:(a.x+b.x-w)/2,y:(a.y+b.y-h)/2,w,h,angle:Math.atan2(b.y-a.y,b.x-a.x),approach:true};}
-for(const team of [0,1])for(const bottom of [false,true]){const mirror=(x,y)=>({x:team?RULES.width-x:x,y:bottom?RULES.height-y:y});WALLS.push(diagonalWall(mirror(approachEnd.x,approachEnd.y),mirror(APPROACH.tipX,0)));}
-
 // Green connectors in the user's original sketch, mirrored around x=32.
 const leftBushes = [
   { x: 18.8, y: 10.1, w: 2, h: 1.6 },
   { x: 18.8, y: 24.3, w: 2, h: 1.6 },
-  { x: 26.3, y: 16, w: 1.35, h: 4 },
 ];
 const horizontalMist=(a,b)=>({x:a.x+a.w,y:a.y,w:b.x-a.x-a.w,h:a.h});
 export const BUSHES=[
  ...[[1,8],[3,10],[5,12],[6,13]].map(([a,b])=>horizontalMist(WALLS[a],WALLS[b])),
  ...[...leftBushes,...leftBushes.map(b=>({...b,x:64-b.x-b.w}))].map(b=>({x:b.x*MAP_SCALE*MAP_X,y:b.y*MAP_SCALE,w:b.w*MAP_SCALE*MAP_X,h:b.h*MAP_SCALE})),
 ].map((b,id)=>({...b,id}));
+for(const [index,inside]of [[4,1],[11,-1]]){const wall=WALLS[index],w=1.35*MAP_SCALE*MAP_X;BUSHES.push({id:BUSHES.length,x:inside>0?wall.x+wall.w:wall.x-w,y:wall.y,w,h:wall.h});}
 // Outer lane hedges and bushes inside the added horizontal flank rooms.
 for(const y of [0,RULES.height-1.6])for(const side of [false,true]){const x=APPROACH.tipX,w=TERRAIN[3].x-x;BUSHES.push({id:BUSHES.length,x:side?RULES.width-x-w:x,y,w,h:1.6});}
 // Concealment follows the walls of side camps, the central diagonals and flank rooms.

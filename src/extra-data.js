@@ -37,7 +37,7 @@ export const EXTRA_CHAMPIONS = {
     "range": 2,
     "damage": 220,
     "attackTime": 0.43,
-    "q": 12,
+    "q": 8,
     "r": 45,
     "passive": "담.탐",
     "basic": "그려내기",

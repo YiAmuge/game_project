@@ -24,7 +24,7 @@ with sync_playwright() as pw:
         bounds=page.evaluate('__moba.game.bounds');rect=page.locator('#target-map').bounding_box()
         page.mouse.click(rect['x']+(x-bounds['x'])/bounds['w']*rect['width'],rect['y']+(y-bounds['y'])/bounds['h']*rect['height'])
     select(65,23.4);expect(page.locator('#global-target')).to_be_visible();assert not page.evaluate('!!__moba.game.player.recall')
-    page.screenshot(path=str(art/('v50-infiltration-offline.png'if offline else'v50-infiltration.png')))
+    page.screenshot(path=str(art/('v51-infiltration-offline.png'if offline else'v51-infiltration.png')))
     select(29,7.15);expect(page.locator('#global-target')).to_be_hidden()
     assert page.evaluate('Math.abs(__moba.game.player.recall.until-__moba.game.time-2)<1e-8')
     page.click('#recall-btn');assert page.evaluate('!__moba.game.player.recall&&Math.abs(__moba.game.player.state.infiltrationReady-__moba.game.time-1.5)<1e-8')
@@ -35,17 +35,18 @@ with sync_playwright() as pw:
     result=page.evaluate('''patches=>{
       const g=__moba.game,r=__moba.renderer,p=g.player;const calls=[],old=r.structure.bind(r),labels=[],text=r.text.bind(r);
       r.structure=(e,game)=>{calls.push(e.kind);return old(e,game);};r.text=(s,x,y,...args)=>{labels.push({s,x,y});return text(s,x,y,...args);};
-      const target=g.makeChampion('faust',1,8);Object.assign(target,{x:31,y:7.15,player:false});target.state.gaze={1:{n:3,until:g.time+5}};g.status(target,'slow',.2,5,p);r.draw(g,true);
-      if(!calls.includes('tower'))throw Error('2D tower was not drawn');if(!labels.some(t=>t.s.includes('시선 3')&&t.y<target.y-2.7))throw Error('Debuff is not above HP');
+      const target=g.makeChampion('faust',1,8);Object.assign(target,{x:31,y:7.15,player:false,level:7});target.state.gaze={1:{n:3,until:g.time+5}};g.status(target,'slow',.2,5,p);r.draw(g,true);
+      if(!calls.includes('tower'))throw Error('2D tower was not drawn');if(labels.some(t=>t.s.includes('시선 3')||t.s.includes('감속 20%')))throw Error('Removed debuff labels remain');if(!labels.some(t=>t.s==='7'&&Math.abs(t.x-(target.x-1.655))<1e-8&&Math.abs(t.y-(target.y-2.53))<1e-8))throw Error('Level badge is not at health bar left');
+      const tower=g.towers(1)[0],rings=[],circle=r.circle.bind(r),gp=r.scene25d.groundPainter,gCircle=gp.circle.bind(gp);r.circle=(x,y,radius,...a)=>{rings.push({x,y,radius});return circle(x,y,radius,...a);};gp.circle=(x,y,radius,...a)=>{rings.push({x,y,radius});return gCircle(x,y,radius,...a);};Object.assign(p,{x:tower.x+3,y:tower.y});tower.targetId=p.id;r.draw(g,true);if(rings.some(s=>s.x===tower.x&&s.y===tower.y&&s.radius===tower.range))throw Error('Tower range circle remains');r.circle=circle;gp.circle=gCircle;if(r.scene25d.walls.some(w=>w.rect.approach))throw Error('Diagonal wall mesh remains');
       const core=g.units.find(e=>e.kind==='core'&&e.team===0);Object.assign(p,{x:core.x+3,y:core.y});r.draw(g,true);if(!calls.includes('core'))throw Error('2D core was not drawn');
       if(r.scene25d.structures.size)throw Error('3D structures remain');r.structure=old;r.text=text;
       const saved=r.ctx;for(const patch of patches){const canvas=document.createElement('canvas');canvas.width=Math.ceil((patch.w+2)*40);canvas.height=Math.ceil((patch.h+2)*40);const c=canvas.getContext('2d');c.scale(40,40);c.translate(1-patch.x,1-patch.y);r.ctx=c;r.bush(patch);const alpha=(x,y)=>c.getImageData(Math.floor((x-patch.x+1)*40),Math.floor((y-patch.y+1)*40),1,1).data[3];if(alpha(patch.x-.1,patch.y+.2)!==0)throw Error('Mist spilled beyond straight boundary');if(!patch.polygon){for(const x of [patch.x+.1,patch.x+patch.w-.1])for(const y of [patch.y+.1,patch.y+patch.h-.1])if(alpha(x,y)<35)throw Error('Mist leaves empty wall corners');}else{const x=patch.polygon.reduce((n,p)=>n+p[0],0)/4,y=patch.polygon.reduce((n,p)=>n+p[1],0)/4;if(alpha(x,y)<35||alpha(patch.x+.1,patch.y+.1)!==0)throw Error('Diagonal mist footprint mismatch');}}r.ctx=saved;
 
-      return {wholeMapSelection:true,range60Enforced:true,channel:2,cancelCooldown:1.5,blinkAndStride:true,structures2D:true,debuffAboveHP:true,mistFullyFilledAndClipped:true,gl:r.scene25d.webgl.getContext().getError()};
+      return {wholeMapSelection:true,range60Enforced:true,channel:2,cancelCooldown:1.5,blinkAndStride:true,structures2D:true,debuffLabelsAbsent:true,levelBadgeLeft:true,towerRangeAbsent:true,diagonalWallsAbsent:true,mistFullyFilledAndClipped:true,gl:r.scene25d.webgl.getContext().getError()};
     }''',patches)
     for location,label in [({'x':3,'y':23.4},'base'),({'x':20,'y':23.4},'camp'),({'x':35.36,'y':23.4},'central-mist'),({'x':35.36,'y':-3},'mist')]:
         page.evaluate('(p)=>{Object.assign(__moba.game.player,p);__moba.renderer.draw(__moba.game,true)}',location);page.wait_for_timeout(120)
-        page.screenshot(path=str(art/('v50-'+label+('-offline'if offline else'')+'.png')))
+        page.screenshot(path=str(art/('v51-'+label+('-offline'if offline else'')+'.png')))
     for w,h in [(390,844),(1920,1080)]:
         page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(150);assert page.evaluate('__moba.renderer.scene25d.webgl.getContext().getError()')==0
     assert not errors,errors

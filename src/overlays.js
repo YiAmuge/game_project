@@ -1,4 +1,3 @@
-import { drawDebuffs } from './debuff-ui.js';
 import { paintHealth } from './health-display.js';
 import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import * as Yan from './yan.js';
@@ -38,7 +37,7 @@ export function championHud(r,e,g){
  paintHealth(c,e,g,x,y,width,.34,e.player?'#7bd387':e.team===0?'#79bbc9':'#d7877e');
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
- drawDebuffs(r,e,g,y);
+ const levelX=x-.33;c.fillStyle='#12242b';c.fillRect(x-.61,y-.06,.49,.46);c.strokeStyle=e.player?'#efd39a':e.team===0?'#79bbc9':'#d7877e';c.lineWidth=.035;c.strokeRect(x-.61,y-.06,.49,.46);r.text(String(e.level),levelX,y+.17,'#fff0cd',.27);
  if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1500)),sx,sy+.43,'#e8e9b6',.24);}
  if(e.trainingDummy){r.text(e.name,e.x,e.y-3.05,e.team===0?'#a7d8df':'#edb2a4',.29);c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);
@@ -55,7 +54,7 @@ export function championHud(r,e,g){
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
  }
  if(e.key==='gubo'&&g.buff(e,'guboReload')){const left=e.buffs.guboReload-g.time;c.fillStyle='#2c1019';c.fillRect(x,resourceY+.32,width,.13);c.fillStyle='#a72b47';c.fillRect(x,resourceY+.32,width*Math.min(1,left/4),.13);r.text(`흉탄 ${left.toFixed(1)}s · 아군 ≤35%`,e.x,resourceY+.64,'#ec93a4',.22);}
- r.text(`${e.name} · ${e.level}${g.bounty(e)?' · +'+g.bounty(e)+' ◈':''}`,e.x,y-.32,e.player?'#f4dfa3':e.team===0?'#a7d8df':'#edb2a4',.29);
+ r.text(`${e.name}${g.bounty(e)?' · +'+g.bounty(e)+' ◈':''}`,e.x,y-.32,e.player?'#f4dfa3':e.team===0?'#a7d8df':'#edb2a4',.29);
  if(gauge){const gy=resourceY+.36+(e.key==='gubo'&&g.buff(e,'guboReload')?.55:0);c.fillStyle='#111e26';c.fillRect(x,gy,width,.17);c.fillStyle=gauge.color;c.fillRect(x,gy,width*gauge.ratio,.17);c.strokeStyle=gauge.color;c.lineWidth=.025;c.strokeRect(x,gy,width,.17);if(!gauge.timer&&gauge.max>1&&gauge.max<=12)for(let i=1;i<gauge.max;i++){c.fillStyle='#13202c';c.fillRect(x+width*i/gauge.max-.015,gy,.03,.17);}r.text(gauge.label,e.x,gy+.36,gauge.color,.205);}
  if(g.champions(e.team).some(a=>a.alive&&g.canGuboHitAlly(a,e)))flameHealthBorder(r,e,g,x,y,width);
  if(g.bounty(e)){r.polygon([[e.x-.92,e.y-.05],[e.x-.56,e.y-.05],[e.x-.47,e.y+.23],[e.x-.58,e.y+.4],[e.x-.91,e.y+.37],[e.x-1,e.y+.15]],'#c39b50','#3c2e19');r.text('¤',e.x-.74,e.y+.2,'#fff0a3',.23);}
@@ -143,4 +142,4 @@ function flameHealthBorder(r,e,g,x,y,width){
 }
 export function towerTargeters(g,e){return g.units.filter(t=>t.alive&&t.team!==e.team&&['tower','core'].includes(t.kind)&&t.targetId===e.id);}
 export function towerMark(r,e,g){if(!towerTargeters(g,e).length)return;const y=e.y-(e.kind==='champion'?(stackGauge(e,g)?4.2:3.55):e.kind==='minion'?1.15:1.6);r.circle(e.x,y,.22,null,'#ff6456',.045);r.circle(e.x,y,.095,null,'#ffd0b0',.025);r.line([{x:e.x-.31,y},{x:e.x+.31,y}],'#ff6456',.035);r.line([{x:e.x,y:y-.31},{x:e.x,y:y+.31}],'#ff6456',.035);}
-export function threatRanges(r,g){const p=g.player;if(!p.alive)return;for(const e of g.units)if(e.alive&&e.team!==p.team&&['tower','core'].includes(e.kind)&&(Math.hypot(e.x-p.x,e.y-p.y)<=e.range||e.targetId===p.id)){r.circle(e.x,e.y,e.range,'#bf3f3520','#e77d60bb',.065);}}
+export function threatRanges(r,g){const p=g.player;if(!p.alive)return;for(const e of g.units)if(e.alive&&e.team!==p.team&&e.kind==='core'&&(Math.hypot(e.x-p.x,e.y-p.y)<=e.range||e.targetId===p.id)){r.circle(e.x,e.y,e.range,'#bf3f3520','#e77d60bb',.065);}}

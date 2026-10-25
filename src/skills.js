@@ -44,7 +44,7 @@ export const dashLength=(e,n)=>n+(has(e,'range7')?1:0);
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set();
  return g.startMotion(e,d,len,{phaseEnemies:typeof damage==='function'||damage>0||Boolean(options.offensive),...options,onComplete:result=>options.onComplete?.({...result,hitIds}),onStep:(from,to)=>{
-  if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&segmentDistance(t,from,to)<t.radius+(options.hitWidth??.6)*(e.actionKind==='basic'?1.2:1)&&g.clearLine(e,t)){hitIds.add(t.id);const actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual);}
+  if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&segmentDistance(t,from,to)<t.radius+(options.hitWidth??.6)*(e.actionKind==='basic'?1.2:1)&&g.clearLine(e,t)){hitIds.add(t.id);const shield=g.shield(t),actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual,Math.max(0,shield-g.shield(t)));}
   g.effects.push({type:options.swordTrail?'ryoshuTrail':'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});
  }});
 }
@@ -123,7 +123,7 @@ export function basic(g,e,p,d,options={}){
  case 'ryoshu':cone(g.attackRange(e),1.7,220);return true;
  case 'honglu':area(g,e,e,g.attackRange(e),190);g.addBuff(e,'hongluStride',1);g.effects.push({type:'hongluSweep',x:e.x,y:e.y,r:g.attackRange(e),life:.4,maxLife:.4});return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
- case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive&&!(t.invulnerableUntil>g.time)&&!(t.ccImmuneUntil>g.time)&&!(g.training&&t===g.player&&g.practice.invincible)){t.state.ishmaelWeak??={};const old=t.state.ishmaelWeak[e.id]||0;t.state.ishmaelWeak[e.id]=Math.min(2,old+1);if(old<2)g.triggerDisrupt(e,t);}});return true;
+ case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive&&!(t.invulnerableUntil>g.time)&&!(t.ccImmuneUntil>g.time)&&!g.debuffImmune(t)&&!(g.training&&t===g.player&&g.practice.invincible)){t.state.ishmaelWeak??={};const prior=t.state.ishmaelWeak[e.id],old=prior?.until>g.time?prior.stacks:0;t.state.ishmaelWeak[e.id]={stacks:Math.min(2,old+1),until:g.time+1.5};if(old<2)g.triggerDisrupt(e,t);}});return true;
  case 'rodya':{const hit=t=>{if((t.rodyaSlowUntil||0)<=g.time){g.status(t,'slow',.18,2,e);g.status(t,'weak',.1,2,e);t.rodyaSlowUntil=g.time+2.5;}};dash(g,e,d,dashLength(e,2.4),220,hit,{onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8*1.2,220,hit,{exclude:hitIds})});return true;}
  case 'outis':g.bullet(e,d,215,g.attackRange(e),{width:.16});return true;
  case 'gregor':if(g.buff(e,'mutant'))dash(g,e,d,dashLength(e,2.5),210,()=>{},{hitWidth:1.08,onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8*1.3*1.2,210,()=>{},{exclude:hitIds})});else cone(g.attackRange(e),1.8,210);return true;
@@ -173,11 +173,11 @@ export function cast(g,e,slot,p,d,options={}){
   else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
   return true;
  case 'ryoshu':
-  if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;const len=4;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,()=>{},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
+  if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;const len=4;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
   else{
    const len=Math.min(7,distance(e,p)),rawDest={x:clamp(e.x+d.x*len,g.bounds.x+.6,g.bounds.x+g.bounds.w-.6),y:clamp(e.y+d.y*len,g.bounds.y+.6,g.bounds.y+g.bounds.h-.6)};
    const dest=trapPoint(g,e,rawDest);if(!g.blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
-   g.effects.push({type:'ryoshuStorm',source:e.id,x:e.x,y:e.y,r:2.6,theme:e.key,life:.7,maxLife:.7});for(let i=0;i<4;i++)g.schedule(e,i*.12,()=>area(g,e,e,2.6,140,t=>g.status(t,'armorDown',25,3,e)));
+   g.effects.push({type:'ryoshuStorm',source:e.id,x:e.x,y:e.y,r:2.6,theme:e.key,life:.7,maxLife:.7});for(let i=0;i<4;i++)g.schedule(e,i*.12,()=>area(g,e,e,2.6,140,t=>g.status(t,'vulnerable',.2,5,e)));
    e.ammo=ammoCap(g,e);
   }return true;
  case 'honglu':return Reworks.honglu(g,e,slot,p,d);
@@ -281,6 +281,7 @@ export function interceptDeath(g,e,killer){
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
  const s=e.state;
+ if(s.ishmaelWeak)for(const [id,mark]of Object.entries(s.ishmaelWeak))if(mark.until<=g.time)delete s.ishmaelWeak[id];
  if(e.key==='ryoshu'){s.ryoshuCharges??=2;s.ryoshuReady??=Infinity;while(s.ryoshuCharges<2&&g.time+1e-8>=s.ryoshuReady){s.ryoshuCharges++;s.ryoshuReady=s.ryoshuCharges<2?s.ryoshuReady+g.cooldown(e,'q'):Infinity;}e.qCd=s.ryoshuCharges>0?0:Math.max(0,s.ryoshuReady-g.time);}
  decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);Sora.tick(g,e);Yan.tick(g,e,dt);Hohenheim.tick(g,e,dt);Reworks.tick(g,e);
  Don.tick(g,e);

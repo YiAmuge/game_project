@@ -1,10 +1,18 @@
-import { WALLS, WORLD, RULES, terrainContains,inApproachCutout } from './data.js';
+import { WALLS, WORLD, RULES, terrainContains,inApproachCutout,APPROACH,APPROACH_CUTOUTS } from './data.js';
 export const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 export const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 export const direction = (a,b) => { const d = distance(a,b) || 1; return {x:(b.x-a.x)/d,y:(b.y-a.y)/d}; };
+function approachBlocked(x,y,r){
+ if(inApproachCutout(x,y))return true;
+ const xx=Math.min(x,RULES.width-x),yy=Math.min(y,RULES.height-y);
+ if(xx<-r||yy<-r||xx>APPROACH.tipX+r||yy>APPROACH.tipY+r)return false;
+ const slope=APPROACH.tipY/APPROACH.tipX;if((yy+slope*xx-APPROACH.tipY)/Math.hypot(1,slope)>=r)return false;
+ const polygon=APPROACH_CUTOUTS[0],p={x:xx,y:yy};
+ return polygon.some((a,i)=>{const b=polygon[(i+1)%polygon.length];return segmentDistance(p,{x:a[0],y:a[1]},{x:b[0],y:b[1]})<r-1e-8;});
+}
 export function blocked(x,y,r=.4,map) {
   if(map){const b=map.bounds;if(x<b.x+r||y<b.y+r||x>b.x+b.w-r||y>b.y+b.h-r)return true;}
-  if(!map&&inApproachCutout(x,y))return true;
+  if(!map&&approachBlocked(x,y,r))return true;
   const interior=x>=r&&y>=r&&x<=RULES.width-r&&y<=RULES.height-r;
   const footprint=interior?[]:[[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.707,r*.707],[-r*.707,r*.707],[r*.707,-r*.707],[-r*.707,-r*.707]];
   return (!map&&!interior&&footprint.some(([dx,dy])=>!terrainContains(x+dx,y+dy))) || (map?.walls||WALLS).some(w => {
@@ -31,7 +39,7 @@ export function segmentDistance(p,a,b) {
   return distance(p,{x:a.x+dx*t,y:a.y+dy*t});
 }
 // A small deterministic breadth-first grid search. Recomputed only when an AI path expires.
-export function findPath(start,goal,r=.48,map) {
+export function findPath(start,goal,r=.48,map,obstacles=[]) {
   const bounds=map?.bounds||WORLD;
   const sx=Math.floor(start.x-bounds.x),sy=Math.floor(start.y-bounds.y),gx=Math.floor(goal.x-bounds.x),gy=Math.floor(goal.y-bounds.y);
   const cols=Math.ceil(bounds.w),rows=Math.ceil(bounds.h);
@@ -42,7 +50,7 @@ export function findPath(start,goal,r=.48,map) {
     if(k===dest) {found=k;break;}
     for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]) {
       const nx=x+dx,ny=y+dy,nk=key(nx,ny);
-      if(nx<0||ny<0||nx>=cols||ny>=rows||prev.has(nk)||blocked(nx+.5+bounds.x,ny+.5+bounds.y,r,map)) continue;
+      if(nx<0||ny<0||nx>=cols||ny>=rows||prev.has(nk)||(blocked(nx+.5+bounds.x,ny+.5+bounds.y,r,map)||obstacles.some(o=>Math.hypot(nx+.5+bounds.x-o.x,ny+.5+bounds.y-o.y)<r+o.radius+.08))) continue;
       prev.set(nk,k);queue.push(nk);
     }
   }
