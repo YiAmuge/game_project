@@ -85,7 +85,7 @@ test('basic projectile hits an enemy and collides with walls',()=>{
 });
 test('auto aim ignores enemies beyond range and behind a wall',()=>{
   const g=isolated(),p=g.player,t=opponent(g);g.units=[p,t];Object.assign(p,worldPoint(12,11.7));Object.assign(t,worldPoint(20,11.7));
-  assert.equal(g.nearest(p,10),undefined);p.x=30;p.y=5;t.x=40;t.y=5;assert.equal(g.nearest(p,7.5),undefined);
+  assert.equal(g.nearest(p,10),undefined);p.x=30;p.y=7.15;t.x=40;t.y=7.15;assert.equal(g.nearest(p,7.5),undefined);
   t.x=35;assert.equal(g.nearest(p,7.5),t);
 });
 test('Faust ultimate telegraphs before applying damage, then goes on cooldown',()=>{
