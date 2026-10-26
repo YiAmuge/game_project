@@ -18,10 +18,10 @@ test('34 champion records retain four named skills',()=>{
   assert.equal(roster.length,34);assert.equal(new Set(roster.map(c=>c.id)).size,34);
   for(const c of roster){assert.equal(c.skills.length,4);assert.ok(c.skills.every(s=>s.name&&s.description.length>20));}
 });
-test('match starts with 4+4 champions, four towers, two cores and eighteen neutrals',()=>{
+test('match starts with 4+4 champions, four towers, two cores and fourteen initial neutrals',()=>{
   const g=new Game();assert.equal(g.champions(0).length,4);assert.equal(g.champions(1).length,4);
   assert.equal(g.champions().filter(c=>c.player).length,1);assert.equal(g.units.filter(u=>u.kind==='tower').length,4);
-  assert.equal(g.units.filter(u=>u.kind==='core').length,2);assert.equal(g.units.filter(u=>u.kind==='neutral').length,18);
+  assert.equal(g.units.filter(u=>u.kind==='core').length,2);assert.equal(g.units.filter(u=>u.kind==='neutral').length,14);
   assert.equal(g.units.filter(u=>u.camp==='central').length,4);
 });
 test('damage uses grade, level and armor; example rounds to 246',()=>{

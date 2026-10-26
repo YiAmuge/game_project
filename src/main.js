@@ -1,3 +1,5 @@
+import{CodexScreen}from'./codex-screen.js';
+import{PickScreen}from'./pick-screen.js';
 import * as Infiltration from './infiltration.js';
 import{rooftopImages}from'./rooftop.js';
 import * as AugmentArt from './augment-art.js';
@@ -12,19 +14,18 @@ import { AUGMENTS, AUGMENT_RULES, unlocked, has, categoryCount,categoryFits,slot
 import { releaseHeath,cancelHeath } from './skills.js';
 import { canRecast,skillCharges } from './skills.js';
 import { Game } from './game.js';
-import { CHAMPIONS, EXPERIMENTAL_CHAMPIONS, RUNTIME_CHAMPIONS, RULES, UPGRADES, POSITIONS, WORLD } from './data.js';
+import { CHAMPIONS, RUNTIME_CHAMPIONS, RULES, UPGRADES, POSITIONS, WORLD } from './data.js';
 import { Renderer } from './render.js';
 import { portrait,visualForm } from './art.js';
 import { dragChoice, DRAG_KEYS, EZRA_WEAPONS } from './skills.js';
-import { MONSTERS, GAME_RULES, BUFF_LABELS } from './catalog.js';
+import { BUFF_LABELS } from './catalog.js';
 
 const $=id=>document.getElementById(id);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const clock=t=>`${String(Math.floor(t/60)).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')}`;
-const roleName=role=>role;
 let selected='faust',position='bottom',game=new Game(selected,position),mode='menu',paused=false,speed=1;
 let deployment='match',globalKind='ultimate',trainingCollapsed=false,summonChoice=null;
-let keys=new Set(),last=0,accumulator=0,lastHud=0,roster=[],activeRecord=2,category='champions',toastTimer,pointer=null,drag=null,globalTarget=false,globalPoint=null,scoreOpen=false,shopSelection=null,shopGroup='all';
+let keys=new Set(),last=0,accumulator=0,lastHud=0,toastTimer,pointer=null,drag=null,globalTarget=false,globalPoint=null,scoreOpen=false,shopSelection=null,shopGroup='all';
 const renderer=new Renderer($('arena'));
 $('menu-background').src=rooftopImages().skyline.src;
 new ResizeObserver(()=>renderer.resize()).observe($('arena'));
@@ -44,32 +45,19 @@ function showScore(show){scoreOpen=show&&inMatch();$('scoreboard').classList.tog
 function renderPortraits(){document.querySelectorAll('.champion-portrait').forEach(c=>portrait(c,c.dataset.key,renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17));portrait($('hud-face'),visualForm(game,game.player),renderer.atlas,renderer.atlasExtra,renderer.atlasV05,renderer.atlasV06,renderer.atlasV08,renderer.atlasV10,renderer.atlasV12,renderer.atlasV13,renderer.atlasV17);}
 renderer.atlasV36.addEventListener('load',renderPortraits);
 renderer.atlas.addEventListener('load',renderPortraits);renderer.atlasExtra.addEventListener('load',renderPortraits);renderer.atlasV05.addEventListener('load',renderPortraits);renderer.atlasV06.addEventListener('load',renderPortraits);renderer.atlasV08.addEventListener('load',renderPortraits);renderer.atlasV10.addEventListener('load',renderPortraits);renderer.atlasV12.addEventListener('load',renderPortraits);renderer.atlasV13.addEventListener('load',renderPortraits);renderer.atlasV17.addEventListener('load',renderPortraits);
-function select(key){
- selected=key;game=new Game(key,position);const c=RUNTIME_CHAMPIONS[key];
- document.querySelectorAll('.champion-option').forEach(b=>{const chosen=b.dataset.key===key;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',chosen);b.classList.toggle('recommended',CHAMPIONS[b.dataset.key].recommendedPosition===position);});
- $('selected-name').textContent=c.name;$('selected-role').textContent=(c.roles||[c.role]).join(' · ');$('selected-brief').textContent=c.brief;
- $('selected-stats').innerHTML=[['전투력',c.power],['체력',c.health],['기동성',c.speed]].map(([name,n])=>`<span>${name}<b>${'●'.repeat(n)}${'○'.repeat(5-n)}</b></span>`).join('');
- renderPortraits();updateHud();
-}
-for(const [key,c] of Object.entries(CHAMPIONS)){
- const b=document.createElement('button');b.className='champion-option';b.dataset.key=key;b.setAttribute('aria-label',`${c.name} 선택`);
- b.innerHTML=`<canvas class="champion-portrait" data-key="${key}" width="80" height="80"></canvas><small>${c.name}</small><em>${(c.roles||[c.role]).join(' · ')}</em>`;b.onclick=()=>select(key);$('champion-select').append(b);
-}
-function setPosition(key){position=key;document.querySelectorAll('.position-option').forEach(b=>{b.classList.toggle('selected',b.dataset.position===key);b.setAttribute('aria-pressed',b.dataset.position===key);});$('position-description').textContent=POSITIONS[key].description;select(selected);}
-for(const [key,p] of Object.entries(POSITIONS)){
- const b=document.createElement('button');b.className='position-option';b.dataset.position=key;b.innerHTML=`<b>${p.name}</b><small>${p.recommend.map(roleName).join(' · ')} 추천</small>`;b.onclick=()=>setPosition(key);$('position-select').append(b);
-}
-function resetView(){clearInput();cancelDrag();cancelGlobal();showScore(false);clearTimeout(toastTimer);$('toast').classList.add('hidden');paused=false;document.body.classList.remove('in-game','training-mode','training-25d');for(const id of ['result','pause-banner','shop','minimap','buff-tray','score-toggle','training-panel','augment-tray'])$(id).classList.add('hidden');$('pause').disabled=true;$('lobby').classList.remove('hidden');pointer=null;}
+const pickScreen=new PickScreen($('practice-panel'),{onPlayer:key=>select(key),onPosition:key=>setPosition(key)});
+function select(key){selected=key;game=new Game(key,position,{bots:pickScreen.value()});pickScreen.selectPlayer(key);renderPortraits();updateHud();}
+function setPosition(key){position=key;pickScreen.setPosition(key);select(selected);}
+function resetView(){if(renderer.scene25d)renderer.scene25d.canvas.hidden=true;clearInput();cancelDrag();cancelGlobal();showScore(false);clearTimeout(toastTimer);$('toast').classList.add('hidden');paused=false;document.body.classList.remove('in-game','training-mode','training-25d');for(const id of ['result','pause-banner','shop','minimap','buff-tray','score-toggle','training-panel','augment-tray'])$(id).classList.add('hidden');$('pause').disabled=true;$('lobby').classList.remove('hidden');pointer=null;}
 function mainMenu(){deployment='match';mode='menu';resetView();document.body.classList.remove('practice-screen','training-selection');document.body.classList.add('menu-screen');$('main-menu').classList.remove('hidden');$('practice-panel').classList.add('hidden');if(!CHAMPIONS[selected])selected='faust';select(selected);}
 function showPractice(kind='match'){
- deployment=kind;mode='practice';resetView();document.body.classList.remove('menu-screen');document.body.classList.add('practice-screen');$('main-menu').classList.add('hidden');$('practice-panel').classList.remove('hidden');if(!CHAMPIONS[selected])selected='faust';setPosition(position);
+ deployment=kind;mode='practice';resetView();pickScreen.show(kind!=='match');document.body.classList.remove('menu-screen');document.body.classList.add('practice-screen');$('main-menu').classList.add('hidden');$('practice-panel').classList.remove('hidden');if(!CHAMPIONS[selected])selected='faust';setPosition(position);
  const training=kind!=='match';document.body.classList.toggle('training-selection',training);
- $('practice-panel').querySelector('h2').textContent=training?'연습할 챔피언을 선택하세요.':'포지션과 전투원을 선택하세요.';
- $('start').innerHTML=training?'연습장 입장 <span>→</span>':'연습전 시작 <span>→</span>';
- $('practice-panel').querySelector('.deploy-note').textContent=training?'AI 대전 없이 다섯 구역에서 자유롭게 연습 · G 무료 상점':'탑 1 · 정글 1 · 바텀 1 · 서포터 1 / 추천 역할군과 관계없이 선택 가능';
+ $('practice-panel').querySelector('h2').textContent='챔피언 선택';
+ $('start').innerHTML=training?'연습장 입장 <span>→</span>':'AI 대전 시작 <span>→</span>';
 }
 function start(){
- const nextGame=new Game(selected,position,{mode:deployment});try{renderer.prepare(nextGame);}catch(error){toast(error.message);return;}game=nextGame;mode='playing';paused=false;accumulator=0;speed=1;clearInput();cancelDrag();cancelGlobal();showScore(false);
+ const nextGame=new Game(selected,position,{mode:deployment,bots:pickScreen.value()});try{renderer.prepare(nextGame);}catch(error){toast(error.message);return;}game=nextGame;mode='playing';paused=false;accumulator=0;speed=1;clearInput();cancelDrag();cancelGlobal();showScore(false);
  document.body.classList.remove('practice-screen','menu-screen');document.body.classList.add('in-game');document.body.classList.toggle('training-mode',game.training);document.body.classList.toggle('training-25d',game.training25d);setTrainingCollapsed(matchMedia('(max-width:600px)').matches);
  for(const id of ['minimap','buff-tray','score-toggle','augment-tray'])$(id).classList.remove('hidden');
  pointer=null;game.input.aim={x:game.player.x+5,y:game.player.y};$('lobby').classList.add('hidden');$('result').classList.add('hidden');$('pause-banner').classList.add('hidden');$('pause').disabled=false;$('pause').textContent='Ⅱ';$('speed').textContent='1×';$('arena').focus();updateHud();
@@ -234,11 +222,12 @@ $('fullscreen').onclick=fullscreen;document.addEventListener('fullscreenchange',
 window.addEventListener('blur',()=>{clearInput();cancelDrag();cancelGlobal();showScore(false);if(active())togglePause();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&active())togglePause();});
 window.addEventListener('keydown',e=>{
+ if(!inMatch()&&!modalOpen()){if(e.code==='F12'&&!e.repeat){e.preventDefault();fullscreen();}else if(e.code==='Escape'&&!e.repeat){if(mode==='codex')closeCodex();else if(mode==='practice')mainMenu();}return;}
  if(modalOpen()||['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
  if(e.code==='Tab'&&inMatch()){e.preventDefault();if(!e.repeat)showScore(true);return;}
  if(['Space','ArrowUp','ArrowDown','KeyW','KeyA','KeyS','KeyD'].includes(e.code))e.preventDefault();
  if(e.code==='F12'&&!e.repeat){e.preventDefault();fullscreen();return;}
- if(e.code==='Escape'&&!e.repeat){if(game.player.state.yanCharge||game.player.state.hohenCharge||game.player.state.donCharge){cancelBasicCharge(game.player);game.input.fire=false;return;}if(game.targeting){delete game.targeting;return;}if(game.player.state.chargeAt!==undefined){delete game.player.state.chargeAt;delete game.player.status.slow;return;}if(globalTarget){cancelGlobal();return;}if(game.player.recall){game.cancelRecall(game.player);return;}if(drag){cancelDrag();return;}if(scoreOpen){showScore(false);return;}if(document.fullscreenElement)return;if(!$('shop').classList.contains('hidden'))$('shop').classList.add('hidden');else togglePause();return;}
+ if(e.code==='Escape'&&!e.repeat){if(mode==='codex'){closeCodex();return;}if(game.player.state.yanCharge||game.player.state.hohenCharge||game.player.state.donCharge){cancelBasicCharge(game.player);game.input.fire=false;return;}if(game.targeting){delete game.targeting;return;}if(game.player.state.chargeAt!==undefined){delete game.player.state.chargeAt;delete game.player.status.slow;return;}if(globalTarget){cancelGlobal();return;}if(game.player.recall){game.cancelRecall(game.player);return;}if(drag){cancelDrag();return;}if(scoreOpen){showScore(false);return;}if(document.fullscreenElement)return;if(!$('shop').classList.contains('hidden'))$('shop').classList.add('hidden');else togglePause();return;}
  if(e.code==='KeyB'&&!e.repeat){e.preventDefault();if(active()&&!globalTarget&&!scoreOpen){recallAction();}return;}
  if(e.code==='KeyG'&&!e.repeat){e.preventDefault();toggleShop();return;}
  if(!active()||globalTarget||scoreOpen||!$('shop').classList.contains('hidden'))return;keys.add(e.code);
@@ -273,7 +262,7 @@ function updateHud(){
  $('basic-btn').querySelector('span').textContent=p.key==='ezra'?(game.buff(p,'ezraUlt')?'총공 모드':EZRA_WEAPONS[p.state.weapon||0].name):c.basic;
  for(const [slot,name,description] of [['q',c.tactical,c.qText],['r',c.ultimate,c.rText]]){const b=$(slot+'-btn');b.querySelector('span').textContent=name;b.title=description;b.disabled=p.key==='yan'&&slot==='r'&&Yan.distorted(game,p);const cd=p.key==='yan'&&slot==='r'?(Yan.distorted(game,p)?p.buffs.yanDistorted-game.time:Yan.ready(game,p)?0:p.rCd):p.key==='sora'&&slot==='r'?(Sora.ego(game,p)?p.buffs.soraEgo-game.time:Sora.ready(game,p)?0:p.rCd):p[slot+'Cd'];const charges=skillCharges(game,p,slot),displayCd=Math.max(cd,charges?.remaining||0);b.querySelector('small').textContent=charges?`전술기 · ${charges.current}/${charges.max}`:slot==='q'?'전술기':'궁극기';const tracking=slot==='r'&&((p.key==='honglu'&&game.zones.find(z=>z.kind==='waterfall'&&z.source===p&&z.until>game.time)));b.querySelector('.cooldown').textContent=tracking?Math.ceil(tracking.until-game.time):displayCd>0?Math.ceil(displayCd):'';b.classList.toggle('on-cooldown',cd>0&&!tracking);b.classList.toggle('can-recast',Boolean(tracking));if(p.key==='heathcliff'&&slot==='q'&&p.state.chargeAt!==undefined)b.querySelector('span').textContent=`충전 ${Math.round(Math.min(1,(game.time-p.state.chargeAt)/1.5)*100)}% · 놓기`;if(p.key==='don'&&slot==='q'&&p.state.donCharge)b.querySelector('span').textContent=`충전 ${Math.round(Don.chargeShape(game,p,game.input.aim).progress*100)}% · 놓기`;if(p.key==='sora'&&slot==='q'&&Sora.ego(game,p))b.querySelector('span').textContent=`대행: 말살 · ${p.state.egoQCharges}/2`;}
  $('passive-slot').querySelector('span').textContent=c.passive;$('passive-slot').title=c.passiveText||c.brief;const passiveCd=game.passiveCooldown(p);$('passive-slot').querySelector('.cooldown').textContent=passiveCd>0?passiveCd.toFixed(1):'';$('passive-slot').classList.toggle('on-cooldown',passiveCd>0);$('basic-btn').title=c.basicText;const shownRange=p.key==='yan'&&!Yan.distorted(game,p)?Yan.chargeShape(game,p,game.input.aim).range:game.attackRange(p)*(p.key==='kim'&&p.state.followSlashUntil>game.time?1.2*1.08:1);$('basic-btn').querySelector('small').textContent=`사거리 ${Number(shownRange.toFixed(2))}`;
- $('gold').textContent=Math.floor(p.gold).toLocaleString();updateAnnouncement();updateTeamPortraits();
+ document.querySelector('.match-clock>span').textContent=game.training?'자유 연습':`${game.champions(0).length} VS ${game.champions(1).length} · 두 개의 전선`;$('gold').textContent=Math.floor(p.gold).toLocaleString();updateAnnouncement();updateTeamPortraits();
  $('shop-status').textContent=game.training?'연습장 · 모든 장소·사망 중 이용 가능 · 강화 시술/증강 무료':game.canUpgrade(p)?(p.alive?'구매 가능 · 부활소 보급':'부활 대기 중 · 능력치 / 증강 변경 가능'):'부활 대기 중 또는 부활소에서 3초 비전투 시 구매 가능합니다.';
  updateShopCards(p);
 
@@ -294,26 +283,18 @@ function frame(t){
   game.input.x=globalTarget?0:Number(keys.has('KeyD'))-Number(keys.has('KeyA'));game.input.y=globalTarget?0:Number(keys.has('KeyS'))-Number(keys.has('KeyW'));
   accumulator+=elapsed*speed;while(accumulator>=1/30&&game.winner===null){renderer.follow(game,true);if(pointer)game.input.aim=renderer.point(pointer.x,pointer.y);game.step(1/30);accumulator-=1/30;}if(game.winner!==null)finish();
  }else accumulator=0;
- if(mode!=='menu')renderer.draw(game,inMatch());if(inMatch())renderer.minimap($('minimap'),game);if(scoreOpen)renderer.minimap($('score-map'),game);
+ if(mode!=='menu'&&mode!=='codex'&&mode!=='practice')renderer.draw(game,inMatch());if(inMatch())renderer.minimap($('minimap'),game);if(scoreOpen)renderer.minimap($('score-map'),game);
  if(globalTarget){renderer.minimap($('target-map'),game);if(globalKind==='infiltration'){const canvas=$('target-map'),c=canvas.getContext('2d'),p=Infiltration.origin(game,game.player),sx=canvas.width/game.bounds.w,sy=canvas.height/game.bounds.h;c.save();c.fillStyle='#071426aa';c.beginPath();c.rect(0,0,canvas.width,canvas.height);c.moveTo((p.x-game.bounds.x+60)*sx,(p.y-game.bounds.y)*sy);c.ellipse((p.x-game.bounds.x)*sx,(p.y-game.bounds.y)*sy,60*sx,60*sy,0,0,Math.PI*2);c.fill('evenodd');c.beginPath();c.ellipse((p.x-game.bounds.x)*sx,(p.y-game.bounds.y)*sy,60*sx,60*sy,0,0,Math.PI*2);c.strokeStyle='#8abfee';c.lineWidth=2;c.stroke();c.restore();}if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/game.bounds.w,sy=$('target-map').height/game.bounds.h,radius=globalKind==='ultimate'?5.25:.75;c.beginPath();c.ellipse((globalPoint.x-game.bounds.x)*sx,(globalPoint.y-game.bounds.y)*sy,radius*sx,radius*sy,0,0,Math.PI*2);c.fillStyle='#ffac5033';c.fill();c.strokeStyle='#ffd396';c.lineWidth=2;c.stroke();}}
  if(t-lastHud>100){updateHud();lastHud=t;}requestAnimationFrame(frame);
 }
 function showDialog(id){clearInput();cancelDrag();cancelGlobal();showScore(false);$(id).showModal();}
 $('help-open').onclick=()=>showDialog('help');$('field-help').onclick=()=>showDialog('help');
 document.querySelectorAll('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());document.querySelectorAll('dialog').forEach(d=>d.addEventListener('close',clearInput));
-function recordList(){const q=$('roster-search').value.trim();const filtered=roster.filter(c=>c.name.includes(q)||(c.roles||[c.role]).join(' ').includes(q)||(c.roles||[c.role]).join(' · ').includes(q));$('roster-list').innerHTML=filtered.length?filtered.map(c=>`<button data-id="${c.id}" class="${c.id===activeRecord?'active':''}">${escape(c.name)}<small>${escape((c.roles||[c.role]).join(' · '))}</small></button>`).join(''):'<p>검색 결과가 없습니다.</p>';$('roster-list').querySelectorAll('button').forEach(b=>b.onclick=()=>record(Number(b.dataset.id)));}
-function record(id){
- activeRecord=id;const c=roster.find(c=>c.id===id);if(!c)return;const playable=Object.entries(CHAMPIONS).find(([,p])=>p.id===id),experimental=Object.entries(EXPERIMENTAL_CHAMPIONS).find(([,p])=>p.id===id);
- $('roster-detail').innerHTML=`<span class="eyebrow">NO.${String(c.id).padStart(2,'0')} / ${escape((c.roles||[c.role]).join(' · '))}</span><h2>${escape(c.name)}</h2><span class="availability">${playable?'연습전 플레이 가능':experimental?'조작·규칙 실험실 제공 · 외형은 개발중':'기획 수록 · 아직 플레이 불가'}</span>${playable||experimental?'<button id="record-play" class="record-play">'+(experimental?'조작·규칙 실험실 입장':'이 챔피언으로 연습')+' →</button>':''}<p class="quote">${escape(c.quote)}</p><p class="stats">${escape(c.stats)}</p>${c.skills.map(s=>`<h3>${escape(s.kind)} / ${escape(s.name)}</h3><p>${escape(s.description)}</p>`).join('')}<p>${escape(c.note)}</p>`;
- if($('record-play'))$('record-play').onclick=()=>{$('archive').close();if(playable){showPractice();select(playable[0]);}else{selected=experimental[0];position='jungle';start();toast('실험실: 특수 조작·변경 규칙 검증용 캐릭터입니다.');}};recordList();
-}
-function renderCategory(key){category=key;document.querySelectorAll('#codex-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.category===key));$('champion-archive').classList.toggle('hidden',key!=='champions');$('codex-content').classList.toggle('hidden',key==='champions');
- if(key==='champions'){record(activeRecord);return;}
- if(key==='monsters')$('codex-content').innerHTML=MONSTERS.map(m=>`<article><h3>${m.name}</h3><p>체력 ${m.hp.toLocaleString()} · 방어력 ${m.armor}</p><p>공격 ${m.attack}</p><p>${m.text}</p><small>${m.reward}</small></article>`).join('');
- if(key==='augments')$('codex-content').innerHTML=`<article><h3>부활소 증강</h3><p>최대 ${AUGMENT_RULES.slots}개 · 딜리버리 캐리어 보유 시 카테고리 제한 없음 · 카테고리별 일반 증강 최대 2개 · 구매 ${AUGMENT_RULES.cost} 재화 · 판매 ${AUGMENT_RULES.cost*AUGMENT_RULES.refund} 재화. 사망 중에도 구매 가능. 상점에서 보유 증강을 선택하고 판매 버튼으로 판매하세요.</p></article>`+AUGMENT_GROUPS.map(([group,name])=>`<section class="augment-category" data-group="${group}"><h3>${name}</h3><div class="codex-group-grid">${AUGMENTS.filter(a=>a.group===group).map(a=>`<article><h3>${escape(a.name)}</h3><p>${escape(a.text)}</p><small>${AUGMENT_RULES.cost} 재화</small></article>`).join('')}</div></section>`).join('');
- if(key==='rules')$('codex-content').innerHTML=GAME_RULES.map(([name,text])=>`<article><h3>${name}</h3><p>${text}</p></article>`).join('');
-}
-async function openCodex(){if(!roster.length)try{const embedded=$('roster-data');if(embedded)roster=JSON.parse(embedded.textContent);else{const res=await fetch('./src/roster.json');if(!res.ok)throw new Error();roster=await res.json();}}catch{toast('도감을 불러오지 못했습니다.');return;}renderCategory(category);showDialog('archive');}
-$('archive-open').onclick=openCodex;$('menu-codex').onclick=openCodex;$('roster-search').oninput=recordList;document.querySelectorAll('#codex-tabs button').forEach(b=>b.onclick=()=>renderCategory(b.dataset.category));
-if(new URLSearchParams(location.search).has('debug'))window.__moba={get game(){return game;},get mode(){return mode;},get paused(){return paused;},get renderer(){return renderer;},get globalTarget(){return globalTarget;},get dragging(){return drag;},get targeting(){return game.targeting;},get selectedPosition(){return position;}};
-setPosition(position);mainMenu();requestAnimationFrame(frame);
+let codexReturn=null;
+const codexScreen=new CodexScreen($('archive'),{onClose:()=>closeCodex(),onPlay:(key,experimental)=>{closeCodex(true);if(experimental){selected=key;position='jungle';start();}else{showPractice('training');select(key);}}});
+function openCodex(push=true){if(mode!=='codex'){codexReturn={mode,paused};clearInput();cancelDrag();cancelGlobal();showScore(false);$('shop').classList.add('hidden');mode='codex';document.body.classList.add('codex-screen');}const route=location.hash.startsWith('#codex/')?location.hash.split('/')[1]:codexScreen.category;if(push&&!location.hash.startsWith('#codex'))history.pushState({codex:true,fromApp:true},'',`#codex/${route}`);codexScreen.show(route);$('archive').focus({preventScroll:true});}
+function closeCodex(fromHistory=false){if(mode!=='codex')return;$('archive').classList.add('hidden');document.body.classList.remove('codex-screen');mode=codexReturn?.mode||'menu';paused=codexReturn?.paused||false;codexReturn=null;if(location.hash.startsWith('#codex')){if(!fromHistory&&history.state?.fromApp)history.back();else history.replaceState(null,'',location.href.split('#')[0]);}}
+$('pause-archive').onclick=()=>openCodex();$('archive-open').onclick=()=>openCodex();$('menu-codex').onclick=()=>openCodex();
+window.addEventListener('popstate',()=>{if(location.hash.startsWith('#codex'))openCodex(false);else closeCodex(true);});
+if(new URLSearchParams(location.search).has('debug'))window.__moba={get game(){return game;},get mode(){return mode;},get paused(){return paused;},get renderer(){return renderer;},get globalTarget(){return globalTarget;},get dragging(){return drag;},get targeting(){return game.targeting;},get selectedPosition(){return position;},get draft(){return pickScreen;},get codex(){return codexScreen;}};
+setPosition(position);mainMenu();if(location.hash.startsWith('#codex'))openCodex(false);requestAnimationFrame(frame);

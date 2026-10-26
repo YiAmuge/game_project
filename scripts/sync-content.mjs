@@ -1,6 +1,6 @@
 import {readFile,writeFile} from 'node:fs/promises';
 import { RUNTIME_CHAMPIONS,POSITIONS,AUGMENTS,AUGMENT_RULES } from '../src/data.js';
-import { GAME_RULES,MONSTERS } from '../src/catalog.js';
+import{REFERENCE_RULES as GAME_RULES,MONSTER_GUIDE as MONSTERS}from'../src/reference-content.js';
 const root=new URL('../',import.meta.url),roster=JSON.parse(await readFile(new URL('src/roster.json',root),'utf8')),text={};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){
  const record=roster.find(r=>r.id===c.id);
@@ -11,7 +11,7 @@ const sections=['# 도시 경계 — 현재 구현 규칙\n\n설명 기준: 현�
 sections.push('## 공통 규칙\n',...GAME_RULES.map(([name,body])=>`### ${name}\n\n${body}\n`));
 sections.push('## 증강\n',`기본 최대 ${AUGMENT_RULES.slots}개·카테고리별 일반 증강 최대 ${AUGMENT_RULES.categorySlots}개. 딜리버리 캐리어도 전체 6칸에 포함되며 보유 시 모든 카테고리의 2개 제한을 해제한다. 구매 500·판매 350 재화. 전투는 전투력 3단계, 생존은 체력 3단계, 기술은 이동속도·장전속도·스킬 가속 합계 3단계에서 구매한다.\n`);
 for(const [group,name] of [['combat','전투'],['survival','생존'],['tech','기술']])sections.push(`### ${name}\n`,...AUGMENTS.filter(a=>a.group===group).map(a=>`#### ${a.name}\n\n${a.text}.\n`));
-sections.push('## 몹과 건물\n',...MONSTERS.map(m=>`### ${m.name}\n\n체력 ${m.hp}·방어력 ${m.armor}·공격 ${m.attack}. 보상 ${m.reward}. ${m.text}\n`));
+sections.push('## 몹과 건물\n',...MONSTERS.map(m=>`### ${m.name}\n\n체력 ${m.hp}·방어력 ${m.armor}·공격 ${m.attack}. 보상 ${m.reward}.\n\n${m.sections.map(([title,text])=>`**${title}**\n\n${text}`).join('\n\n')}\n`));
 sections.push('## 챔피언\n');
 for(const c of Object.values(RUNTIME_CHAMPIONS)){
  const r=roster.find(r=>r.id===c.id);sections.push(`### ${c.name}\n\n${r.note}\n\n${r.stats}.\n`,...r.skills.map(s=>`**${s.kind} — ${s.name}**\n\n${s.description}\n`));

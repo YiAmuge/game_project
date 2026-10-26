@@ -6,8 +6,8 @@ import{laneGoal,laneDistance,convoyBlocked}from'../src/minion-navigation.js';imp
 import{readFile}from'node:fs/promises';import{decodePNG}from'../tools/png.mjs';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 function arena(){const g=new Game('faust','top',{seed:55}),p=g.player;g.units=[p];g.minionQueue=[];g.wave=100;g.map={bounds:g.bounds,walls:[]};Object.assign(p,{x:35,y:0});return{g,p};}
-test('north divider is exactly 2x1, centered between camp room and lane, with all sides and corners concealed',()=>{
- const w=NORTH_DIVIDER;assert.ok(WALLS.includes(w));near(w.w,2);near(w.h,1);near(w.x+w.w/2,Sewing.NORTH_CAMP.x);near(w.y+w.h/2,(TERRAIN[3].y+TERRAIN[3].h+7.15)/2);
+test('north divider is exactly 4x1 on the camp entrance, with all sides and corners concealed',()=>{
+ const w=NORTH_DIVIDER;assert.ok(WALLS.includes(w));near(w.w,4);near(w.h,1);near(w.x+w.w/2,Sewing.NORTH_CAMP.x);near(w.y+w.h,TERRAIN[3].y+TERRAIN[3].h);
  const smoke=BUSHES.filter(b=>b.northSmoke);assert.equal(smoke.length,4);for(const x of [w.x-.01,w.x+.01,w.x+w.w/2,w.x+w.w-.01,w.x+w.w+.01])for(const y of [w.y-.01,w.y+w.h+.01])assert.ok(smoke.some(b=>regionContains(b,{x,y})));
  for(const y of [w.y+.01,w.y+w.h/2,w.y+w.h-.01])for(const x of [w.x-.01,w.x+w.w+.01])assert.ok(smoke.some(b=>regionContains(b,{x,y})));
  assert.equal(smoke.some(b=>regionContains(b,{x:w.x+w.w/2,y:w.y+w.h/2})),false);

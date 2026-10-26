@@ -1,5 +1,4 @@
 import { distance,direction } from './geometry.js';
-import{bossVisualHeight}from'./boss-art.js';
 
 export const BOSS_RULES={health:9750,attack:297.5,aggroRange:8.5,cleaveRadius:1.15,shockEvery:5,shockWindup:1.15,shockRange:7,shockWidth:.7,shockSpeed:10,shockDamage:240,knock:2,marksEvery:7,markWindup:2.15,markRadius:1.25,markDamage:180,root:.8};
 export function engage(g,e){if(!e.hostile){e.bossShockReady=g.time+BOSS_RULES.shockEvery;e.bossMarksReady=g.time+BOSS_RULES.marksEvery;}e.hostile=true;}
@@ -36,7 +35,7 @@ export function update(g,e,dt=1/30){
 export function draw(r,e,g){
  if(!e.alive)return;const c=r.ctx,p=e.bossPattern,color='#d9a6ef';
  c.save();
- if(p){const d=p.d,n={x:-d.y*BOSS_RULES.shockWidth,y:d.x*BOSS_RULES.shockWidth},end={x:e.x+d.x*BOSS_RULES.shockRange,y:e.y+d.y*BOSS_RULES.shockRange};r.polygon([[e.x+n.x,e.y+n.y],[end.x+n.x,end.y+n.y],[end.x-n.x,end.y-n.y],[e.x-n.x,e.y-n.y]],'#d5a1ed28',color);r.line([{x:e.x,y:e.y},end],color,.055,[.15,.15]);r.text(`충격파 ${Math.max(0,p.at-g.time).toFixed(2)}s`,e.x,e.y-bossVisualHeight(e)-.95,color,.31);}
- for(const m of e.bossMarkers||[]){if(!m.visible)continue;const left=Math.max(0,m.at-g.time),progress=Math.max(0,Math.min(1,1-left/BOSS_RULES.markWindup));r.circle(m.x,m.y,m.r,'#c790da22',color,.055);r.circle(m.x,m.y,m.r*progress,null,'#efcaff',.06);r.text(`${left.toFixed(2)}s`,m.x,m.y+m.r+.3,color,.26);}
+ if(p){const d=p.d,n={x:-d.y*BOSS_RULES.shockWidth,y:d.x*BOSS_RULES.shockWidth},end={x:e.x+d.x*BOSS_RULES.shockRange,y:e.y+d.y*BOSS_RULES.shockRange};r.polygon([[e.x+n.x,e.y+n.y],[end.x+n.x,end.y+n.y],[end.x-n.x,end.y-n.y],[e.x-n.x,e.y-n.y]],'#d5a1ed28',color);r.line([{x:e.x,y:e.y},end],color,.055,[.15,.15]);}
+ for(const m of e.bossMarkers||[]){if(!m.visible)continue;const left=Math.max(0,m.at-g.time),progress=Math.max(0,Math.min(1,1-left/BOSS_RULES.markWindup));r.circle(m.x,m.y,m.r,'#c790da22',color,.055);r.circle(m.x,m.y,m.r*progress,null,'#efcaff',.06);}
  c.restore();
 }

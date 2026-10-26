@@ -1,15 +1,14 @@
 import {MAP_CENTER} from './data.js';
 import {distance,direction} from './geometry.js';
-import{needleVisualHeight}from'./needle-art.js';
 
 export const SEWING={spawnAt:270,health:4000,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:12,windup:1.5,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
-export const NEEDLE={health:350,armor:0,damage:55,interval:.65,respawn:Infinity,xp:45,gold:35};
+export const NEEDLE={spawnAt:90,health:350,armor:0,damage:55,interval:.65,respawn:Infinity,xp:45,gold:35};
 export const NORTH_CAMP={x:MAP_CENTER.x,y:-3.8};
 export const isSewing=e=>e.kind==='neutral'&&['needle','sewingKing'].includes(e.camp);
 export function makeNeedle(g,x,y,index=0,{summoned=false}={}){
  const e=g.makeNeutral(x,y,'needle');e.needleColor=index%2?'red':'green';e.campId=summoned?'sewing-king':'needle-north';e.campCenter={...NORTH_CAMP};e.summonedNeedle=summoned;if(summoned)e.respawnDelay=Infinity;return e;
 }
-export function makeCamp(g){for(const [i,[dx,dy]]of [[-.85,-.6],[.85,-.6],[-.85,.6],[.85,.6]].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y+dy,i);}
+export function makeCamp(g){if(g.needleCampSpawned)return;g.needleCampSpawned=true;for(const [i,[dx,dy]]of [[-.85,-.6],[.85,-.6],[-.85,.6],[.85,.6]].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y+dy,i);}
 export function spawnKing(g){
  if(g.sewingKingSpawned)return;g.sewingKingSpawned=true;
  for(const n of g.units.filter(e=>e.camp==='needle'&&!e.summonedNeedle)){n.alive=false;n.hp=0;n.retired=true;n.respawnAt=Infinity;cancel(n);}
@@ -51,6 +50,7 @@ export function stationaryAI(g,e,dt){
  if(!e.hostile&&g.time-e.lastCombat>5)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.15*dt);
 }
 export function tick(g){
+ if(!g.training&&!g.needleCampSpawned&&g.time+1e-8>=NEEDLE.spawnAt)makeCamp(g);
  if(!g.training&&!g.sewingKingSpawned&&g.time+1e-8>=SEWING.spawnAt)spawnKing(g);
  for(const t of [...g.units])if(t.needleBleeds){
   if(!t.alive||t.returning){delete t.needleBleeds;continue;}
@@ -71,5 +71,5 @@ export function reward(g,team){
 }
 export function draw(r,e,g){
  const p=e.needleCast;if(!p||!e.alive||e.returning)return;const end={x:p.x+p.dx*SEWING.range,y:p.y+p.dy*SEWING.range},nx=-p.dy*.18,ny=p.dx*.18;
- r.polygon([[p.x+nx,p.y+ny],[end.x+nx,end.y+ny],[end.x-nx,end.y-ny],[p.x-nx,p.y-ny]],'#c7a7a438','#ead6b6');r.line([p,end],'#ead6b6',.045,[.15,.15]);r.text(`바늘 ${Math.max(0,p.at-g.time).toFixed(1)}s`,e.x,e.y-needleVisualHeight(e)-.95,'#f4deaa',.3);
+ r.polygon([[p.x+nx,p.y+ny],[end.x+nx,end.y+ny],[end.x-nx,end.y-ny],[p.x-nx,p.y-ny]],'#c7a7a438','#ead6b6');r.line([p,end],'#ead6b6',.045,[.15,.15]);
 }

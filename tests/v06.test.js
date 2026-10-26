@@ -22,7 +22,7 @@ test('new rear wings and two flank rooms are walkable and connected; void corner
  assert.ok(BUSHES.some(b=>b.y<0));assert.ok(BUSHES.some(b=>b.y>RULES.height));
 });
 test('three two-unit neutral camps and a four-unit needle camp match the camp rules',()=>{
- const g=new Game();assert.equal(g.units.filter(u=>u.kind==='neutral').length,18);
+ const g=new Game();assert.equal(g.units.filter(u=>u.kind==='neutral').length,14);g.time=90;g.step(.001);assert.equal(g.units.filter(u=>u.kind==='neutral').length,18);
  const sides=g.campViews().filter(c=>c.kind==='side');assert.equal(sides.length,3);assert.ok(sides.every(c=>c.units.length===2));assert.equal(g.campViews().find(c=>c.kind==='needle').units.length,4);
  for(const e of g.units.filter(u=>u.kind==='neutral')){if(['central','side'].includes(e.camp))assert.equal(e.respawnDelay,20);else if(['blessing','amplify'].includes(e.camp)){close(e.maxHp,e.camp==='amplify'?1700:1600);assert.equal(e.respawnDelay,45);}}
 });

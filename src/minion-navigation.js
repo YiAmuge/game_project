@@ -18,6 +18,7 @@ export function mayChase(g,e,t){
  if(t.kind==='minion'&&t.lane!==e.lane)return false;
  return laneDistance(g,e,t)<=2.5+t.radius;
 }
+export function marchTarget(e,goal){const d=distance(e,goal),t=Math.min(1,2/(d||1));return{x:e.x+(goal.x-e.x)*t,y:e.y+(goal.y-e.y)*t};}
 export function convoyBlocked(g,e,goal){
  const ahead=g.units.find(a=>a.alive&&a.kind==='minion'&&a.team===e.team&&a.lane===e.lane&&a.wave===e.wave&&a.formationIndex===e.formationIndex-1);
  if(!ahead||distance(e,ahead)>=e.radius+ahead.radius+.12)return false;

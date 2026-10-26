@@ -99,8 +99,8 @@ export const WALLS = [...leftWalls, ...leftWalls.map(w => ({ ...w, x: 64 - w.x -
 }));
 // Leave entrances above and below; separate the fountain approach from side camps.
 WALLS.push(...BASE_DIVIDERS);
-// A two-by-one divider halfway between the north camp room and the upper lane.
-export const NORTH_DIVIDER={x:MAP_CENTER.x-1,y:(TERRAIN[3].y+TERRAIN[3].h+7.15)/2-.5,w:2,h:1,northDivider:true};
+// A four-by-one divider whose front face meets the north camp entrance.
+export const NORTH_DIVIDER={x:MAP_CENTER.x-2,y:TERRAIN[3].y+TERRAIN[3].h-1,w:4,h:1,northDivider:true};
 WALLS.push(NORTH_DIVIDER);
 // Green connectors in the user's original sketch, mirrored around x=32.
 const leftBushes = [

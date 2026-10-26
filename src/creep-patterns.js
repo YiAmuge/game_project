@@ -38,5 +38,5 @@ export function draw(r,e,g){
  c.save();c.strokeStyle=color;c.lineWidth=.08;c.fillStyle=color+'25';c.beginPath();
  {const a=Math.atan2(p.dy,p.dx);c.moveTo(p.x,p.y);c.arc(p.x,p.y,p.r,a-p.spread/2,a+p.spread/2);c.closePath();}c.fill();c.stroke();
   {const a=Math.atan2(p.dy,p.dx);r.line([{x:p.x,y:p.y},{x:p.x+Math.cos(a)*p.r*progress,y:p.y+Math.sin(a)*p.r*progress}],color,.1);}
- const label={x:p.x+p.dx*p.r*.6,y:p.y+p.dy*p.r*.6};r.text(`${left.toFixed(2)}s`,label.x,label.y,color,.42);r.text('집중 중 · 받는 피해 +20%',e.x,e.y-1.7,color,.28);c.restore();
+ c.restore();
 }

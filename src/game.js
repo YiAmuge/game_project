@@ -1,4 +1,5 @@
 import*as MinionNav from'./minion-navigation.js';
+import{botChoice}from'./draft.js';
 import * as Infiltration from './infiltration.js';
 import * as Sewing from './sewing.js';
 import * as CampBuffs from './camp-buffs.js';
@@ -39,10 +40,10 @@ export function damageFormula(base,power=3,level=3,armor=0) {
 export function respawnTime(time,level) { return Math.min(23,Math.ceil(6+1.356*(.8*time/60+1.2*(level-1)))); }
 
 export class Game {
-  constructor(selected='faust',position='bottom',{seed=Math.floor(Math.random()*4294967296),mode='match'}={}) {
+  constructor(selected='faust',position='bottom',{seed=Math.floor(Math.random()*4294967296),mode='match',bots}={}) {
     if(!CHAMPIONS[selected])throw new Error('Unknown champion');
     if(!POSITIONS[position])position='bottom';
-    this.time=0; this.nextId=1; this.wave=0; this.bossSpawned=false;this.sewingKingSpawned=false;this.sewingWinner=null;this.sewingTeams=[false,false]; this.winner=null; this.reason='';
+    this.time=0; this.nextId=1; this.wave=0; this.bossSpawned=false;this.sewingKingSpawned=false;this.needleCampSpawned=false;this.sewingWinner=null;this.sewingTeams=[false,false]; this.winner=null; this.reason='';
     this.units=[]; this.minionQueue=[];this.corpses=[]; this.projectiles=[]; this.effects=[]; this.zones=[]; this.pending=[]; this.logs=[];this.events=[];this.buffSequence=0;this.randomState=(seed>>>0)||137;
     this.minionFactions=(seed>>>0)&1?['uniform','suit']:['suit','uniform'];
     this.kills=[0,0]; this.damageDone=0; this.input={x:0,y:0,aim:{x:32,y:18},fire:false};
@@ -51,8 +52,7 @@ export class Game {
     if(this.training){Training.init(this,selected,position);return;}
     this.makeStructures(); this.makeCamps();
     this.makeChampion(selected,0,0,position);
-    for(const pos of POSITION_ORDER.filter(p=>p!==position)){const used=this.champions(0).map(c=>c.key);this.makeChampion(BotAI.draft(this,pos,used),0,this.champions(0).length,pos);}
-    POSITION_ORDER.forEach((pos,i)=>this.makeChampion(BotAI.draft(this,pos,this.champions(1).map(c=>c.key)),1,i,pos));
+    for(const team of [0,1])for(const pos of POSITION_ORDER){if(team===0&&pos===position)continue;const choice=botChoice(bots,team,pos);if(choice===null)continue;const used=[...this.champions(team).map(c=>c.key),...POSITION_ORDER.map(p=>botChoice(bots,team,p)).filter(k=>k&&k!=='random')];this.makeChampion(choice==='random'?BotAI.draft(this,pos,used):choice,team,team===0?this.champions(team).length:POSITION_ORDER.indexOf(pos),pos);}
     this.player=this.units.find(u=>u.player);
     this.log('전투 개시 · 첫 미니언 3초 후 출격 · 20분 제한', 'system');
   }
@@ -72,7 +72,6 @@ export class Game {
   }
   makeCamps() {
     for(const [camp,points] of Object.entries({central:[[30.5,16.5],[33.5,16.5],[30.5,19.5],[33.5,19.5]],blessing:[[22,13],[42,13]],amplify:[[22,23],[42,23]]}))for(const [x,y] of points){const p=worldPoint(x,y);this.makeNeutral(p.x,p.y,camp);}
-    Sewing.makeCamp(this);
     for(const [id,center] of [['west',worldPoint(17,18)],['east',worldPoint(47,18)],['south',{x:MAP_CENTER.x,y:50.6}]]){
       for(const dx of [-.85,.85]){const n=this.makeNeutral(center.x+dx,center.y,'side');n.campId=`side-${id}`;n.campCenter={...center};n.name=['north','south'].includes(id)?'외곽 중립 크립':'본진 앞 중립 크립';}
     }
@@ -615,7 +614,7 @@ export class Game {
       else if(e.attackCd<=0&&!this.stat(e,'stun')&&!this.stat(e,'disarm')){this.simpleAttack(e,target);e.attackCd=e.interval;}
     } else {
       if(MinionNav.convoyBlocked(this,e,goal))return;
-      this.moveToward(e,goal,dt);
+      this.moveToward(e,MinionNav.marchTarget(e,goal),dt);
     }
   }
   simpleAttack(e,t) {

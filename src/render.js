@@ -81,20 +81,12 @@ export class Renderer {
       this.line([{x:w.x+.2,y:w.y+.22},{x:w.x+w.w-.2,y:w.y+.22}],'#84917a66',.06);
       for(let x=w.x+1;x<w.x+w.w;x+=1.4)this.line([{x,y:w.y},{x:x-.15,y:w.y+w.h}],'#16262a88',.05);
     }
-    for(const a of FOUNTAIN_AREAS){const color=a.team?'#df9b82':'#8adfe1';c.fillStyle=color+'22';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=color;c.lineWidth=.13;c.strokeRect(a.x,a.y,a.w,a.h);this.text('부활소',a.x+a.w/2,a.y+a.h/2,color,.42);}
-    this.text('UPPER LINE',MAP_CENTER.x,4.7,'#84907866',.43);this.text('LOWER LINE',MAP_CENTER.x,RULES.height-4.5,'#84907866',.43);
+    for(const a of FOUNTAIN_AREAS){const color=a.team?'#df9b82':'#8adfe1';c.fillStyle=color+'22';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=color;c.lineWidth=.13;c.strokeRect(a.x,a.y,a.w,a.h);}
+
     c.restore();
-    this.text('N',2,2,'#617972',.5);this.line([{x:2,y:4},{x:2,y:2.6}],'#617972',.08);this.polygon([[1.8,2.9],[2,2.5],[2.2,2.9]],'#617972');c.restore();for(const room of TERRAIN.slice(1)){c.strokeStyle='#6c887855';c.lineWidth=.12;c.strokeRect(room.x+.08,room.y+.08,room.w-.16,room.h-.16);}
+    c.restore();for(const room of TERRAIN.slice(1)){c.strokeStyle='#6c887855';c.lineWidth=.12;c.strokeRect(room.x+.08,room.y+.08,room.w-.16,room.h-.16);}
   }
-  camps(game){
-    const c=this.ctx;
-    for(const camp of game.campViews()){
-      const color=['boss','blessing','amplify'].includes(camp.kind)?CAMP_RANGE_COLOR:'#92966e';
-      this.circle(camp.home.x,camp.home.y,camp.radius,color+'12',color+'55',.065);c.setLineDash([.15,.22]);this.circle(camp.home.x,camp.home.y,camp.radius+.15,null,color+'44',.04);c.setLineDash([]);
-      this.text(camp.name+' 캠프',camp.home.x,camp.home.y+camp.radius+.45,color,.29);
-    }
-    for(const timer of game.campTimers()){const p=timer.home;this.circle(p.x,p.y,.65,'#182720', '#9b9568',.05);this.text(`${Math.floor(timer.seconds/60)}:${String(timer.seconds%60).padStart(2,'0')}`,p.x,p.y,'#ecd59b',.38);this.text('재생성',p.x,p.y+.55,'#97a586',.22);}
-  }
+  camps(game){}
   bar(e,width,y,game) {
     const c=this.ctx,x=e.x-width/2;
     c.fillStyle='#081317';c.fillRect(x-.05,y-.05,width+.1,.31);
@@ -108,8 +100,8 @@ export class Renderer {
     if(e.kind==='core') {
       this.circle(e.x,e.y,1.9,`${dark}55`,`${color}66`);this.circle(e.x,e.y,1.45,dark,color,.1);this.circle(e.x,e.y,1.1,'#192b2c',color,.06);
       this.polygon([[e.x,e.y-.8],[e.x+.65,e.y],[e.x,e.y+.8],[e.x-.65,e.y]],color);
-      if(locked){this.circle(e.x,e.y,2.25,null,`${color}66`,.045);this.text('LOCKED',e.x,e.y+2.5,color,.39);}
-      else this.text('본진',e.x,e.y+2.35,color,.4);
+      if(locked){this.circle(e.x,e.y,2.25,null,`${color}66`,.045);}
+
 
     } else {
       this.polygon([[e.x-.8,e.y+.7],[e.x-.7,e.y-.4],[e.x-.45,e.y-.95],[e.x+.45,e.y-.95],[e.x+.7,e.y-.4],[e.x+.8,e.y+.7]],dark,color);
@@ -134,11 +126,6 @@ export class Renderer {
         this.circle(e.x,e.y,.62,'#111d21',`${team}66`);this.polygon([[e.x,e.y-.4],[e.x+.3,e.y],[e.x,e.y+.4],[e.x-.3,e.y]],team);
       }
 
-      if(!this.billboardPass){
-        if(e.exposedUntil>game.time)this.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.9:1.6),'#edbb97',.25);
-        if(e.returning)this.text('복귀 중',e.x,e.y+1.5,'#d1dec5',.32);
-        if(e.camp==='boss'||['amplify','blessing'].includes(e.camp))this.text(e.name,e.x,e.y+(e.camp==='boss'?1.7:1.05),team,.4);
-      }
       return;
     }
     if(e.trainingDummy){const team=e.team===0?'#a9d3df':'#e2a79a';this.line([{x:e.x,y:e.y+.25},{x:e.x,y:e.y-1.8}],'#8d7959',.2);this.line([{x:e.x-.7,y:e.y-.85},{x:e.x+.7,y:e.y-.85}],'#a49171',.18);this.circle(e.x,e.y-1.5,.48,'#a99772',team,.085);this.circle(e.x,e.y-1.5,.23,null,team,.05);this.line([{x:e.x-.5,y:e.y+.3},{x:e.x+.5,y:e.y+.3}],'#9f8c66',.14);return;}
@@ -192,7 +179,7 @@ export class Renderer {
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);if(this.groundPass)c.clearRect(0,0,this.width,this.height);else{c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);}if(this.groundTransform)c.transform(...this.groundTransform);else{c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);}
     this.floor(game);this.camps(game);for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
-    if(!game.training&&!game.bossSpawned){this.text('CENTRAL CAMP',MAP_CENTER.x,MAP_CENTER.y,'#b8ae7766',.4);this.text('05:00',MAP_CENTER.x,MAP_CENTER.y+.7,'#a5a58b66',.48);}
+
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo(0,e))chargePreview(this,e,game);
     for(const e of game.units.filter(e=>e.kind==='core'||e.kind==='tower'))this.structure(e,game);threatRanges(this,game);
