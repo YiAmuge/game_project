@@ -1,0 +1,21 @@
+{
+  "reference": "background.jpg",
+  "description": "Crimson-black storm city background, blue-teal smoke shared by the abyss and concealment, descending window facade.",
+  "assets": {
+    "skyline": {
+      "file": "rooftop-skyline.png",
+      "source": "exec-a7106489-d126-4a02-a145-16d1e3bdd78f.png",
+      "sha256": "f886dc8d61b75b9422413c2d3b986fc771f4817c2ac8d8efd40dd36519641c5e"
+    },
+    "smoke": {
+      "file": "rooftop-smoke.png",
+      "source": "exec-0f396d25-963c-4a6c-a612-362ffe3540f0.png",
+      "sha256": "34e4d5d5ec6c83d632f089c066b270747f0699cb50bffa50ea99d39a25dc9b77"
+    },
+    "windows": {
+      "file": "rooftop-windows.png",
+      "source": "exec-231d1b25-4950-4b21-8e69-804b87c84a81.png",
+      "sha256": "22fb964ff745d4969b8efc29757642cb7542311b9fb652f501b937349613ccce"
+    }
+  }
+}

@@ -1,11 +1,12 @@
 import{minionHeight}from'./minion-art.js';
 import { isClerk,CLERK_HEIGHT } from './clerk-art.js';
 import { BackstreetSkin } from './backstreet.js';
+import { RooftopScenery,roofPath } from './rooftop.js';
 import { drawWorld as drawPings } from './pings.js';
 import * as THREE from './vendor/three.js';
 import { Camera25D } from './camera-25d.js';
 import { TRAINING_25D as MAP } from './training-25d-map.js';
-import { WORLD,WALLS,TERRAIN,APPROACH_CUTOUTS,FOUNTAINS,FOUNTAIN_AREAS,BUSHES,lanePath } from './data.js';
+import { WORLD,WALLS,TERRAIN,FOUNTAINS,FOUNTAIN_AREAS,BUSHES,lanePath } from './data.js';
 import * as Training from './training.js';
 import { championHud,orderMark,championEffects,towerMark } from './overlays.js';
 import * as CombatVisuals from './combat-visuals.js';
@@ -22,7 +23,7 @@ function painter(base,canvas){
  const p=Object.create(Object.getPrototypeOf(base));p.canvas=canvas;p.ctx=canvas.getContext('2d');
  for(const key of ATLAS_KEYS)p[key]=base[key];return p;
 }
-function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m.map?.userData?.backstreetShared)m.map?.dispose();m.dispose();}}});object.removeFromParent();}
+function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m.map?.userData?.backstreetShared&&!m.map?.userData?.rooftopShared)m.map?.dispose();m.dispose();}}});object.removeFromParent();}
 
 export class Renderer25D {
  constructor(base){
@@ -33,6 +34,7 @@ export class Renderer25D {
   catch(error){this.canvas.remove();throw new Error('게임은 WebGL을 지원하는 브라우저가 필요합니다. 브라우저의 하드웨어 가속 설정을 확인해 주세요.',{cause:error});}
   this.webgl.outputColorSpace=THREE.SRGBColorSpace;this.webgl.setClearColor('#141919');
   this.skin=new BackstreetSkin(()=>{this.floorStamp=null;this.sceneryDirty=true;});
+  this.rooftop=new RooftopScenery(()=>{this.floorStamp=null;this.sceneryDirty=true;});
   this.scene=new THREE.Scene();this.scene.fog=new THREE.Fog('#141919',55,110);
   this.scene.add(new THREE.AmbientLight('#d2d2c9',1.7));
   const sun=new THREE.DirectionalLight('#e4d4b8',1.8);sun.position.set(-12,35,8);this.scene.add(sun);
@@ -59,9 +61,7 @@ export class Renderer25D {
  box(w,h,d,x,y,z,color,group=this.world){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material(color));mesh.position.set(x,y,z);group.add(mesh);return mesh;}
  cylinder(radius,height,x,y,z,color,group=this.world,top=radius){const m=new THREE.Mesh(new THREE.CylinderGeometry(top,radius,height,12),material(color));m.position.set(x,y,z);group.add(m);return m;}
  buildArena(){
-  const b=this.layout.bounds;
-  if(this.layout.terrain){for(const t of this.layout.terrain){this.box(t.w,.8,t.h,t.x+t.w/2,-.55,t.y+t.h/2,'#292c2a');this.box(t.w-.08,.12,t.h-.08,t.x+t.w/2,-.09,t.y+t.h/2,'#42433e');}}
-  else {this.box(b.w,.8,b.h,b.x+b.w/2,-.43,b.y+b.h/2,'#292c2a');this.box(b.w-.3,.16,b.h-.3,b.x+b.w/2,-.1,b.y+b.h/2,'#42433e');}
+  this.rooftop.build(this.layout,this.world);
   for(const a of this.layout.areas){
    this.box(a.w,.08,a.h,a.x+a.w/2,-.015,a.y+a.h/2,a.id===2?'#4b5148':a.id===5?'#525349':'#3c5252');
    for(const z of [a.y,a.y+a.h])this.box(a.w,.03,.06,a.x+a.w/2,.035,z,a.color);
@@ -73,13 +73,6 @@ export class Renderer25D {
    wall.rotation.y=-(w.angle||0);this.skin.box(wall,'wall');this.skin.decorateWall(wall,w,this.walls.length/2);wall.material.transparent=true;this.walls.push({mesh:wall,rect:w});
    const cap=this.box(w.w+.08,.1,w.h+.08,w.x+w.w/2,1.455,w.y+w.h/2,'#a5b2a4');
    cap.rotation.y=-(w.angle||0);this.skin.box(cap,'wall','#c8d0d1');cap.material.transparent=true;this.walls.push({mesh:cap,rect:w});
-  }
-  // Perimeter rails sit outside the playable rectangle; they add no hidden obstacles.
-  for(const z of [b.y-.35,b.y+b.h+.35])this.box(b.w+.7,.45,.35,b.x+b.w/2,.18,z,'#71817d');
-  for(const x of [b.x-.35,b.x+b.w+.35])this.box(.35,.45,b.h+.7,x,.18,b.y+b.h/2,'#71817d');
-  for(const [x,z] of [[b.x+1,b.y+1],[b.x+b.w-1,b.y+1],[b.x+1,b.y+b.h-1],[b.x+b.w-1,b.y+b.h-1]]){
-   this.cylinder(.55,2.5,x,1.25,z,'#516775');this.cylinder(.65,.18,x,2.56,z,'#b9ba99');
-   const gem=new THREE.Mesh(new THREE.ConeGeometry(.28,.65,5),material('#a4ddd9',{emissive:'#407b87',emissiveIntensity:.6}));gem.position.set(x,2.95,z);this.world.add(gem);
   }
   for(const f of this.layout.spawns||[this.layout.spawn]){
   this.cylinder(2.45,.13,f.x,.02,f.y,'#476e75');this.cylinder(1.9,.16,f.x,.12,f.y,'#6a9392');this.cylinder(1.5,.12,f.x,.22,f.y,'#7fa8a1');
@@ -96,9 +89,8 @@ export class Renderer25D {
   const c=r.ctx;
   c.clearRect(v.x,v.y,v.w,v.h);
   const b=this.layout.bounds;
-  c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();if(this.layout.terrain){c.beginPath();for(const t of this.layout.terrain)c.rect(t.x,t.y,t.w,t.h);c.clip();}
+  c.save();roofPath(c,this.layout);c.clip();
   this.skin.floor(c,b);
-  if(!game.training){c.fillStyle='#141919';for(const points of APPROACH_CUTOUTS){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();}}
   for(const a of this.layout.areas){r.text(`${String(a.id).padStart(2,'0')} / ${a.name}`,a.x+a.w/2,a.y+1.2,a.color,.52);}
   const f=this.layout.spawn;r.circle(f.x,f.y,2.45,'#a8f2e91c','#bbf7e1aa',.08);r.circle(f.x,f.y,1.65,null,'#dcffef66',.055);r.text('부활소',f.x,f.y+3.1,'#c3e9dc',.42);
   if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);r.text('부활소 · 적에게 1000 고정 피해 / 0.5초',a.x+a.w/2,a.y+1.1,a.team?'#f5bba4':'#c7fff1',.27);}for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#a6a09214',3.2);for(const bush of BUSHES)r.bush(bush);c.restore();return;}
@@ -210,7 +202,7 @@ export class Renderer25D {
   // Units, aiming and floor effects continue updating on every animation frame.
   if(this.sceneryDirty||Math.abs(pan.x)>this.padding*.7||Math.abs(pan.y)>this.padding*.7){
    const c=this.sceneryCamera;c.copy(this.camera.native);const extra=this.padding/this.camera.scale;c.left-=extra;c.right+=extra;c.top+=extra;c.bottom-=extra;c.updateProjectionMatrix();
-   this.webgl.render(this.scene,c);this.sceneryAnchor={x:this.camera.x,y:this.camera.y};this.sceneryDirty=false;this.canvas.style.transform='translate3d(0,0,0)';
+   this.webgl.render(this.rooftop.background,c);this.webgl.autoClear=false;this.webgl.clearDepth();this.webgl.render(this.scene,c);this.webgl.autoClear=true;this.sceneryAnchor={x:this.camera.x,y:this.camera.y};this.sceneryDirty=false;this.canvas.style.transform='translate3d(0,0,0)';
   }else this.canvas.style.transform=`translate3d(${pan.x}px,${pan.y}px,0)`;
   this.hud(game,playing);
  }
