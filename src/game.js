@@ -42,6 +42,7 @@ export class Game {
     if(!POSITIONS[position])position='bottom';
     this.time=0; this.nextId=1; this.wave=0; this.bossSpawned=false; this.winner=null; this.reason='';
     this.units=[]; this.minionQueue=[];this.corpses=[]; this.projectiles=[]; this.effects=[]; this.zones=[]; this.pending=[]; this.logs=[];this.events=[];this.buffSequence=0;this.randomState=(seed>>>0)||137;
+    this.minionFactions=(seed>>>0)&1?['uniform','suit']:['suit','uniform'];
     this.kills=[0,0]; this.damageDone=0; this.input={x:0,y:0,aim:{x:32,y:18},fire:false};
     this.firstBlood=null;this.announcements=[];this.announcementSequence=0;
     this.training25d=true;this.training=mode==='training'||mode==='training25d';this.map=this.training?createTraining25DMap():null;this.bounds=this.map?.bounds||WORLD;
@@ -432,7 +433,7 @@ export class Game {
     const due=this.minionQueue.filter(s=>s.at<=this.time+1e-8);this.minionQueue=this.minionQueue.filter(s=>s.at>this.time+1e-8);
     for(const spawn of due){
       const {team,lane,index,wave,scale}=spawn,ranged=index===3,siege=index===4,path=this.training?Training.lanePath(team,this):lanePath(team,lane),radius=(siege?.48:.28)*MINIONS.size,forward=direction(path[0],path[1]),origin={x:path[0].x+forward.x*(1.4+radius),y:path[0].y+forward.y*(1.4+radius)};
-      this.entity({kind:'minion',trainingLane:this.training,team,lane,...origin,wave,formationIndex:index,spawnAt:spawn.at,
+      this.entity({kind:'minion',trainingLane:this.training,team,lane,faction:this.minionFactions[team],facing:Math.atan2(forward.y,forward.x),...origin,wave,formationIndex:index,spawnAt:spawn.at,
         maxHp:(siege?MINIONS.health.siege:ranged?MINIONS.health.ranged:MINIONS.health.melee)*(1+MINIONS.hpGrowth*scale),damage:(siege?125:ranged?72:58)*(1+MINIONS.attackGrowth*scale),
         interval:siege?2:ranged?1.5:1.25,range:siege?6:ranged?5.5:1.2,radius,
         name:siege?'공성 미니언':ranged?'원거리 미니언':'근접 미니언',siege,ranged,waypoint:1,path:[],pathAt:0});
@@ -458,7 +459,7 @@ export class Game {
       while(e.path?.length&&distance(e,e.path[0])<.3)e.path.shift();
       target=e.path?.[0]||goal;
     }
-    const step=Math.min(distance(e,target),(speed??this.speed(e))*dt),d=steer(this,e,target,step);moveBody(this,e,d.x*step,d.y*step);
+    const step=Math.min(distance(e,target),(speed??this.speed(e))*dt),d=steer(this,e,target,step),from={x:e.x,y:e.y};moveBody(this,e,d.x*step,d.y*step);if(e.kind==='minion'&&Math.abs(e.x-from.x)>1e-6)e.facing=Math.atan2(e.y-from.y,e.x-from.x);
   }
   aim(e,point) {const d=direction(e,point);return Math.hypot(d.x,d.y)>.01?d:{x:e.team===0?1:-1,y:0};}
   bullet(e,dir,damage,range,options={}) {
@@ -618,8 +619,9 @@ export class Game {
     }
   }
   simpleAttack(e,t) {
-    if(e.kind==='neutral')e.facing=Math.atan2(t.y-e.y,t.x-e.x);
-    if(e.kind==='tower'||e.kind==='core'||e.kind==='minion'&&(e.ranged||e.siege)){this.projectiles.push({source:e,target:t,homing:true,x:e.x,y:e.y,damage:e.kind==='tower'?Towers.shotDamage(this,e,t):e.damage,speed:e.kind==='minion'?12:14,remaining:4,width:e.kind==='minion'?.12:.24,color:e.team===0?'#83e5f4':'#ee9b84'});return;}
+    if(e.kind==='minion'){e.facing=Math.atan2(t.y-e.y,t.x-e.x);e.attackAt=this.time;e.attackUntil=this.time+.28;}
+    if(e.kind==='neutral'){e.facing=Math.atan2(t.y-e.y,t.x-e.x);CampBuffs.swing(this,e,t);}
+    if(e.kind==='tower'||e.kind==='core'||e.kind==='minion'&&(e.ranged||e.siege)){this.projectiles.push({source:e,target:t,homing:true,x:e.x,y:e.y,damage:e.kind==='tower'?Towers.shotDamage(this,e,t):e.damage,visualHeight:e.kind==='minion'?(e.siege?1.05:.95):undefined,speed:e.kind==='minion'?12:14,remaining:4,width:e.kind==='minion'?.12:.24,color:e.team===0?'#83e5f4':'#ee9b84'});return;}
     this.effects.push({type:'line',x:e.x,y:e.y,to:{x:t.x,y:t.y},color:e.team===0?'#6fb8c7':e.team===1?'#d18178':'#bd9e64',life:.16,maxLife:.16});
     this.deal(e,t,e.damage);
   }

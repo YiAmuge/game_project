@@ -36,7 +36,7 @@ export const EXTRA_CHAMPIONS = {
     "reload": 2,
     "range": 2,
     "damage": 220,
-    "attackTime": 0.43,
+    "attackTime": 0.25,
     "q": 8,
     "r": 45,
     "passive": "담.탐",

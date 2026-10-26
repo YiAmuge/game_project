@@ -5,6 +5,7 @@ export const CLERK_ART={
  blessing:{idle:'leNoirIdle',attack:'leNoirAttack',weapon:'leNoirCase',size:.70,axis:'height',idleAngle:0},
 };
 export const isClerk=e=>e.kind==='neutral'&&Boolean(CLERK_ART[e.camp]);
+export function clerkCharge(g,e){return e.alive&&!e.returning&&e.pattern?Math.max(0,Math.min(1,(g.time-e.pattern.startedAt)/(e.pattern.at-e.pattern.startedAt))):0;}
 export function clerkPresentation(g,e){
  const spec=CLERK_ART[e.camp];if(!spec)return null;
  const striking=!e.returning&&!e.pattern&&e.swingUntil>g.time,key=striking?spec.attack:spec.idle,f=FRAMES[key],weapon=FRAMES[spec.weapon],h=CLERK_HEIGHT*f.heightScale,w=h*f.w/f.h,left=-w*f.foot[0],top=-h*f.foot[1];
@@ -20,5 +21,6 @@ export function drawClerk(r,e,g){
  // The exact handle pivot is attached to this pose's gloved hand. Drawing the
  // body last lets the original glove cover the handle naturally.
  c.save();c.translate(hand.x,hand.y);c.rotate(pose.angle);c.drawImage(a,weapon.x,weapon.y,weapon.w,weapon.h,-weapon.grip[0]*k,-weapon.grip[1]*k,weapon.w*k,weapon.h*k);c.restore();
- c.drawImage(a,f.x,f.y,f.w,f.h,pose.left,pose.top,pose.w,pose.h);c.restore();return true;
+ const charge=clerkCharge(g,e);c.save();if(charge>0){const m=c.getTransform();c.filter=`brightness(${1+charge*.9})`;c.shadowColor=e.camp==='amplify'?'#f1abb1':'#f3e6b0';c.shadowBlur=Math.min(18,Math.hypot(m.a,m.b)*.18*charge);}
+ c.drawImage(a,f.x,f.y,f.w,f.h,pose.left,pose.top,pose.w,pose.h);c.restore();c.restore();return true;
 }

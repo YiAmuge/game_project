@@ -88,7 +88,7 @@ test('Don attacks stay yellow and use red throughout the seven-second lifesteal 
 });
 test('Starbuck shadow returns only when leap motion finishes',()=>{const e={key:'starbuck'};assert.ok(airborneShadow(e));e.motion={kind:'leap',elapsed:0};assert.equal(airborneShadow(e),false);e.motion.elapsed=.699;assert.equal(airborneShadow(e),false);delete e.motion;assert.ok(airborneShadow(e));});
 test('cores and minion body/collider/feet share their current sizes',()=>{
- const g=new Game();assert.ok(g.units.filter(e=>e.kind==='core').every(e=>e.hp===6000&&e.maxHp===6000));g.spawnWave();const m=g.units.find(e=>e.kind==='minion');close(m.radius,.28*1.15*1.2);close(MINIONS.size,1.38);close(feetOffset(m),.36);
+ const g=new Game();assert.ok(g.units.filter(e=>e.kind==='core').every(e=>e.hp===6000&&e.maxHp===6000));g.spawnWave();const m=g.units.find(e=>e.kind==='minion');close(m.radius,.28*1.15*1.2);close(MINIONS.size,1.38);close(feetOffset(m),0);
 });
 
 test('Dongbaek released flower pulses finish through caster crowd control',()=>{

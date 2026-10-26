@@ -1,3 +1,4 @@
+import{minionHeight}from'./minion-art.js';
 import { isClerk,CLERK_HEIGHT } from './clerk-art.js';
 import { BackstreetSkin } from './backstreet.js';
 import { drawWorld as drawPings } from './pings.js';
@@ -15,7 +16,7 @@ import { SkillVFX } from './skill-vfx.js';
 import { THEMES } from './art.js';
 import { projectFeet,leapLift,airborneShadow,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
 
-const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17','atlasV36','weaponAtlas','clerkAtlas'];
+const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17','atlasV36','weaponAtlas','clerkAtlas','minionAtlas'];
 const material=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
 function painter(base,canvas){
  const p=Object.create(Object.getPrototypeOf(base));p.canvas=canvas;p.ctx=canvas.getContext('2d');
@@ -182,7 +183,7 @@ export class Renderer25D {
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:isClerk(e)?CLERK_HEIGHT+.18:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.5:1.55),'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.85:2),'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}
-   else if(e.kind==='minion')r.bar(e,.8,e.y-.65,game);
+   else if(e.kind==='minion')r.bar(e,.95,e.y-minionHeight(e)-.18,game);
    else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-(e.kind==='core'?1.45:1.1),game);towerMark(r,e,game);
   });
   for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&(!game.hidden(e)||e.motion?.kind==='leap')).sort((a,b)=>Number(a.player)-Number(b.player)))at(e,()=>{

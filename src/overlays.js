@@ -1,3 +1,4 @@
+import{drawLevelBadge}from'./level-badge.js';
 import { paintHealth } from './health-display.js';
 import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import * as Yan from './yan.js';
@@ -37,7 +38,7 @@ export function championHud(r,e,g){
  paintHealth(c,e,g,x,y,width,.34,e.player?'#7bd387':e.team===0?'#79bbc9':'#d7877e');
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
- const levelX=x-.33;c.fillStyle='#12242b';c.fillRect(x-.61,y-.06,.49,.46);c.strokeStyle=e.player?'#efd39a':e.team===0?'#79bbc9':'#d7877e';c.lineWidth=.035;c.strokeRect(x-.61,y-.06,.49,.46);r.text(String(e.level),levelX,y+.17,'#fff0cd',.27);
+ drawLevelBadge(r,e,x,y);
  if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1500)),sx,sy+.43,'#e8e9b6',.24);}
  if(e.trainingDummy){r.text(e.name,e.x,e.y-3.05,e.team===0?'#a7d8df':'#edb2a4',.29);c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);

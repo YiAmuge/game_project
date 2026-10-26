@@ -32,7 +32,7 @@ export const HAND_ANCHORS={yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
 export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
  const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],facing=e.facing??(e.team?Math.PI:0),flip=(Math.cos(facing)<0)!==Boolean(f?.mirror)?-1:1,[x,y]=HAND_ANCHORS[e.key]||[-.3,-.8];
- const age=g.time-(e.attackAt??-99),attacking=age>=0&&age<.3,style=g.attackStyle(e),slash=['slash','sweep'].includes(style),swing=age/.3,side=(e.attackSerial||0)%2?1:-1;
+ const duration=e.key==='ryoshu'?.25:.3,age=g.time-(e.attackAt??-99),attacking=age>=0&&age<duration,style=g.attackStyle(e),slash=['slash','sweep'].includes(style),swing=age/duration,side=(e.attackSerial||0)%2?1:-1;
  let angle=attacking?(e.attackFacing??facing):facing;
  if(slash&&attacking)angle+=e.key==='honglu'?swingProgress(swing)*Math.PI*2:(swingProgress(swing)-.5)*2.25*side;
  if(e.state.donCharge)angle=facing;

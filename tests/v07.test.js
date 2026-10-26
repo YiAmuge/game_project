@@ -39,8 +39,8 @@ test('Gahwan converts gaze at five and ultimate adds precisely one stack per hit
 test('Gahwan close knockback cooldown is independent per champion and does not remove close extra damage',()=>{
  const {g,p,t}=quiet('gahwan'),b=enemy(g,42,7.4);t.x=42;g.attack(p,t);close(t.motion.total,2.5);close(b.motion.total,2.5);delete t.motion;delete b.motion;p.attackCd=0;const hp=t.hp;g.attack(p,t);assert.equal(t.motion,undefined);assert.ok(t.hp<hp);g.time=2.01;p.attackCd=0;p.ammo=1;g.attack(p,t);close(t.motion.total,2.5);
 });
-test('Nelly mark does fixed seven percent max HP and basic and ultimate triggers both refund Q charge time',()=>{
- for(const ult of [false,true]){const {g,p,t}=quiet('nelly');t.x=41;p.state.knifeCharges=0;p.state.knifeReady=10;p.qCd=10;g.attack(p,t);const hp=t.hp;if(ult)g.cast(p,'r',t);else{p.attackCd=0;g.attack(p,t);}assert.ok(hp-t.hp>=700);close(p.state.knifeReady,5);}
+test('Nelly mark does fixed 4.5 percent max HP and basic and ultimate triggers both refund Q charge time',()=>{
+ for(const ult of [false,true]){const {g,p,t}=quiet('nelly');t.x=41;p.state.knifeCharges=0;p.state.knifeReady=10;p.qCd=10;g.attack(p,t);const hp=t.hp;if(ult)g.cast(p,'r',t);else{p.attackCd=0;g.attack(p,t);}assert.ok(hp-t.hp>=450);close(p.state.knifeReady,5);}
 });
 test('Nelly knives pierce multiple enemies and refill no more than once per throw; R restores two ammo',()=>{
  const {g,p,t}=quiet('nelly'),b=enemy(g,46);t.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};b.state.nellyMarks={[p.id]:{active:true,until:5,hold:0}};g.cast(p,'q',t);run(g,.5);assert.ok(t.hp<10000&&b.hp<10000);assert.ok(p.state.knifeReady>2.5&&p.state.knifeReady<2.7);p.ammo=0;t.x=43;g.cast(p,'r',t);assert.equal(p.ammo,2);

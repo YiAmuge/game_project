@@ -114,7 +114,8 @@ for(const [index,inside]of [[4,1],[11,-1]]){const wall=WALLS[index],w=1.35*MAP_S
 for(const y of [0,RULES.height-1.6])for(const side of [false,true]){const x=APPROACH.tipX,w=TERRAIN[3].x-x;BUSHES.push({id:BUSHES.length,x:side?RULES.width-x-w:x,y,w,h:1.6});}
 // Concealment follows the walls of side camps, the central diagonals and flank rooms.
 function mist(x,y,w,h){BUSHES.push({id:BUSHES.length,x,y,w,h});}
-for(const x of [14.15,24.35])for(const side of [false,true])mist(side?RULES.width-x-1.35:x,18.7,1.35,9.4);
+for(const side of [false,true])mist(side?RULES.width-14.15-1.35:14.15,18.7,1.35,9.4);
+for(const [index,side]of [[4,-1],[11,1]]){const wall=WALLS[index],w=1.35;mist(side<0?wall.x-w:wall.x+wall.w,wall.y,w,wall.h);}
 // Fill each diagonal opening from the full end face of one wall to the next wall's end face.
 const sideWall=WALLS[4],capWall=WALLS[5];
 const centralMist=[[sideWall.x,sideWall.y],[sideWall.x+sideWall.w,sideWall.y],[capWall.x,capWall.y+capWall.h],[capWall.x,capWall.y]];
