@@ -1,7 +1,9 @@
 import{minionHeight}from'./minion-art.js';
+import{needleVisualHeight}from'./needle-art.js';
 import { isClerk,CLERK_HEIGHT } from './clerk-art.js';
 import { BackstreetSkin } from './backstreet.js';
 import { RooftopScenery,roofPath } from './rooftop.js';
+import {ArenaDecor,campStains} from './arena-decor.js';
 import { drawWorld as drawPings } from './pings.js';
 import * as THREE from './vendor/three.js';
 import { Camera25D } from './camera-25d.js';
@@ -17,13 +19,13 @@ import { SkillVFX } from './skill-vfx.js';
 import { THEMES } from './art.js';
 import { projectFeet,leapLift,airborneShadow,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
 
-const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17','atlasV36','weaponAtlas','clerkAtlas','minionAtlas'];
+const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17','atlasV36','weaponAtlas','clerkAtlas','minionAtlas','needleAtlas'];
 const material=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
 function painter(base,canvas){
  const p=Object.create(Object.getPrototypeOf(base));p.canvas=canvas;p.ctx=canvas.getContext('2d');
  for(const key of ATLAS_KEYS)p[key]=base[key];return p;
 }
-function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m.map?.userData?.backstreetShared&&!m.map?.userData?.rooftopShared)m.map?.dispose();m.dispose();}}});object.removeFromParent();}
+function dispose(object){object.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m.map?.userData?.backstreetShared&&!m.map?.userData?.rooftopShared)m.map?.dispose();if(m.alphaMap&&!m.alphaMap.userData?.rooftopShared)m.alphaMap.dispose();m.dispose();}}});object.removeFromParent();}
 
 export class Renderer25D {
  constructor(base){
@@ -35,6 +37,7 @@ export class Renderer25D {
   this.webgl.outputColorSpace=THREE.SRGBColorSpace;this.webgl.setClearColor('#141919');
   this.skin=new BackstreetSkin(()=>{this.floorStamp=null;this.sceneryDirty=true;});
   this.rooftop=new RooftopScenery(()=>{this.floorStamp=null;this.sceneryDirty=true;});
+  this.decor=new ArenaDecor(this.skin,()=>{this.sceneryDirty=true;});
   this.scene=new THREE.Scene();this.scene.fog=new THREE.Fog('#141919',55,110);
   this.scene.add(new THREE.AmbientLight('#d2d2c9',1.7));
   const sun=new THREE.DirectionalLight('#e4d4b8',1.8);sun.position.set(-12,35,8);this.scene.add(sun);
@@ -67,13 +70,15 @@ export class Renderer25D {
    for(const z of [a.y,a.y+a.h])this.box(a.w,.03,.06,a.x+a.w/2,.035,z,a.color);
    for(const x of [a.x,a.x+a.w])this.box(.06,.03,a.h,x,.035,a.y+a.h/2,a.color);
   }
-  for(const w of this.layout.walls){
+  for(const [index,w] of this.layout.walls.entries()){
    const footing=this.box(w.w+.22,.18,w.h+.22,w.x+w.w/2,.09,w.y+w.h/2,'#1d303b');footing.rotation.y=-(w.angle||0);
    const wall=this.box(w.w,1.25,w.h,w.x+w.w/2,.78,w.y+w.h/2,'#657a7b');
-   wall.rotation.y=-(w.angle||0);this.skin.box(wall,'wall');this.skin.decorateWall(wall,w,this.walls.length/2);wall.material.transparent=true;this.walls.push({mesh:wall,rect:w});
+   wall.rotation.y=-(w.angle||0);this.skin.box(wall,'wall');wall.material.transparent=true;this.walls.push({mesh:wall,rect:w});
    const cap=this.box(w.w+.08,.1,w.h+.08,w.x+w.w/2,1.455,w.y+w.h/2,'#a5b2a4');
    cap.rotation.y=-(w.angle||0);this.skin.box(cap,'wall','#c8d0d1');cap.material.transparent=true;this.walls.push({mesh:cap,rect:w});
+   this.decor.wall(wall,cap,w,index,Boolean(this.layout.terrain));
   }
+  if(this.layout.terrain)this.decor.smoke(this.world,this.rooftop.textures.smoke);
   for(const f of this.layout.spawns||[this.layout.spawn]){
   this.cylinder(2.45,.13,f.x,.02,f.y,'#476e75');this.cylinder(1.9,.16,f.x,.12,f.y,'#6a9392');this.cylinder(1.5,.12,f.x,.22,f.y,'#7fa8a1');
   // Keep the visual pedestal below the combat plane; movement has no elevation.
@@ -91,6 +96,7 @@ export class Renderer25D {
   const b=this.layout.bounds;
   c.save();roofPath(c,this.layout);c.clip();
   this.skin.floor(c,b);
+  campStains(c,game);
   for(const a of this.layout.areas){r.text(`${String(a.id).padStart(2,'0')} / ${a.name}`,a.x+a.w/2,a.y+1.2,a.color,.52);}
   const f=this.layout.spawn;r.circle(f.x,f.y,2.45,'#a8f2e91c','#bbf7e1aa',.08);r.circle(f.x,f.y,1.65,null,'#dcffef66',.055);r.text('부활소',f.x,f.y+3.1,'#c3e9dc',.42);
   if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);r.text('부활소 · 적에게 1000 고정 피해 / 0.5초',a.x+a.w/2,a.y+1.1,a.team?'#f5bba4':'#c7fff1',.27);}for(let team=0;team<2;team++)for(let lane=0;lane<2;lane++)r.line(lanePath(team,lane),'#a6a09214',3.2);for(const bush of BUSHES)r.bush(bush);c.restore();return;}
@@ -174,7 +180,7 @@ export class Renderer25D {
    this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>['tower','core'].includes(e.kind)?r.structure(e,game):r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
-   if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:isClerk(e)?CLERK_HEIGHT+.18:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.5:1.55),'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.85:2),'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}
+   if(e.kind==='neutral'){orderMark(r,e,game);r.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?1.8:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95),game);if(e.camp!=='central')r.text(e.name,e.x,e.y-(['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.55:isClerk(e)?CLERK_HEIGHT+.5:1.55),'#d2d4b9',.3);if(e.exposedUntil>game.time)r.text(`받는 피해 +20% ${(e.exposedUntil-game.time).toFixed(1)}s`,e.x,e.y-(isClerk(e)?CLERK_HEIGHT+.85:2),'#edbb97',.25);if(e.returning)r.text('복귀 중',e.x,e.y+.8,'#d1dec5',.25);}
    else if(e.kind==='minion')r.bar(e,.95,e.y-minionHeight(e)-.18,game);
    else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-(e.kind==='core'?1.45:1.1),game);towerMark(r,e,game);
   });

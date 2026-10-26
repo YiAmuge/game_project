@@ -37,7 +37,7 @@ test('Living towers reveal concealed enemies to their entire team within attack 
  const tower=g.entity({kind:'tower',team:0,x:t.x,y:t.y-5,range:8.5,radius:.9,maxHp:5000,damage:280});assert.equal(g.visibleTo(0,t),true);assert.equal(Towers.acquire(g,tower),t);tower.alive=false;assert.equal(g.visibleTo(0,t),false);tower.alive=true;tower.y=t.y-8.51;assert.equal(g.visibleTo(0,t),false);tower.y=t.y-8.5;assert.equal(g.visibleTo(0,t),true);t.untargetableUntil=100;assert.equal(Towers.attackable(g,tower,t),false);
 });
 test('Diagonal meshes are absent and the narrowed terrain edge rejects the full body radius',()=>{
- assert.equal(WALLS.length,16);assert.equal(WALLS.some(w=>w.approach),false);assert.ok(APPROACH.tipX>16.2&&APPROACH.tipY>20.9);
+ assert.equal(WALLS.length,16);assert.equal(WALLS.some(w=>w.approach),false);assert.ok(APPROACH.tipX>16.2);near(APPROACH.tipY*(1-APPROACH.stopX/APPROACH.tipX),APPROACH.stopY);
  const x=10,slope=APPROACH.tipY/APPROACH.tipX,y=APPROACH.tipY-slope*x,n=Math.hypot(1,slope);assert.ok(blocked(x,y+.47*n,.48));assert.equal(blocked(x,y+.49*n,.48),false);assert.ok(blocked(1,1));assert.equal(blocked(MAP_CENTER.x,MAP_CENTER.y),false);
 });
 test('Central vertical mist matches both wall faces and endpoints exactly',()=>{

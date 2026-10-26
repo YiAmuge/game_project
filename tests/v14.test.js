@@ -81,7 +81,7 @@ for(const end of ['expiry','cleanse','owner-death','victim-death','recast'])test
 });
 test('Ppui minion sharing grants fifteen percent XP without boosting gold, direct kills or automatic XP',()=>{
  const {g,p}=quiet('ppui'),a=champ(g,0,41,7,'meursault'),m=g.entity({kind:'minion',team:1,x:42,y:7,maxHp:100,radius:.3});
- g.kill(m,a);close(p.xp,24*.2*1.15);close(a.xp,24*.8);close(p.gold,253);const before=p.xp;g.award(p,24,0);close(p.xp-before,24);run(g,1);close(p.xp-before,27);
+ const finisher=g.entity({kind:'minion',team:0,x:42,y:7,maxHp:100});g.kill(m,finisher);close(p.xp,24*.25*1.15);close(a.xp,24*.25);close(p.gold,253.75);const before=p.xp;g.award(p,24,0);close(p.xp-before,24);run(g,1);close(p.xp-before,27);
 });
 test('Ppui basic can empower at seven range and heals from current missing health without frame-rate dependence',()=>{
  function sample(dt){const {g,p}=quiet('ppui'),t=champ(g,0,46.8,7);t.hp=t.maxHp-2000;g.attack(p,t);assert.equal(p.state.empower.target,t.id);for(let i=0;i<3/dt;i++){g.time+=dt;tickSkills(g,p,dt);}return t.hp;}

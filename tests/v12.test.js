@@ -93,7 +93,7 @@ test('new ordinary champions and augment codex share the gameplay definitions',(
 });
 
 test('capture respects status resistance and a full cleanse releases the arena immediately',()=>{
- const {g,t}=capture();assert.ok(trap(g,t));t.status={};g.units=[t];assert.equal(trap(g,t),null);g.moveToward(t,{x:60,y:7},1);assert.ok(t.x>48);
+ const {g,t}=capture();assert.ok(trap(g,t));t.status={};g.units=[t];assert.equal(trap(g,t),null);for(let i=0;i<60;i++){g.moveToward(t,{x:60,y:7},1/60);g.time+=1/60;}assert.ok(t.x>48);
  const f=capture('kim');assert.ok(trap(f.g,f.t));close(f.t.state.netTrap.until-(f.g.time-.05),2.5,.02);
 });
 

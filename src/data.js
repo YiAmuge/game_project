@@ -18,10 +18,10 @@ export const MAP_CENTER=worldPoint(32,18);
 export const WORLD={x:-8.5,y:-8,w:87.72,h:62.8};
 export const TERRAIN=[{x:0,y:0,w:83.2,h:46.8},{x:-10,y:16.4,w:12,h:14},{x:81.2,y:16.4,w:12,h:14},{x:29.6,y:-8,w:24,h:9.5},{x:29.6,y:45.3,w:24,h:9.5}].map(p=>({...p,x:p.x*MAP_X,w:p.w*MAP_X}));
 // The battlefield ends at the former diagonal walls' inner face, leaving the fountain intact.
-const approachSlope=20.9/16.2,approachTipY=20.9+.55*Math.hypot(1,approachSlope);
-export const APPROACH={tipX:approachTipY/approachSlope,tipY:approachTipY,stopX:TERRAIN[1].x+TERRAIN[1].w+.8,stopY:TERRAIN[1].y};
+const approachSlope=20.9/16.2,approachTipX=(20.9+.55*Math.hypot(1,approachSlope))/approachSlope,approachStopX=TERRAIN[1].x+TERRAIN[1].w,approachStopY=TERRAIN[1].y;
+export const APPROACH={tipX:approachTipX,tipY:approachStopY/(1-approachStopX/approachTipX),stopX:approachStopX,stopY:approachStopY};
 const approachEnd={x:APPROACH.stopX,y:APPROACH.tipY*(1-APPROACH.stopX/APPROACH.tipX)};
-const approachCutout=[[0,0],[APPROACH.tipX,0],[approachEnd.x,approachEnd.y],[APPROACH.stopX,APPROACH.stopY],[0,APPROACH.stopY]];
+const approachCutout=[[0,0],[APPROACH.tipX,0],[approachEnd.x,APPROACH.stopY],[0,APPROACH.stopY]];
 export const APPROACH_CUTOUTS=[...Array(4)].map((_,i)=>approachCutout.map(([x,y])=>[i&1?RULES.width-x:x,i&2?RULES.height-y:y]));
 export const inApproachCutout=(x,y)=>{const xx=Math.min(x,RULES.width-x),yy=Math.min(y,RULES.height-y);return xx>=0&&yy>=0&&xx<APPROACH.tipX&&yy<APPROACH.tipY*(1-xx/APPROACH.tipX)&&!(xx<APPROACH.stopX&&yy>=APPROACH.stopY);};
 export const terrainContains=(x,y)=>!inApproachCutout(x,y)&&TERRAIN.some(p=>x>=p.x&&x<=p.x+p.w&&y>=p.y&&y<=p.y+p.h);
@@ -109,6 +109,8 @@ export const BUSHES=[
  ...[[1,8],[3,10],[5,12],[6,13]].map(([a,b])=>horizontalMist(WALLS[a],WALLS[b])),
  ...[...leftBushes,...leftBushes.map(b=>({...b,x:64-b.x-b.w}))].map(b=>({x:b.x*MAP_SCALE*MAP_X,y:b.y*MAP_SCALE,w:b.w*MAP_SCALE*MAP_X,h:b.h*MAP_SCALE})),
 ].map((b,id)=>({...b,id}));
+// Fill the full diagonal opening from one wall's end face to the other's.
+for(const [index,a,b]of [[4,0,1],[5,2,3],[6,8,7],[7,10,9]]){const left=WALLS[a],right=WALLS[b],polygon=[[left.x+left.w,left.y],[right.x,right.y],[right.x,right.y+right.h],[left.x+left.w,left.y+left.h]],xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]);Object.assign(BUSHES[index],{x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys),polygon,towerSmoke:true,wallEnds:[a,b]});}
 for(const [index,inside]of [[4,1],[11,-1]]){const wall=WALLS[index],w=1.35*MAP_SCALE*MAP_X;BUSHES.push({id:BUSHES.length,x:inside>0?wall.x+wall.w:wall.x-w,y:wall.y,w,h:wall.h});}
 // Outer lane hedges and bushes inside the added horizontal flank rooms.
 for(const y of [0,RULES.height-1.6])for(const side of [false,true]){const x=APPROACH.tipX,w=TERRAIN[3].x-x;BUSHES.push({id:BUSHES.length,x:side?RULES.width-x-w:x,y,w,h:1.6});}

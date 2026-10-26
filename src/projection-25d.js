@@ -8,7 +8,7 @@ export function sceneryPixelRatio(width,height,dpr=1){return Math.min(dpr,1,Math
 export function feetOffset(e){
  if(e.trainingDummy)return .37;
  if(e.kind==='champion')return .325;
- if(e.kind==='neutral')return e.camp==='boss'?1.04:['amplify','blessing'].includes(e.camp)?0:.65;
+ if(e.kind==='neutral')return e.camp==='boss'?1.04:['amplify','blessing','needle','sewingKing'].includes(e.camp)?0:.65;
  if(e.kind==='minion')return 0;
  if(e.kind==='bait')return .67;
  if(e.kind==='summon')return 1.1;

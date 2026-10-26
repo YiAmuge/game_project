@@ -6,7 +6,7 @@ const structure=e=>['tower','core'].includes(e.kind);
 export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||e.phaseEnemiesUntil>g.time||false}={}){
  if(e.kind==='summon'||other.kind==='summon')return false;
  if(e===other||!other.alive||g.hidden(other)||other.state?.posthumous)return false;
- if(structure(other))return true;
+ if(structure(other))return !(e.kind==='minion'&&other.kind==='tower'&&e.team===other.team);
  if(paired(g,e,other))return false;
  if(e.team===other.team&&e.team<2&&(['champion','minion'].includes(e.kind)||['champion','minion'].includes(other.kind)))return false;
  if((phaseEnemies||e.phaseEnemiesUntil>g.time||other.phaseEnemiesUntil>g.time||other.motion?.phaseEnemies)&&e.team!==other.team)return false;

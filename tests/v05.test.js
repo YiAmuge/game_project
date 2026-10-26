@@ -33,10 +33,10 @@ test('Faust maximum level adds exactly one magazine and piercing with an unchang
 test('new fountain is a semicircle behind and separated from its core; recall and respawn use it',()=>{
  for(const team of [0,1]){const {g,p,t}=quiet();const e=team?t:p;Object.assign(e,FOUNTAINS[team]);assert.ok(g.inSpawn(e));Object.assign(e,CORE_POSITIONS[team]);assert.ok(!g.inSpawn(e));assert.ok(distance(WELL_ROOMS[team],CORE_POSITIONS[team])>4);g.kill(e,team?p:t);g.time=e.respawnAt;g.step(.01);assert.ok(e.alive);close(distance(e,FOUNTAINS[team]),0);}
 });
-test('minion sharing conserves the reward pool and divides the nearby ally share',()=>{
+test('champion minion last hits grant the full reward without sharing it to nearby allies',()=>{
  const {g,p}=quiet('don'),a=ally(g),b=ally(g,'honglu');b.x=43;
  const m=g.entity({kind:'minion',team:1,x:42,y:7,maxHp:1});const before=[p,a,b].map(c=>[c.xp,c.gold]);g.deal(p,m,10,{fixed:true});
- close(p.xp-before[0][0],19.2);close(a.xp-before[1][0],2.4);close(b.xp-before[2][0],2.4);close(p.gold-before[0][1],12);close(a.gold-before[1][1],1.5);close(b.gold-before[2][1],1.5);
+ close(p.xp-before[0][0],24);close(a.xp-before[1][0],0);close(b.xp-before[2][0],0);close(p.gold-before[0][1],15);close(a.gold-before[1][1],0);close(b.gold-before[2][1],0);
 });
 test('ranged minions and towers have homing flight time, while minion tower resistances differ by type',()=>{
  const {g,p,t}=quiet();const ranged=g.entity({kind:'minion',ranged:true,team:0,x:36,y:7,maxHp:480,damage:72});const hp=t.hp;g.simpleAttack(ranged,t);close(t.hp,hp);g.updateProjectiles(.1);close(t.hp,hp);t.y=8;for(let i=0;i<30;i++)g.updateProjectiles(1/30);close(hp-t.hp,72);

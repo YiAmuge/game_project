@@ -12,6 +12,7 @@ export function drawMist(r,b,front=false,time=0){
   c.save();c.translate(b.x+b.w/2,b.y+b.h/2);if(vertical)c.rotate(Math.PI/2);
   for(let row=0;row<rows;row++)for(let i=-1;i<count;i++){const x=-length/2+i*span*.62+Math.sin(time*.18+row)*.18,y=-breadth/2+(row+.5)*breadth/rows;c.save();c.translate(x,y);if((i+row)%2)c.scale(-1,1);c.drawImage(smoke,-span/2,-Math.max(2,breadth/rows*1.7)/2,span,Math.max(2,breadth/rows*1.7));c.restore();}c.restore();
  }
+ c.fillStyle='#071b2d88';c.fillRect(b.x,b.y,b.w,b.h);
  const count=Math.max(3,Math.min(12,Math.ceil(b.w*b.h/2))),radius=Math.max(.6,Math.min(b.w,b.h)*.7);
  for(let i=0;i<count;i++){
   const phase=(i*.61803398875)%1,other=(i*.381966+.2)%1,x=b.x+b.w*phase+Math.sin(time*.45+i)*.12,y=b.y+b.h*other+Math.cos(time*.35+i*2)*.1;

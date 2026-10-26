@@ -12,7 +12,7 @@ const match={bounds:WORLD,terrain:TERRAIN};
 test('the rooftop silhouette matches the existing playable terrain, including narrowed corners and rear wings',()=>{
  const p=roofOutline(match),inside=(x,y)=>{let yes=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const a=p[i],b=p[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
  for(let x=WORLD.x+.123;x<WORLD.x+WORLD.w;x+=.37)for(let y=WORLD.y+.147;y<WORLD.y+WORLD.h;y+=.37)assert.equal(inside(x,y),terrainContains(x,y),`roof at ${x},${y}`);
- assert.equal(p.length,24);for(const edge of roofSegments(match)){near(Math.hypot(edge.b[0]-edge.a[0],edge.b[1]-edge.a[1]),edge.length);assert.ok(edge.length>0);}
+ assert.equal(p.length,20);for(const edge of roofSegments(match)){near(Math.hypot(edge.b[0]-edge.a[0],edge.b[1]-edge.a[1]),edge.length);assert.ok(edge.length>0);}
  const practice={bounds:{x:0,y:0,w:83.2,h:46.8}};assert.deepEqual(roofOutline(practice),[[0,0],[83.2,0],[83.2,46.8],[0,46.8]]);
 });
 test('skyscraper windows descend below the exact roof edges and the distant backdrop never writes gameplay depth',()=>{

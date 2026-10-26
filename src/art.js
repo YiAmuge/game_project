@@ -1,4 +1,5 @@
 import { MINION_FRAMES } from './minion-sprites.js';
+import { NEEDLE_FRAMES } from './needle-sprites.js';
 import { CLERK_FRAMES } from './clerk-sprites.js';
 import { SPRITE_FRAMES } from './sprites-v36.js';
 // Generated fan-art atlas; source revisions are recorded in assets/sprites-v36.json.
@@ -27,9 +28,9 @@ export const FRAMES = {
   outis:{"x": 768, "y": 532, "w": 384, "h": 492, "sheet": 1},
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
-Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES);
-export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52'];
-const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52'];
+Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES);
+export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54'];
+const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54'];
 const atlasImages=new Map();
 export function visualForm(g,e){
  if(e.key==='sora'&&g.buff(e,'soraEgo'))return 'soraEgo';

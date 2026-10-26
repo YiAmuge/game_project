@@ -1,4 +1,6 @@
 import{drawMinion,minionHeight}from'./minion-art.js';
+import{drawNeedle,needleVisualHeight}from'./needle-art.js';
+import{draw as sewingPattern}from'./sewing.js';
 import { drawMist,CAMP_RANGE_COLOR } from './mist.js';
 import { drawClerk,isClerk,CLERK_HEIGHT } from './clerk-art.js';
 import { drawMinimap } from './minimap.js';
@@ -25,7 +27,7 @@ import { targetingPreview } from './targeting.js';
 import { championHud, championEffects, championGroundEffects, chargePreview, orderMark, threatRanges } from './overlays.js';
 
 export class Renderer {
-  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.scale=1;this.ox=0;this.oy=0;this.resize();}
+  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.needleAtlas=loadAtlas(13);this.scale=1;this.ox=0;this.oy=0;this.resize();}
   resize() {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
@@ -121,7 +123,9 @@ export class Renderer {
     if(!this.billboardPass)this.circle(e.x+.1,e.y+.3,e.radius+.14,'#07161a77');
     if(e.kind==='minion'){drawMinion(this,e,game);return;}
     if(e.kind==='neutral') {
-      if(drawClerk(this,e,game)) {
+      if(drawNeedle(this,e,game)) {
+        // Front-facing idle/weapon-swing poses stay grounded at their feet.
+      } else if(drawClerk(this,e,game)) {
         // Clerk body and independent held weapon are drawn together.
       } else if(e.camp==='boss') {
         if(!this.billboardPass)this.circle(e.x,e.y,1.6,'#b788d312','#c6a6dd55');
@@ -163,7 +167,7 @@ export class Renderer {
     this.weapon(e,game);
     c.restore();
 
-    if(e.player&&inBush)this.text(e.revealedUntil>game.time?'노출 중':'수풀 은닉',e.x,e.y+.8,'#a9d890',.32);
+    if(e.player&&inBush)this.text(e.revealedUntil>game.time?'노출 중':'푸른연기 은닉',e.x,e.y+.8,'#a9d890',.32);
   }
   yanHand(e,game){
     const c=this.ctx,f=FRAMES.yanHand,a=this.atlasFor('yanHand');if(!a.complete||!a.naturalWidth)return;
@@ -188,7 +192,7 @@ export class Renderer {
     if(!this.groundPass&&game.training25d){this.follow(game,playing);this.scene25d.draw(game,playing);return;}
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);if(this.groundPass)c.clearRect(0,0,this.width,this.height);else{c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);}if(this.groundTransform)c.transform(...this.groundTransform);else{c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);}
-    this.floor(game);this.camps(game);for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
+    this.floor(game);this.camps(game);for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
     if(!game.training&&!game.bossSpawned){this.text('CENTRAL CAMP',MAP_CENTER.x,MAP_CENTER.y,'#b8ae7766',.4);this.text('05:00',MAP_CENTER.x,MAP_CENTER.y+.7,'#a5a58b66',.48);}
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo(0,e))chargePreview(this,e,game);
@@ -222,7 +226,7 @@ export class Renderer {
       return;
     }
     // Nameplates render after bushes and effects; the player's is always last.
-    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,e.camp==='boss'?3.4:1.2,e.y-(e.camp==='boss'?1.8:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
+    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?1.8:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
     for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)).sort((a,b)=>Number(a.player)-Number(b.player))){championEffects(this,e,game);CombatVisuals.front(this,e,game);championHud(this,e,game);CombatVisuals.meter(this,e,game);}
     for(const e of game.champions().filter(e=>e.easterText?.until>game.time))this.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   }

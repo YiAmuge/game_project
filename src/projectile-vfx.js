@@ -6,7 +6,7 @@ const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice
 
 export function projectileAppearance(p,g){
  const key=p.theme||p.source?.key,style=combatStyle(key,g,p.source,{kind:p.damageKind==='basic'?'basic':'projectile',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});
- const type=key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
+ const type=key==='sewingNeedle'?'needle':key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?(p.visualHeight??1):p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
  return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(type==='swordRay'?{visualWidth:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:empowered?'#a32b44':null};
@@ -46,6 +46,8 @@ export class ProjectileVFX {
    c.strokeStyle='#f4fbf8';c.lineWidth=3;c.beginPath();c.moveTo(-27,0);c.lineTo(54,0);c.stroke();
   }else if(type==='wave'){
    for(let i=0;i<7;i++){c.beginPath();c.moveTo(-25-i*2,-40+i*3);c.bezierCurveTo(35+i,0,35+i,0,-25-i*2,40-i*3);c.strokeStyle=i%2?color:'#f2f5fa';c.lineWidth=5-i*.6;c.globalAlpha=.8-i*.08;c.stroke();}c.globalAlpha=1;
+  }else if(type==='needle'){
+   c.beginPath();c.moveTo(-48,-3);c.lineTo(52,0);c.lineTo(-48,3);c.bezierCurveTo(-58,3,-58,-3,-48,-3);c.fill();c.stroke();c.strokeStyle='#191e21';c.lineWidth=1.4;c.beginPath();c.ellipse(-48,0,5,1.4,0,0,Math.PI*2);c.stroke();
   }else if(type==='axe'){
    c.save();c.rotate(.6);c.fillStyle='#554b42';c.fillRect(-36,-3,65,6);c.fillStyle=metal;c.beginPath();c.moveTo(5,-5);c.bezierCurveTo(9,-28,40,-36,49,-15);c.lineTo(34,9);c.lineTo(9,4);c.closePath();c.fill();c.stroke();
    c.strokeStyle='#e9f6ff';c.lineWidth=2;c.beginPath();c.moveTo(14,-19);c.lineTo(30,-25);c.lineTo(43,-15);c.stroke();c.restore();

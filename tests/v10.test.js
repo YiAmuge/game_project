@@ -15,8 +15,8 @@ function quiet(key='meursault'){
  const p=g.player,t=g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:43,y:7,maxHp:100000,hp:100000});g.units=[p,t];g.minionQueue=[];return{g,p,t};
 }
 function ally(g,key='meursault',x=42,y=9){const a=g.makeChampion(key,0,9);Object.assign(a,{x,y});return a;}
-test('neutral and buff creep XP drops ten percent without changing gold or boss rewards',()=>{
- for(const [camp,xp,gold]of[['central',56.25,18],['side',56.25,18],['amplify',112.5,40],['blessing',112.5,40]]){const {g,p}=quiet();const n=g.makeNeutral(44,7,camp);g.kill(n,p);close(p.xp,xp);close(p.gold,250+gold);}
+test('central, side and buff creep experience and gold follow their configured rewards',()=>{
+ for(const [camp,xp,gold]of[['central',35,18],['side',56.25,18],['amplify',112.5,40],['blessing',112.5,40]]){const {g,p}=quiet();const n=g.makeNeutral(44,7,camp);g.kill(n,p);close(p.xp,xp);close(p.gold,250+gold);}
  const {g,p}=quiet();g.spawnBoss();g.kill(g.units.find(u=>u.camp==='boss'),p);close(p.xp,180);
 });
 test('first minion wave waits three seconds and following waves remain twenty-five seconds apart',()=>{

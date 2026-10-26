@@ -18,8 +18,8 @@ test('27 ordinary champions include all four additions; XP accrues at three per 
  assert.equal(Object.keys(CHAMPIONS).length,29);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,31);
  for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,key==='faust'?9:3);g.kill(p,t);run(g,1);close(p.xp,key==='faust'?18:6);}
 });
-test('four ordinary creeps or two buff creeps now give 225 XP; building HP stays reduced',()=>{
- for(const [camp,n]of [['side',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++)g.kill(g.makeNeutral(42,7,camp),p);assert.equal(p.level,1);close(p.xp,225);}const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===5000));assert.equal(g.units.find(t=>t.kind==='core').maxHp,6000);
+test('central, side, needle and buff camps award their configured XP; building HP stays reduced',()=>{
+ for(const [camp,n]of [['side',4],['needle',4],['central',4],['amplify',2],['blessing',2]]){const {g,p}=quiet('meursault');for(let i=0;i<n;i++)g.kill(g.makeNeutral(42,7,camp),p);assert.equal(p.level,1);close(p.xp,camp==='central'?140:225);}const g=new Game();assert.ok(g.towers(0).every(t=>t.maxHp===5000));assert.equal(g.units.find(t=>t.kind==='core').maxHp,6000);
 });
 
 test('Rudolph magazine augmentation grants thirty maximum SP',()=>{const {g,p}=quiet('rudolph');p.alive=false;p.upgrades.reload=3;p.gold=5000;assert.ok(g.buyAugment(p,'magazine2'));assert.equal(g.ammoCap(p),130);});

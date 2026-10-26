@@ -14,8 +14,8 @@ export function rooftopImages(){
 // wings and the four narrowed approaches. This adds no gameplay boundaries.
 export function roofOutline(layout){
  const b=layout.bounds;if(!layout.terrain)return[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]];
- const [,left,right,top,bottom]=TERRAIN,W=RULES.width,H=RULES.height,a=APPROACH.tipX,s=APPROACH.stopX,n=APPROACH.tipY*(1-s/a),t=left.y,v=left.y+left.h;
- return[[a,0],[top.x,0],[top.x,top.y],[top.x+top.w,top.y],[top.x+top.w,0],[W-a,0],[W-s,n],[W-s,t],[right.x+right.w,t],[right.x+right.w,v],[W-s,v],[W-s,H-n],[W-a,H],[bottom.x+bottom.w,H],[bottom.x+bottom.w,bottom.y+bottom.h],[bottom.x,bottom.y+bottom.h],[bottom.x,H],[a,H],[s,H-n],[s,v],[left.x,v],[left.x,t],[s,t],[s,n]];
+ const [,left,right,top,bottom]=TERRAIN,W=RULES.width,H=RULES.height,a=APPROACH.tipX,s=APPROACH.stopX,t=left.y,v=left.y+left.h;
+ return[[a,0],[top.x,0],[top.x,top.y],[top.x+top.w,top.y],[top.x+top.w,0],[W-a,0],[W-s,t],[right.x+right.w,t],[right.x+right.w,v],[W-s,v],[W-a,H],[bottom.x+bottom.w,H],[bottom.x+bottom.w,bottom.y+bottom.h],[bottom.x,bottom.y+bottom.h],[bottom.x,H],[a,H],[s,v],[left.x,v],[left.x,t],[s,t]];
 }
 export function roofSegments(layout){const p=roofOutline(layout);return p.map((a,i)=>{const b=p[(i+1)%p.length],dx=b[0]-a[0],dz=b[1]-a[1];return{a,b,length:Math.hypot(dx,dz),angle:-Math.atan2(dz,dx)};});}
 export function roofPath(c,layout){c.beginPath();roofOutline(layout).forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();}
@@ -62,7 +62,7 @@ export class RooftopScenery{
    const {a,b,length,angle}=edge,x=(a[0]+b[0])/2,z=(a[1]+b[1])/2;
    const geometry=new THREE.PlaneGeometry(length,ROOFTOP.depth),uv=geometry.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*length/ROOFTOP.windowWidth,uv.getY(i)*ROOFTOP.depth/ROOFTOP.windowHeight);
    const wall=new THREE.Mesh(geometry,windowMat);wall.name='skyscraper-windows';wall.position.set(x,-ROOFTOP.depth/2-.16,z);wall.rotation.y=angle;group.add(wall);
-   const coping=new THREE.Mesh(new THREE.BoxGeometry(length+.02,.22,.22),new THREE.MeshLambertMaterial({color:'#59676a'}));coping.name='roof-edge';coping.position.set(x,.02,z);coping.rotation.y=angle;group.add(coping);
+   const coping=new THREE.Mesh(new THREE.BoxGeometry(length,.22,.22),new THREE.MeshLambertMaterial({color:'#59676a'}));coping.name='roof-edge';coping.position.set(x,.02,z);coping.rotation.y=angle;group.add(coping);
    // Only the facing edges need a veil. It stays below the roof and never
    // paints across the playable floor or participates in concealment checks.
    if(b[0]<a[0]){
