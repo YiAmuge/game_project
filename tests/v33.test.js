@@ -97,6 +97,6 @@ test('Sora base Q follows a high arc over walls and settles on legal ground',()=
 test('Starbuck opacity fades with height on ascent and descent at the same motion timestamps',()=>{
  const e={key:'starbuck',motion:{kind:'leap',minDuration:.7,elapsed:0}};close(leapOpacity(e),1);e.motion.elapsed=.12;const early=leapOpacity(e);assert.ok(early>0&&early<1);e.motion.elapsed=.27;close(leapOpacity(e),0);e.motion.elapsed=.55;assert.ok(leapOpacity(e)>0&&leapOpacity(e)<1);e.motion.elapsed=.7;close(leapOpacity(e),1);
 });
-test('tower target markers track the target without displaying range circles',()=>{
- const {g,p}=arena();const t=g.entity({kind:'tower',team:1,x:27,y:20,range:8.5,maxHp:5000,targetId:p.id});assert.equal(towerTargeters(g,p)[0],t);let count=0;const renderer={circle:()=>count++};threatRanges(renderer,g);assert.equal(count,0);t.x=40;threatRanges(renderer,g);assert.equal(count,0);t.targetId=null;threatRanges(renderer,g);assert.equal(count,0);
+test('tower target markers and enemy range warnings track the target',()=>{
+ const {g,p}=arena();const t=g.entity({kind:'tower',team:1,x:27,y:20,range:8.5,maxHp:5000,targetId:p.id});assert.equal(towerTargeters(g,p)[0],t);let count=0;const renderer={circle:()=>count++};threatRanges(renderer,g);assert.equal(count,1);t.x=40;threatRanges(renderer,g);assert.equal(count,2);t.targetId=null;threatRanges(renderer,g);assert.equal(count,2);
 });

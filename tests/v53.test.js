@@ -31,5 +31,5 @@ test('rooftop painting, smoke and window images have local provenance and stable
  assert.equal(meta.reference,'background.jpg');for(const [key,name]of Object.entries(ROOFTOP_ASSETS)){const bytes=await readFile(new URL(`../src/assets/${name}.png`,import.meta.url));assert.equal(bytes.readUInt32BE(0),0x89504e47);assert.equal(createHash('sha256').update(bytes).digest('hex'),meta.assets[key].sha256);assert.ok(bytes.readUInt32BE(16)>=1024);}
 });
 test('blue smoke uses the existing bush polygons and does not add or remove concealment',()=>{
- assert.equal(BUSHES.length,28);for(const b of BUSHES){assert.ok(b.w>0&&b.h>0);if(!b.polygon){assert.equal(regionContains(b,{x:b.x+b.w/2,y:b.y+b.h/2}),true);assert.equal(regionContains(b,{x:b.x-.01,y:b.y+b.h/2}),false);}}
+ assert.equal(BUSHES.length,32);for(const b of BUSHES){assert.ok(b.w>0&&b.h>0);if(!b.polygon){assert.equal(regionContains(b,{x:b.x+b.w/2,y:b.y+b.h/2}),true);assert.equal(regionContains(b,{x:b.x-.01,y:b.y+b.h/2}),false);}}
 });

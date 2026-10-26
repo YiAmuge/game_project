@@ -1,6 +1,6 @@
 import{NEEDLE_FRAMES}from'./needle-sprites.js';
 import{loadAtlas}from'./art.js';
-export const needleHeight=e=>e.camp==='sewingKing'?3:1.45;
+export const needleHeight=e=>e.camp==='sewingKing'?4.2:1.45;
 export function needlePresentation(g,e){
  const attacking=!e.returning&&e.swingUntil>g.time,key=(e.camp==='sewingKing'?'sewingKing':e.needleColor==='red'?'needleRed':'needleGreen')+(attacking?'Attack':'Idle'),f=NEEDLE_FRAMES[key],h=needleHeight(e)*f.heightScale,w=h*f.w/f.h;
  return{key,f,h,w,left:-w*f.foot[0],top:-h*f.foot[1],attacking};

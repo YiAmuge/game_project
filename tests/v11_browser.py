@@ -34,9 +34,9 @@ with sync_playwright() as pw:
  page.evaluate('''() => {const g=__moba.game,t=g.makeChampion('faust',1,12);g.deal(g.player,t,1,{fixed:true});g.time+=10.01;g.deal(g.entity({kind:'minion',team:0,x:42,y:7,maxHp:1000}),t,1e7,{fixed:true});}''')
  expect(page.locator('#announcement-title')).to_contain_text('처형');expect(page.locator('#blue-score')).to_have_text('4')
  page.evaluate('''() => {const g=__moba.game;g.time+=4;g.kill(g.entity({kind:'tower',team:1,x:48,y:7,maxHp:1000}),g.player);}''');expect(page.locator('#announcement-title')).to_have_text('적군 포탑 파괴')
- page.evaluate('__moba.game.time+=4;__moba.game.spawnBoss()');expect(page.locator('#announcement-title')).to_have_text('중앙 보스 등장')
+ page.evaluate('__moba.game.time+=4;__moba.game.spawnBoss()');expect(page.locator('#announcement-title')).to_have_text('쌓인 것 등장')
  page.screenshot(path=str(art/'v11-boss-spawn.png'))
- page.evaluate('''() => {const g=__moba.game;g.time+=4;g.kill(g.units.find(e=>e.camp==='boss'),g.player);}''');expect(page.locator('#announcement-title')).to_have_text('아군 중앙 보스 처치')
+ page.evaluate('''() => {const g=__moba.game;g.time+=4;g.kill(g.units.find(e=>e.camp==='boss'),g.player);}''');expect(page.locator('#announcement-title')).to_have_text('아군 쌓인 것 처치')
  amount=page.evaluate('''() => {const g=__moba.game,k=g.makeChampion('faust',1,13);g.time+=4;const before=k.gold;g.kill(g.player,k);return k.gold-before;}''');assert abs(amount-220)<1e-5
  expect(page.locator('#announcement-detail')).to_contain_text('현상금 +100');expect(page.locator('#red-score')).to_have_text('1');page.screenshot(path=str(art/'v11-shutdown.png'))
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(150);box=page.locator('#battle-announcement').bounding_box();assert box['x']>=140 and box['x']+box['width']<=391;assert page.evaluate('document.body.scrollWidth<=innerWidth');page.screenshot(path=str(art/'v11-mobile-announcement.png'));page.set_viewport_size({'width':1440,'height':900})

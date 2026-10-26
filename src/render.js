@@ -1,3 +1,4 @@
+import{drawBoss,bossVisualHeight}from'./boss-art.js';
 import{drawMinion,minionHeight}from'./minion-art.js';
 import{drawNeedle,needleVisualHeight}from'./needle-art.js';
 import{draw as sewingPattern}from'./sewing.js';
@@ -27,7 +28,7 @@ import { targetingPreview } from './targeting.js';
 import { championHud, championEffects, championGroundEffects, chargePreview, orderMark, threatRanges } from './overlays.js';
 
 export class Renderer {
-  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.needleAtlas=loadAtlas(13);this.scale=1;this.ox=0;this.oy=0;this.resize();}
+  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.needleAtlas=loadAtlas(13);this.bossAtlas=loadAtlas(14);this.scale=1;this.ox=0;this.oy=0;this.resize();}
   resize() {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
@@ -127,10 +128,8 @@ export class Renderer {
         // Front-facing idle/weapon-swing poses stay grounded at their feet.
       } else if(drawClerk(this,e,game)) {
         // Clerk body and independent held weapon are drawn together.
-      } else if(e.camp==='boss') {
-        if(!this.billboardPass)this.circle(e.x,e.y,1.6,'#b788d312','#c6a6dd55');
-        this.polygon([[e.x-1.1,e.y-.9],[e.x-.3,e.y-.6],[e.x+.3,e.y-.6],[e.x+1.1,e.y-.9],[e.x+.8,e.y+.4],[e.x,e.y+1],[e.x-.8,e.y+.4]],'#705982',team);
-        this.line([{x:e.x-.55,y:e.y-.15},{x:e.x-.2,y:e.y+.05}],'#ead3f0',.14);this.line([{x:e.x+.2,y:e.y+.05},{x:e.x+.55,y:e.y-.15}],'#ead3f0',.14);
+      } else if(drawBoss(this,e,game)) {
+        // Front-facing patchwork boss: the fan-swing pose is used on impact.
       } else {
         this.circle(e.x,e.y,.62,'#111d21',`${team}66`);this.polygon([[e.x,e.y-.4],[e.x+.3,e.y],[e.x,e.y+.4],[e.x-.3,e.y]],team);
       }
@@ -226,7 +225,7 @@ export class Renderer {
       return;
     }
     // Nameplates render after bushes and effects; the player's is always last.
-    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?1.8:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
+    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
     for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)).sort((a,b)=>Number(a.player)-Number(b.player))){championEffects(this,e,game);CombatVisuals.front(this,e,game);championHud(this,e,game);CombatVisuals.meter(this,e,game);}
     for(const e of game.champions().filter(e=>e.easterText?.until>game.time))this.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   }

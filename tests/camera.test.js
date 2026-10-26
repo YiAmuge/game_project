@@ -19,7 +19,7 @@ test('screen-to-world aim follows movement without moving the pointer',()=>{
   const point=camera.worldToScreen(after);close(point.x,1000);close(point.y,300);
 });
 test('bush layout is symmetric and includes inner, outer and flank blue-mist connectors',()=>{
-  assert.equal(BUSHES.length,28);
+  assert.equal(BUSHES.length,32);
   for(const b of BUSHES)assert.ok(BUSHES.some(m=>Math.abs(m.x-(RULES.width-b.x-b.w))<1e-7&&Math.abs(m.y-b.y)<1e-7&&Math.abs(m.w-b.w)<1e-7&&Math.abs(m.h-b.h)<1e-7));
 });
 function setup(){

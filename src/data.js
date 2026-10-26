@@ -99,6 +99,9 @@ export const WALLS = [...leftWalls, ...leftWalls.map(w => ({ ...w, x: 64 - w.x -
 }));
 // Leave entrances above and below; separate the fountain approach from side camps.
 WALLS.push(...BASE_DIVIDERS);
+// A two-by-one divider halfway between the north camp room and the upper lane.
+export const NORTH_DIVIDER={x:MAP_CENTER.x-1,y:(TERRAIN[3].y+TERRAIN[3].h+7.15)/2-.5,w:2,h:1,northDivider:true};
+WALLS.push(NORTH_DIVIDER);
 // Green connectors in the user's original sketch, mirrored around x=32.
 const leftBushes = [
   { x: 18.8, y: 10.1, w: 2, h: 1.6 },
@@ -123,6 +126,8 @@ const sideWall=WALLS[4],capWall=WALLS[5];
 const centralMist=[[sideWall.x,sideWall.y],[sideWall.x+sideWall.w,sideWall.y],[capWall.x,capWall.y+capWall.h],[capWall.x,capWall.y]];
 for(const side of [false,true])for(const bottom of [false,true]){const polygon=centralMist.map(([x,y])=>[side?RULES.width-x:x,bottom?RULES.height-y:y]),xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]),x=Math.min(...xs),y=Math.min(...ys);BUSHES.push({id:BUSHES.length,x,y,w:Math.max(...xs)-x,h:Math.max(...ys)-y,polygon});}
 for(const [i,room]of TERRAIN.slice(3).entries()){const thickness=1.35,capY=i?room.y+room.h-thickness:room.y;mist(room.x,capY,room.w,thickness);for(const x of [room.x,room.x+room.w-thickness])mist(x,i?room.y:room.y+thickness,thickness,room.h-thickness);}
+// Full perimeter, including all four corners, without putting concealment inside the wall.
+{const {x,y,w,h}=NORTH_DIVIDER,t=1.2;for(const r of [{x:x-t,y:y-t,w:w+2*t,h:t},{x:x-t,y:y+h,w:w+2*t,h:t},{x:x-t,y,w:t,h},{x:x+w,y,w:t,h}])BUSHES.push({...r,id:BUSHES.length,northSmoke:true});}
 export const lanePath = (team, lane) => {
   const y=lane===0?7.15:39.65;
   const points=[{...CORE_POSITIONS[0]},{x:16,y}, {x:RULES.width-16,y},{...CORE_POSITIONS[1]}];
@@ -140,13 +145,13 @@ export const AUGMENTS=[
  {key:'power15',group:'combat',name:'신검합일',text:'전투력 +10% · 방어관통 +10%'},
  {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 돌진형 기본 공격은 공격 사거리와 돌진거리 각각 +1'},
  {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소'},
- {key:'glaive',group:'combat',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
+ {key:'glaive',group:'survival',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
  {key:'wisdom',group:'combat',name:'지혜성도',text:'전투력 +5% · 공격 중에도 장전이 50% 속도로 진행'},
  {key:'duelManual',group:'combat',name:'듀엘교본 3권',text:'이동속도 +5% · 기본 이동속도를 초과한 현재 이동속도의 비율만큼 전투력 증가'},
  {key:'resentment',group:'survival',name:'원한 문신',text:'잃은 체력 10%마다 전투력·방어력·장전속도 +5%, 최대 8중첩. 현재 체력에 따라 실시간 적용'},
  {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:'치명적인 피해를 받으면 체력을 최대 체력의 50%로 복구하고 모든 군중제어 해제. 1초간 군중제어 면역·이동속도 +30%. 재사용 대기시간 60초'},
  {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:'2초간 피해를 받지 않으면 초당 최대 체력의 13% 보호막 충전, 최대 30%. 최대 체력의 10% 이상 보호막 보유 중 스킬 가속 +10%'},
- {key:'blackOrb',group:'survival',name:'흑수환',text:'최대 체력·이동속도·장전속도 +15%'},
+ {key:'blackOrb',group:'combat',name:'흑수환',text:'전투력·이동속도·장전속도 +10%'},
  {key:'antimatter',group:'survival',name:'반물질 옷',text:'최대 체력 +10% · 사거리 1.6의 적에게 0.5초마다 20 고정 피해'},
  {key:'writtenOrder',group:'survival',name:'쪽지로 전해진 지령',text:'공격 적중 시 방어력 +5%, 최대 5중첩. 각 중첩은 5초 유지. 최대 중첩 중 일반 피해의 10%를 고정 피해로 전환하고 해당 고정 피해만큼 5초 보호막 획득, 최대 500 누적'},
  {key:'traumaGuard',group:'survival',name:'트라우마 방지장',text:'최대 체력 +5% · 방어력 +5% · 군중제어를 받을 때 해당 효과를 무효화하고 탄창 1개 충전. 재사용 대기시간 16초'},

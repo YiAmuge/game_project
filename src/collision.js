@@ -48,7 +48,7 @@ export function settleBody(g,e,fallback){
 export function separate(g){
  const moved=e=>Boolean(e.bodyMoved)||e.bodyOrigin&&distance(e,e.bodyOrigin)>1e-6;
  for(const e of [...g.units].sort((a,b)=>Number(Boolean(moved(b)))-Number(Boolean(moved(a)))||b.id-a.id)){
-  if(!e.alive||e.kind==='summon'||structure(e)||e.camp==='boss'||g.hidden(e)||e.state?.posthumous||e.motion?.phaseEnemies||e.phaseEnemiesUntil>g.time)continue;
+  if(!e.alive||e.kind==='summon'||structure(e)||['boss','sewingKing'].includes(e.camp)||g.hidden(e)||e.state?.posthumous||e.motion?.phaseEnemies||e.phaseEnemiesUntil>g.time)continue;
   if(!canOccupy(g,e,e))settleBody(g,e,e.bodySafe);
   if(canOccupy(g,e,e))e.bodySafe={x:e.x,y:e.y};delete e.bodyMoved;
  }

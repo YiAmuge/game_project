@@ -42,9 +42,9 @@ test('core shield requires low health and ten quiet seconds; one surviving tower
  run(g,10.1);close(g.shield(core),0);core.hp=3499;g.step(.01);close(g.shield(core),1500);const before=g.shield(core);g.deal(p,core,100,{fixed:true});close(before-g.shield(core),100);tower.alive=false;const before2=g.shield(core);g.deal(p,core,100,{fixed:true});close(before2-g.shield(core),100);
 });
 test('respawn growth has a six-second floor and twenty-three-second cap',()=>{close(respawnTime(0,1),6);close(respawnTime(120,3),Math.ceil(6+1.356*(1.6+2.4)));close(respawnTime(1200,10),23);});
-test('four augments are allowed, with two from any one category',()=>{
+test('category limits allow two combat and two survival augments',()=>{
  const {g,p}=arena();p.alive=false;p.gold=10000;Object.assign(p.upgrades,{power:3,health:3,speed:3});
- for(const key of ['power15','range7','blackOrb','forceBattery'])assert.ok(g.buyAugment(p,key));assert.equal(g.buyAugment(p,'finalBullet'),false);assert.ok(g.sellAugment(p,'power15'));assert.equal(g.buyAugment(p,'resentment'),false);assert.ok(g.buyAugment(p,'finalBullet'));assert.equal(p.augments.length,4);
+ for(const key of ['power15','range7','glaive','forceBattery'])assert.ok(g.buyAugment(p,key));assert.equal(g.buyAugment(p,'finalBullet'),false);assert.ok(g.sellAugment(p,'power15'));assert.equal(g.buyAugment(p,'resentment'),false);assert.ok(g.buyAugment(p,'finalBullet'));assert.equal(p.augments.length,4);
  assert.ok(A.AUGMENTS.every(a=>!['armorHealth','emergencyHeal','health15','reloadRetaliation'].includes(a.key)));
 });
 test('range augment adds flat range, and dash distance independently gains one',()=>{

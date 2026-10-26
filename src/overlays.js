@@ -143,4 +143,4 @@ function flameHealthBorder(r,e,g,x,y,width){
 }
 export function towerTargeters(g,e){return g.units.filter(t=>t.alive&&t.team!==e.team&&['tower','core'].includes(t.kind)&&t.targetId===e.id);}
 export function towerMark(r,e,g){if(!towerTargeters(g,e).length)return;const y=e.y-(e.kind==='champion'?(stackGauge(e,g)?4.2:3.55):e.kind==='minion'?1.15:1.6);r.circle(e.x,y,.22,null,'#ff6456',.045);r.circle(e.x,y,.095,null,'#ffd0b0',.025);r.line([{x:e.x-.31,y},{x:e.x+.31,y}],'#ff6456',.035);r.line([{x:e.x,y:y-.31},{x:e.x,y:y+.31}],'#ff6456',.035);}
-export function threatRanges(r,g){const p=g.player;if(!p.alive)return;for(const e of g.units)if(e.alive&&e.team!==p.team&&e.kind==='core'&&(Math.hypot(e.x-p.x,e.y-p.y)<=e.range||e.targetId===p.id)){r.circle(e.x,e.y,e.range,'#bf3f3520','#e77d60bb',.065);}}
+export function threatRanges(r,g){const p=g.player;if(!p.alive)return;for(const e of g.units)if(e.alive&&e.team!==p.team&&['tower','core'].includes(e.kind)&&(Math.hypot(e.x-p.x,e.y-p.y)<=e.range||e.targetId===p.id)){r.circle(e.x,e.y,e.range,'#bf3f3520','#e77d60bb',.065);}}

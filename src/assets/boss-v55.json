@@ -1,0 +1,49 @@
+{
+  "source": "exec-7eee08e7-f7f6-4378-b329-cd66468e2555.png",
+  "sha256": "90122f40ae81e3f3ceeb64ca0e7d1e5e29bd70365cd0436e4cba0af57953c586",
+  "name": "쌓인 것",
+  "orientation": "front",
+  "extraction": "alpha >= 192, connected silhouettes; no detached residue; original RGB",
+  "frames": {
+    "heapedIdle": {
+      "x": 8,
+      "y": 8,
+      "w": 354,
+      "h": 391,
+      "sheet": 14,
+      "referenceHeight": 360,
+      "heightScale": 1.086111111111111,
+      "crownOffset": 22.980494148244475,
+      "foot": [
+        0.5568608435638036,
+        0.9794897548548452
+      ],
+      "sourceRect": [
+        111,
+        65,
+        723,
+        801
+      ]
+    },
+    "heapedAttack": {
+      "x": 520,
+      "y": 8,
+      "w": 425,
+      "h": 397,
+      "sheet": 14,
+      "referenceHeight": 360,
+      "heightScale": 1.1027777777777779,
+      "crownOffset": 28.76923076923077,
+      "foot": [
+        0.6285197155785391,
+        0.9792675838015888
+      ],
+      "sourceRect": [
+        866,
+        96,
+        827,
+        770
+      ]
+    }
+  }
+}

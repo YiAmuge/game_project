@@ -1,3 +1,4 @@
+import*as MinionNav from'./minion-navigation.js';
 import * as Infiltration from './infiltration.js';
 import * as Sewing from './sewing.js';
 import * as CampBuffs from './camp-buffs.js';
@@ -78,7 +79,7 @@ export class Game {
   }
   makeNeutral(x,y,camp) {
     const clerk=CampBuffs.BUFF_CREEPS[camp],stats=clerk?[clerk.health,clerk.armor,clerk.damage,clerk.interval,CAMP_RULES.buffRespawn]:{central:[700,10,80,1.3,CAMP_RULES.neutralRespawn],side:[850,15,100,1.2,CAMP_RULES.neutralRespawn],needle:[Sewing.NEEDLE.health,0,Sewing.NEEDLE.damage,Sewing.NEEDLE.interval,Sewing.NEEDLE.respawn],sewingKing:[Sewing.SEWING.health,Sewing.SEWING.armor,Sewing.SEWING.damage,Sewing.SEWING.interval,Infinity],boss:[BossPatterns.BOSS_RULES.health,60,BossPatterns.BOSS_RULES.attack,1.5,BossBuff.BOSS_BUFF.respawn]}[camp];
-    return this.entity({kind:'neutral',team:2,camp,x,y,home:{x,y},campId:camp==='central'?'central':`${camp}-${x}`,campCenter:camp==='central'?MAP_CENTER:{x,y},campRadius:['central','boss'].includes(camp)?4.7:CAMP_RULES.radius,maxHp:stats[0],armor:stats[1],damage:stats[2],interval:stats[3],respawnDelay:stats[4],range:camp==='boss'?2.8:camp==='sewingKing'?1.6:1.4,radius:camp==='boss'?1.2:camp==='sewingKing'?.9:camp==='needle'?.35:clerk?.5*1.15:.5,name:{central:'중앙 크립',side:'측면 크립',needle:'바늘이',sewingKing:'바늘질의 왕',blessing:CampBuffs.BUFF_CREEPS.blessing.name,amplify:CampBuffs.BUFF_CREEPS.amplify.name,boss:'중앙 보스'}[camp],sweep:2.5});
+    return this.entity({kind:'neutral',team:2,camp,x,y,home:{x,y},campId:camp==='central'?'central':`${camp}-${x}`,campCenter:camp==='central'?MAP_CENTER:{x,y},campRadius:['central','boss'].includes(camp)?4.7:CAMP_RULES.radius,maxHp:stats[0],armor:stats[1],damage:stats[2],interval:stats[3],respawnDelay:stats[4],range:camp==='boss'?2.8:camp==='sewingKing'?1.6:1.4,radius:camp==='boss'?1.2:camp==='sewingKing'?.9:camp==='needle'?.35:clerk?.5*1.15:.5,name:{central:'중앙 크립',side:'측면 크립',needle:'바늘이',sewingKing:'바느질의 왕',blessing:CampBuffs.BUFF_CREEPS.blessing.name,amplify:CampBuffs.BUFF_CREEPS.amplify.name,boss:'쌓인 것'}[camp],sweep:2.5});
   }
   makeChampion(key,team,index,position=POSITION_ORDER[index%4]) {
     const c=CHAMPIONS[key];
@@ -116,7 +117,7 @@ export class Game {
   action(e,kind,fn){const old=e.actionKind,previous=this.actionSource;e.actionKind=kind;this.actionSource=e;try{return fn();}finally{e.actionKind=old;this.actionSource=previous;}}
   schedule(source,delay,fn,{autonomous=false}={}){const kind=source.actionKind||'skill';this.events.push({source,autonomous,at:this.time+delay,fn:()=>this.action(source,kind,fn)});}
   startMotion(e,d,len,{speed=RULES.dashSpeed,maxSpeed=RULES.dashSpeed,kind='dash',onStep,onComplete,onCollision,ignoreWalls=false,minDuration=0,follow=null,stopDistance=0,arcHeight=1.1,phaseEnemies=false,source,forcedMaxSpeed=RULES.knockSpeed}={}){
-    if(!e.alive||e.camp==='boss'||!['champion','minion','neutral'].includes(e.kind)||e.returning)return false;
+    if(!e.alive||['boss','sewingKing'].includes(e.camp)||!['champion','minion','neutral'].includes(e.kind)||e.returning)return false;
     const forced=kind==='knock';
     if(forced&&(e.invulnerableUntil>this.time||e.ccImmuneUntil>this.time||Yan.barraging(this,e)))return false;
     if(forced&&Augments.interceptCC(this,e,'knock',1,len/Math.max(1,speed)))return false;
@@ -209,7 +210,7 @@ export class Game {
   }
   shield(e) { return e.shields.filter(s=>s.until>this.time).reduce((sum,s)=>sum+s.value,0); }
   yiShield(e){return e.shields.find(s=>s.value>0&&s.until>this.time&&s.passive==='yi');}
-  maxHp(e) { if(e.trainingDummy)return e.trainingDummy.hp*Infestation.factor(this,e);return RULES.health[CHAMPIONS[e.key].health]*(CHAMPIONS[e.key].healthMultiplier||1)*(1+CHAMPIONS[e.key].growth.health*(e.level-1))*(1+.06*e.upgrades.health)*(this.buff(e,'mutant')?1.15:1)*(1+(Augments.has(e,'blackOrb')?.15:0)+Augments.healthRate(e))*this.desireEfficiency(e)*(Sora.ego(this,e)?.8:1)*(Yan.distorted(this,e)?1.12:1)*Infestation.factor(this,e); }
+  maxHp(e) { if(e.trainingDummy)return e.trainingDummy.hp*Infestation.factor(this,e);return RULES.health[CHAMPIONS[e.key].health]*(CHAMPIONS[e.key].healthMultiplier||1)*(1+CHAMPIONS[e.key].growth.health*(e.level-1))*(1+.06*e.upgrades.health)*(this.buff(e,'mutant')?1.15:1)*(1+Augments.healthRate(e))*this.desireEfficiency(e)*(Sora.ego(this,e)?.8:1)*(Yan.distorted(this,e)?1.12:1)*Infestation.factor(this,e); }
   speed(e) {
     if(e.state?.posthumous||e.state?.ishmaelCast)return 0;
     if(e.kind!=='champion') return e.kind==='minion'?2.5:CampBuffs.BUFF_CREEPS[e.camp]?2.7*.85:2.7;
@@ -228,7 +229,7 @@ export class Game {
     if(e.key==='ahab'&&e.state.order==='guard')mult+=.12;
     mult+=this.buffValue(e,'hohenheimStride',.3);
     mult+=this.buffValue(e,'hohenheimHitStride',.25);
-    if(Augments.has(e,'blackOrb'))mult+=.15;mult+=this.buffValue(e,'ampuleStride',.3);
+    if(Augments.has(e,'blackOrb'))mult+=.1;mult+=this.buffValue(e,'ampuleStride',.3);
     if(Augments.has(e,'adaptiveSpeed'))mult+=this.time-e.lastCombat>3?.15:.07;
     mult+=this.buffValue(e,'resolve',.25)+this.buffValue(e,'infiltrationStride',.1);
     mult+=this.buffValue(e,'marks',.15);
@@ -248,7 +249,7 @@ export class Game {
   haste(e) { return Math.max(0,e.upgrades.haste*.05+this.extraRate(e)+(this.discipline(e)?.12:0)+this.buffValue(e,'augBattleHaste',.15)+(Augments.has(e,'forceBattery')&&this.shield(e)>=e.maxHp*.1-1e-8?.1:0)-this.stat(e,'hasteWeak')); }
   extraRate(e){return (e.key==='ryoshu'&&this.time-e.lastCombat>=2?.2:0)+this.buffValue(e,'ishmaelSurvive',.2)+(this.buff(e,'coins')?(e.state.coinHeads||0)*.08:0)+this.buffValue(e,'mosesWhite',.15)+(e.key==='moses'?e.upgrades.power*.04*.5*.6:0);}
   reloadInterval(e) {
-    return RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*Math.max(e.key==='moses'?.85:.2,1+e.upgrades.reload*.05+Augments.resentment(e)+Augments.reloadRate(this,e)+(Augments.has(e,'blackOrb')?.15:0)+(Sora.ego(this,e)?.3:0)+(e.key==='ahab'?.15:0)+this.buffValue(e,'queequegUlt',.4)+this.buffValue(e,'explore',.2)+this.buffValue(e,'marks',.2)+this.buffValue(e,'guboReload',.35)+this.extraRate(e)+(this.discipline(e)?.12:0)+(this.buff(e,'rabbitHunt')?(e.state.rabbitStacks||0)*.2:0)+this.buffValue(e,'rabbitFrenzy',.6)+this.buffValue(e,'alisaReload',.3)+(e.key==='dongbaek'&&e.qCd<=0?.2:0)+this.buffValue(e,'flowerReload',.2)+this.buffValue(e,'outisReload',.3)+(Augments.has(e,'reloadStacks')?(e.state.augReloadStacks||0)*.05:0)+(e.key==='ahab'&&this.buff(e,'ahabCover')?(e.state.coverStacks||0)*.2:0)-this.stat(e,'reloadWeak')));
+    return RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*Math.max(e.key==='moses'?.85:.2,1+e.upgrades.reload*.05+Augments.resentment(e)+Augments.reloadRate(this,e)+(Augments.has(e,'blackOrb')?.1:0)+(Sora.ego(this,e)?.3:0)+(e.key==='ahab'?.15:0)+this.buffValue(e,'queequegUlt',.4)+this.buffValue(e,'explore',.2)+this.buffValue(e,'marks',.2)+this.buffValue(e,'guboReload',.35)+this.extraRate(e)+(this.discipline(e)?.12:0)+(this.buff(e,'rabbitHunt')?(e.state.rabbitStacks||0)*.2:0)+this.buffValue(e,'rabbitFrenzy',.6)+this.buffValue(e,'alisaReload',.3)+(e.key==='dongbaek'&&e.qCd<=0?.2:0)+this.buffValue(e,'flowerReload',.2)+this.buffValue(e,'outisReload',.3)+(Augments.has(e,'reloadStacks')?(e.state.augReloadStacks||0)*.05:0)+(e.key==='ahab'&&this.buff(e,'ahabCover')?(e.state.coverStacks||0)*.2:0)-this.stat(e,'reloadWeak')));
   }
   support() {}
   addShield(target,value,source,seconds=3,copy=true) {
@@ -406,10 +407,10 @@ export class Game {
       else if(e.camp==='boss') {
         e.respawnAt=this.time+BossBuff.BOSS_BUFF.respawn;BossBuff.reward(this,killer.team);
         this.champions(killer.team).forEach(c=>this.award(c,180*(c.key==='starbuck'?1.1:1),160));
-        this.log(`${killer.team===0?'아군':'적군'} 중앙 보스 처치`,killer.team===0?'ally':'enemy');
-        this.announce('boss-kill',`${killer.team===0?'아군':'적군'} 중앙 보스 처치`,'아군 경험치 180 · 재화 160 · 생존 아군 보스 버프 3분',{team:killer.team});
+        this.log(`${killer.team===0?'아군':'적군'} 쌓인 것 처치`,killer.team===0?'ally':'enemy');
+        this.announce('boss-kill',`${killer.team===0?'아군':'적군'} 쌓인 것 처치`,'아군 경험치 180 · 재화 160 · 생존 아군 보스 버프 3분',{team:killer.team});
       } else {
-        this.award(killer,(e.camp==='central'?35:['side','needle'].includes(e.camp)?56.25:112.5)*(killer.key==='starbuck'?1.1:1),['central','side','needle'].includes(e.camp)?18:40);
+        if(!e.summonedNeedle)this.award(killer,(e.camp==='needle'?Sewing.NEEDLE.xp:e.camp==='central'?35:e.camp==='side'?56.25:112.5)*(killer.key==='starbuck'?1.1:1),e.camp==='needle'?Sewing.NEEDLE.gold:['central','side'].includes(e.camp)?18:40);
         e.respawnAt=this.time+e.respawnDelay;
         if(killer.kind==='champion'&&e.camp==='amplify')this.addBuff(killer,'amplify',CAMP_RULES.buffDuration);
         if(killer.kind==='champion'&&e.camp==='blessing')this.addBuff(killer,'blessing',CAMP_RULES.buffDuration);
@@ -444,15 +445,15 @@ export class Game {
   spawnBoss() {
     this.bossSpawned=true;
     for(const u of this.units)if(u.camp==='central'){u.alive=false;u.hp=0;u.respawnAt=Infinity;}
-    this.makeNeutral(MAP_CENTER.x,MAP_CENTER.y,'boss');this.log('05:00 · 중앙 보스 출현', 'boss');
-    this.announce('boss-spawn','중앙 보스 등장','중앙 캠프에 보스가 나타났습니다.');
+    this.makeNeutral(MAP_CENTER.x,MAP_CENTER.y,'boss');this.log('05:00 · 쌓인 것 출현', 'boss');
+    this.announce('boss-spawn','쌓인 것 등장','중앙 캠프에 보스가 나타났습니다.');
     this.effects.push({type:'ring',...MAP_CENTER,r:5,color:'#c89cf0',life:2,maxLife:2});
   }
   nearest(e,range,includeNeutral=true) {
     return this.units.filter(u=>this.hostile(e,u)&&this.visibleTo(e.team,u)&&(includeNeutral||u.team!==2)&&!this.locked(u)&&distance(e,u)<=range+u.radius&&this.clearLine(e,u)).sort((a,b)=>distance(e,a)-distance(e,b))[0];
   }
   moveToward(e,goal,dt,{speed,ignoreCC=false}={}) {
-    if(e.state?.posthumous||e.state?.ahabUlt||e.motion||e.recall||!ignoreCC&&(this.stat(e,'root')||this.stat(e,'stun')||this.hidden(e)||e.channelUntil>this.time&&!e.state.alisaUltimateChannel))return;
+    if(['boss','sewingKing'].includes(e.camp)||e.state?.posthumous||e.state?.ahabUlt||e.motion||e.recall||!ignoreCC&&(this.stat(e,'root')||this.stat(e,'stun')||this.hidden(e)||e.channelUntil>this.time&&!e.state.alisaUltimateChannel))return;
     if(distance(e,goal)<.05)return;
     let target=goal;
     const structures=this.units.filter(t=>t.alive&&['tower','core'].includes(t.kind)&&solid(this,e,t)&&distance(goal,t)>e.radius+t.radius+.08);
@@ -603,8 +604,9 @@ export class Game {
   }
   aiMinion(e,dt) {
     if(this.training&&this.practice.lineStopped)return;
-    const aggro=this.units.find(t=>t.id===e.aggro&&t.alive&&this.visibleTo(e.team,t)&&e.aggroUntil>this.time&&distance(e,t)<e.range+2);
-    const candidates=this.units.filter(t=>t.team!==2&&this.hostile(e,t)&&this.visibleTo(e.team,t)&&!this.locked(t)&&distance(e,t)<Math.max(6,e.range)+t.radius&&this.clearLine(e,t));
+    const goal=MinionNav.laneGoal(this,e);
+    const aggro=this.units.find(t=>t.id===e.aggro&&t.alive&&this.visibleTo(e.team,t)&&e.aggroUntil>this.time&&distance(e,t)<e.range+2&&MinionNav.mayChase(this,e,t));
+    const candidates=this.units.filter(t=>t.team!==2&&this.hostile(e,t)&&this.visibleTo(e.team,t)&&!this.locked(t)&&distance(e,t)<Math.max(6,e.range)+t.radius&&MinionNav.mayChase(this,e,t)&&this.clearLine(e,t));
     const rank=t=>e.siege&&t.kind==='tower'?-1:t.kind==='minion'?0:t.kind==='champion'?1:2;
     candidates.sort((a,b)=>rank(a)-rank(b)||distance(e,a)-distance(e,b));
     const target=aggro||candidates[0];
@@ -612,12 +614,8 @@ export class Game {
       if(distance(e,target)>e.range+target.radius)this.moveToward(e,target,dt);
       else if(e.attackCd<=0&&!this.stat(e,'stun')&&!this.stat(e,'disarm')){this.simpleAttack(e,target);e.attackCd=e.interval;}
     } else {
-      const path=this.training?Training.lanePath(e.team,this):lanePath(e.team,e.lane),goal=path[e.waypoint];
-      const ahead=this.units.find(a=>a.alive&&a.kind==='minion'&&a.team===e.team&&a.lane===e.lane&&a.wave===e.wave&&a.formationIndex===e.formationIndex-1);
-      if(ahead&&distance(e,ahead)<e.radius+ahead.radius+.12)return;
+      if(MinionNav.convoyBlocked(this,e,goal))return;
       this.moveToward(e,goal,dt);
-      if(distance(e,goal)<.09&&e.waypoint<3){e.x=goal.x;e.y=goal.y;e.waypoint++;}
-
     }
   }
   simpleAttack(e,t) {
@@ -646,6 +644,7 @@ export class Game {
   }
   aiNeutral(e,dt) {
     if(e.camp==='boss'){BossPatterns.update(this,e,dt);return;}
+    if(e.camp==='sewingKing'){Sewing.stationaryAI(this,e,dt);return;}
     if(e.hostile&&distance(e,e.campCenter)>e.campRadius)e.outsideSince??=this.time;else delete e.outsideSince;
     if(!e.returning&&(e.outsideSince!==undefined&&this.time-e.outsideSince>=CAMP_RULES.leashDelay)){
       e.returning=true;e.hostile=false;e.swingUntil=0;e.exposedUntil=0;e.aggro=null;CreepPatterns.cancel(e);Sewing.cancel(e);e.status={};e.path=[];delete e.motion;

@@ -208,3 +208,29 @@ body.in-game.training-25d .arena-shell{background:#101e2a}
 @media(max-width:460px){.shop-workspace{grid-template-columns:minmax(0,1fr) 165px;gap:8px}.shop #shop-detail{padding-left:8px}.shop .augment-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:4px;gap:8px}.shop #detail-name{font-size:15px}.shop #shop-status{font-size:9px}.shop #upgrade-list{grid-template-columns:repeat(3,minmax(0,1fr))}.shop #shop-supply{min-height:500px}.shop #training-procedures button{padding:6px}.shop #shop-tabs{position:sticky;top:0;background:#132322;z-index:2}.shop .shop-upgrades{padding-bottom:8px}}
 .shop,.training-mode .shop{background:#132322}.shop .augment-item.locked .augment-icon{filter:none;opacity:1}
 #shop-tabs button[data-group=combat]{border-color:#ef7953}#shop-tabs button[data-group=survival]{border-color:#a4db74}#shop-tabs button[data-group=tech]{border-color:#8ccff1}#shop-tabs button[data-group=combat].selected{background:#6a392b;box-shadow:inset 0 -2px #ef7953}#shop-tabs button[data-group=survival].selected{background:#3a5032;box-shadow:inset 0 -2px #a4db74}#shop-tabs button[data-group=tech].selected{background:#2d4b5c;box-shadow:inset 0 -2px #8ccff1}
+
+/* The title screen contains only the city backdrop, title and navigation. */
+#menu-scenery{display:none}
+body.menu-screen{overflow:hidden;background:#080b10}
+body.menu-screen #menu-scenery{display:block;position:fixed;inset:0;pointer-events:none;isolation:isolate}
+#menu-background{width:100%;height:100%;object-fit:cover;object-position:48.2% 48%;filter:brightness(.72)}
+#menu-scenery:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#06090de6 0%,#070b1270 32%,transparent 66%),linear-gradient(0deg,#05090fe0,transparent 55%,#05050940)}
+body.menu-screen .masthead,body.menu-screen .match-bar,body.menu-screen .field-top,body.menu-screen .field-legend,body.menu-screen #event-feed,body.menu-screen .hud,body.menu-screen .underbar,body.menu-screen footer,body.menu-screen #respawn,body.menu-screen #battle-announcement{display:none}
+body.menu-screen main{position:relative;height:100dvh;min-height:0;max-width:none;margin:0;padding:0;background:transparent}
+body.menu-screen .arena-shell{height:100%;border:0;background:transparent;box-shadow:none;overflow:visible}
+body.menu-screen #arena,body.menu-screen #arena-3d{visibility:hidden}
+body.menu-screen .lobby{position:fixed;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:30px;padding:clamp(28px,8vw,160px);min-height:0;overflow:auto;background:transparent;backdrop-filter:none}
+body.menu-screen .lobby-copy{max-width:none;flex:none;width:auto}
+body.menu-screen .lobby-copy .eyebrow{font-size:11px;letter-spacing:.55em;color:#d2b998}
+body.menu-screen .lobby h1{font-family:Georgia,'Noto Serif KR',serif;font-size:clamp(44px,5vw,76px);font-weight:500;letter-spacing:.12em;line-height:1.25;margin:16px 0 0;color:#f3e5d0;text-shadow:0 2px 25px #000}
+body.menu-screen .menu-card{width:min(370px,100%);padding:0;background:transparent;border:0;box-shadow:none}
+body.menu-screen .menu-card>.eyebrow,body.menu-screen .menu-card>h2{display:none}
+body.menu-screen .menu-action{grid-template-columns:1fr;gap:6px;margin:0;padding:17px 0 17px 19px;background:#0a10164a;border:0;border-left:1px solid #a58c6655;transition:background .15s,border-color .15s}
+body.menu-screen .menu-action+ .menu-action{margin-top:6px}
+body.menu-screen .menu-action>span{display:none}
+body.menu-screen .menu-action>b{font-size:16px;letter-spacing:.06em;color:#e9e3da}
+body.menu-screen .menu-action>small{font-size:10px;letter-spacing:.03em;color:#a4a9b1}
+body.menu-screen .menu-action:not(:disabled):hover,body.menu-screen .menu-action:focus-visible{background:#283038af;border-left-color:#e1bd7c;outline:1px solid #d0b07766;outline-offset:2px}
+body.menu-screen .menu-action:disabled{opacity:.38}
+@media(max-width:600px){body.menu-screen .lobby{align-items:center;gap:24px;padding:30px 28px}body.menu-screen .lobby-copy{text-align:center}body.menu-screen .menu-card{width:min(340px,100%)}#menu-background{object-position:48.2% center}#menu-scenery:after{background:linear-gradient(0deg,#05090fed,transparent 80%),#060a1255}body.menu-screen .menu-action{background:#090e1775;padding:15px 18px}}
+@media(max-height:600px){body.menu-screen .lobby{justify-content:flex-start;gap:16px;padding-top:22px;padding-bottom:22px}body.menu-screen .lobby h1{font-size:38px;margin-top:8px}body.menu-screen .menu-action{padding-top:10px;padding-bottom:10px}body.menu-screen .lobby-copy .eyebrow{font-size:9px}}

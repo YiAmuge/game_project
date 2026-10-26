@@ -31,11 +31,11 @@ with sync_playwright() as pw:
  for key in ['power','health']:
   page.evaluate('(key)=>{__moba.game.player.upgrades[key]=3}',key)
  page.wait_for_timeout(150)
- for key in ['power15','range7','blackOrb','forceBattery']:
+ for key in ['power15','range7','glaive','forceBattery']:
   page.locator('#augment-'+key).click();page.wait_for_timeout(280)
  assert page.evaluate('__moba.game.player.augments.length')==4
- expect(page.locator('#augment-finalBullet')).to_be_disabled();expect(page.locator('#augment-kAmpule')).to_be_disabled();expect(page.locator('#augment-count')).to_contain_text('4 / 4')
- page.click('#select-augment-blackOrb');page.click('#shop-sell');page.wait_for_timeout(280)
+ expect(page.locator('#augment-finalBullet')).to_be_disabled();expect(page.locator('#augment-kAmpule')).to_be_disabled();expect(page.locator('#augment-count')).to_contain_text('4 / 6')
+ page.click('#select-augment-glaive');page.click('#shop-sell');page.wait_for_timeout(280)
  expect(page.locator('#augment-kAmpule')).to_be_enabled();expect(page.locator('#augment-finalBullet')).to_be_disabled()
  page.screenshot(path=str(art/'v25-shop.png'));page.click('#shop-close')
  page.evaluate('''()=>{const g=__moba.game;g.units=g.units.filter(e=>e.player);g.step=__realStep;g.time=1250;g.practice.invincible=true;}''');page.wait_for_timeout(120);assert page.evaluate('__moba.game.winner===null')

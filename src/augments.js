@@ -44,7 +44,7 @@ export const fits=(e,key)=>usedSlots(e)<slots(e);
 export const sellable=(g,key)=>true;
 export const liveStacks=(g,e,key)=>(e.state[key]||[]).filter(at=>at>g.time+1e-8);
 function stack(g,e,key,max){const list=liveStacks(g,e,key);if(list.length>=max)list.shift();list.push(g.time+5);e.state[key]=list;}
-export function powerRate(g,e){return (has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'wisdom')?.05:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?Math.max(0,g.speed(e)/g.baseSpeed(e)-1):0);}
+export function powerRate(g,e){return (has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.05:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?Math.max(0,g.speed(e)/g.baseSpeed(e)-1):0);}
 export const speedRate=(g,e)=>(has(e,'duelManual')?.05:0);
 export const reloadRate=(g,e)=>0;
 export const armorRate=(g,e)=>(has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*.05:0)+(has(e,'traumaGuard')?.05:0)+(has(e,'highRisk')?.07:0);

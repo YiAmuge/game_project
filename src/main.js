@@ -1,4 +1,5 @@
 import * as Infiltration from './infiltration.js';
+import{rooftopImages}from'./rooftop.js';
 import * as AugmentArt from './augment-art.js';
 import * as Pings from './pings.js';
 import * as Training from './training.js';
@@ -25,6 +26,7 @@ let selected='faust',position='bottom',game=new Game(selected,position),mode='me
 let deployment='match',globalKind='ultimate',trainingCollapsed=false,summonChoice=null;
 let keys=new Set(),last=0,accumulator=0,lastHud=0,roster=[],activeRecord=2,category='champions',toastTimer,pointer=null,drag=null,globalTarget=false,globalPoint=null,scoreOpen=false,shopSelection=null,shopGroup='all';
 const renderer=new Renderer($('arena'));
+$('menu-background').src=rooftopImages().skyline.src;
 new ResizeObserver(()=>renderer.resize()).observe($('arena'));
 function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2600);}
 function inMatch(){return mode==='playing'||mode==='result';}
@@ -58,9 +60,9 @@ for(const [key,p] of Object.entries(POSITIONS)){
  const b=document.createElement('button');b.className='position-option';b.dataset.position=key;b.innerHTML=`<b>${p.name}</b><small>${p.recommend.map(roleName).join(' · ')} 추천</small>`;b.onclick=()=>setPosition(key);$('position-select').append(b);
 }
 function resetView(){clearInput();cancelDrag();cancelGlobal();showScore(false);clearTimeout(toastTimer);$('toast').classList.add('hidden');paused=false;document.body.classList.remove('in-game','training-mode','training-25d');for(const id of ['result','pause-banner','shop','minimap','buff-tray','score-toggle','training-panel','augment-tray'])$(id).classList.add('hidden');$('pause').disabled=true;$('lobby').classList.remove('hidden');pointer=null;}
-function mainMenu(){deployment='match';mode='menu';resetView();document.body.classList.remove('practice-screen');$('main-menu').classList.remove('hidden');$('practice-panel').classList.add('hidden');if(!CHAMPIONS[selected])selected='faust';select(selected);}
+function mainMenu(){deployment='match';mode='menu';resetView();document.body.classList.remove('practice-screen','training-selection');document.body.classList.add('menu-screen');$('main-menu').classList.remove('hidden');$('practice-panel').classList.add('hidden');if(!CHAMPIONS[selected])selected='faust';select(selected);}
 function showPractice(kind='match'){
- deployment=kind;mode='practice';resetView();document.body.classList.add('practice-screen');$('main-menu').classList.add('hidden');$('practice-panel').classList.remove('hidden');if(!CHAMPIONS[selected])selected='faust';setPosition(position);
+ deployment=kind;mode='practice';resetView();document.body.classList.remove('menu-screen');document.body.classList.add('practice-screen');$('main-menu').classList.add('hidden');$('practice-panel').classList.remove('hidden');if(!CHAMPIONS[selected])selected='faust';setPosition(position);
  const training=kind!=='match';document.body.classList.toggle('training-selection',training);
  $('practice-panel').querySelector('h2').textContent=training?'연습할 챔피언을 선택하세요.':'포지션과 전투원을 선택하세요.';
  $('start').innerHTML=training?'연습장 입장 <span>→</span>':'연습전 시작 <span>→</span>';
@@ -68,7 +70,7 @@ function showPractice(kind='match'){
 }
 function start(){
  const nextGame=new Game(selected,position,{mode:deployment});try{renderer.prepare(nextGame);}catch(error){toast(error.message);return;}game=nextGame;mode='playing';paused=false;accumulator=0;speed=1;clearInput();cancelDrag();cancelGlobal();showScore(false);
- document.body.classList.remove('practice-screen');document.body.classList.add('in-game');document.body.classList.toggle('training-mode',game.training);document.body.classList.toggle('training-25d',game.training25d);setTrainingCollapsed(matchMedia('(max-width:600px)').matches);
+ document.body.classList.remove('practice-screen','menu-screen');document.body.classList.add('in-game');document.body.classList.toggle('training-mode',game.training);document.body.classList.toggle('training-25d',game.training25d);setTrainingCollapsed(matchMedia('(max-width:600px)').matches);
  for(const id of ['minimap','buff-tray','score-toggle','augment-tray'])$(id).classList.remove('hidden');
  pointer=null;game.input.aim={x:game.player.x+5,y:game.player.y};$('lobby').classList.add('hidden');$('result').classList.add('hidden');$('pause-banner').classList.add('hidden');$('pause').disabled=false;$('pause').textContent='Ⅱ';$('speed').textContent='1×';$('arena').focus();updateHud();
 }
@@ -263,7 +265,7 @@ function updateHud(){
  $('clock').textContent=clock(game.training?game.time:Math.max(0,RULES.timeLimit-game.time));$('phase').textContent=!inMatch()?'출격 대기':game.training?'연습장 · 시간 제한 없음':game.winner!==null?'경기 종료':paused?'일시정지':game.bossSpawned?'남은 시간 · 후반전':'남은 시간 · 전반전';
  $('blue-score').textContent=game.kills[0];$('red-score').textContent=game.kills[1];
  $('blue-towers').textContent='▰ '.repeat(game.towers(0).length)+'▱ '.repeat(2-game.towers(0).length);$('red-towers').textContent='▰ '.repeat(game.towers(1).length)+'▱ '.repeat(2-game.towers(1).length);
- const boss=game.units.find(u=>u.camp==='boss');$('boss-time').textContent=boss?(boss.alive?`중앙 보스 · ${Math.ceil(boss.hp).toLocaleString()} HP`:`보스 재등장 ${clock(Math.max(0,boss.respawnAt-game.time))}`):`보스까지 ${clock(Math.max(0,300-game.time))}`;
+ const boss=game.units.find(u=>u.camp==='boss');$('boss-time').textContent=boss?(boss.alive?`쌓인 것 · ${Math.ceil(boss.hp).toLocaleString()} HP`:`보스 재등장 ${clock(Math.max(0,boss.respawnAt-game.time))}`):`보스까지 ${clock(Math.max(0,300-game.time))}`;
  $('player-name').textContent=`${c.name} · ${game.training?'연습장':POSITIONS[p.position].name}`;$('level').textContent=`LV.${p.level}`;$('kda').textContent=`${p.kills} / ${p.deaths} / ${p.assists}`;
  $('xp-fill').style.width=`${p.level===RULES.maxLevel?100:Math.min(100,(p.xp-RULES.xp[p.level-1])/(RULES.xp[p.level]-RULES.xp[p.level-1])*100)}%`;
  $('champion-live-status').textContent=p.key==='yan'?`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${Yan.distorted(game,p)?'손 공격':'충전 '+Math.round(Yan.chargeShape(game,p,game.input.aim).progress*100)+'%'}`:p.key==='hohenheim'?`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · 충전 ${Math.round(Hohenheim.chargeShape(game,p,game.input.aim).progress*100)}%`:`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${p.key==='rudolph'?'정신력':'탄약'} ${Math.floor(p.ammo)} / ${game.ammoCap(p)}`;
@@ -292,7 +294,7 @@ function frame(t){
   game.input.x=globalTarget?0:Number(keys.has('KeyD'))-Number(keys.has('KeyA'));game.input.y=globalTarget?0:Number(keys.has('KeyS'))-Number(keys.has('KeyW'));
   accumulator+=elapsed*speed;while(accumulator>=1/30&&game.winner===null){renderer.follow(game,true);if(pointer)game.input.aim=renderer.point(pointer.x,pointer.y);game.step(1/30);accumulator-=1/30;}if(game.winner!==null)finish();
  }else accumulator=0;
- renderer.draw(game,inMatch());if(inMatch())renderer.minimap($('minimap'),game);if(scoreOpen)renderer.minimap($('score-map'),game);
+ if(mode!=='menu')renderer.draw(game,inMatch());if(inMatch())renderer.minimap($('minimap'),game);if(scoreOpen)renderer.minimap($('score-map'),game);
  if(globalTarget){renderer.minimap($('target-map'),game);if(globalKind==='infiltration'){const canvas=$('target-map'),c=canvas.getContext('2d'),p=Infiltration.origin(game,game.player),sx=canvas.width/game.bounds.w,sy=canvas.height/game.bounds.h;c.save();c.fillStyle='#071426aa';c.beginPath();c.rect(0,0,canvas.width,canvas.height);c.moveTo((p.x-game.bounds.x+60)*sx,(p.y-game.bounds.y)*sy);c.ellipse((p.x-game.bounds.x)*sx,(p.y-game.bounds.y)*sy,60*sx,60*sy,0,0,Math.PI*2);c.fill('evenodd');c.beginPath();c.ellipse((p.x-game.bounds.x)*sx,(p.y-game.bounds.y)*sy,60*sx,60*sy,0,0,Math.PI*2);c.strokeStyle='#8abfee';c.lineWidth=2;c.stroke();c.restore();}if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/game.bounds.w,sy=$('target-map').height/game.bounds.h,radius=globalKind==='ultimate'?5.25:.75;c.beginPath();c.ellipse((globalPoint.x-game.bounds.x)*sx,(globalPoint.y-game.bounds.y)*sy,radius*sx,radius*sy,0,0,Math.PI*2);c.fillStyle='#ffac5033';c.fill();c.strokeStyle='#ffd396';c.lineWidth=2;c.stroke();}}
  if(t-lastHud>100){updateHud();lastHud=t;}requestAnimationFrame(frame);
 }

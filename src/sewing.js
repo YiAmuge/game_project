@@ -1,8 +1,9 @@
-import {MAP_CENTER,CAMP_RULES} from './data.js';
+import {MAP_CENTER} from './data.js';
 import {distance,direction} from './geometry.js';
+import{needleVisualHeight}from'./needle-art.js';
 
 export const SEWING={spawnAt:270,health:4000,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:12,windup:1.5,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
-export const NEEDLE={health:350,armor:0,damage:55,interval:.65,respawn:CAMP_RULES.neutralRespawn};
+export const NEEDLE={health:350,armor:0,damage:55,interval:.65,respawn:Infinity,xp:45,gold:35};
 export const NORTH_CAMP={x:MAP_CENTER.x,y:-3.8};
 export const isSewing=e=>e.kind==='neutral'&&['needle','sewingKing'].includes(e.camp);
 export function makeNeedle(g,x,y,index=0,{summoned=false}={}){
@@ -13,7 +14,7 @@ export function spawnKing(g){
  if(g.sewingKingSpawned)return;g.sewingKingSpawned=true;
  for(const n of g.units.filter(e=>e.camp==='needle'&&!e.summonedNeedle)){n.alive=false;n.hp=0;n.retired=true;n.respawnAt=Infinity;cancel(n);}
  const e=g.makeNeutral(NORTH_CAMP.x,NORTH_CAMP.y,'sewingKing');e.campId='sewing-king';e.campCenter={...NORTH_CAMP};
- g.log('04:30 · 바늘질의 왕 등장','boss');g.announce('boss-spawn','바늘질의 왕 등장','상단 캠프의 바늘이를 처형하고 등장했습니다.');g.effects.push({type:'ring',...e.home,r:3.4,color:'#c7ba72',life:1.5,maxLife:1.5});
+ g.log('04:30 · 바느질의 왕 등장','boss');g.announce('boss-spawn','바느질의 왕 등장','상단 캠프의 바늘이를 처형하고 등장했습니다.');g.effects.push({type:'ring',...e.home,r:3.4,color:'#c7ba72',life:1.5,maxLife:1.5});
 }
 export function engage(g,e){if(!e.hostile)e.needleReady=g.time+SEWING.needleEvery;e.hostile=true;}
 export function cancel(e){delete e.needleCast;delete e.channelUntil;}
@@ -39,6 +40,16 @@ export function update(g,e){
   const d=direction(e,target);e.needleCast={x:e.x,y:e.y,dx:d.x,dy:d.y,startedAt:g.time,at:g.time+SEWING.windup};e.needleReady=g.time+SEWING.needleEvery;e.channelUntil=e.needleCast.at;e.facing=Math.atan2(d.y,d.x);return true;
  }return false;
 }
+export function stationaryAI(g,e,dt){
+ Object.assign(e,e.home);e.returning=false;delete e.motion;
+ const targets=g.units.filter(t=>g.hostile(e,t)&&!g.hidden(t)&&distance(e,t)<=9&&g.clearLine(e,t));
+ const target=targets.find(t=>t.id===e.aggro)||targets.sort((a,b)=>distance(e,a)-distance(e,b))[0];
+ if(e.hostile&&target){e.aggro=target.id;delete e.sewingIdleSince;}
+ else if(e.hostile){e.sewingIdleSince??=g.time;if(g.time-e.sewingIdleSince>3){e.hostile=false;e.aggro=null;cancel(e);}}
+ if(update(g,e))return;
+ if(e.hostile&&target&&distance(e,target)<=e.range+target.radius&&e.attackCd<=0&&!g.stat(e,'stun')&&!g.stat(e,'disarm')){basic(g,e,target);e.attackCd=e.interval;}
+ if(!e.hostile&&g.time-e.lastCombat>5)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.15*dt);
+}
 export function tick(g){
  if(!g.training&&!g.sewingKingSpawned&&g.time+1e-8>=SEWING.spawnAt)spawnKing(g);
  for(const t of [...g.units])if(t.needleBleeds){
@@ -56,9 +67,9 @@ export function afterDamage(g,source,target,dealt,{hpBefore,campBonus}={}){
 export function reward(g,team){
  if(![0,1].includes(team)||g.sewingWinner!==null)return;g.sewingWinner=team;g.sewingTeams[team]=true;g.sewingBuffOrder=++g.buffSequence;
  for(const c of g.champions(team))g.award(c,SEWING.rewardXp,SEWING.rewardGold);
- g.log(`${team===0?'아군':'적군'} 바늘질의 왕 처치 · 땀수!`,'boss');g.announce('boss-kill','바늘질의 왕 처치','팀 전원 125 XP · 200 재화 · 영구 버프 땀수!',{team});
+ g.log(`${team===0?'아군':'적군'} 바느질의 왕 처치 · 땀수!`,'boss');g.announce('boss-kill','바느질의 왕 처치','팀 전원 125 XP · 200 재화 · 영구 버프 땀수!',{team});
 }
 export function draw(r,e,g){
  const p=e.needleCast;if(!p||!e.alive||e.returning)return;const end={x:p.x+p.dx*SEWING.range,y:p.y+p.dy*SEWING.range},nx=-p.dy*.18,ny=p.dx*.18;
- r.polygon([[p.x+nx,p.y+ny],[end.x+nx,end.y+ny],[end.x-nx,end.y-ny],[p.x-nx,p.y-ny]],'#c7a7a438','#ead6b6');r.line([p,end],'#ead6b6',.045,[.15,.15]);r.text(`바늘 ${Math.max(0,p.at-g.time).toFixed(1)}s`,e.x,e.y-3.8,'#f4deaa',.3);
+ r.polygon([[p.x+nx,p.y+ny],[end.x+nx,end.y+ny],[end.x-nx,end.y-ny],[p.x-nx,p.y-ny]],'#c7a7a438','#ead6b6');r.line([p,end],'#ead6b6',.045,[.15,.15]);r.text(`바늘 ${Math.max(0,p.at-g.time).toFixed(1)}s`,e.x,e.y-needleVisualHeight(e)-.95,'#f4deaa',.3);
 }
