@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.js';
 import {TERRAIN,APPROACH,RULES} from './data.js';
 
-export const ROOFTOP={depth:72,windowWidth:36,windowHeight:36,skyAspect:1981/793,skyRise:3.5};
+export const ROOFTOP={depth:72,windowWidth:36,windowHeight:36,skyAspect:1981/793,skyRise:3.5,skyOutletX:955/1981};
 export const ROOFTOP_ASSETS={skyline:'rooftop-skyline',smoke:'rooftop-smoke',windows:'rooftop-windows'};
 let images;
 export function rooftopImages(){
@@ -20,15 +20,35 @@ export function roofOutline(layout){
 export function roofSegments(layout){const p=roofOutline(layout);return p.map((a,i)=>{const b=p[(i+1)%p.length],dx=b[0]-a[0],dz=b[1]-a[1];return{a,b,length:Math.hypot(dx,dz),angle:-Math.atan2(dz,dx)};});}
 export function roofPath(c,layout){c.beginPath();roofOutline(layout).forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();}
 
+function edgeMask(blur=false){
+ const canvas=document.createElement('canvas');canvas.width=256;canvas.height=128;const c=canvas.getContext('2d');
+ const fill=(x,y,stops)=>{const g=c.createLinearGradient(0,0,x,y);for(const [at,color]of stops)g.addColorStop(at,color);c.fillStyle=g;c.fillRect(0,0,256,128);};
+ if(blur){
+  fill(256,0,[[0,'#fff'],[.18,'#ffffff00'],[.82,'#ffffff00'],[1,'#fff']]);
+  fill(0,128,[[0,'#ffffff00'],[.70,'#ffffff00'],[1,'#fff']]);
+ }else{
+  fill(256,0,[[0,'#000'],[.14,'#fff'],[.86,'#fff'],[1,'#000']]);c.globalCompositeOperation='multiply';
+  fill(0,128,[[0,'#000'],[.06,'#fff'],[.72,'#fff'],[1,'#000']]);
+ }
+ return canvas;
+}
+// Prepare the edge blur once when the painting loads. The central building
+// keeps its source pixels; only the sides and lower edge blend into the blur.
+function softSkyline(image){
+ const canvas=document.createElement('canvas'),blurred=document.createElement('canvas');canvas.width=blurred.width=image.naturalWidth;canvas.height=blurred.height=image.naturalHeight;
+ const c=canvas.getContext('2d'),b=blurred.getContext('2d');b.filter='blur(12px)';b.drawImage(image,0,0);b.filter='none';b.globalCompositeOperation='destination-in';b.drawImage(edgeMask(true),0,0,canvas.width,canvas.height);
+ c.drawImage(image,0,0);c.drawImage(blurred,0,0);return canvas;
+}
+
 export class RooftopScenery{
  constructor(invalidate){
-  this.images=rooftopImages();this.textures={};this.ready=false;this.background=new THREE.Scene();this.background.background=new THREE.Color('#0c0e13');
-  const fade=document.createElement('canvas');fade.width=1;fade.height=128;const c=fade.getContext('2d'),gradient=c.createLinearGradient(0,0,0,128);for(const [at,color]of [[0,'#000000'],[.06,'#ffffff'],[.82,'#ffffff'],[1,'#000000']])gradient.addColorStop(at,color);c.fillStyle=gradient;c.fillRect(0,0,1,128);this.fade=new THREE.CanvasTexture(fade);this.fade.userData.rooftopShared=true;
+  this.images=rooftopImages();this.textures={};this.ready=false;this.background=new THREE.Scene();this.background.background=new THREE.Color('#000000');
+  this.fade=new THREE.CanvasTexture(edgeMask());this.fade.userData.rooftopShared=true;
   for(const [key,image]of Object.entries(this.images)){
    const texture=new THREE.Texture(image);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.userData.rooftopShared=true;
    if(key==='windows')texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
    this.textures[key]=texture;
-   const loaded=()=>{texture.needsUpdate=true;this.ready=Object.values(this.images).every(i=>i.complete&&i.naturalWidth);invalidate();};
+   const loaded=()=>{if(key==='skyline')texture.image=softSkyline(image);texture.needsUpdate=true;this.ready=Object.values(this.images).every(i=>i.complete&&i.naturalWidth);invalidate();};
    image.addEventListener('load',loaded);if(image.complete&&image.naturalWidth)loaded();
   }
  }
@@ -56,7 +76,7 @@ export class RooftopScenery{
   // pass permits a soft vertical fade without ever covering the roof or actors.
   // Keep the original painting's aspect ratio. Anchor the tower's smoke outlet
   // above the roof instead of compressing a tall skyline into a shallow strip.
-  const sky=new THREE.Mesh(new THREE.PlaneGeometry(width,height),skyMat);sky.name='crimson-city-backdrop';sky.rotation.x=tilt;sky.position.set(b.x+b.w/2,0,b.y-ROOFTOP.skyRise);sky.position.addScaledVector(up,(.42-.5)*height);sky.renderOrder=-100;this.background.add(sky);
+  const sky=new THREE.Mesh(new THREE.PlaneGeometry(width,height),skyMat);sky.name='crimson-city-backdrop';sky.rotation.x=tilt;sky.position.set(b.x+b.w/2+(.5-ROOFTOP.skyOutletX)*width,0,b.y-ROOFTOP.skyRise);sky.position.addScaledVector(up,(.42-.5)*height);sky.renderOrder=-100;this.background.add(sky);
   return group;
  }
 }

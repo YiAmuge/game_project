@@ -23,6 +23,7 @@ test('skyscraper windows descend below the exact roof edges and the distant back
   for(const fog of g.children.filter(o=>o.name==='blue-smoke-below'))assert.ok(fog.position.y+fog.geometry.parameters.height/2<=-ROOFTOP.depth+9);
   assert.equal(ROOFTOP.windowWidth,12*3);assert.equal(ROOFTOP.windowHeight,12*3);assert.equal(sky.length,1);for(const s of sky){assert.equal(s.material.depthWrite,false);assert.equal(s.material.depthTest,false);assert.equal(s.material.fog,false);assert.ok(s.renderOrder<0);assert.equal(s.geometry.parameters.width,WORLD.w+12);near(s.geometry.parameters.width/s.geometry.parameters.height,ROOFTOP.skyAspect);assert.ok(s.geometry.parameters.height>39);assert.deepEqual(Array.from(s.geometry.getAttribute('uv').array).filter((_,i)=>i%2),[1,1,0,0]);}
   const slab=g.children.find(o=>o.name==='roof-slab');assert.ok(slab.geometry.getAttribute('position').count>0);near(slab.position.y,-.12);
+  near(sky[0].position.x+(ROOFTOP.skyOutletX-.5)*sky[0].geometry.parameters.width,WORLD.x+WORLD.w/2);
  }finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });
 test('rooftop painting, smoke and window images have local provenance and stable checksums',async()=>{
