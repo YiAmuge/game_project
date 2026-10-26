@@ -1,6 +1,7 @@
 import test from'node:test';import assert from'node:assert/strict';
 import{Game}from'../src/game.js';import{AUGMENTS,NORTH_DIVIDER,WALLS,BUSHES,TERRAIN,lanePath}from'../src/data.js';
-import*as Sewing from'../src/sewing.js';import*as Boss from'../src/boss-patterns.js';import{needleHeight}from'../src/needle-art.js';import{bossPresentation}from'../src/boss-art.js';
+import*as Sewing from'../src/sewing.js';import*as Boss from'../src/boss-patterns.js';import{needleHeight}from'../src/needle-art.js';import{bossPresentation,BOSS_HEIGHT}from'../src/boss-art.js';
+import{Camera25D}from'../src/camera-25d.js';import{projectFeet}from'../src/projection-25d.js';
 import{laneGoal,laneDistance,convoyBlocked}from'../src/minion-navigation.js';import{separate}from'../src/collision.js';import{threatRanges}from'../src/overlays.js';import{regionContains,distance}from'../src/geometry.js';
 import{readFile}from'node:fs/promises';import{decodePNG}from'../tools/png.mjs';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
@@ -43,6 +44,7 @@ test('ranged minions keep their full attack reach outside the lane corridor with
 });
 test('Heaped Thing uses its front idle and attack sprites, with grounded feet, clean alpha and preserved boss combat',async()=>{
  const{g,p}=arena(),boss=g.makeNeutral(35,0,'boss');assert.equal(boss.name,'쌓인 것');assert.equal(bossPresentation(g,boss).key,'heapedIdle');Object.assign(p,{x:36,y:0});Boss.basic(g,boss,p);assert.equal(bossPresentation(g,boss).key,'heapedAttack');g.time+=.31;assert.equal(bossPresentation(g,boss).key,'heapedIdle');const v=bossPresentation(g,boss);near(v.top+v.h*v.f.foot[1],0);
+ near(BOSS_HEIGHT,4.94);const camera=new Camera25D();for(const [w,h]of [[1440,950],[390,844],[1920,1080]]){camera.update(w,h,boss);for(const attack of [false,true]){boss.swingUntil=attack?g.time+1:0;const pose=bossPresentation(g,boss),feet=projectFeet(camera,boss),ground=camera.worldToScreen(boss,.075);near(feet.y+(pose.top+pose.h*pose.f.foot[1]-feet.offset)*feet.scale,ground.y);near(pose.h/pose.w,pose.f.h/pose.f.w);}}
  const meta=JSON.parse(await readFile(new URL('../src/assets/boss-v55.json',import.meta.url),'utf8'));assert.equal(meta.orientation,'front');assert.ok(meta.source.includes('7eee08e7'));assert.equal(Object.keys(meta.frames).length,2);
  for(const key of Object.keys(meta.frames)){const im=decodePNG(await readFile(new URL('../src/assets/boss/'+key+'.png',import.meta.url)));for(let x=0;x<im.width;x++){assert.equal(im.data[x*4+3],0);assert.equal(im.data[((im.height-1)*im.width+x)*4+3],0);}for(let y=0;y<im.height;y++){assert.equal(im.data[y*im.width*4+3],0);assert.equal(im.data[(y*im.width+im.width-1)*4+3],0);}for(let i=3;i<im.data.length;i+=4)assert.ok(im.data[i]===0||im.data[i]===255);}
 });

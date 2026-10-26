@@ -1,6 +1,6 @@
 import{BOSS_FRAMES}from'./boss-sprites.js';
 import{loadAtlas}from'./art.js';
-export const BOSS_HEIGHT=3.8;
+export const BOSS_HEIGHT=3.8*1.3;
 export function bossPresentation(g,e){
  const key=e.swingUntil>g.time?'heapedAttack':'heapedIdle',f=BOSS_FRAMES[key],h=BOSS_HEIGHT*f.heightScale,w=h*f.w/f.h;
  return{key,f,h,w,left:-w*f.foot[0],top:-h*f.foot[1]};
