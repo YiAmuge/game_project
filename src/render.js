@@ -42,7 +42,7 @@ export class Renderer {
     this.camera=game.training25d?this.scene25d.camera:this.flatCamera;
     if(this.scene25d)this.scene25d.canvas.hidden=!game.training25d;
   }
-  follow(game,playing){this.prepare(game);this.camera.update(this.width,this.height,renderAnchor(game.player),playing);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
+  follow(game,playing){this.prepare(game);this.camera.update(this.width,this.height,game.player.state.infiltration?.point||renderAnchor(game.player),playing);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
   point(clientX,clientY) {const r=this.canvas.getBoundingClientRect();return this.camera.screenToWorld(clientX-r.left,clientY-r.top);}
   circle(x,y,r,fill,stroke=null,width=.07) {const c=this.ctx;c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
   line(points,color,width,dash=[]) {const c=this.ctx;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.setLineDash(dash);c.stroke();c.setLineDash([]);}

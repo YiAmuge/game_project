@@ -19,7 +19,7 @@ test('camp needles grant 45 XP and 35 gold once; summoned needles have zero rewa
 test('sewing king stays at its spawn despite pursuit, movement, knockback and unit separation; attacks still fire',()=>{
  const{g,p}=arena(),k=g.makeNeutral(35,-3.8,'sewingKing');assert.equal(k.name,'바느질의 왕');near(needleHeight(k),4.2);Object.assign(p,{x:35,y:1.2});g.deal(p,k,1,{fixed:true,proc:false});
  for(let i=0;i<60;i++){g.time+=.1;g.aiNeutral(k,.1);}near(k.x,k.home.x);near(k.y,k.home.y);assert.equal(g.startMotion(k,{x:1,y:0},3,{kind:'knock',source:p}),false);g.moveToward(k,{x:40,y:0},1);near(k.x,35);
- Object.assign(p,{x:k.x,y:k.y});separate(g);near(k.x,35);near(k.y,-3.8);Object.assign(p,{x:35,y:-2.5});k.attackCd=0;g.aiNeutral(k,.01);assert.ok(k.swingUntil>g.time);
+ Object.assign(p,{x:k.x,y:k.y});separate(g);near(k.x,35);near(k.y,-3.8);Object.assign(p,{x:35,y:-2.5});g.time+=.25;k.attackCd=0;g.aiNeutral(k,.01);k.attackCd=0;g.aiNeutral(k,.01);assert.ok(k.swingUntil>g.time);
  g.time=12;Object.assign(p,{x:35,y:0});g.aiNeutral(k,.01);assert.ok(k.needleCast);g.time=13.5;g.aiNeutral(k,.01);assert.ok(g.projectiles.some(p=>p.theme==='sewingNeedle'));near(k.x,35);near(k.y,-3.8);
 });
 test('Black Orb has combat category and exactly ten-percent power, speed and reload with unchanged health; Glaive is survival',()=>{

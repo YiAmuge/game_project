@@ -67,9 +67,22 @@ export function honglu(g,e,slot,p,d){
  }else{
   const z=g.zones.find(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time);
   if(z)z.moving=!z.moving;
-  else g.zones.push({kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,damage:60,heal:75+15*g.bonusHealthPercent(e),firstTick:true,tickEvery:.5,cleanse:true,cleansed:new Set()});
+  else {const zone={kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,tickEvery:.5,cleanse:true,cleansed:new Set()};g.zones.push(zone);waterfallPulse(g,zone,true);}
  }
  return true;
+}
+export function waterfallPulse(g,z,first=false){
+ z.damage=first?120:60;z.heal=first?120+20*g.bonusHealthPercent(z.source):75+7*g.bonusHealthPercent(z.source);
+ if(first)g.effects.push({type:'hongluWaterfall',source:z.source.id,x:z.x,y:z.y,r:z.r,life:.7,maxLife:.7});
+ for(const t of [...g.units].filter(t=>t.alive&&!g.hidden(t)&&distance(t,z)<=z.r&&g.clearLine(z,t))){
+  if(t.team===z.source.team&&t.kind==='champion'){
+   g.heal(z.source,t,z.heal,true,{skillHeal:true,healingKey:z.healingEvent?.key,startedAt:z.healingEvent?.at});
+   if(!z.cleansed.has(t.id)){t.status={};z.cleansed.add(t.id);}
+  }else if(g.hostile(z.source,t)){
+   const shield=g.shield(t),dealt=g.deal(z.source,t,z.damage);
+   if(first&&(dealt>0||g.shield(t)<shield))g.effects.push({type:'hongluSplash',source:z.source.id,x:t.x,y:t.y,r:1.2,life:.5,maxLife:.5});
+  }
+ }
 }
 export function tick(g,e){
  const s=e.state;
@@ -86,7 +99,7 @@ export function tick(g,e){
 export function finishInsight(g,e){
  const s=e.state;if(s.insightUntil===undefined)return;
  delete s.insightUntil;delete e.buffs.insight;e.shields=e.shields.filter(a=>a.source!==`insight-${e.id}`);e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;
- for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500+7*g.bonusHealthPercent(e),false,{skillHeal:true,healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
+ for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500+5*g.bonusHealthPercent(e),false,{skillHeal:true,healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
  g.effects.push({type:'hongluRipple',source:e.id,theme:'honglu',x:e.x,y:e.y,r:5,life:.8,maxLife:.8});
 }
 export function easterEggs(g,dt){

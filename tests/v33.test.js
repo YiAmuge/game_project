@@ -70,8 +70,8 @@ test('stack gauges use under-ammo progress and transformation/awakening time',()
  for(const [key,buff,duration] of [['sinclair','marks',4],['gregor','mutant',5],['sora','soraEgo',20],['yan','yanDistorted',20],['myo','rabbitFrenzy',4.5]]){const {g,p}=arena(key);g.addBuff(p,buff,duration,{copy:false});close(stackGauge(p,g).ratio,1);g.time+=duration/2;close(stackGauge(p,g).ratio,.5);assert.equal(stackGauge(p,g).timer,true);}
  const {g,p}=arena('sora');p.state.unlock=3;close(stackGauge(p,g).ratio,.6);
 });
-test('Alisa explosion phases opponents, does not leave a corpse and gives max-health-scaled burn',()=>{
- const {g,p}=arena('alisa'),t=hero(g,21);Skills.beginAlisaDetonation(g,p,p);assert.ok(p.phaseEnemiesUntil>g.time);moveBody(g,p,.8,0);assert.ok(p.x>20.7);run(g,2.01);assert.equal(p.alive,false);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,0);assert.ok(t.burn.explosion);close(t.burn.damage,15+p.maxHp*.015);
+test('Alisa explosion phases opponents, does not leave a corpse and snapshots current-health-scaled burn',()=>{
+ const {g,p}=arena('alisa'),t=hero(g,21);Skills.beginAlisaDetonation(g,p,p);assert.ok(p.phaseEnemiesUntil>g.time);moveBody(g,p,.8,0);assert.ok(p.x>20.7);run(g,2.01);assert.equal(p.alive,false);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,0);assert.ok(t.burn.explosion);close(t.burn.damage,15+p.maxHp*.02);
 });
 test('lethal burns cannot leave dead creep aggro, pattern or DoT state, and respawn is clean',()=>{
  for(const explosion of [false,true]){const {g,p}=arena('alisa'),n=g.makeNeutral(23,20,'amplify');n.hp=1;Skills.applyBurn(g,p,n,explosion);run(g,.51);assert.equal(n.alive,false);assert.equal(n.burn,undefined);assert.equal(n.aggro,null);assert.equal(n.hostile,false);assert.equal(n.pattern,undefined);Skills.applyBurn(g,p,n,explosion);assert.equal(n.burn,undefined);g.time=n.respawnAt;g.step(.01);assert.ok(n.alive);const hp=n.hp;run(g,3);close(n.hp,hp);assert.equal(n.hostile,false);}

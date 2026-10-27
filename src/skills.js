@@ -314,7 +314,7 @@ export function tick(g,e,dt){
 export function applyBurn(g,source,target,explosion=false){
  if(!target.alive||target.hp<=0||target.returning||g.debuffImmune?.(target))return;
  if(target.burn?.explosion&&!explosion&&target.burn.until>g.time)return;
- const interval=explosion?.3:.5;target.burn={source,explosion,until:g.time+(explosion?3:2),next:g.time+interval,interval,damage:explosion?15+source.maxHp*.015:25};g.triggerDisrupt(source,target);
+ const interval=explosion?.3:.5;target.burn={source,explosion,until:g.time+(explosion?3:2),next:g.time+interval,interval,damage:explosion?15+Math.max(0,source.hp)*.02:12+Math.max(0,source.hp)*.015};g.triggerDisrupt(source,target);
 }
 export function tickBurn(g,e){
  const b=e.burn;if(!b)return;if(!e.alive||e.returning){delete e.burn;return;}

@@ -1,17 +1,32 @@
 import { distance,direction } from './geometry.js';
+import { MAP_CENTER } from './data.js';
+import { drawPingIcon } from './ping-icons.js';
 export const PING_COLORS={attack:'#ff9b61',defend:'#86d8f7',danger:'#ff626c'};
-export function targetAt(g,point){return g.units.filter(e=>e.alive&&g.visibleTo(g.player.team,e)&&['champion','neutral','tower','core'].includes(e.kind)&&!g.hidden(e)&&distance(e,point)<=Math.max(1.35,e.radius+.6)).sort((a,b)=>distance(a,point)-distance(b,point))[0];}
-export function text(kind,t){
- const name=t?.name;
- if(kind==='attack')return !t?'해당 지점을 경계하라!':t.kind==='neutral'?`${name} 토벌 개시!`:['tower','core'].includes(t.kind)?`적 ${name}을 철거하라!`:t.kind==='champion'?`${name} 공격!`:'해당 지점을 경계하라!';
- if(kind==='defend')return !t?'해당 지점을 지켜라!':['tower','core'].includes(t.kind)?`아군 ${name} 방어!`:t.kind==='champion'?`${name} 보호!`:'해당 지점을 지켜라!';
- return !t?'해당 지점에서 후퇴하라!':t.kind==='neutral'?`${name} 토벌 포기!`:t.kind==='champion'?`${name}에게서 도주!`:'해당 지점에서 후퇴하라!';
+export const PING_KEYS={KeyQ:'attack',KeyE:'defend',KeyR:'danger'};
+export const PING_LABELS={attack:'공격!',defend:'도움!',danger:'후퇴!'};
+export function choices(g,kind){
+ const team=g.player.team,items=[];
+ if(kind!=='danger')for(const [lane,name,y]of [['top','상단 라인',7.15],['bottom','하단 라인',39.65]])items.push({id:lane,type:'lane',lane,name,x:MAP_CENTER.x,y});
+ if(kind!=='danger'){const t=g.units.find(t=>t.kind==='core'&&t.team===(kind==='attack'?1-team:team));if(t)items.push({id:'core-'+t.team,type:'core',name:kind==='attack'?'적 본진':'아군 본진',targetId:t.id,team:t.team,x:t.x,y:t.y,disabled:!t.alive});}
+ for(const t of g.champions().filter(t=>!t.trainingDummy&&(kind==='danger'||t.team===(kind==='attack'?1-team:team))))items.push({id:'champion-'+t.id,type:'champion',key:t.key,name:t.name,targetId:t.id,team:t.team,x:t.x,y:t.y,disabled:!t.alive||g.hidden(t)||t.team!==team&&!g.visibleTo(team,t)});
+ if(kind!=='defend')for(const camp of ['sewingKing','boss']){const t=g.units.find(t=>t.kind==='neutral'&&t.camp===camp&&!t.retired&&t.alive);if(!t)continue;items.push({id:camp,type:'boss',camp,name:camp==='boss'?'쌓인 것':'바느질의 왕',targetId:t?.id,team:2,x:t?.x??MAP_CENTER.x,y:t?.y??(camp==='boss'?MAP_CENTER.y:-3.8),disabled:!t?.alive});}
+ return items;
 }
-export function send(g,kind,point){
- if(!PING_COLORS[kind]||!Number.isFinite(point?.x)||!Number.isFinite(point?.y)||g.winner!==null||g.time<(g.pingReady||0))return false;
- const b=g.bounds;if(point.x<b.x||point.x>b.x+b.w||point.y<b.y||point.y>b.y+b.h)return false;
- let target=targetAt(g,point);if(target&&target.kind!=='neutral'&&(kind==='defend'?target.team!==g.player.team:target.team===g.player.team))target=null;
- const p={kind,x:point.x,y:point.y,targetId:target?.id,at:g.time,until:g.time+8,team:g.player.team,label:text(kind,target)};
+export function text(kind,t,team=0){
+ if(!t)return PING_LABELS[kind];
+ if(t.type==='lane')return `${t.name} ${kind==='attack'?'진격':'수비'}!`;
+ if(t.type==='core')return `${kind==='attack'?'적':'아군'} 본진 ${kind==='attack'?'진격':'수비'}!`;
+ if(t.type==='boss')return `${t.name} ${kind==='danger'?'토벌을 포기':'토벌'}!`;
+ return kind==='attack'?`${t.name} 공격!`:kind==='defend'?`${t.name} 보호!`:t.team===team?`${t.name}${(t.name.charCodeAt(t.name.length-1)-0xac00)%28===0?'는':'은'} 후퇴!`:`${t.name}에게서 후퇴!`;
+}
+// Only the held-key menu specifies a target. Tapping sends the basic signal at the cursor.
+export function send(g,kind,point,choiceId){
+ if(!PING_COLORS[kind]||g.winner!==null||g.time<(g.pingReady||0))return false;
+ const choice=choiceId?choices(g,kind).find(t=>t.id===(typeof choiceId==='string'?choiceId:choiceId.id)):null;
+ if(choiceId&&(!choice||choice.disabled))return false;
+ point=choice||point;const b=g.bounds;
+ if(!Number.isFinite(point?.x)||!Number.isFinite(point?.y)||point.x<b.x||point.x>b.x+b.w||point.y<b.y||point.y>b.y+b.h)return false;
+ const p={kind,x:point.x,y:point.y,targetId:choice?.targetId,icon:choice?{...choice}:null,at:g.time,until:g.time+8,team:g.player.team,label:text(kind,choice,g.player.team)};
  g.pings??=[];g.pings.push(p);g.pings=g.pings.slice(-8);g.pingReady=g.time+.65;g.log(p.label,kind==='danger'?'enemy':'ally');return p;
 }
 export function live(g){return (g.pings||[]).filter(p=>p.until>g.time);}
@@ -23,7 +38,8 @@ export function respond(g,e,dt){
  const point=target||p,d=distance(e,point);if(d>(champ?12:27))return false;
  e.objective='ping-'+p.kind;
  if(p.kind==='danger'){
-  if(d>11)return e.pingAvoidUntil===p.until;const v=direction(point,e);g.moveToward(e,{x:e.x+v.x*6,y:e.y+v.y*6},dt);e.pingAvoidUntil=p.until;return true;
+  if(target?.kind==='champion'&&target.team===e.team&&target.id!==e.id)return false;
+  if(d>11)return e.pingAvoidUntil===p.until;const threat=target?.team===e.team?g.nearest(e,12,false):null,from=threat||point,v=distance(from,e)<.01?direction(e,g.spawnPoint(e)):direction(from,e);g.moveToward(e,{x:e.x+v.x*6,y:e.y+v.y*6},dt);e.pingAvoidUntil=p.until;return true;
  }
  if(p.kind==='attack'&&target){
   if(target.team===e.team||!g.visibleTo(e.team,target))return false;
@@ -44,6 +60,6 @@ export function respond(g,e,dt){
 }
 export function drawWorld(c,camera,g){for(const p of live(g)){
  const age=g.time-p.at,phase=age%1,base=camera.worldToScreen(p,.08),top=camera.worldToScreen(p,1.8+.25*Math.sin(age*5)),color=PING_COLORS[p.kind];
- c.save();c.strokeStyle=color;c.fillStyle=color;c.lineWidth=2;c.globalAlpha=.7*(1-phase)+.2;c.beginPath();c.ellipse(base.x,base.y,14+phase*24,7+phase*12,0,0,Math.PI*2);c.stroke();
- c.globalAlpha=.85;c.setLineDash([3,4]);c.beginPath();c.moveTo(top.x,top.y+9);c.lineTo(base.x,base.y);c.stroke();c.setLineDash([]);c.font='bold 24px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(p.kind==='danger'?'!':p.kind==='defend'?'◆':'⚔',top.x,top.y);c.restore();
+ c.save();c.strokeStyle=color;c.lineWidth=2;c.globalAlpha=.7*(1-phase)+.2;c.beginPath();c.ellipse(base.x,base.y,14+phase*24,7+phase*12,0,0,Math.PI*2);c.stroke();
+ c.globalAlpha=.85;c.setLineDash([3,4]);c.beginPath();c.moveTo(top.x,top.y+15);c.lineTo(base.x,base.y);c.stroke();c.setLineDash([]);drawPingIcon(c,p.icon||{type:p.kind},top.x-17,top.y-17,34,g.player.team);c.restore();
 }}

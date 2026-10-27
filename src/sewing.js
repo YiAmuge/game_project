@@ -1,12 +1,12 @@
 import {MAP_CENTER} from './data.js';
 import {distance,direction} from './geometry.js';
 
-export const SEWING={spawnAt:270,health:4000,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:12,windup:1.5,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
+export const SEWING={spawnAt:270,health:4000,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:6,windup:.25,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
 export const NEEDLE={spawnAt:90,health:350,armor:0,damage:55,interval:.65,respawn:Infinity,xp:45,gold:35};
 export const NORTH_CAMP={x:MAP_CENTER.x,y:-3.8};
 export const isSewing=e=>e.kind==='neutral'&&['needle','sewingKing'].includes(e.camp);
 export function makeNeedle(g,x,y,index=0,{summoned=false}={}){
- const e=g.makeNeutral(x,y,'needle');e.needleColor=index%2?'red':'green';e.campId=summoned?'sewing-king':'needle-north';e.campCenter=g.training?{x,y}:{...NORTH_CAMP};e.summonedNeedle=summoned;if(summoned)e.respawnDelay=Infinity;return e;
+ const e=g.makeNeutral(x,y,'needle');e.needleColor=index%2?'red':'green';e.campId=summoned?'sewing-king':'needle-north';e.campCenter=g.training?{x,y}:{...NORTH_CAMP};e.summonedNeedle=summoned;if(summoned){e.respawnDelay=Infinity;e.invulnerableUntil=g.time+1.5;e.hostile=true;summonedAI(g,e,0);}return e;
 }
 export function makeCamp(g){if(g.needleCampSpawned)return;g.needleCampSpawned=true;for(const [i,[dx,dy]]of [[-.85,-.6],[.85,-.6],[-.85,.6],[.85,.6]].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y+dy,i);}
 export function spawnKing(g){
@@ -49,6 +49,14 @@ export function stationaryAI(g,e,dt){
  if(e.hostile&&target&&distance(e,target)<=e.range+target.radius&&e.attackCd<=0&&!g.stat(e,'stun')&&!g.stat(e,'disarm')){basic(g,e,target);e.attackCd=e.interval;}
  if(!e.hostile&&g.time-e.lastCombat>5)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.15*dt);
 }
+export function summonedAI(g,e,dt){
+ // Summons engage immediately and reacquire the closest target without a camp leash.
+ const target=g.units.filter(t=>g.hostile(e,t)&&['champion','minion'].includes(t.kind)&&g.visibleTo(e.team,t)&&g.clearLine(e,t)).sort((a,b)=>distance(e,a)-distance(e,b)||a.id-b.id)[0];
+ e.hostile=true;e.returning=false;e.aggro=target?.id;
+ if(!target)return;
+ if(distance(e,target)>e.range+target.radius)g.moveToward(e,target,dt);
+ else if(e.attackCd<=0&&!g.stat(e,'stun')&&!g.stat(e,'disarm')){g.simpleAttack(e,target);e.attackCd=e.interval;}
+}
 export function tick(g){
  if(!g.training&&!g.needleCampSpawned&&g.time+1e-8>=NEEDLE.spawnAt)makeCamp(g);
  if(!g.training&&!g.sewingKingSpawned&&g.time+1e-8>=SEWING.spawnAt)spawnKing(g);
@@ -59,8 +67,11 @@ export function tick(g){
  }
 }
 export function afterDamage(g,source,target,dealt,{hpBefore,campBonus}={}){
- if(target.camp==='sewingKing'&&target.alive&&target.hp>0&&hpBefore>target.maxHp*.3&&target.hp<=target.maxHp*.3){
-  const points=[[-1.3,.8],[1.3,.8]];for(const [i,[dx,dy]]of points.entries())makeNeedle(g,target.x+dx,target.y+dy,i,{summoned:true});g.effects.push({type:'ring',x:target.x,y:target.y,r:2,color:'#aabf77',life:.7,maxLife:.7});
+ if(target.camp==='sewingKing'&&target.alive&&target.hp>0){
+  const waves=Math.min(2,Math.floor((1-target.hp/target.maxHp+1e-8)/.3));
+  while((target.needleWaves||0)<waves){const wave=target.needleWaves=(target.needleWaves||0)+1;
+   const points=[[-1.3,.8+(wave-1)*.7],[1.3,.8+(wave-1)*.7]];for(const [i,[dx,dy]]of points.entries())makeNeedle(g,target.x+dx,target.y+dy,i,{summoned:true});g.effects.push({type:'ring',x:target.x,y:target.y,r:2,color:'#aabf77',life:.7,maxLife:.7});
+  }
  }
  if(campBonus&&dealt>0&&source.kind==='champion'&&g.sewingTeams?.[source.team]&&['tower','core'].includes(target.kind)&&target.alive)g.deal(source,target,dealt*SEWING.structureBonus,{fixed:true,proc:false,campBonus:false,transferred:true});
 }
