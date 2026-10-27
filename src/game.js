@@ -93,7 +93,8 @@ export class Game {
     });
     Skills.init?.(this,e);e.maxHp=this.maxHp(e);e.hp=e.maxHp;return e;
   }
-  emitSound(kind,source={},extra={}){if(source.kind==='minion')return;this.soundEvents.push({id:++this.soundSerial,kind,key:source.key,sourceKind:source.kind,x:source.x,y:source.y,at:this.time,...extra});if(this.soundEvents.length>64)this.soundEvents.shift();}
+  emitSound(kind,source={},extra={}){if(source.kind==='minion')return;const damageKind=extra.damageKind||source.actionKind||(['swing','shot'].includes(kind)?'basic':undefined),slot=extra.slot||((damageKind==='skill'||['cast','ultimate'].includes(kind))?source.castSlot:undefined);this.soundEvents.push({id:++this.soundSerial,kind,key:source.key,sourceId:source.id,sourceKind:source.kind,camp:source.camp,damageKind,slot,form:source.key==='sora'&&this.buff(source,'soraEgo')?'ego':source.key==='yan'&&this.buff(source,'yanDistorted')?'distorted':'base',stance:source.state?.weapon,transforming:source.key==='sora'&&source.state?.unlock>=5||source.key==='yan'&&source.state?.ominous>=6,x:source.x,y:source.y,at:this.time,...extra});if(this.soundEvents.length>64)this.soundEvents.shift();}
+
   log(text,kind='system') { this.logs.unshift({text,kind,time:this.time}); this.logs=this.logs.slice(0,10); }
   announce(...args){return Combat.announce(this,...args);}
   currentAnnouncement(){return Combat.currentAnnouncement(this);}
@@ -288,7 +289,7 @@ export class Game {
       this.effects.push({type:'ring',x:e.x,y:e.y,r:2,color:'#d9be78',life:1,maxLife:1});
     }
   }
-  deal(source,target,base,{fixed=false,proc=true,allowFriendly=false,damageKind=source.actionKind||'skill',nonLethal=false,transferred=false,campBonus=true}={}) {
+  deal(source,target,base,{fixed=false,proc=true,allowFriendly=false,damageKind=source.actionKind||'skill',nonLethal=false,transferred=false,campBonus=true,sound={}}={}) {
     const alliedAllowed=allowFriendly&&this.canGuboHitAlly(source,target);
     if(!target.alive||GuboUltimate.guarded(this,target)||target.state?.posthumous||target.returning||(source.team===target.team&&!alliedAllowed)||this.hidden(target)||this.training&&target===this.player&&this.practice.invincible||target.invulnerableUntil>this.time||this.locked(target)||this.winner!==null) return 0;
     const pulsing=source.kind==='champion'&&this.buff(source,'amplify');
@@ -325,7 +326,7 @@ export class Game {
     if(!transferred&&campBonus)amount*=Skills.coverMultiplier(this,source,target);
     source.lastCombat=this.time;target.lastCombat=this.time;
     target.lastDamageAt=this.time;
-    if(amount>0){this.cancelRecall(target);if(target.kind==='champion'||target.kind==='neutral')this.emitSound('hit',source);}
+    if(amount>0)this.cancelRecall(target);
     if(source.kind==='champion') {
       source.lastAttackAt=this.time;
       if(target.kind==='champion'&&source.team!==target.team) {
@@ -343,6 +344,7 @@ export class Game {
     if(nonLethal)remaining=Math.min(remaining,Math.max(0,target.hp-1));
     const saved=!nonLethal&&Augments.interceptFatal(this,target,remaining);if(saved)remaining=0;
     const hpBefore=target.hp,actual=infinite?measured:Math.min(target.hp,Math.max(0,remaining));target.hp=infinite?target.maxHp:Math.max(0,target.hp-remaining);if(this.training)Training.recordMetric(this,target,'damage',actual);
+    if(actual+absorbed>0)this.emitSound('hit',source,{x:target.x,y:target.y,damageKind,slot:damageKind==='skill'?source.castSlot:undefined,periodic:fixed&&!proc,shielded:absorbed>actual,strength:Math.min(1.5,(actual+absorbed)/160),targetKind:target.kind,...sound});
     if(actual+absorbed>0&&source.kind==='champion'&&target.kind==='champion'&&source.team!==target.team){
       target.lastEnemyDamage={id:source.id,at:this.time};target.contributors[source.id]=this.time;
       for(const [id,at] of Object.entries(source.supporters))if(at>=this.time-6)target.contributors[id]=this.time;
@@ -372,7 +374,7 @@ export class Game {
   }
   kill(e,killer,{absolute=false}={}) {
     if(!e.alive||e.trainingDummy?.infinite&&!absolute)return;
-    if(e.kind!=='minion')this.emitSound('death',e);GuboUltimate.cancel(this,e);
+    if(e.kind==='tower')this.emitSound('explosion',e,{global:true,element:'stone',phase:'tower-break'});else if(e.kind!=='minion')this.emitSound('death',e);GuboUltimate.cancel(this,e);
     const selfDetonation=e.key==='alisa'&&e.state.detonating&&!absolute;delete e.burn;delete e.needleBleeds;Sewing.cancel(e);
     Infestation.clear(this,e);Yan.onDeath(this,e);Hohenheim.cancelCharge(e);Sora.onDeath(this,e);V12.onDeath(this,e);V08.onDeath(this,e);e.exposedUntil=0;e.alive=false;e.hp=0;delete e.motion;delete e.recall;if(e.kind==='neutral'){e.aggro=null;e.hostile=false;e.returning=false;delete e.outsideSince;CreepPatterns.cancel(e);if(e.camp==='boss')BossPatterns.cancel(e);}
     if(this.training&&Training.onDeath(this,e))return;
@@ -468,7 +470,7 @@ export class Game {
   }
   aim(e,point) {const d=direction(e,point);return Math.hypot(d.x,d.y)>.01?d:{x:e.team===0?1:-1,y:0};}
   bullet(e,dir,damage,range,options={}) {
-    if(e.actionKind!=='basic')this.emitSound('shot',e);
+    if(e.actionKind!=='basic')this.emitSound('shot',e,{slot:options.slot??e.castSlot});
     this.projectiles.push({source:e,damageKind:e.actionKind||'skill',x:e.x,y:e.y,slot:e.actionKind==='skill'?e.castSlot:undefined,bornAt:this.time,origin:{x:e.x,y:e.y},dx:dir.x,dy:dir.y,damage,remaining:range,width:.18,speed:22,knock:0,color:e.key==='gubo'?'#a62c45':e.team===0?'#92d5dd':'#e6a097',theme:e.key,hitIds:new Set(),...options});
   }
   cone(e,dir,range,angle,damage,onHit=()=>{},{exclude}={}) {
@@ -507,10 +509,10 @@ export class Game {
     if(e.key==='meursault'){
       const root=Boolean(e.state.fistRoot);delete e.state.fistRoot;
       Reworks.rectangle(this,e,d,this.attackRange(e),2.6,120);
-      this.schedule(e,.1,()=>Reworks.rectangle(this,e,d,this.attackRange(e),2.6,120,t=>{
+      this.schedule(e,.1,()=>{this.emitSound('swing',e,{phase:'fist-left'});return Reworks.rectangle(this,e,d,this.attackRange(e),2.6,120,t=>{
         if((t.slowFromFist||0)<=this.time){this.status(t,'slow',.2,1.2,e);t.slowFromFist=this.time+3;}
         if(root)this.status(t,'root',1,.8,e);
-      }));
+      });});
     }
     return true;
   }
@@ -672,7 +674,7 @@ export class Game {
   updateProjectiles(dt) {
     for(const p of this.projectiles) {
       if(p.guboUltimate){GuboUltimate.flight(this,p,dt);continue;}
-      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius+projectileHitWidth(p)){this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true});p.onHit?.(t,p);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
+      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius+projectileHitWidth(p)){this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});p.onHit?.(t,p);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
       const travel=Math.min(p.remaining,p.speed*dt),n=Math.max(1,Math.ceil(travel/.18));
       for(let i=0;i<n&&p.remaining>0;i++) {
         p.x+=p.dx*travel/n;p.y+=p.dy*travel/n;p.remaining-=travel/n;
@@ -680,7 +682,7 @@ export class Game {
         const t=this.units.find(t=>(this.hostile(p.source,t)||p.allowFriendly&&this.canGuboHitAlly(p.source,t))&&!p.hitIds.has(t.id)&&distance(p,t)<=t.radius+projectileHitWidth(p));
         if(t) {
           p.hitIds.add(t.id);p.lastHpRatio=t.hp/t.maxHp;
-          p.beforeHit?.(t,p);this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly,nonLethal:p.nonLethal,proc:p.proc??true});
+          p.beforeHit?.(t,p);this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});
           p.onHit?.(t,p);
           if(p.knock)this.startMotion(t,{x:p.dx,y:p.dy},p.knock,{kind:'knock',source:p.source});
           if(p.pierce>0){p.pierce--;p.damage*=p.decay??1;}else {p.remaining=0;p.hit=true;}
@@ -695,6 +697,7 @@ export class Game {
       if(event.at>this.time+1e-8)continue;
       const e=event.source;
       if(!event.autonomous&&(!e.alive||this.stat(e,'stun')||(event.type==='burst'&&this.stat(e,'silence'))))continue;
+      this.emitSound('detonation',e,{slot:'r',phase:'ability-impact',x:event.x,y:event.y});
       let hits=0;
       for(const t of this.units.filter(t=>this.hostile(e,t)&&distance(event,t)<=event.r&&(event.ignoreWalls||this.clearLine(event,t)))) {this.deal(e,t,event.damage);event.onHit?.(t);if(t.kind==='champion')hits++;}
       if(event.type==='burst'&&hits&&e.alive){this.addBuff(e,'faustUlt',5);e.ultStacks=Math.min(4,hits);}

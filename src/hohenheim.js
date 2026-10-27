@@ -14,7 +14,7 @@ export function attackRange(g,e){return chargeShape(g,e,{x:e.x+1,y:e.y}).range;}
 function fire(g,e,point){
  const shape=chargeShape(g,e,point);cancelCharge(e);g.cancelRecall(e);
  e.attackCd=HOHENHEIM.interval;e.lastAttackAt=g.time;e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.attackFacing=e.facing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;
- g.action(e,'basic',()=>{const beam=()=>{g.emitSound?.('shot',e);
+ g.action(e,'basic',()=>{const beam=()=>{g.emitSound?.('shot',e,{charge:shape.progress,phase:'electric-beam'});
   const targets=g.units.filter(t=>g.hostile(e,t)&&g.clearLine(e,t)&&distance(e,t)<=shape.range+t.radius).filter(t=>{const dx=t.x-e.x,dy=t.y-e.y;return dx*shape.d.x+dy*shape.d.y>=0&&Math.abs(dx*shape.d.y-dy*shape.d.x)<=shape.width+t.radius;}).sort((a,b)=>distance(e,a)-distance(e,b));
   targets.forEach((t,j)=>g.deal(e,t,shape.damage*(j?.8:1)));
   g.effects.push({type:'line',source:e.id,x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},color:'#84edee',theme:'hohenheim',charge:shape.progress,life:.19,maxLife:.19});

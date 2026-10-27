@@ -161,6 +161,7 @@ export function mentalWhip(g,e,t){
  if(++mark.hits>=5){mark.hits=0;mark.stage=Math.min(3,mark.stage+1);}
 }
 function shockIshmael(g,e){
+ g.emitSound?.('detonation',e,{slot:'q',phase:'shield-shock',family:'shield',element:'metal'});
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
@@ -271,7 +272,8 @@ export function endAlisaReload(g,e){if(!e.state.alisaReloadActive)return;const h
 export function beginAlisaDetonation(g,e,killer,{lethal=false}={}){
  if(e.state.detonating)return false;
  if(lethal)e.hp=1;e.state.detonating=true;e.state.detonationAt=g.time;e.state.detonatesAt=g.time+2;e.invulnerableUntil=g.time+2;e.phaseEnemiesUntil=g.time+2;
- g.schedule(e,2,()=>{area(g,e,e,4,600,t=>{if(t.alive)applyBurn(g,e,t,true);});g.effects.push({type:'burst',x:e.x,y:e.y,r:4,theme:e.key,life:.7,maxLife:.7});const armed=e.state.blastArmed;g.kill(e,killer);if(armed){e.respawnAt=g.time+3;e.state.fastReturn=true;}});
+ g.emitSound?.('charge',e,{phase:'detonation-charge',duration:2,element:'fire'});
+ g.schedule(e,2,()=>{g.emitSound?.('explosion',e,{phase:'alisa-detonation',element:'fire',weight:1.5});area(g,e,e,4,600,t=>{if(t.alive)applyBurn(g,e,t,true);});g.effects.push({type:'burst',x:e.x,y:e.y,r:4,theme:e.key,life:.7,maxLife:.7});const armed=e.state.blastArmed;g.kill(e,killer);if(armed){e.respawnAt=g.time+3;e.state.fastReturn=true;}});
  return true;
 }
 export function interceptDeath(g,e,killer){

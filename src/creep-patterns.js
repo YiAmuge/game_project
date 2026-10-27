@@ -11,7 +11,7 @@ export function update(g,e,target){
   const p=e.pattern;
   if(g.time+1e-8>=p.at){
    cancel(e);e.exposedUntil=g.time+2;
-   swing(g,e,{x:e.x+p.dx,y:e.y+p.dy});let dealt=0,hits=0;
+   g.emitSound?.('swing',e,{phase:'focused-strike',weight:1.5});swing(g,e,{x:e.x+p.dx,y:e.y+p.dy});let dealt=0,hits=0;
    for(const t of [...g.units]){
     if(!g.hostile(e,t))continue;
     const inside=distance(p,t)<=p.r+t.radius&&(()=>{const d=direction(p,t);return d.x*p.dx+d.y*p.dy>=Math.cos(p.spread/2);})();
@@ -28,6 +28,7 @@ export function update(g,e,target){
  if(target&&g.time+1e-8>=(e.patternReady??Infinity)&&!g.stat(e,'stun')&&!g.stat(e,'silence')){
   const d=direction(e,target);
   e.pattern={kind:e.camp,x:e.x,y:e.y,dx:d.x,dy:d.y,r:4.6,spread:Math.PI*.65,damage:160,startedAt:g.time,at:g.time+2.65};
+  g.emitSound?.('charge',e,{phase:'focused-charge',duration:2});
   e.facing=Math.atan2(d.y,d.x);e.channelUntil=e.pattern.at;e.patternReady=g.time+CAMP_RULES.patternEvery;return true;
  }
  return false;

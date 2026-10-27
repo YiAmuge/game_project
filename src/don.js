@@ -14,6 +14,7 @@ export function release(g,e,point){
  if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.stat(e,'captured')||g.stat(e,'netCapture')||g.hidden(e)||e.motion||e.recall){cancel(g,e);return false;}
  const shape=chargeShape(g,e,point),full=shape.progress>=1-1e-8;cancel(g,e);e.lastAttackAt=g.time;e.revealedUntil=g.time+1.25;e.facing=Math.atan2(shape.d.y,shape.d.x);e.state.donThrust={at:g.time,angle:e.facing,progress:shape.progress};
  return g.action(e,'skill',()=>{
+  g.emitSound?.('swing',e,{slot:'q',phase:'charged-thrust',charge:shape.progress,weight:.9+shape.progress*.5});
   let connected=false;
   rectangle(g,e,shape.d,shape.range,shape.width,shape.damage,t=>{if(t.invulnerableUntil>g.time||t.state?.posthumous||g.locked(t))return;connected=true;if(full)g.status(t,'stun',1,1,e);});
   if(full&&connected)e.ammo=Math.min(g.ammoCap(e),e.ammo+2);

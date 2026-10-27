@@ -23,6 +23,6 @@ export function flight(g,p,dt){
  const d=direction(p,t);p.dx=d.x;p.dy=d.y;const step=p.speed*dt;
  if(distance(p,t)>step+t.radius){p.x+=d.x*step;p.y+=d.y*step;return;}
  p.x=t.x;p.y=t.y;p.remaining=0;p.hit=true;release(p.ward);const e=p.source;
- g.action(e,'skill',()=>{e.state.guboLaserFiring=true;try{if(p.allied){e.state.guboUltimateExecuting=t.id;g.kill(t,e);}else g.deal(e,t,p.damage,{damageKind:'skill'});}finally{delete e.state.guboLaserFiring;delete e.state.guboUltimateExecuting;}});
+ g.action(e,'skill',()=>{e.state.guboLaserFiring=true;try{if(p.allied){e.state.guboUltimateExecuting=t.id;g.kill(t,e);}else g.deal(e,t,p.damage,{damageKind:'skill',sound:{slot:'r'}});}finally{delete e.state.guboLaserFiring;delete e.state.guboUltimateExecuting;}});
  g.effects.push({source:e.id,target:t.id,type:'guboBulletImpact',theme:'gubo',x:t.x,y:t.y,r:.8,life:.35,maxLife:.35});
 }

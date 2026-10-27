@@ -19,6 +19,7 @@ export function engage(g,e){if(!e.hostile)e.needleReady=g.time+SEWING.needleEver
 export function cancel(e){delete e.needleCast;delete e.channelUntil;}
 export function swing(g,e){e.swingAt=g.time;e.swingUntil=g.time+.3;}
 export function basic(g,e,target){
+ g.emitSound?.('swing',e,{phase:'king-swing'});
  swing(g,e);e.facing=Math.atan2(target.y-e.y,target.x-e.x);
  for(const t of [...g.units])if(g.hostile(e,t)&&distance(target,t)<=SEWING.cleave+t.radius&&distance(e,t)<=e.range+t.radius&&g.clearLine(e,t))g.deal(e,t,e.damage,{damageKind:'basic'});
  g.effects.push({type:'slash',x:e.x,y:e.y,r:e.range,angle:e.facing,spread:1.1,color:'#d9c889',life:.3,maxLife:.3});

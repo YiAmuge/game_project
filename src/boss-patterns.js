@@ -4,6 +4,7 @@ export const BOSS_RULES={health:9750,attack:297.5,aggroRange:8.5,cleaveRadius:1.
 export function engage(g,e){if(!e.hostile){e.bossShockReady=g.time+BOSS_RULES.shockEvery;e.bossMarksReady=g.time+BOSS_RULES.marksEvery;}e.hostile=true;}
 export function cancel(e){delete e.bossPattern;e.bossMarkers=[];delete e.bossShockReady;delete e.bossMarksReady;delete e.bossIdleSince;}
 export function basic(g,e,t){
+ g.emitSound?.('swing',e,{phase:'boss-swing'});
  e.swingAt=g.time;e.swingUntil=g.time+.3;
  for(const u of [...g.units])if(g.hostile(e,u)&&distance(t,u)<=BOSS_RULES.cleaveRadius+u.radius&&g.clearLine(t,u))g.deal(e,u,e.damage);
  g.effects.push({type:'burst',x:t.x,y:t.y,r:BOSS_RULES.cleaveRadius,theme:'boss',life:.3,maxLife:.3});
@@ -13,7 +14,7 @@ export function update(g,e,dt=1/30){
  Object.assign(e,e.home);e.returning=false;
  if(!e.hostile){if(g.time-e.lastCombat>5)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.15*dt);return;}
  e.bossShockReady??=g.time+BOSS_RULES.shockEvery;e.bossMarksReady??=g.time+BOSS_RULES.marksEvery;e.bossMarkers??=[];
- for(const m of e.bossMarkers)if(g.time+1e-8>=m.at&&!m.done){m.done=true;for(const t of [...g.units])if(g.hostile(e,t)&&distance(m,t)<=m.r+t.radius&&g.clearLine(m,t)){g.deal(e,t,BOSS_RULES.markDamage);g.status(t,'root',1,BOSS_RULES.root,e);}g.effects.push({type:'burst',x:m.x,y:m.y,r:m.r,theme:'boss',life:.5,maxLife:.5});}
+ for(const m of e.bossMarkers)if(g.time+1e-8>=m.at&&!m.done){m.done=true;g.emitSound?.('detonation',e,{phase:'boss-mark',x:m.x,y:m.y});for(const t of [...g.units])if(g.hostile(e,t)&&distance(m,t)<=m.r+t.radius&&g.clearLine(m,t)){g.deal(e,t,BOSS_RULES.markDamage);g.status(t,'root',1,BOSS_RULES.root,e);}g.effects.push({type:'burst',x:m.x,y:m.y,r:m.r,theme:'boss',life:.5,maxLife:.5});}
  e.bossMarkers=e.bossMarkers.filter(m=>!m.done);
  const possible=g.units.filter(t=>['champion','minion'].includes(t.kind)&&t.alive&&!g.hidden(t)&&distance(e,t)<=BOSS_RULES.aggroRange&&g.clearLine(e,t));
  const target=possible.find(t=>t.id===e.aggro)||possible.sort((a,b)=>distance(e,a)-distance(e,b))[0];

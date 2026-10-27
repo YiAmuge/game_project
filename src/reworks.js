@@ -24,7 +24,7 @@ export function releaseHeath(g,e,p){
  if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.stat(e,'root')||g.stat(e,'captured')||e.motion||g.hidden(e)){cancelHeath(e);return false;}
  const shape=heathCharge(g,e,p||e.state.chargeAim),d=direction(e,shape.landing);cancelHeath(e);e.qCd=g.cooldown(e,'q');e.lastAttackAt=g.time;
  return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{kind:'leap',actionTag:'heathQ',ignoreWalls:true,arcHeight:3,minDuration:distance(e,shape.landing)/RULES.dashSpeed,phaseEnemies:true,onComplete:()=>{
-  e.state.heathSlamAt=g.time;e.state.heathSlamFacing=Math.atan2(d.y,d.x);
+  g.emitSound?.('slam',e,{phase:'heath-landing',family:'club'});e.state.heathSlamAt=g.time;e.state.heathSlamFacing=Math.atan2(d.y,d.x);
   area(g,e,e,shape.radius,shape.damage,t=>{if(shape.stun)g.status(t,'stun',1,shape.stun,e);});g.effects.push({type:'burst',x:e.x,y:e.y,r:shape.radius,theme:'heathcliff',life:.5,maxLife:.5});
  }}));
 }
@@ -47,7 +47,7 @@ export function outis(g,e,d){
  let victim=null,finished=false;
  const blast=()=>{
   if(finished)return;finished=true;
-  s.outisRecoilAt=g.time;s.outisRecoilFacing=Math.atan2(d.y,d.x);
+  g.emitSound?.('explosion',e,{phase:'outis-shotgun',family:'shotgun',element:'fire',slot:'r'});s.outisRecoilAt=g.time;s.outisRecoilFacing=Math.atan2(d.y,d.x);
   const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,t=>{if(!t.alive&&e.alive){g.addBuff(e,'outisReload',3,{copy:false});e.rCd=Math.max(0,e.rCd-g.cooldown(e,'r')*.3);}},{exclude:new Set(victim?[victim.id]:[])});
   g.effects.push({type:'outisShotgun',source:e.id,slot:'r',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:6.5,spread:Math.PI*2/3,theme:'outis',life:.5,maxLife:.5});
   if(victim){if(!g.startMotion(e,backward,2.5,{speed:18,maxSpeed:18,phaseEnemies:true,onComplete:finish}))finish();}else finish();
@@ -66,7 +66,7 @@ export function honglu(g,e,slot,p,d){
  }else{
   const z=g.zones.find(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time);
   if(z)z.moving=!z.moving;
-  else {const zone={kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,tickEvery:.5,cleanse:true,cleansed:new Set()};g.zones.push(zone);waterfallPulse(g,zone,true);}
+  else {const zone={kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,tickEvery:.5,cleanse:true,cleansed:new Set()};g.zones.push(zone);g.emitSound?.('waterfall',e,{slot:'r',x:zone.x,y:zone.y,duration:4,phase:'waterfall-start'});waterfallPulse(g,zone,true);}
  }
  return true;
 }
@@ -78,7 +78,7 @@ export function waterfallPulse(g,z,first=false){
    g.heal(z.source,t,z.heal,true,{skillHeal:true,healingKey:z.healingEvent?.key,startedAt:z.healingEvent?.at});
    if(!z.cleansed.has(t.id)){t.status={};z.cleansed.add(t.id);}
   }else if(g.hostile(z.source,t)){
-   const shield=g.shield(t),dealt=g.deal(z.source,t,z.damage);
+   const shield=g.shield(t),dealt=g.deal(z.source,t,z.damage,{sound:{slot:'r',element:'water',phase:'waterfall-pulse'}});
    if(first&&(dealt>0||g.shield(t)<shield))g.effects.push({type:'hongluSplash',source:z.source.id,x:t.x,y:t.y,r:1.2,life:.5,maxLife:.5});
   }
  }
@@ -99,6 +99,7 @@ export function finishInsight(g,e){
  const s=e.state;if(s.insightUntil===undefined)return;
  delete s.insightUntil;delete e.buffs.insight;e.shields=e.shields.filter(a=>a.source!==`insight-${e.id}`);e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;
  for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500+5*g.bonusHealthPercent(e),false,{skillHeal:true,healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
+ g.emitSound?.('water',e,{slot:'q',phase:'healing-ripple'});
  g.effects.push({type:'hongluRipple',source:e.id,theme:'honglu',x:e.x,y:e.y,r:5,life:.8,maxLife:.8});
 }
 export function easterEggs(g,dt){

@@ -17,7 +17,7 @@ export function validate(g,e,slot,p){
 export function basic(g,e,p,d){
  if(e.key==='marton'){
   const len=Math.min(g.attackRange(e),distance(e,p)),point={x:e.x+d.x*len,y:e.y+d.y*len};
-  e.state.martonGroundStrike=len>=2.5?e.attackSerial:null;
+  e.state.martonGroundStrike=len>=2.5?e.attackSerial:null;if(len>=2.5)g.emitSound?.('slam',e,{phase:'root-slam',family:'hammer',element:'wood',x:point.x,y:point.y});
   if(len<2.5)g.cone(e,d,2.5,Math.PI,190,()=>g.addBuff(e,'martonStride',2.25));else area(g,e,point,2.2,100);
   g.effects.push({damageKind:'basic',type:len<2.5?'slash':'burst',x:len<2.5?e.x:point.x,y:len<2.5?e.y:point.y,r:len<2.5?2.5:2.2,angle:Math.atan2(d.y,d.x),spread:Math.PI,theme:e.key,life:.4,maxLife:.4});return true;
  }
