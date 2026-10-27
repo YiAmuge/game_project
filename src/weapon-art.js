@@ -3,6 +3,7 @@ import { leapLift,levitationLift,feetOffset } from './projection-25d.js';
 import { drawGripHands,gripSourcePoint } from './weapon-grips.js';
 import { carried } from './attachments.js';
 import { rudolphWeaponProgress,RUDOLPH_WEAPON } from './rudolph-weapon.js';
+import{basicStance,bodyFacing}from'./champion-pose.js';
 
 // Shaft extensions are geometric slices of the latest source art. The metal
 // heads keep their source shape and size; only the handle interval gains length.
@@ -32,7 +33,7 @@ export const EMISSION_ANCHORS={gubo:[.99,.32],rudolph:[.94,.48],myo:[.995,.50],j
 export const HAND_ANCHORS={jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
 export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
- const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],facing=e.facing??(e.team?Math.PI:0),flip=(Math.cos(facing)<0)!==Boolean(f?.mirror)?-1:1,[x,y]=HAND_ANCHORS[e.key]||[-.3,-.8];
+ const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],stance=basicStance(g,e),facing=stance?.weaponFacing??e.facing??(e.team?Math.PI:0),flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[x,y]=HAND_ANCHORS[e.key]||[-.3,-.8];
  const duration=e.key==='ryoshu'?.25:.3,age=g.time-(e.attackAt??-99),attacking=age>=0&&age<duration,style=g.attackStyle(e),slash=['slash','sweep'].includes(style),swing=age/duration,side=(e.attackSerial||0)%2?1:-1;
  let angle=attacking?(e.attackFacing??facing):facing;
  if(slash&&attacking)angle+=e.key==='honglu'?swingProgress(swing)*Math.PI*2:(swingProgress(swing)-.5)*2.25*side;
@@ -40,7 +41,7 @@ export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
  if(e.state.donThrust&&g.time-e.state.donThrust.at<.24)angle=e.state.donThrust.angle;
  if(e.key==='starbuck'&&(e.motion?.kind==='leap'&&e.motion.elapsed/Math.max(.01,e.motion.minDuration)>.5||g.time-(e.state.starbuckLandedAt??-99)<.22))angle=Math.PI/2;
  const handY=y+(['honglu','dongrang'].includes(e.key)?.15:0);
- return {origin,right:{x:origin.x+x*flip,y:origin.y+handY},left:{x:origin.x-x*flip,y:origin.y+handY},angle,age,attacking,slash,swing,flip,facing};
+ return {origin,right:{x:origin.x+x*flip,y:origin.y+handY},left:{x:origin.x-x*flip,y:origin.y+handY},angle,age,attacking,slash,swing,flip,facing,resting:Boolean(stance)};
 }
 export function swingProgress(t){
  t=Math.max(0,Math.min(1,t));const turn=.8/3;return t<=turn?t*3:.8+(t-turn)*(.2/(1-turn));
@@ -239,13 +240,14 @@ export function jamilaWeaponPose(g,e,p=equipmentPose(g,e)){
 }
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const c=r.ctx,entry=WEAPON_ART[e.key];if(!entry)return false;
- if(e.key==='yan'&&g.buff(e,'yanDistorted')||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
+ if(e.key==='yan'&&g.buff(e,'yanDistorted')&&!e.previewStance||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=gripPivot(e.key),{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
   c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm'))});c.restore();drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
+ if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){c.save();c.translate(p.right.x,p.right.y);orientWeapon(c,p.facing);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}
  const skill=skillWeaponPose(g,e,p,camera);
  if(skill){
@@ -257,7 +259,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='dongbaek'&&dongbaekUltSwing(g,e)){
   const cut=dongbaekUltSwing(g,e);held(entry[0],entry[1],p.right,cut.angle,undefined,{mode:'swing',progress:cut.progress,trail:true,part:'ultimate-swing'});
  }else if(ryoshuResting(g,e,p)){
-  held(entry[0],entry[1],p.right,p.facing+Math.PI,.5,{mode:null,trail:false,centerGrip:true});
+  held(entry[0],entry[1],p.right,p.facing+(p.resting?0:Math.PI),.5,{mode:null,trail:false,centerGrip:true});
  }else if(e.key==='gubo'){
   const shot=guboWeaponPose(g,e,camera,p);held(entry[0],entry[1],shot.hand,shot.angle,undefined,{thrust:shot.thrust,trail:false});
  }else if(e.key==='rudolph'){

@@ -1,4 +1,5 @@
 import{combatNumber}from'./combat-text.js';
+import{captureMobileAim,followMobileAim}from'./champion-pose.js';
 import * as Jamila from './jamila.js';
 import{introHidden}from'./match-presentation.js';
 import*as GuboUltimate from'./gubo-ultimate.js';
@@ -745,6 +746,7 @@ export class Game {
   }
   step(dt) {
     if(this.winner!==null)return;
+    const mobileAim=captureMobileAim(this);
     dt=this.training?dt:Math.min(dt,Math.max(0,RULES.timeLimit-this.time));
     if(dt===0){if(this.training)return;const result=this.timeDecision();this.finish(result.team,result.reason);return;}
     this.time+=dt;GuboUltimate.tick(this);BossBuff.tick(this);Sewing.tick(this);this.pings=Pings.live(this);V08.tickObjects(this);if(this.training)Training.beforeStep(this,dt);
@@ -782,6 +784,7 @@ export class Game {
         if(V08.controlTaunt(this,e,dt))continue;
         if(e.player) {
           if(!e.state.posthumous&&!e.state.ahabUlt&&!moving&&!e.motion&&!e.recall&&!this.stat(e,'root')&&!this.stat(e,'stun')&&!this.hidden(e)&&(!(e.channelUntil>this.time)||e.state.alisaUltimateChannel)) {const len=Math.max(1,Math.hypot(this.input.x,this.input.y));moveBody(this,e,this.input.x/len*this.speed(e)*dt,this.input.y/len*this.speed(e)*dt);}
+          followMobileAim(this,mobileAim);
           if(this.input.fire)this.attack(e,this.input.aim);
           e.facing=Math.atan2(this.input.aim.y-e.y,this.input.aim.x-e.x);
         } else if(!e.state.posthumous&&!e.state.ahabUlt&&!moving&&!e.motion&&!e.recall){if(e.trainingSummoned)Training.aiChampion(this,e,dt);else this.aiChampion(e,dt);}
@@ -791,7 +794,7 @@ export class Game {
     }
     const due=this.events.filter(ev=>ev.at<=this.time+1e-8);this.events=this.events.filter(ev=>ev.at>this.time+1e-8);
     for(const ev of due)if(ev.autonomous||ev.source.alive&&!this.stat(ev.source,'stun'))ev.fn();
-    separate(this);this.updateProjectiles(dt);this.updateDelayed(dt);Reworks.easterEggs(this,dt);if(this.training)Training.afterStep(this,dt);
+    separate(this);this.updateProjectiles(dt);this.updateDelayed(dt);Reworks.easterEggs(this,dt);if(this.training)Training.afterStep(this,dt);followMobileAim(this,mobileAim);
     for(const fx of this.effects)fx.life-=dt;
     this.effects=this.effects.filter(f=>f.life>0).slice(-220);
     for(const b of this.units.filter(e=>e.kind==='bait'&&e.alive&&e.until<=this.time))this.kill(b,b);

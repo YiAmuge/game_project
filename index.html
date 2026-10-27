@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11191b">
+  <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>도시 경계</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23c7ac72' d='M32 2 60 18v28L32 62 4 46V18zm0 9L12 23v18l20 12 20-12V23z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./src/style.css">
@@ -12,7 +13,7 @@
   <header class="masthead">
     <a id="home" class="brand" href="#" aria-label="도시 경계 처음으로"><span class="brand-mark">◈</span><span>도시 경계<small>CITY BORDER</small></span></a>
     <nav><span class="nav-active">아레나</span><button id="archive-open">도감</button><button id="help-open">플레이 가이드 ↗</button></nav>
-    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.64.0</b></span>
+    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.65.0</b></span>
   </header>
   <main>
     <section class="match-bar" aria-label="경기 상태">
@@ -51,7 +52,7 @@
       <div class="shop-heading"><div><span class="eyebrow">SUPPLY STATION</span><h2 id="shop-title">부활소 보급</h2></div><button id="shop-close" aria-label="상점 닫기">×</button></div><p id="shop-status"></p>
       <nav id="shop-tabs" aria-label="증강 카테고리"><button data-group="all">전체</button><button data-group="combat">전투</button><button data-group="survival">생존</button><button data-group="tech">기술</button></nav>
       <div id="shop-supply"><div class="shop-workspace"><div class="shop-catalog"><h3>증강 <small id="augment-count"></small></h3><div id="augment-list"></div></div>
-      <aside id="shop-detail" aria-label="선택한 증강 상세"><div id="detail-icon"></div><h3 id="detail-name">증강을 선택하세요</h3><p id="detail-effect">아이콘에 커서를 올리거나 선택하면 효과를 확인합니다.</p><p id="detail-condition"></p><button id="detail-buy" class="shop-buy" disabled>구매</button><button id="shop-sell" disabled>판매</button><p id="shop-selected-info"></p><h4>보유 증강</h4><div id="owned-list"></div></aside></div>
+      <aside id="shop-detail" aria-label="선택한 증강 상세"><div id="detail-copy"><div id="detail-icon"></div><h3 id="detail-name">증강을 선택하세요</h3><p id="detail-effect">증강을 선택하면 효과를 확인합니다.</p><p id="detail-condition"></p><p id="shop-selected-info"></p></div><div id="detail-actions"><button id="detail-buy" class="shop-buy" disabled>구매</button><button id="shop-sell" disabled>판매</button></div><section id="detail-owned"><h4>보유 증강</h4><div id="owned-list"></div></section></aside></div>
       <section class="shop-upgrades"><h3>강화 시술</h3><div id="upgrade-list"></div><div id="training-procedures" class="training-actions hidden"><button id="training-buy-procedures">강화 시술 모두 구매</button><button id="training-sell-procedures">강화 시술 모두 판매</button><button id="training-sell-all">증강·강화 시술 모두 판매</button></div></section></div>
     </aside>
     <aside id="augment-tray" class="augment-tray hidden" aria-label="보유 증강"></aside>

@@ -25,6 +25,7 @@ import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
 import { FRAMES, THEMES, loadAtlas,visualForm,spriteHeight } from './art.js';
 import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin,orientWeapon } from './weapon-art.js';
+import{bodyFacing}from'./champion-pose.js';
 import { draw as bossPattern } from './boss-patterns.js';
 import { draw as creepPattern } from './creep-patterns.js';
 import { targetingPreview } from './targeting.js';
@@ -146,7 +147,7 @@ export class Renderer {
     }
     if(e.trainingDummy){const team=e.team===0?'#a9d3df':'#e2a79a';this.line([{x:e.x,y:e.y+.25},{x:e.x,y:e.y-1.8}],'#8d7959',.2);this.line([{x:e.x-.7,y:e.y-.85},{x:e.x+.7,y:e.y-.85}],'#a49171',.18);this.circle(e.x,e.y-1.5,.48,'#a99772',team,.085);this.circle(e.x,e.y-1.5,.23,null,team,.05);this.line([{x:e.x-.5,y:e.y+.3},{x:e.x+.5,y:e.y+.3}],'#9f8c66',.14);return;}
     if(e.kind==='bait'){c.save();c.translate(e.x,e.y-.65);drawMartonFairy(c,game.time,.8);c.restore();return;}
-    const def=CHAMPIONS[e.key],inBush=game.bushAt(e),angle=e.facing??(e.team===0?0:Math.PI);
+    const def=CHAMPIONS[e.key],inBush=game.bushAt(e),angle=bodyFacing(game,e);
     if(!this.billboardPass)CombatVisuals.behind(this,e,game);c.save();if(inBush)c.globalAlpha=.72;if(e.key==='ryoshu'&&e.invulnerableUntil>game.time)c.globalAlpha*=.65;c.globalAlpha*=leapOpacity(e);
     if(!this.billboardPass){c.beginPath();c.ellipse(e.x,e.y+.2,.65,.25,0,0,Math.PI*2);c.fillStyle='#06131599';c.fill();this.circle(e.x,e.y,.67,null,e.player?'#f2d98e':team,.07);}
     if(!this.billboardPass&&game.shield(e)>0)this.circle(e.x,e.y-.65,1.05,'#9fc9d711','#c8e4df99',.055);

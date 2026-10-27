@@ -362,3 +362,170 @@ body.in-game:not(.mobile-ui) .field-top>div{margin-left:auto;right:18px;left:aut
 
 body.mobile-ui.in-game .field-top>div{display:contents;background:none;border:0;padding:0;backdrop-filter:none}body.mobile-ui.in-game #pause,body.mobile-ui.in-game #sound-toggle{pointer-events:auto}body.mobile-ui.in-game .hud #basic-btn:before{content:"⚔";font-size:30px;color:#ffe3d9aa;position:absolute;left:0;right:0;top:13px}body.mobile-ui.in-game .hud #q-btn:before{content:"◇";font-size:28px;color:#d8edffbb;position:absolute;left:0;right:0;top:5px}body.mobile-ui.in-game .hud #r-btn:before{content:"✦";font-size:28px;color:#fff0acbb;position:absolute;left:0;right:0;top:5px}body.mobile-ui.in-game .hud .ability.on-cooldown:before{opacity:.22}
 body.mobile-ui.in-game .scoreboard,body.mobile-ui.in-game .shop{transform:none;margin:0}body.mobile-ui.in-game .field-top>div{box-shadow:none}
+
+/* Mobile menus keep navigation and confirmation outside the scrolling lists. */
+body.mobile-ui{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+body.mobile-ui button,body.mobile-ui canvas{ -webkit-touch-callout:none }
+#ping-controls button svg,#mobile-shop-tabs,#mobile-shop-gold,#mobile-owned-catalog{display:none}
+body.mobile-ui.in-game #ping-controls{left:max(163px,env(safe-area-inset-left));top:clamp(80px,24dvh,130px);gap:6px}
+body.mobile-ui.in-game #ping-controls button{display:grid;place-items:center;width:42px;height:40px;font-size:0;background:#102333b8;border:1px solid #82a4b16b;border-radius:9px;padding:3px;line-height:1;overflow:hidden}
+body.mobile-ui.in-game #ping-controls button svg{display:block;width:22px;height:22px;pointer-events:none;flex:none}
+body.mobile-ui.in-game #ping-controls [data-ping=attack]{color:#ffb77b}body.mobile-ui.in-game #ping-controls [data-ping=defend]{color:#9adff8}body.mobile-ui.in-game #ping-controls [data-ping=danger]{color:#ff8c99}
+.mobile-target-btn{position:absolute;width:36px;height:36px;padding:6px;display:grid;place-items:center;border:1.5px solid #c6d9e7a8;border-radius:50%;background:#1a344bc7;color:#dbeaff;pointer-events:auto;touch-action:none;box-shadow:0 2px 8px #02091466}
+.mobile-target-btn svg{width:100%;height:100%;pointer-events:none}
+body.mobile-ui.in-game .hud .ability>span{display:none}
+.mobile-target-btn[data-target-kind=champion]{right:max(8px,env(safe-area-inset-right));bottom:13px;border-color:#ef9aa4;color:#ffc0c6}
+.mobile-target-btn[data-target-kind=minion]{right:max(8px,env(safe-area-inset-right));bottom:63px;color:#bce3f4}
+.mobile-target-btn[data-target-kind=structure]{right:max(8px,env(safe-area-inset-right));bottom:113px;color:#ffe5a4}
+.mobile-target-btn[data-target-kind=creep]{right:164px;bottom:17px;color:#c8dba0}
+body.mobile-ui.match-intro .mobile-target-btn{visibility:hidden}
+
+/* Supply has three touch tabs, independently scrolling details and fixed actions. */
+body.mobile-ui.in-game .shop{inset:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));padding:9px 12px;overflow:hidden;border-radius:8px}
+body.mobile-ui.in-game .shop-heading{gap:10px;align-items:center;min-height:32px;padding:0!important}
+body.mobile-ui.in-game .shop-heading .eyebrow{display:none}
+body.mobile-ui.in-game .shop-heading h2{font-size:16px;margin:0}
+body.mobile-ui.in-game #shop-close{order:3;width:36px;height:32px;min-height:32px;padding:0;font-size:24px}
+body.mobile-ui.in-game #mobile-shop-gold{display:block;margin-left:auto;font:700 14px monospace;color:#edcc86}
+body.mobile-ui.in-game #shop-status{font-size:10px;line-height:1.4;margin:3px 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.mobile-ui.in-game #mobile-shop-tabs{display:flex;flex:none;gap:6px;margin-bottom:4px}
+#mobile-shop-tabs button{flex:1;min-height:36px;border:1px solid #536c76;background:#162f3a;color:#adc3cb;font-size:12px}
+#mobile-shop-tabs button.selected{border-color:#d4b877;background:#46452c;color:#ffedb7}
+body.mobile-ui.in-game #shop-tabs{margin:2px 0 5px;gap:6px}
+body.mobile-ui.in-game #shop-tabs button{flex:1;min-height:30px;padding:3px 8px;font-size:11px}
+body.mobile-ui.in-game #shop-supply{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden}
+body.mobile-ui.in-game .shop-workspace{min-height:0;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:12px}
+body.mobile-ui.in-game .shop-catalog{min-height:0;touch-action:pan-y;padding:0 5px 0 0}
+body.mobile-ui.in-game .shop-catalog>h3{font-size:11px;margin:2px 0 5px}
+body.mobile-ui.in-game .shop .augment-group-grid{grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px;padding:3px 2px 10px}
+body.mobile-ui.in-game .shop .augment-tile{min-height:75px;padding:2px;gap:3px}
+body.mobile-ui.in-game .shop .augment-tile .augment-icon{width:56px;height:56px}
+body.mobile-ui.in-game .shop .augment-tile small{font-size:10px}
+body.mobile-ui.in-game .shop #shop-detail{display:flex;flex-direction:column;max-height:none;min-height:0;overflow:hidden;padding-left:10px}
+body.mobile-ui.in-game #detail-copy{flex:1;min-height:0;overflow:auto;touch-action:pan-y;padding-right:6px}
+body.mobile-ui.in-game #shop-detail #detail-icon .augment-icon{width:42px;height:42px;float:left;margin:0 9px 5px 0}
+body.mobile-ui.in-game #shop-detail #detail-name{font-size:15px;min-height:34px;margin:2px 0 8px;line-height:1.4}
+body.mobile-ui.in-game #detail-effect{clear:both;font-size:12px;line-height:1.75;margin:5px 0}
+body.mobile-ui.in-game #detail-condition,body.mobile-ui.in-game #shop-selected-info{font-size:10px;line-height:1.5;margin:4px 0}
+body.mobile-ui.in-game #detail-actions{display:flex;gap:6px;flex:none;padding:5px 0;background:#132322}
+body.mobile-ui.in-game #shop-detail #detail-buy,body.mobile-ui.in-game #shop-detail #shop-sell{flex:1;width:auto;min-height:40px;margin:0;padding:6px;font-size:12px}
+body.mobile-ui.in-game #detail-owned{flex:none;max-height:76px;overflow:auto;border-top:1px solid #3b5355;padding-top:4px}
+body.mobile-ui.in-game #detail-owned h4{font-size:10px;margin:0 0 4px}
+body.mobile-ui.in-game #owned-list{gap:5px}
+body.mobile-ui.in-game #owned-list .augment-icon{width:30px;height:30px}
+body.mobile-ui.in-game .shop .shop-upgrades{display:none;margin:0;min-height:0;overflow:auto;touch-action:pan-y}
+body.mobile-ui.in-game .shop[data-mobile-section=upgrades] .shop-workspace,body.mobile-ui.in-game .shop[data-mobile-section=upgrades] #shop-tabs{display:none}
+body.mobile-ui.in-game .shop[data-mobile-section=upgrades] .shop-upgrades{display:block;flex:1;border:0;padding:5px 0}
+body.mobile-ui.in-game .shop #upgrade-list{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+body.mobile-ui.in-game .shop .upgrade-card{min-width:0}
+body.mobile-ui.in-game .shop #upgrade-list .shop-option{display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:160px;padding:10px 7px}
+body.mobile-ui.in-game .shop #upgrade-list .shop-option strong{font-size:13px}
+body.mobile-ui.in-game .shop #upgrade-list .shop-option small{font-size:10px;line-height:1.8;margin-top:8px;white-space:normal}
+body.mobile-ui.in-game .shop #upgrade-list .shop-buy{width:100%;min-height:42px;font-size:11px;padding:6px 2px}
+body.mobile-ui.in-game .shop #training-procedures button{min-height:36px;font-size:10px}
+body.mobile-ui.in-game .shop[data-mobile-section=inventory] #shop-tabs,body.mobile-ui.in-game .shop[data-mobile-section=inventory] .shop-catalog>h3,body.mobile-ui.in-game .shop[data-mobile-section=inventory] #augment-list,body.mobile-ui.in-game .shop[data-mobile-section=inventory] #detail-owned{display:none}
+body.mobile-ui.in-game .shop[data-mobile-section=inventory] #mobile-owned-catalog{display:block}
+body.mobile-ui.in-game #mobile-owned-catalog h3{font-size:13px;margin:5px 0 12px}
+body.mobile-ui.in-game #mobile-owned-catalog #owned-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+body.mobile-ui.in-game #mobile-owned-catalog #owned-list button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border:1px solid #526c6c;background:#1a3339}
+body.mobile-ui.in-game #mobile-owned-catalog #owned-list button:after{content:attr(aria-label);font-size:10px;line-height:1.5}
+body.mobile-ui.in-game #mobile-owned-catalog #owned-list .augment-icon{width:48px;height:48px}
+body.mobile-ui.in-game #mobile-owned-catalog #owned-list:empty:after{content:'보유한 증강이 없습니다.';grid-column:1/-1;color:#a5b8bf;font-size:12px;padding:15px 0}
+
+@media(orientation:landscape){
+ body.mobile-ui.menu-screen .lobby{display:grid;grid-template-columns:1fr minmax(230px,310px);padding:18px max(22px,env(safe-area-inset-right));gap:24px}
+ body.mobile-ui.menu-screen .lobby-copy{align-self:center}
+ body.mobile-ui.menu-screen .lobby h1{font-size:38px}
+ body.mobile-ui.menu-screen .menu-card{width:310px;min-width:0}
+ body.mobile-ui.menu-screen .menu-action{min-height:44px;padding:9px 12px;margin-top:4px;gap:3px}
+ body.mobile-ui.menu-screen .menu-action>b{font-size:14px}
+ body.mobile-ui.menu-screen .menu-action>small{font-size:9px}
+ body.mobile-ui .pick-heading{padding:6px max(12px,env(safe-area-inset-left));min-height:42px}
+ body.mobile-ui .pick-heading>div{display:flex;gap:12px;align-items:center}
+ body.mobile-ui .pick-heading h2{font-size:17px;margin:0}
+ body.mobile-ui .pick-heading>button{min-height:32px;padding:6px 10px;font-size:11px}
+ body.mobile-ui .pick-layout{grid-template-columns:112px minmax(0,1fr) 112px;grid-template-rows:minmax(0,1fr);padding:6px max(10px,env(safe-area-inset-left));gap:6px}
+ body.mobile-ui .pick-team{padding:0;overflow:auto;touch-action:pan-y}
+ body.mobile-ui #pick-allies{grid-column:1;grid-row:1}body.mobile-ui #pick-enemies{grid-column:3;grid-row:1}
+ body.mobile-ui .pick-team h3{font-size:11px;margin:3px 0 6px}body.mobile-ui .pick-team h3 small{font-size:9px}
+ body.mobile-ui .pick-team .pick-slot{display:flex;width:100%;height:45px;min-height:45px;margin:0 0 5px;padding:4px;gap:5px}
+ body.mobile-ui .slot-image,body.mobile-ui .slot-image canvas{width:30px;height:30px}
+ body.mobile-ui .pick-slot strong{font-size:11px;margin:3px 0 0}body.mobile-ui .pick-slot small{font-size:8px}
+ body.mobile-ui .pick-center{grid-column:2;grid-row:1;padding:0 7px;border:0;border-left:1px solid #293947;border-right:1px solid #293947}
+ body.mobile-ui .pick-controls{flex-wrap:nowrap;margin:0 0 5px;gap:5px}
+ body.mobile-ui .pick-controls h3{font-size:12px;margin:0}body.mobile-ui .pick-controls p{display:none}
+ body.mobile-ui .bot-choices button{min-height:32px;font-size:10px;padding:4px 8px}
+ body.mobile-ui .pick-filter{display:grid;grid-template-columns:110px minmax(0,1fr);gap:5px;margin:0 0 6px}
+ body.mobile-ui .pick-filter input{width:100%;padding:4px 7px;font-size:16px;height:32px;min-width:0}
+ body.mobile-ui #pick-roles{flex-wrap:nowrap;overflow:auto;touch-action:pan-x}
+ body.mobile-ui #pick-roles button{white-space:nowrap;min-height:32px;padding:3px 7px;font-size:10px}
+ body.mobile-ui .practice-panel #champion-select{grid-template-columns:repeat(auto-fill,minmax(62px,1fr));grid-auto-rows:78px;gap:7px;padding:1px 3px 8px;touch-action:pan-y}
+ body.mobile-ui .practice-panel #champion-select .champion-option{height:78px;min-height:0}
+ body.mobile-ui .practice-panel .champion-option canvas{height:58px}
+ body.mobile-ui .practice-panel .champion-option span{font-size:10px;line-height:18px}
+ body.mobile-ui.practice-screen .pick-footer{grid-template-columns:minmax(115px,1fr) auto 140px;grid-template-rows:auto;min-height:62px;padding:6px max(12px,env(safe-area-inset-right));gap:12px}
+ body.mobile-ui .pick-selected{gap:7px}body.mobile-ui .pick-selected canvas{width:38px;height:38px}body.mobile-ui .pick-selected h3{font-size:15px;margin:3px 0}body.mobile-ui .pick-selected p,body.mobile-ui .deploy-note{display:none}
+ body.mobile-ui .pick-position{grid-column:auto;grid-row:auto;display:block}body.mobile-ui .pick-position>span{display:none}
+ body.mobile-ui .pick-position #position-select{display:flex;gap:5px;margin:0}body.mobile-ui .pick-position .position-option{min-width:40px;padding:5px 9px;min-height:36px;font-size:11px}
+ body.mobile-ui .pick-confirm,body.mobile-ui .pick-confirm #start{width:140px}body.mobile-ui .pick-confirm #start{min-height:42px;padding:8px;font-size:12px}
+ body.mobile-ui .codex-heading{display:flex;padding:6px max(12px,env(safe-area-inset-left));gap:10px;min-height:48px}
+ body.mobile-ui .codex-heading small{display:none}body.mobile-ui .codex-heading h1{font-size:17px;margin:0;white-space:nowrap}
+ body.mobile-ui #codex-tabs{display:flex;gap:4px;margin-left:auto}body.mobile-ui #codex-tabs button{min-height:36px;padding:5px 8px;font-size:10px;white-space:nowrap}
+ body.mobile-ui #codex-back{min-height:36px;padding:5px 9px;font-size:10px}
+ body.mobile-ui .codex-champions{grid-template-columns:142px minmax(145px,.7fr) minmax(0,1.3fr);grid-template-rows:minmax(0,1fr);gap:10px;padding:10px max(10px,env(safe-area-inset-left))}
+ body.mobile-ui .archive-picker{grid-column:1;grid-row:1;padding:0 7px 0 0;border-right:1px solid #344656;grid-template-rows:32px minmax(0,1fr);gap:7px}
+ body.mobile-ui .archive-search h2{display:none}body.mobile-ui .archive-search input{font-size:16px;height:32px;padding:4px 7px;margin:0;min-width:0}
+ body.mobile-ui .archive-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:78px;gap:6px;padding:1px 2px 5px;touch-action:pan-y}
+ body.mobile-ui .archive-champion canvas{height:56px}body.mobile-ui .archive-champion span{font-size:9px;line-height:20px}
+ body.mobile-ui .archive-hero{padding:0;justify-content:center}body.mobile-ui .archive-hero canvas{height:calc(100% - 86px);min-height:0;width:100%;max-height:none}
+ body.mobile-ui .archive-hero h2{font-size:18px;margin:4px 0}body.mobile-ui .archive-hero p{font-size:9px;line-height:1.3;margin:0 0 5px}
+ body.mobile-ui .archive-hero button{font-size:10px;min-height:36px;padding:5px 8px}
+ body.mobile-ui .archive-detail{padding:0 4px 14px;touch-action:pan-y}
+ body.mobile-ui .champion-overview h2{font-size:18px;margin:4px 0}body.mobile-ui .champion-overview>p{display:none}
+ body.mobile-ui .champion-stat-heading{flex-wrap:wrap;gap:5px}body.mobile-ui .champion-stat-heading>span{font-size:9px}
+ body.mobile-ui .champion-form-toggle button{min-height:30px;padding:4px 6px;font-size:9px}
+ body.mobile-ui .champion-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0;padding:8px 0}body.mobile-ui .champion-stats dd{font-size:14px;margin:5px 0 0}body.mobile-ui .champion-stats dt{font-size:9px}
+ body.mobile-ui .skill-tabs{grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0;position:sticky;top:0;background:#0c1924;z-index:1;padding:3px 0}
+ body.mobile-ui .skill-tabs button{min-height:34px;padding:4px 2px;font-size:10px}
+ body.mobile-ui .skill-description{padding:5px 0}body.mobile-ui .skill-description h3{font-size:17px;margin:10px 0}body.mobile-ui .skill-description p{font-size:12px;line-height:1.85}
+ body.mobile-ui .codex-monsters{grid-template-columns:150px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:12px;padding:10px}
+ body.mobile-ui .monster-list{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:105px;gap:6px;padding:0 7px 0 0;border-right:1px solid #344656;border-bottom:0;touch-action:pan-y}
+ body.mobile-ui .monster-choice canvas{height:70px}body.mobile-ui .monster-choice span{font-size:9px}
+ body.mobile-ui .monster-detail{touch-action:pan-y}body.mobile-ui .monster-overview{grid-template-columns:115px minmax(0,1fr);gap:12px}body.mobile-ui .monster-overview canvas{height:155px}body.mobile-ui .monster-overview h2{font-size:21px;margin:7px 0 12px}
+ body.mobile-ui .monster-skills{grid-template-columns:1fr}body.mobile-ui .monster-skills section{padding:12px}body.mobile-ui .monster-skills p{font-size:12px;line-height:1.8}
+ body.mobile-ui .codex-augments{padding:10px 12px}body.mobile-ui .augment-guide-heading{display:flex;gap:10px;padding-bottom:8px}body.mobile-ui .augment-guide-heading h2{font-size:17px;margin:0 0 5px}body.mobile-ui .augment-guide-heading p{font-size:9px}body.mobile-ui .augment-guide-tabs{margin:0;gap:4px}body.mobile-ui .augment-guide-tabs button{min-height:34px;font-size:10px;padding:4px 10px}
+ body.mobile-ui .augment-guide-workspace{grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:15px}body.mobile-ui .augment-guide-list{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));grid-auto-rows:125px;padding-right:10px;gap:8px;touch-action:pan-y}
+ body.mobile-ui .augment-guide-choice{padding:6px;gap:5px}body.mobile-ui .augment-guide-choice canvas{width:64px;height:64px}body.mobile-ui .augment-guide-choice span{font-size:10px;line-height:1.5}body.mobile-ui .augment-guide-detail{touch-action:pan-y;padding:0 5px 12px}body.mobile-ui .augment-guide-icon{padding:0 0 8px}body.mobile-ui .augment-guide-icon canvas{width:65px;height:65px}body.mobile-ui .augment-guide-detail h2{font-size:19px;margin:7px 0 12px}body.mobile-ui .augment-guide-detail p{font-size:12px;line-height:1.8}
+ body.mobile-ui .codex-rules{padding:14px}body.mobile-ui .rules-intro h2{font-size:21px}body.mobile-ui .rules-grid{grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}body.mobile-ui .rules-grid section{padding:12px}body.mobile-ui .rules-grid p{font-size:12px;line-height:1.8}
+ body.mobile-ui .training-pick-dialog{height:calc(100dvh - 16px);max-height:none;width:min(740px,calc(100vw - 24px));padding:10px 14px;gap:8px}body.mobile-ui .training-pick-grid{grid-auto-rows:80px;grid-template-columns:repeat(auto-fill,minmax(65px,1fr));gap:7px;touch-action:pan-y}body.mobile-ui .training-pick-option canvas{height:59px}body.mobile-ui .training-pick-option span{font-size:10px;line-height:19px}body.mobile-ui .training-pick-footer{padding-top:7px!important}body.mobile-ui .training-pick-footer .primary{min-height:36px;padding:7px 14px}
+}
+
+/* Compact right-side mobile toolbar and notifications. */
+#mobile-fullscreen{display:none}
+body.mobile-ui.menu-screen #mobile-fullscreen,body.mobile-ui.in-game #mobile-fullscreen{display:grid;place-items:center;position:fixed;right:max(12px,env(safe-area-inset-right));top:max(6px,env(safe-area-inset-top));width:32px;height:32px;padding:0;border:1px solid #9dbac177;border-radius:6px;background:#122634ca;color:#cedee8;line-height:1;overflow:hidden;z-index:36}
+#mobile-fullscreen svg{display:block;width:20px;height:20px;pointer-events:none;flex:none}
+body.mobile-ui.in-game #mobile-fullscreen{right:86px}
+body.mobile-ui.in-game .field-top #pause{left:auto;right:max(12px,env(safe-area-inset-right));top:max(6px,env(safe-area-inset-top));width:32px;height:32px}
+body.mobile-ui.in-game .field-top #sound-toggle{left:auto;right:49px;top:max(6px,env(safe-area-inset-top));width:30px;height:32px}
+body.mobile-ui.in-game #ping-controls{left:auto;right:max(12px,env(safe-area-inset-right));top:clamp(92px,24dvh,135px);gap:6px}
+body.mobile-ui.in-game #ping-controls button{border-radius:50%;width:40px;height:40px;padding:4px}
+body.mobile-ui.in-game #ping-controls button svg{width:22px;height:22px}
+body.mobile-ui.in-game .hud #r-btn{right:80px}
+body.mobile-ui.in-game .training-panel{top:45px;right:8px;max-height:70dvh}
+body.mobile-ui.in-game .battle-announcement{left:50%;right:auto;top:44px;transform:translateX(-50%);width:min(280px,calc(100vw - 260px));padding:5px 9px;border-top-width:1px;box-shadow:0 3px 12px #0004}
+body.mobile-ui.in-game .battle-announcement>span{font-size:7px;letter-spacing:.4px}
+body.mobile-ui.in-game .battle-announcement>strong{font-size:14px;line-height:1.3;margin:3px 0}
+body.mobile-ui.in-game .battle-announcement p{font-size:9px;line-height:1.3}
+body.mobile-ui.in-game #event-feed{left:12px;right:auto;top:176px;width:min(200px,26vw);max-width:200px;max-height:74px;overflow:hidden;text-align:left;pointer-events:none}
+body.mobile-ui.in-game #event-feed div{font-size:8px;line-height:1.4;padding:3px 5px;margin:2px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.mobile-ui.in-game #event-feed time{font-size:7px;margin-right:4px}
+body.mobile-ui.in-game .scoreboard{inset:7px 64px 7px 164px}
+body.mobile-ui.in-game #score-map{max-width:100%;max-height:none;aspect-ratio:auto;object-fit:contain;flex:none;margin:0 auto 10px}
+body.mobile-ui.match-intro #mobile-fullscreen{visibility:hidden;pointer-events:none}
+@media(orientation:landscape){
+ body.mobile-ui.menu-screen .lobby{padding-top:32px;padding-bottom:16px;align-items:center}
+ body.mobile-ui.menu-screen .lobby-copy h1{font-size:clamp(29px,5vw,42px);line-height:1.2;margin:10px 0}
+ body.mobile-ui.menu-screen .lobby-copy p{font-size:10px;line-height:1.8;max-width:310px}
+ body.mobile-ui.menu-screen .menu-action{min-height:42px;padding:8px 12px}
+ body.mobile-ui.menu-screen .menu-card{padding-top:0;padding-bottom:0}
+}
