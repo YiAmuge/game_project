@@ -21,6 +21,7 @@ export const MAP={bounds:TRAINING_25D.bounds,walls:TRAINING_25D.walls};
 export const spawn=()=>SPAWN;
 export const hazard=()=>HAZARD;
 export const areas=()=>AREAS;
+export const bushes=()=>TRAINING_25D.bushes;
 export function lanePath(team){const p=TRAINING_25D.lane.map(p=>({...p}));return team?p.reverse():p;}
 function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아비'}={}){
  const e=g.makeChampion('faust',team,10+g.champions().length,'bottom');

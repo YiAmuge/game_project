@@ -131,7 +131,7 @@ export function dongbaekUltSwing(g,e){
  const cast=e.visualCast,age=g.time-(cast?.at??-99);if(e.key!=='dongbaek'||cast?.slot!=='r'||age<0||age>=.38)return null;
  const progress=age/.38;return {angle:cast.angle+(swingProgress(progress)-.5)*2.5*weaponOrientation(cast.angle).flip,progress};
 }
-export function donChargePull(g,e){return e.state.donCharge?-.45*Math.max(0,Math.min(1,(g.time-e.state.donCharge.at)/1.5)):0;}
+export function donChargePull(g,e){return e.state.donCharge?-.45*Math.max(0,Math.min(1,(g.time-e.state.donCharge.at)/1.5*(1+g.buffValue(e,'donLifesteal',.5)))):0;}
 export function ryoshuResting(g,e,p=equipmentPose(g,e)){
  const castAge=g.time-(e.visualCast?.at??-99);return e.key==='ryoshu'&&!p.attacking&&!(e.motion?.actionKind==='skill')&&!(castAge>=0&&castAge<.4);
 }
@@ -191,7 +191,7 @@ export function gregorCenterline(u){
 export const myoFiring=(g,e)=>e.key==='myo'&&e.castSlot==='q'&&g.time-(e.castAt??-99)>=0&&g.time-e.castAt<.5;
 export function drawBackEquipment(r,e,g,{lift=0}={}){
  if(e.key!=='myo'||myoFiring(g,e))return;
- const p=equipmentPose(g,e,lift),c=r.ctx;c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,'myoRifle',2.1,{x:.06,rotation:.95,pivot:.5});c.restore();
+ const p=equipmentPose(g,e,lift),c=r.ctx;c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,'myoRifle',2.1,{x:.06,rotation:.95,pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
 }
 export function weaponGeometry(key,length){
  const f=FRAMES[key];if(!f)return null;const angle=f.rotation||0,baseW=f.w,baseH=f.h;
@@ -199,9 +199,13 @@ export function weaponGeometry(key,length){
  const width=baseW*(1+extra),span=Math.abs(width*Math.cos(angle))+Math.abs(baseH*Math.sin(angle)),scale=length/(Math.abs(baseW*Math.cos(angle))+Math.abs(baseH*Math.sin(angle)));
  return {frame:f,angle,scale,width,height:baseH,span:span*scale,extension};
 }
-export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0}={}){
+export function drawDisarmChains(c,m,pivot){
+ const count=Math.max(5,Math.min(24,Math.ceil(m.span/.15))),height=Math.min(.16,m.height*m.scale*.35+.04);c.save();c.lineWidth=.055;c.strokeStyle='#242b35';
+ for(let i=0;i<count;i++){const x=m.span*(i/(count-1)-pivot),y=Math.sin(i*1.8)*height;c.beginPath();c.ellipse(x,y,.105,.045,i%2?.65:-.65,0,Math.PI*2);c.stroke();c.strokeStyle='#aeb8c4';c.lineWidth=.025;c.stroke();c.strokeStyle='#242b35';c.lineWidth=.055;}c.restore();
+}
+export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0,disabled=false}={}){
  const m=weaponGeometry(key,length);if(!m)return false;const f=m.frame,image=loadAtlas(f.sheet);if(!image.complete||!image.naturalWidth)return false;
- c.save();c.imageSmoothingEnabled=false;c.translate(x,y);c.rotate(rotation);c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.scale(m.scale,m.scale);
+ c.save();if(disabled)c.filter='grayscale(1) brightness(.7)';c.imageSmoothingEnabled=false;c.translate(x,y);c.rotate(rotation);c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.scale(m.scale,m.scale);
  let dx=-m.width/2;
  if(key==='gregorClaw'&&straighten>0){
   c.scale(1,WEAPON_ART.gregor[1]/length);
@@ -210,7 +214,7 @@ export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0
   const e=m.extension,a=Math.round(f.w*e.from),b=Math.round(f.w*e.to),segments=[[0,a,1],[a,b-a,e.scale],[b,f.w-b,1]];
   for(const [sx,w,factor] of segments){if(w>0)c.drawImage(image,f.x+sx,f.y,w,f.h,dx,-f.h/2,w*factor,f.h);dx+=w*factor;}
  }else c.drawImage(image,f.x,f.y,f.w,f.h,dx,-f.h/2,f.w,f.h);
- c.restore();return true;
+ c.restore();if(disabled){c.save();c.translate(x,y);c.rotate(rotation);drawDisarmChains(c,m,pivot);c.restore();}return true;
 }
 export function hohenheimWeaponCharge(g,e){return e.key==='hohenheim'?e.state.posthumous?1:Math.max(0,Math.min(1,(e.state.hohenCharge?.progress||0)/1.5)):0;}
 export function drawWeaponCharge(c,r,g,e,m,pivot){
@@ -232,7 +236,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=gripPivot(e.key),{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,0);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});drawWeapon(c,key,displayLength,{pivot,straighten});drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
+  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,0);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm'))});drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  const skill=skillWeaponPose(g,e,p,camera);
@@ -261,7 +265,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='sora'&&!g.buff(e,'soraEgo')){
   // Keep the existing central cuff pivot and raised slam, following body Z.
   const slam=attacking?Math.sin(Math.min(1,age/.18)*Math.PI)*1.25:0;
-  c.save();c.translate(e.x,p.origin.y-.75-slam);orientWeapon(c,p.angle);c.translate(.18+(attacking?Math.sin(p.swing*Math.PI)*.22:0),0);drawWeapon(c,'soraFists',entry[1],{pivot:.5});c.restore();
+  c.save();c.translate(e.x,p.origin.y-.75-slam);orientWeapon(c,p.angle);c.translate(.18+(attacking?Math.sin(p.swing*Math.PI)*.22:0),0);drawWeapon(c,'soraFists',entry[1],{pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
  }else if(e.key==='sora'){
   const orbit=soraOrbitPose(e,p),pivot=orbit.active?.5:.12;held('soraClawLeft',SORA_CLAW_LENGTH,orbit.left.hand,orbit.left.angle,pivot,{mode:'orbit',progress:p.swing,trail:orbit.active,part:'claw-left'});
   held('soraClawRight',SORA_CLAW_LENGTH,orbit.right.hand,orbit.right.angle,pivot,{mode:'orbit',progress:p.swing,trail:orbit.active,part:'claw-right'});

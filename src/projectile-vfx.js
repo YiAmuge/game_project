@@ -9,7 +9,7 @@ export function projectileAppearance(p,g){
  const type=key==='sewingNeedle'?'needle':key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?(p.visualHeight??1):p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
- return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(type==='swordRay'?{visualWidth:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:empowered?'#a32b44':null};
+ return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(type==='swordRay'?{visualWidth:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:p.guboUltimate?'#d24b66':empowered?'#a32b44':null};
 }
 export function beamAppearance(key){
  const width=key==='gubo'?2.5:key==='rudolph'?3.5:1,color=key==='gubo'?'#74192e':key==='rudolph'?'#dc9852':'#a3d6d2',tuned=['gubo','rudolph'].includes(key);
@@ -23,7 +23,8 @@ export function projectileAsset(p){
 export class ProjectileVFX {
  constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();this.guboRanges=new WeakMap();}
  position(p,g,camera,height){
-  // Bullets use their original simulation origin and straight flight path.
+  // Ultimate tracer follows the same screen-space axis as the aimed laser.
+  if(p.guboUltimate){const to=camera.worldToScreen(p.target,1.25),fx={...p.origin,to:p.target},axis=guboEffectAxis(g,p.source,camera,fx,{height:1.35,to}),length=Math.hypot(p.target.x-p.origin.x,p.target.y-p.origin.y),t=Math.min(1,Math.hypot(p.x-p.origin.x,p.y-p.origin.y)/(length||1));return{x:axis.start.x+(to.x-axis.start.x)*t,y:axis.start.y+(to.y-axis.start.y)*t};}
   return camera.worldToScreen(p,height);
  }
  effectVisible(p,g,camera,height){
@@ -104,6 +105,10 @@ export class ProjectileVFX {
  beams(c,camera,game){
   this.syncWhips(game);
   c.save();
+  for(const owner of game.champions().filter(e=>e.alive&&e.state.guboAim?.until>game.time)){
+   const aim=owner.state.guboAim,to=camera.worldToScreen(aim.target,1.25),fx={x:owner.x,y:owner.y,to:aim.target},from=guboEffectAxis(game,owner,camera,fx,{height:1.35,to}).start,progress=Math.max(0,Math.min(1,(game.time-(aim.at??aim.until-1.2))/1.2));
+   for(const [width,color,alpha]of [[.075,'#411023',.08+progress*.24],[.027,'#a22b4c',.12+progress*.72],[.009,'#e998aa',progress*.7]]){c.save();c.globalAlpha=alpha;c.strokeStyle=color;c.lineWidth=camera.scale*width;c.beginPath();c.moveTo(from.x,from.y);c.lineTo(to.x,to.y);c.stroke();c.restore();}
+  }
   for(const fx of [...game.effects.filter(f=>f.type!=='whipArc'),...this.whipPulses.map(p=>({...p,life:Math.max(0,.2-(game.time-p.bornAt))}))]){
    if(!['guboLaser','whipArc'].includes(fx.type)&&!(fx.type==='line'&&fx.theme==='hohenheim'))continue;
    const owner=game.units.find(e=>e.id===fx.source),key=fx.theme||(fx.type==='guboLaser'?'gubo':'rudolph');

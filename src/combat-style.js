@@ -5,7 +5,7 @@ export const CHAMPION_STYLES={
  yi:style('#dce9ef','mirror'),faust:{...NEUTRAL},sinclair:{...NEUTRAL},don:style('#e5bd38','metal','#fff1a5','#79611d'),meursault:{...NEUTRAL},gubo:{...NEUTRAL},
  kim:style('#629edc','metal','#c4e9ff','#1c3458'),queequeg:style('#376c70','water','#a7d4ce','#182f36'),ppui:{...NEUTRAL},
  gahwan:style('#e8c653','metal','#fff0aa','#715930'),hohenheim:style('#83cecd','electric','#d0f2ec','#28434d'),
- alisa:style('#e69a58','fire','#f6ce80','#762f26'),marton:style('#684a32','wood','#76cbb3','#30241c'),nelly:{...NEUTRAL},
+ alisa:style('#e69a58','fire','#f6ce80','#762f26'),marton:style('#02ebf7','wood','#c8ffff','#0e5967'),nelly:{...NEUTRAL},
  myo:style('#df9653','metal','#f4c58c','#6b3f2b'),rudolph:style('#e39b4f','electric','#f5c789','#6b4123'),
  dongbaek:style('#e6ce77','petal','#fff0b3','#75653d'),dongrang:style('#b99b76','metal','#d9c5a6','#61513f'),
  outis:{...NEUTRAL},heathcliff:{...NEUTRAL},ryoshu:{...NEUTRAL},ishmael:style('#416e70','water','#a7c9c4','#1b363c'),

@@ -40,8 +40,8 @@ test('self and healthier allies are filtered before choosing an eligible allied 
 test('R cannot spend cooldown on a healthy ally, on self, or across a wall',()=>{
  const {g,p,a}=fixture();a.hp=421;assert.equal(g.cast(p,'r',a),false);close(p.rCd,0);a.x=50;p.hp=1;assert.equal(g.cast(p,'r',p),false);close(p.rCd,0);p.x=16;p.y=15;a.x=20;a.y=15;a.hp=420;assert.equal(g.cast(p,'r',a),false);close(p.rCd,0);
 });
-test('allied R rechecks health on bullet impact and does not kill a teammate healed during aiming',()=>{
- const {g,p,a}=fixture();assert.ok(g.cast(p,'r',a));a.hp=1000;run(g,1.6);assert.ok(a.alive);close(a.hp,1000);
+test('allied R executes its designated teammate even after healing during aiming',()=>{
+ const {g,p,a}=fixture();assert.ok(g.cast(p,'r',a));a.hp=1000;run(g,1.6);assert.equal(a.alive,false);close(a.hp,0);
 });
 test('allied execution damage does not make friendly minions or towers aggro onto Gubo',()=>{
  const {g,p,a}=fixture();const minion=g.entity({kind:'minion',team:0,x:41,y:7,maxHp:1000,range:6}),tower=g.entity({kind:'tower',team:0,x:42,y:8,maxHp:1000,range:6});g.attack(p,a);run(g,.3);assert.equal(minion.aggro,undefined);assert.equal(tower.aggro,undefined);assert.equal(a.contributors[p.id],undefined);

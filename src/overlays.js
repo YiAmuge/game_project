@@ -28,6 +28,7 @@ export function stackInfo(e,g){
  if(e.key==='honglu'&&g.buff(e,'insight'))return {label:`통찰 ${Math.max(0,(e.state.insightUntil||0)-g.time).toFixed(1)}s`,textOnly:true,color:'#8aead8'};
  if(e.key==='faust'&&g.buff(e,'faustUlt'))return {label:'권태',value:e.ultStacks||0,max:4,color:'#b8edf2',shape:'mirror'};
  if(e.key==='ezra'&&g.buff(e,'ezraUlt'))return {label:'총공',value:e.state.ultAttacks||0,max:4,color:'#f4cd96',shape:'claw'};
+ if(e.key==='don'&&g.buff(e,'donLifesteal'))return {label:'피갈망',textOnly:true,color:'#e59ba7'};
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt'))return {label:'시체자루 연장',value:e.state.heathExtensions||0,max:4,color:'#c9a5e5',shape:'flame'};
 
  return null;
@@ -44,12 +45,12 @@ export function championHud(r,e,g){
  const resourceY=y+.51,cap=g.ammoCap(e);
  if(e.key==='hohenheim'){
   const shape=Hohenheim.chargeShape(g,e,e.player?g.input.aim:e.state.hohenCharge?.aim||{x:e.x+1,y:e.y});
-  const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}r.text(e.state.posthumous?`사후 공격 ${Math.max(0,2-(e.state.posthumous.attacks||0))}/2 · ${shape.hits}타`:`${shape.hits}타 · 충전 ${Math.round(shape.progress*100)}%`,e.x,resourceY+.12,'#e0ffff',.205);
+  const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}
  }else if(e.key==='yan'){
   const progress=Yan.chargeShape(g,e,e.player?g.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}).progress;
-  c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);r.text(Yan.distorted(g,e)?'손 조종':`검 충전 ${Math.round(progress*100)}%`,e.x,resourceY+.12,'#e7f7ff',.205);
+  c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);
  }else if(e.key==='rudolph'){
-  c.fillStyle='#322018';c.fillRect(x,resourceY,width,.24);c.fillStyle=e.state.exhaustedUntil>g.time?'#866347':'#f5a34e';c.fillRect(x,resourceY,width*(e.state.exhaustedUntil>g.time?Math.min(1,(g.time-e.state.exhaustedAt)/e.state.recoveryDuration):Math.min(1,Math.max(0,e.ammo/cap))),.24);r.text(e.state.exhaustedUntil>g.time?`재충전 ${Math.max(0,e.state.exhaustedUntil-g.time).toFixed(1)}s`:`SP ${Math.floor(e.ammo)} / ${cap}`,e.x,resourceY+.12,'#fff2da',.205);
+  c.fillStyle='#322018';c.fillRect(x,resourceY,width,.24);c.fillStyle=e.state.exhaustedUntil>g.time?'#866347':'#f5a34e';c.fillRect(x,resourceY,width*(e.state.exhaustedUntil>g.time?Math.min(1,(g.time-e.state.exhaustedAt)/e.state.recoveryDuration):Math.min(1,Math.max(0,e.ammo/cap))),.24);if(!(e.state.exhaustedUntil>g.time))r.text(`SP ${Math.floor(e.ammo)} / ${cap}`,e.x,resourceY+.12,'#fff2da',.205);
  }else{
   const gap=.075,w=(width-gap*(cap-1))/cap;
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
@@ -84,6 +85,7 @@ function directiveFlower(r,e,g,remaining,muted,offset){const c=r.ctx;
 }
 export function championEffects(r,e,g){
  const c=r.ctx;c.save();orderMark(r,e,g);towerMark(r,e,g);
+ if(g.stat(e,'silence')){const x=e.x,y=e.y-4.8;r.circle(x,y,.25,'#242938','#c6c0df',.04);r.line([{x:x-.12,y:y-.06},{x:x+.12,y:y-.06},{x:x+.12,y:y+.07},{x:x+.03,y:y+.07},{x:x-.04,y:y+.14},{x:x-.04,y:y+.07},{x:x-.12,y:y+.07},{x:x-.12,y:y-.06}],'#e8def4',.035);r.line([{x:x-.18,y:y+.19},{x:x+.18,y:y-.19}],'#dfa8b8',.055);}
  const villain=g.champions(1-e.team).some(a=>a.alive&&a.key==='don'&&a.state.villain===e.id);
  if(villain){const y=e.y-4.45;for(const color of ['#ffe258','#d82b39'])for(const side of [-1,1])r.line([{x:e.x-.25,y:y-side*.25},{x:e.x+.25,y:y+side*.25}],color,color==='#ffe258'?.2:.1);}
 
@@ -96,17 +98,18 @@ export function championEffects(r,e,g){
  if(trap(g,e)){for(let i=0;i<5;i++){const x=e.x-.5+i*.25;r.line([{x,y:e.y-.6},{x:x+.3,y:e.y+.15}],'#9fae9c99',.035);r.line([{x,y:e.y+.15},{x:x+.3,y:e.y-.6}],'#9fae9c99',.035);}}
  c.restore();
 }
+function chargeBar(r,e,progress,color){const c=r.ctx;c.fillStyle='#17222ddd';c.fillRect(e.x-.85,e.y+.9,1.7,.16);c.fillStyle=color;c.fillRect(e.x-.85,e.y+.9,1.7*progress,.16);c.lineWidth=.025;c.strokeStyle=color;c.strokeRect(e.x-.85,e.y+.9,1.7,.16);}
 export function chargePreview(r,e,g){
  if(e.key==='don'&&e.state.donCharge&&e.alive){
   const shape=Don.chargeShape(g,e,e.player?g.input.aim:e.state.donCharge.aim),d=shape.d,end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range},side={x:-d.y*shape.width/2,y:d.x*shape.width/2};
-  r.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],'#e8c94a24','#ffe18a');r.text(`충전 ${Math.round(shape.progress*100)}% · 놓아서 찌르기`,e.x,e.y+1.2,'#ffe18a',.3);return;
+  r.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],'#e8c94a24','#ffe18a');chargeBar(r,e,shape.progress,'#ffe18a');return;
  }
  if(e.key!=='heathcliff'||e.state.chargeAt===undefined||!e.alive)return;
  const point=e.player?g.input.aim:e.state.chargeAim,charge=heathCharge(g,e,point),color=charge.ready?'#d9b6f1':'#b4a7c1',c=r.ctx;
  c.save();r.circle(e.x,e.y,charge.range,'#b389d209',color+'88',.045);
  const path=[];for(let i=0;i<=20;i++){const t=i/20;path.push({x:e.x+(charge.landing.x-e.x)*t,y:e.y+(charge.landing.y-e.y)*t-Math.sin(t*Math.PI)*1.2});}
  r.line(path,color+'cc',.08,[.16,.13]);r.circle(charge.landing.x,charge.landing.y,charge.radius,'#c49ce526',color,.075);r.circle(charge.landing.x,charge.landing.y,.15,color);
- r.text(`놓아서 도약 · ${Math.round(charge.progress*100)}% · 피해 ${Math.round(charge.damage)} · 기절 ${charge.stun.toFixed(2)}s`,charge.landing.x,charge.landing.y+2.25,color,.3);
+ chargeBar(r,e,charge.progress,color);
  c.restore();
 }
 
@@ -114,7 +117,7 @@ export function championGroundEffects(r,e,g){
  const color='#c5d0d33b',outline=(radius)=>r.circle(e.x,e.y,radius,null,color,.025);
  if(e.key==='ahab'&&e.player)outline(AHAB.orderRadius);
  if(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))outline(4.5);
- if(g.buff(e,'martonDrain'))outline(5.5);
+ if(g.buff(e,'martonDrain'))r.circle(e.x,e.y,5.5,null,'#02ebf770',.035);
  if(g.buff(e,'heathUlt'))outline(5.5);
  if(e.state.detonatesAt>g.time)r.circle(e.x,e.y,4,'#d94e262e','#ff7957',.085);
  if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,2.5,null,'#d1dcb799',.035);
@@ -127,13 +130,13 @@ export function stackGauge(e,g){
  const info=stackInfo(e,g);let state=info;
  if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))state={label:'광폭한 칼날'};
  if(!state)return null;
- const timed={sinclair:['marks',4],gregor:['mutant',5],sora:['soraEgo',20],yan:['yanDistorted',20],myo:['rabbitFrenzy',4.5]},entry=timed[e.key];
+ const timed={don:['donLifesteal',7],heathcliff:['heathUlt',11],sinclair:['marks',4],gregor:['mutant',5],sora:['soraEgo',20],yan:['yanDistorted',20],myo:['rabbitFrenzy',4.5]},entry=timed[e.key];
  let remaining,total;
  if(entry&&g.buff(e,entry[0])){remaining=e.buffs[entry[0]]-g.time;total=Math.max(entry[1],e.buffs[entry[0]]-(e.visuals[entry[0]]?.at??g.time));}
  if(e.key==='hohenheim'&&e.state.posthumous){remaining=e.state.posthumous.until-g.time;total=2.5;}
  if(e.key==='honglu'&&g.buff(e,'insight')){remaining=e.state.insightUntil-g.time;total=1.2;}
  const color=THEMES[e.key]?.light||state.color||'#bdd1db';
- if(total)return {color,ratio:Math.max(0,Math.min(1,remaining/total)),label:`${entry?{sinclair:'표지 각성',gregor:'변이',sora:'대행',yan:'뒤틀림',myo:'광폭한 칼날'}[e.key]:state.label.split(' ')[0]} ${remaining.toFixed(1)}s`,timer:true};
+ if(total)return {color,ratio:Math.max(0,Math.min(1,remaining/total)),label:`${entry?{don:'피갈망',heathcliff:'시체자루',sinclair:'표지 각성',gregor:'변이',sora:'대행',yan:'뒤틀림',myo:'광폭한 칼날'}[e.key]:state.label.split(' ')[0]} ${remaining.toFixed(1)}s`,timer:true};
  const max=state.max||1,value=state.value??1;
  return {color,ratio:Math.max(0,Math.min(1,value/max)),label:state.textOnly?state.label:`${state.label} ${value}/${max}`,max};
 }

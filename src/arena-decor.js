@@ -31,10 +31,10 @@ export class ArenaDecor{
   }
   this.skin.decorateWall(mesh,w,index);
  }
- smoke(parent,texture){
+ smoke(parent,texture,regions=BUSHES){
   const group=new THREE.Group();group.name='blue-smoke-volumes';parent.add(group);this.smokeGroup=group;
   const material=new THREE.MeshBasicMaterial({map:texture,color:'#81b6cf',transparent:true,opacity:.46,depthWrite:false,side:THREE.DoubleSide,fog:false});
-  for(const b of BUSHES){
+  for(const b of regions){
    for(const p of smokeSlices(b)){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(p.right-p.left,BLUE_SMOKE_HEIGHT),material);mesh.name='blue-smoke-sprite';mesh.position.set((p.left+p.right)/2,BLUE_SMOKE_HEIGHT/2,p.y);mesh.userData={regionId:b.id,height:BLUE_SMOKE_HEIGHT};mesh.renderOrder=3;group.add(mesh);}
    const mask=document.createElement('canvas');mask.width=mask.height=128;const c=mask.getContext('2d');c.fillStyle='#000';c.fillRect(0,0,128,128);c.fillStyle='#fff';c.beginPath();(b.polygon||[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]]).forEach(([x,y],i)=>i?c.lineTo((x-b.x)/b.w*128,(y-b.y)/b.h*128):c.moveTo((x-b.x)/b.w*128,(y-b.y)/b.h*128));c.closePath();c.fill();const alphaMap=new THREE.CanvasTexture(mask),capMat=new THREE.MeshBasicMaterial({map:texture,alphaMap,color:'#6d9cb6',transparent:true,opacity:.30,depthWrite:false,side:THREE.DoubleSide,fog:false});
    for(const height of [.55,1,BLUE_SMOKE_HEIGHT-.03]){const layer=new THREE.Mesh(new THREE.PlaneGeometry(b.w,b.h),capMat);layer.name='blue-smoke-layer';layer.position.set(b.x+b.w/2,height,b.y+b.h/2);layer.rotation.x=-Math.PI/2;layer.userData={regionId:b.id,height};layer.renderOrder=3;group.add(layer);}

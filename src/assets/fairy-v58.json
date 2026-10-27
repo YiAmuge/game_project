@@ -1,0 +1,16 @@
+{
+  "source": "exec-fd69cdc3-04fd-479a-810a-df41e8048309.png",
+  "reference": "user-fairy-2026-10-27",
+  "frame": {
+    "x": 232,
+    "y": 218,
+    "w": 816,
+    "h": 859
+  },
+  "palette": {
+    "main": "#02ebf7",
+    "light": "#c8ffff",
+    "dark": "#0e5967"
+  },
+  "sha256": "20248bc9960419e677832a86e4ff1c77efe466a61801dc8f29388add746a3792"
+}

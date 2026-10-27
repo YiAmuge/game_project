@@ -53,7 +53,7 @@ test('Rudolph vulnerability loses one stack per two seconds and every basic hit 
  const {g,p,t}=quiet('rudolph');for(let i=0;i<15;i++){g.time+=.1;mentalWhip(g,p,t);}const m=t.state.mentalWhip[p.id];assert.equal(m.stage,3);g.time=m.at+1.99;g.step(.001);assert.equal(m.stage,3);g.time=m.at+2.01;g.step(.001);assert.equal(m.stage,2);mentalWhip(g,p,t);const next=m.decayAt;g.time=next-.01;g.step(.001);assert.equal(m.stage,2);g.time=next+.01;g.step(.001);assert.equal(m.stage,1);g.time=next+2.01;g.step(.001);assert.equal(m.stage,0);
 });
 test('Rudolph direct hits expire stale stacks before calculating whip damage, then refresh their timer',()=>{
- const {g,p,t}=quiet('rudolph');t.state.mentalWhip={[p.id]:{stage:3,hits:0,at:0,decayAt:2}};g.time=4.01;const hp=t.hp;g.attack(p,t);close(hp-t.hp,48*1.15*.91*.9);close(t.state.mentalWhip[p.id].decayAt,6.01);
+ const {g,p,t}=quiet('rudolph');t.state.mentalWhip={[p.id]:{stage:3,hits:0,at:0,decayAt:2}};g.time=4.01;const hp=t.hp;g.attack(p,t);close(hp-t.hp,57*1.15*.91*.9);close(t.state.mentalWhip[p.id].decayAt,6.01);
 });
 test('Rudolph can damage minions, creeps and towers without champion-only debuff state',()=>{
  for(const kind of ['minion','neutral','tower']){const {g,p}=quiet('rudolph');g.units=[p];const t=g.entity({kind,team:kind==='neutral'?2:1,x:43,y:7,maxHp:10000,radius:.5,range:8.5});assert.equal(t.state,undefined);assert.ok(g.attack(p,t));assert.ok(t.hp<t.maxHp,kind);assert.equal(t.state,undefined);}

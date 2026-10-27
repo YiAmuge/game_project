@@ -20,7 +20,7 @@ export function preview(r,e,g){
  const cones={sinclair:1.6,ryoshu:Math.PI,heathcliff:1.7,ishmael:1.6,gregor:g.buff(e,'mutant')?1.8*1.3*1.2:1.8,nelly:1.2,dongbaek:1.3,dongrang:1.9,alisa:1.1,kim:e.state.followSlashUntil>g.time?1.9*1.3*1.2*1.08:1.2*1.3,starbuck:.975*1.2};
  if(cones[e.key]){const range=g.attackRange(e)*(e.key==='kim'&&e.state.followSlashUntil>g.time?1.2*1.08:1);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,range,angle-cones[e.key]/2,angle+cones[e.key]/2);ctx.closePath();ctx.fillStyle='#bddfd20b';ctx.fill();ctx.strokeStyle='#bddfd255';ctx.lineWidth=.035;ctx.stroke();}
 
- if(e.key==='marton'){r.circle(e.x,e.y,2.5,null,'#dbcba999',.04);r.circle(e.x,e.y,g.attackRange(e),null,'#a4ce9477',.04);r.text('근접 2.5 · 뿌리 시전 5',e.x,e.y+1.8,'#c9ddba',.24);const dx=g.input.aim.x-e.x,dy=g.input.aim.y-e.y,len=Math.hypot(dx,dy);if(len>=2.5){const cap=Math.min(g.attackRange(e),len);r.circle(e.x+dx/(len||1)*cap,e.y+dy/(len||1)*cap,2.2,'#b5cf8f0e','#b5cf8f77',.045);}}
+ if(e.key==='marton'){r.circle(e.x,e.y,2.5,null,'#02ebf799',.04);r.circle(e.x,e.y,g.attackRange(e),null,'#8bffff77',.04);r.text('근접 2.5 · 뿌리 시전 5',e.x,e.y+1.8,'#bcffff',.24);const dx=g.input.aim.x-e.x,dy=g.input.aim.y-e.y,len=Math.hypot(dx,dy);if(len>=2.5){const cap=Math.min(g.attackRange(e),len);r.circle(e.x+dx/(len||1)*cap,e.y+dy/(len||1)*cap,2.2,'#02ebf70e','#8bffff77',.045);}}
  if(e.key==='meursault'){const a=e.facing||0,d={x:Math.cos(a),y:Math.sin(a)},s={x:-d.y*1.3,y:d.x*1.3},end={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};r.polygon([[e.x+s.x,e.y+s.y],[end.x+s.x,end.y+s.y],[end.x-s.x,end.y-s.y],[e.x-s.x,e.y-s.y]],'#c2d5e90b','#c2d5e95a');}
 }
 export function meter(r,e,g){

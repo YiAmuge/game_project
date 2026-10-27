@@ -91,7 +91,7 @@ test('camp timers count down, disappear on respawn, and never revive removed cen
 test('stack UI reflects actual Sinclair, Gregor and Alisa state',()=>{
  for(const [key,state,max] of [['sinclair',2,3],['gregor',11,12],['alisa',4,5]]){const {g,p}=quiet(key);if(key==='sinclair')p.marks=state;if(key==='gregor')p.state.mutations=state;if(key==='alisa')p.state.heat=state;assert.equal(stackInfo(p,g).value,state);assert.equal(stackInfo(p,g).max,max);}
 });
-test('Hong Lu shared effects carry water aura metadata and Rodion displays the actual coin outcomes',()=>{
- const {g,p}=quiet('honglu');const ally=g.makeChampion('yi',0,5,'support');Object.assign(ally,{x:41,y:7});g.addBuff(p,'blessing',25);assert.ok(g.buff(ally,'blessing'));assert.equal(ally.visuals.hongluShare.theme,'honglu');assert.ok(ally.visuals.hongluShare.until>g.time);
+test('Hong Lu skill healing grants care metadata and Rodion displays the actual coin outcomes',()=>{
+ const {g,p}=quiet('honglu');const ally=g.makeChampion('yi',0,5,'support');Object.assign(ally,{x:41,y:7});ally.hp-=100;g.heal(p,ally,100,false,{skillHeal:true});assert.ok(g.buff(ally,'hongluCare'));assert.ok(ally.visuals.hongluCare.until>g.time);
  const a=quiet('rodya');a.g.cast(a.p,'q',a.p);assert.equal(a.p.state.coinResults.length,3);assert.equal(a.p.state.coinResults.filter(Boolean).length,a.p.state.coinHeads);assert.equal(a.p.state.jackpot?3:a.p.state.coinResults.filter(v=>!v).length,a.p.state.coinTails);
 });

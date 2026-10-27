@@ -27,8 +27,8 @@ test('Gubo allied execution has a long uncapped cone, halves respawn and grants 
 test('Gubo shot and ultimate respect the inclusive live ally health threshold and its temporary increase',()=>{
  const {g,p}=quiet('gubo'),a=g.makeChampion('faust',0,8);Object.assign(a,{x:42,y:7,maxHp:1000,hp:211});close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);a.hp=210;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=350;g.cast(p,'q',p);close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=351;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);
 });
-test('Gubo ultimate aims without instant damage, then resolves an instant laser',()=>{
- const {g,p,t}=quiet('gubo');t.x=50;assert.ok(g.cast(p,'r',t));assert.equal(p.state.guboAim.target,t);close(t.hp,10000);run(g,1.1);close(t.hp,10000);run(g,.12);assert.equal(g.projectiles.length,0);assert.ok(g.effects.some(f=>f.type==='guboLaser'));assert.ok(t.hp<10000);assert.equal(p.state.guboAim,undefined);
+test('Gubo ultimate aims without damage and hits when its fast projectile arrives',()=>{
+ const {g,p,t}=quiet('gubo');t.x=50;assert.ok(g.cast(p,'r',t));assert.equal(p.state.guboAim.target,t);close(t.hp,10000);run(g,1.1);close(t.hp,10000);run(g,.12);assert.equal(t.hp,10000);assert.equal(g.projectiles.length,1);run(g,.08);assert.equal(g.projectiles.length,0);assert.ok(g.effects.some(f=>f.type==='guboLaser'));assert.ok(t.hp<10000);assert.equal(p.state.guboAim,undefined);
 });
 test('Gubo ultimate ally kill does not duplicate the passive blast',()=>{
  const {g,p,t}=quiet('gubo'),a=g.makeChampion('yi',0,8);Object.assign(a,{x:42,y:7,hp:200,maxHp:1000,lastDamageAt:0});t.x=48;assert.ok(g.cast(p,'r',a));run(g,1.5);assert.equal(a.alive,false);close(10000-t.hp,.25*(g.combatPower(p)+t.maxHp));

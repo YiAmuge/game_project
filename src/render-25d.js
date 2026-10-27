@@ -79,7 +79,7 @@ export class Renderer25D {
    cap.rotation.y=-(w.angle||0);this.skin.box(cap,'wall','#c8d0d1');cap.material.transparent=true;this.walls.push({mesh:cap,rect:w});
    this.decor.wall(wall,cap,w,index,Boolean(this.layout.terrain));
   }
-  if(this.layout.terrain)this.decor.smoke(this.world,this.rooftop.textures.smoke);
+  this.decor.smoke(this.world,this.rooftop.textures.smoke,this.layout.terrain?BUSHES:this.layout.bushes||[]);
   for(const f of this.layout.spawns||[this.layout.spawn]){
   this.cylinder(2.45,.13,f.x,.02,f.y,'#476e75');this.cylinder(1.9,.16,f.x,.12,f.y,'#6a9392');this.cylinder(1.5,.12,f.x,.22,f.y,'#7fa8a1');
   // Keep the visual pedestal below the combat plane; movement has no elevation.
@@ -102,6 +102,7 @@ export class Renderer25D {
 
   const f=this.layout.spawn;r.circle(f.x,f.y,2.45,'#a8f2e91c','#bbf7e1aa',.08);r.circle(f.x,f.y,1.65,null,'#dcffef66',.055);
   if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);}for(let lane=0;lane<2;lane++)r.line(lanePath(0,lane),'#a6a09220',3.2);for(const bush of BUSHES)r.bush(bush);c.restore();return;}
+  for(const bush of this.layout.bushes||[])r.bush(bush);
   r.text('부활소',f.x,f.y+3.1,'#c3e9dc',.42);
   const h=this.layout.hazard;c.fillStyle='#b3574d70';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle='#f1b18d';c.lineWidth=.07;c.strokeRect(h.x,h.y,h.w,h.h);
   for(let i=.35;i<h.w;i+=.7)r.line([{x:h.x+i,y:h.y+.2},{x:h.x+i,y:h.y+h.h-.2}],'#efae8c55',.04);

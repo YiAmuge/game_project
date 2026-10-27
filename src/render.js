@@ -1,3 +1,4 @@
+import{drawMartonFairy}from'./fairy-art.js';
 import{drawBoss,bossVisualHeight}from'./boss-art.js';
 import{drawMinion,minionHeight}from'./minion-art.js';
 import{drawNeedle,needleVisualHeight}from'./needle-art.js';
@@ -93,7 +94,10 @@ export class Renderer {
       this.circle(camp.home.x,camp.home.y,camp.radius,color+'12',color+'55',.065);c.setLineDash([.15,.22]);this.circle(camp.home.x,camp.home.y,camp.radius+.15,null,color+'44',.04);c.setLineDash([]);
       if(game.training)this.text(camp.name+' 캠프',camp.home.x,camp.home.y+camp.radius+.45,color,.29);
     }
-    if(game.training)for(const timer of game.campTimers()){const p=timer.home;this.circle(p.x,p.y,.65,'#182720','#9b9568',.05);this.text(`${Math.floor(timer.seconds/60)}:${String(timer.seconds%60).padStart(2,'0')}`,p.x,p.y,'#ecd59b',.38);this.text('재생성',p.x,p.y+.55,'#97a586',.22);}
+    for(const timer of game.campTimers()){
+      const p=timer.home,ratio=Math.max(0,Math.min(1,1-timer.seconds/(timer.total||60)));this.circle(p.x,p.y,.65,'#10202ddd','#7a9ca6',.05);c.save();c.beginPath();c.arc(p.x,p.y,.52,-Math.PI/2,-Math.PI/2+Math.PI*2*ratio);c.strokeStyle='#d2d8a0';c.lineWidth=.13;c.stroke();c.restore();this.line([{x:p.x,y:p.y},{x:p.x+Math.sin(ratio*Math.PI*2)*.34,y:p.y-Math.cos(ratio*Math.PI*2)*.34}],'#dcebdc',.06);this.circle(p.x,p.y,.065,'#e5f4e5');
+      if(game.training){this.text(`${Math.floor(timer.seconds/60)}:${String(timer.seconds%60).padStart(2,'0')}`,p.x,p.y+.98,'#ecd59b',.28);}
+    }
   }
   bar(e,width,y,game) {
     const c=this.ctx,x=e.x-width/2;
@@ -137,8 +141,7 @@ export class Renderer {
       return;
     }
     if(e.trainingDummy){const team=e.team===0?'#a9d3df':'#e2a79a';this.line([{x:e.x,y:e.y+.25},{x:e.x,y:e.y-1.8}],'#8d7959',.2);this.line([{x:e.x-.7,y:e.y-.85},{x:e.x+.7,y:e.y-.85}],'#a49171',.18);this.circle(e.x,e.y-1.5,.48,'#a99772',team,.085);this.circle(e.x,e.y-1.5,.23,null,team,.05);this.line([{x:e.x-.5,y:e.y+.3},{x:e.x+.5,y:e.y+.3}],'#9f8c66',.14);return;}
-    if(e.kind==='bait'&&this.billboardPass){const v=this.scene25d.championVfx;const c=this.ctx;c.save();c.translate(e.x,e.y-.65);v.fairy(c,game.time,.8);c.restore();return;}
-    if(e.kind==='bait'){this.circle(e.x,e.y,.65,'#344725','#bdd079');this.polygon([[e.x-.25,e.y-.9],[e.x+.25,e.y-.9],[e.x+.3,e.y-.3],[e.x-.3,e.y-.3]],'#f1d779','#ffe9a4');this.text('초롱 미끼',e.x,e.y-1.3,'#e8dc9a',.27);return;}
+    if(e.kind==='bait'){c.save();c.translate(e.x,e.y-.65);drawMartonFairy(c,game.time,.8);c.restore();return;}
     const def=CHAMPIONS[e.key],inBush=game.bushAt(e),angle=e.facing??(e.team===0?0:Math.PI);
     if(!this.billboardPass)CombatVisuals.behind(this,e,game);c.save();if(inBush)c.globalAlpha=.72;if(e.key==='ryoshu'&&e.invulnerableUntil>game.time)c.globalAlpha*=.65;c.globalAlpha*=leapOpacity(e);
     if(!this.billboardPass){c.beginPath();c.ellipse(e.x,e.y+.2,.65,.25,0,0,Math.PI*2);c.fillStyle='#06131599';c.fill();this.circle(e.x,e.y,.67,null,e.player?'#f2d98e':team,.07);}
@@ -170,13 +173,11 @@ export class Renderer {
   hohenheimChargePreview(e,game){
     const shape=Hohenheim.chargeShape(game,e,game.input.aim),d=shape.d,side={x:-d.y*shape.width,y:d.x*shape.width},end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range};
     this.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],'#84edee22','#b5f6faaa');
-    this.text(`전류 ${Math.round(shape.progress*100)}% · ${shape.hits}회`,e.x,e.y+1.1,'#b5f6fa',.3);
     for(let i=0;i<3;i++){const a=game.time*5+i*Math.PI*2/3;this.shard(e.x+Math.cos(a)*(.45+shape.progress*.3),e.y-.5+Math.sin(a)*.4,.06+shape.progress*.09,a,'#a8fbff');}
   }
   yanChargePreview(e,game){
     const shape=Yan.chargeShape(game,e,e.player?game.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}),d=shape.d,side={x:-d.y*shape.width/2,y:d.x*shape.width/2},end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range};
     this.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],e.state.yanCharge?'#a6d5f12a':'#a6d5f107',e.state.yanCharge?'#b3e1ffbb':'#b3e1ff33');
-    if(e.state.yanCharge)this.text(`충전 ${Math.round(shape.progress*100)}%`,e.x,e.y+1.1,'#c3e6ff',.3);
   }
   atlasFor(key){return FRAMES[key]?.sheet>=9?loadAtlas(FRAMES[key].sheet):FRAMES[key]?.sheet===8?this.atlasV17:FRAMES[key]?.sheet===7?this.atlasV13:FRAMES[key]?.sheet===6?this.atlasV12:FRAMES[key]?.sheet===5?this.atlasV10:FRAMES[key]?.sheet===4?this.atlasV08: FRAMES[key]?.sheet===3?this.atlasV06:FRAMES[key]?.sheet===2?this.atlasV05:FRAMES[key]?.sheet===1?this.atlasExtra:this.atlas;}
   corpse(e,game){if(!e.visible)return;const c=this.ctx,f=FRAMES[e.form||e.key],atlas=this.atlasFor(e.form||e.key);if(!f||!atlas.complete||!atlas.naturalWidth)return;const h=spriteHeight(e.form||e.key,1.7),w=h*f.w/f.h;c.save();c.globalAlpha=Math.min(.65,(e.until-game.time)/2);c.filter='grayscale(.8) brightness(.55)';c.translate(e.x,e.y);c.rotate(e.facing+Math.PI/2);c.scale(f.mirror?-1:1,.66);c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
@@ -186,7 +187,7 @@ export class Renderer {
     if(!this.groundPass&&game.training25d){this.follow(game,playing);this.scene25d.draw(game,playing);return;}
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);if(this.groundPass)c.clearRect(0,0,this.width,this.height);else{c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);}if(this.groundTransform)c.transform(...this.groundTransform);else{c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);}
-    this.floor(game);this.camps(game);for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
+    this.floor(game);this.camps(game);for(const bait of game.units.filter(e=>e.kind==='bait'&&e.alive)){this.circle(bait.x,bait.y,6.5,'#02ebf708','#66f4eec0',.075);this.circle(bait.x,bait.y,6.42,null,'#c8ffff55',.025);}for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
 
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo(0,e))chargePreview(this,e,game);

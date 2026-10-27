@@ -25,7 +25,7 @@ test('central, side, needle and buff camps award their configured XP; building H
 test('Rudolph magazine augmentation grants thirty maximum SP',()=>{const {g,p}=quiet('rudolph');p.alive=false;p.upgrades.reload=3;p.gold=5000;assert.ok(g.buyAugment(p,'magazine2'));assert.equal(g.ammoCap(p),130);});
 
 test('Rudolph five-hit chains stack whip vulnerability to thirty percent without ammunition loss or CC',()=>{
- const {g,p,t}=quiet('rudolph');const ammo=t.ammo;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);assert.equal(t.ammo,ammo);assert.equal(g.stat(t,'slow'),0);const hp=t.hp;g.attack(p,t);close(hp-t.hp,48*1.45*.91*.9);p.rCd=0;g.cast(p,'r',t);run(g,1.3);close(g.stat(t,'slow'),.3);assert.equal(g.stat(t,'root'),0);
+ const {g,p,t}=quiet('rudolph');const ammo=t.ammo;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);assert.equal(t.ammo,ammo);assert.equal(g.stat(t,'slow'),0);const hp=t.hp;g.attack(p,t);close(hp-t.hp,57*1.45*.91*.9);p.rCd=0;g.cast(p,'r',t);run(g,1.3);close(g.stat(t,'slow'),.3);assert.equal(g.stat(t,'root'),0);
 });
 test('Sinclair marks allow reload progress during continuous firing while other champions still pause',()=>{
  for(const key of ['sinclair','meursault']){const {g,p}=quiet(key);p.ammo=0;p.attackCd=1;g.addBuff(p,'marks',4);g.input.fire=true;g.input.aim={x:50,y:7};run(g,.25);assert.equal(p.reloadProgress>0,key==='sinclair');}

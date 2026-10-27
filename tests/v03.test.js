@@ -46,7 +46,7 @@ test('Alisa heat self-damage is nonlethal and excluded from healing; idle healin
 test('Gubo manually aimed normal bullets permit allied health at 21 percent but not above',()=>{
  const {g,p}=quiet('gubo');const ally=g.makeChampion('faust',0,5,'support');Object.assign(ally,{x:31,y:5.5,maxHp:1000,hp:211,lastDamageAt:0});
  g.units=[p,ally];assert.ok(g.attack(p,ally));run(g,.1);assert.equal(ally.hp,211);
- p.attackCd=0;p.ammo=3;ally.hp=210;g.attack(p,ally);assert.equal(ally.alive,true);run(g,1/30);assert.equal(ally.alive,false);close(ally.respawnAt-g.time,3.5);assert.equal(g.kills[0],0);
+ p.attackCd=0;p.ammo=3;ally.hp=210;g.attack(p,ally);assert.equal(ally.alive,true);run(g,1/30);assert.ok(ally.alive&&ally.hp<210);p.attackCd=0;g.attack(p,ally);run(g,1/30);assert.equal(ally.alive,false);close(ally.respawnAt-g.time,3.5);assert.equal(g.kills[0],0);
 });
 test('dragging needs distance; Moses supports four directions and Ezra only left/right',()=>{
  assert.equal(dragChoice('moses',0,0),null);assert.equal(dragChoice('moses',4,3),null);
@@ -84,12 +84,10 @@ test('Ishmael shield detonates on recast and on expiry, and low-health passive h
  const {g,p,t}=quiet('ishmael');g.cast(p,'q',t);assert.ok(g.shield(p)>0);assert.ok(g.cast(p,'q',t));assert.ok(t.hp<t.maxHp);assert.ok(g.stat(t,'stun')>0);
  p.qCd=0;p.hp=p.maxHp*.2;g.deal(t,p,1,{fixed:true});assert.ok(g.buff(p,'ishmaelSurvive'));const ready=p.passiveReady;g.deal(t,p,1,{fixed:true});assert.equal(p.passiveReady,ready);
 });
-test('Hong Lu buff copying has a six-second gate and does not recursively copy',()=>{
- const {g,p}=quiet('honglu');const ally=g.makeChampion('yi',0,4,'support');ally.x=p.x+1;ally.y=p.y;
- g.addBuff(p,'blessing',25);assert.ok(g.buff(ally,'blessing'));g.addBuff(p,'amplify',45);assert.equal(g.buff(ally,'amplify'),false);
- g.time+=6.1;g.addBuff(p,'amplify',45);assert.ok(g.buff(ally,'amplify'));
+test('Hong Lu does not copy received buffs or shields to nearby allies',()=>{
+ const {g,p}=quiet('honglu'),ally=g.makeChampion('yi',0,4,'support');ally.x=p.x+1;ally.y=p.y;g.addBuff(p,'blessing',25);assert.equal(g.buff(ally,'blessing'),false);g.time+=6.1;g.addBuff(p,'amplify',45);assert.equal(g.buff(ally,'amplify'),false);g.addShield(p,300,'gift');close(g.shield(ally),0);
 });
-test('Hong Lu receives and copies Yi Sang ultimate before the following shield uses the gate',()=>{
+test('Hong Lu and nearby allies receive Yi Sang ultimate within its own area',()=>{
  const {g,p}=quiet('honglu');const yi=g.makeChampion('yi',0,4,'support'),ally=g.makeChampion('faust',0,5,'bottom');yi.x=p.x-5;yi.y=p.y;ally.x=p.x+3;ally.y=p.y;
  assert.ok(g.cast(yi,'r',p));assert.ok(g.buff(p,'ogamdo'));assert.ok(g.buff(ally,'ogamdo'));assert.ok(g.shield(ally)>0);
 });

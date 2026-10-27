@@ -67,6 +67,7 @@ for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,spee
 
 CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=4.2;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
 
+CHAMPIONS.gubo.damage=240;CHAMPIONS.rudolph.damage=57;CHAMPIONS.marton.color='#02ebf7';
 CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
 
 CHAMPIONS.honglu.q=12;

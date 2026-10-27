@@ -73,7 +73,7 @@ test('Meursault Q cleanses status, burn, infestation, marks and a forced movemen
  g.time=4.01;g.status(p,'weak',.2,1,t);close(g.stat(p,'weak'),.2);Skills.applyBurn(g,t,p);assert.ok(p.burn);
 });
 test('Meursault next basic roots only on its second hit and only for that attack',()=>{
- const {g,p}=arena('meursault'),t=target(g);g.cast(p,'q',p);g.attack(p,t);close(g.stat(t,'root'),0);run(g,.1);close(g.stat(t,'root'),1);close(t.status.root.until-g.time,.3);run(g,.62);g.attack(p,t);run(g,.1);close(g.stat(t,'root'),0);
+ const {g,p}=arena('meursault'),t=target(g);g.cast(p,'q',p);g.attack(p,t);close(g.stat(t,'root'),0);run(g,.1);close(g.stat(t,'root'),1);close(t.status.root.until-g.time,.8);run(g,.82);g.attack(p,t);run(g,.1);close(g.stat(t,'root'),0);
 });
 for(const progress of [0,.5,1])test(`Don release at ${progress} interpolates one rectangle and refills only a fully charged hit`,()=>{
  const {g,p}=arena('don'),t=target(g,42.8);p.ammo=0;g.cast(p,'q',t);g.time=progress*1.5;const shape=Don.chargeShape(g,p,t);close(shape.range,3+3.5*progress);close(shape.damage,120+330*progress);assert.ok(Don.release(g,p,t));close(100000-t.hp,damage(g,p,shape.damage));close(p.qCd,12);assert.equal(p.ammo,progress===1?2:0);close(g.stat(t,'stun'),progress===1?1:0);assert.equal(p.state.donCharge,undefined);assert.equal(Don.release(g,p,t),false);

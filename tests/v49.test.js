@@ -44,7 +44,7 @@ test('Preservation starts after three seconds, accumulates only its ward up to t
 });
 test('Refreshing Preservation preserves cadence and extends its accumulated ward; half-strength copies retain half numerical effects',()=>{
  const {g,p}=arena();g.addBuff(p,'blessing',10);g.time=3;Camps.tick(g,p);g.time=4;g.addBuff(p,'blessing',60);close(p.state.preservationNext,6);close(p.shields.find(s=>s.source===`preservation-${p.id}`).until,64);
- const q=arena('honglu'),ally=q.g.makeChampion('faust',0,3);Object.assign(ally,{x:31,y:20,maxHp:1000,hp:500});q.g.addBuff(q.p,'blessing',60);q.g.time=3;Camps.tick(q.g,ally);close(q.g.shield(ally),15);close(ally.hp,502.5);
+ const q=arena('honglu'),ally=q.g.makeChampion('faust',0,3);Object.assign(ally,{x:31,y:20,maxHp:1000,hp:500});q.g.addBuff(q.p,'blessing',60);close(q.g.shield(ally),0);q.g.addBuff(ally,'blessing',60,{strength:.5,copy:false});q.g.time=3;Camps.tick(q.g,ally);close(q.g.shield(ally),15);close(ally.hp,502.5);
 });
 function focus(camp,{miss=false,invulnerable=false,second=false}={}){const {g,p}=arena();p.armor=100;if(invulnerable)p.invulnerableUntil=100;const n=g.makeNeutral(29,20,camp);n.hp-=300;Patterns.engage(g,n);g.time=1.5;Patterns.update(g,n,p);assert.ok(n.pattern);if(second){const t=enemy(g,30,20);t.team=0;t.armor=100;}if(miss)p.y+=8;g.time=n.pattern.at;const hp=n.hp;Patterns.update(g,n,p);return{g,p,n,hp};}
 test('Le Rouge drains twelve percent of actual focused damage; misses, invulnerability and ordinary attacks do not drain',()=>{

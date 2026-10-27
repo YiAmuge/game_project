@@ -2,9 +2,10 @@ import { clamp } from './geometry.js';
 import { rectangle } from './reworks.js';
 
 export const DON_CHARGE={duration:1.5,width:2.1,minRange:3,maxRange:6.5,minDamage:120,maxDamage:450};
+export const chargeDuration=(g,e)=>DON_CHARGE.duration/(1+g.buffValue(e,'donLifesteal',.5));
 export function chargeShape(g,e,point){
- const progress=clamp((g.time-(e.state.donCharge?.at??g.time))/DON_CHARGE.duration,0,1),d=g.aim(e,point||e.state.donCharge?.aim||e);
- return {progress,d,width:DON_CHARGE.width,range:DON_CHARGE.minRange+(DON_CHARGE.maxRange-DON_CHARGE.minRange)*progress,damage:DON_CHARGE.minDamage+(DON_CHARGE.maxDamage-DON_CHARGE.minDamage)*progress};
+ const progress=clamp((g.time-(e.state.donCharge?.at??g.time))/chargeDuration(g,e),0,1),d=g.aim(e,point||e.state.donCharge?.aim||e);
+ return {progress,d,width:DON_CHARGE.width,range:DON_CHARGE.minRange+(DON_CHARGE.maxRange-DON_CHARGE.minRange)*progress,damage:(DON_CHARGE.minDamage+(DON_CHARGE.maxDamage-DON_CHARGE.minDamage)*progress)*(1+g.buffValue(e,'donLifesteal',.5))};
 }
 export function start(g,e,point){if(e.state.donCharge)return false;e.state.donCharge={at:g.time,aim:{...point}};e.qCd=0;return true;}
 export function cancel(g,e){if(!e.state.donCharge)return false;delete e.state.donCharge;e.qCd=g.cooldown(e,'q');return true;}
@@ -23,5 +24,5 @@ export function tick(g,e){
  if(e.key!=='don'||!e.state.donCharge)return;
  if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.stat(e,'captured')||g.stat(e,'netCapture')||g.hidden(e)||e.motion||e.recall){cancel(g,e);return;}
  const aim=e.player?g.input.aim:e.state.donCharge.aim;e.facing=Math.atan2(aim.y-e.y,aim.x-e.x);e.lastAttackAt=g.time;
- if(g.time-e.state.donCharge.at>=DON_CHARGE.duration-1e-8)release(g,e,aim);
+ if(g.time-e.state.donCharge.at>=chargeDuration(g,e)-1e-8)release(g,e,aim);
 }

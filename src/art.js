@@ -46,7 +46,7 @@ export const THEMES = {
   kim:{light:'#90cbff',dark:'#243d69',accent:'#5f9dff',weapon:'katana'},ppui:{light:'#ffd1d6',dark:'#94364e',accent:'#dc536e',weapon:'nail'},
   starbuck:{light:'#b7d8c8',dark:'#425b51',accent:'#d9c69a',weapon:'harpoon'},
   boss:{light:'#ddb2f0',dark:'#624177',accent:'#efc5ff',weapon:'none'},
-  hohenheim:{light:'#91efec',dark:'#325c69',accent:'#d9fffa',weapon:'electric'},marton:{light:'#bfd785',dark:'#59723a',accent:'#ffe78c',weapon:'lantern'},queequeg:{light:'#8fdbd8',dark:'#346e78',accent:'#e6b6c0',weapon:'harpoon'},
+  hohenheim:{light:'#91efec',dark:'#325c69',accent:'#d9fffa',weapon:'electric'},marton:{light:'#02ebf7',dark:'#0e5967',accent:'#c8ffff',weapon:'lantern'},queequeg:{light:'#8fdbd8',dark:'#346e78',accent:'#e6b6c0',weapon:'harpoon'},
   faust:{light:'#bff4f2',dark:'#449fba',accent:'#d0fff0',weapon:'zweihander'},
   yi:{light:'#d9e9ef',dark:'#6e8fac',accent:'#e6d5a2',weapon:'mirror'},
   sinclair:{light:'#f1da68',dark:'#7a9141',accent:'#fff0b8',weapon:'halberd'},

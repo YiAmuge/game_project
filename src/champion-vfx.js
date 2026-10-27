@@ -1,3 +1,5 @@
+import{drawMartonFairy,FAIRY_COLORS}from'./fairy-art.js';
+import{v58Ground,v58Front}from'./v58-effects.js';
 import { combatStyle,clipShape } from './combat-style.js';
 import { noise } from './organic-particles.js';
 import { guardAlly,ahabMarkPresentation } from './new-champions.js';
@@ -46,6 +48,7 @@ export function championPresentation(g,e){
  if(g.shield(e)>0)set('#b5c7ce','mist',.7);
  if(e.key==='alisa'&&(s.heat||0)>0)set('#b86132','flame',.7);if(s.detonatesAt>g.time)set('#f05832','flame',.65+.3*Math.min(1,(g.time-(s.detonationAt??g.time))/2));
  if(buff('marks'))set('#a2c879');if(buff('resolve'))set('#d9dce0','glow');if(buff('chainArmor'))set('#eef0e7','glow',.7);
+ if(e.key==='marton'&&(buff('martonDrain')||s.fairy))set(FAIRY_COLORS.main,'glow',.65);
  if(buff('donLifesteal'))set('#8e2d3e');if(buff('guboReload'))set('#6c1429','flame',.8);
  if(buff('tetherGuard')||buff('tetherArmor'))set('#3c807e');if(buff('queequegUlt'))set('#a7333c','flame',.8);
  if(buff('redEncouragement'))set('#ad485b','petal');if(buff('insight'))set('#6bb7ad','mist',.75);
@@ -134,10 +137,8 @@ export class ChampionVFX {
  formulaArea(c,camera,p,time,alpha=.8){
   for(let i=0;i<5;i++){const a=i*2.4,rad=p.r*(i===0?0:.7),at=camera.worldToScreen({x:p.x+Math.cos(a)*rad,y:p.y+Math.sin(a)*rad},.12);c.save();c.translate(at.x,at.y);c.scale(camera.scale,camera.scale);this.formulas(c,time+i*.15,.3,alpha);c.restore();}
  }
- fairy(c,time,size=1){
-  c.save();c.scale(size,size);for(const side of [-1,1]){c.save();c.translate(side*.18,-.12);c.rotate(side*(.5+Math.sin(time*17)*.15));c.scale(.8,1.7);this.mote(c,'petal','#a7e4d7',0,0,.3,0,.7,1);c.restore();}
-  this.mote(c,'glow','#7ccdbf',0,0,.5,0,.12);this.mote(c,'drop','#c0e7d9',0,0,.13,0,.9);c.restore();
- }
+ fairy(c,time,size=1){drawMartonFairy(c,time,size);}
+
  body(c,camera,e,g,front=false){
   const p=camera.worldToScreen(renderAnchor(e),.075),scale=camera.scale,presentation=championPresentation(g,e),time=g.time,s=e.state||{};
   c.save();c.globalAlpha*=leapOpacity(e);c.translate(p.x,p.y-(leapLift(e)+presentation.lift)*scale);c.scale(scale,scale);
@@ -213,6 +214,7 @@ export class ChampionVFX {
   else if(f.type==='shout'){c.save();c.translate(.2,-1.7);c.strokeStyle='#b2c8c2';c.lineWidth=.025;c.globalAlpha=(1-t)*.45;for(let i=0;i<3;i++){const size=.15+age*(1+i*.3);c.beginPath();c.arc(0,0,size,-.65,.65);c.stroke();}c.restore();}
  }
  events(c,camera,g){
+  v58Front(c,camera,g);
   c.save();
   for(const f of this.effects){
    if(f.type==='formulaField'){this.formulaArea(c,camera,f,g.time-f.at,1-(g.time-f.at)/f.life);continue;}
@@ -234,6 +236,7 @@ export class ChampionVFX {
   c.restore();
  }
  ground(c,camera,g){
+  v58Ground(c,camera,g);
   const world=(p,h=0)=>camera.worldToScreen(p,h),sprite=(form,color,p,h,size,alpha=.5,angle=0)=>{const at=world(p,h);this.mote(c,form,color,at.x,at.y,size*camera.scale,angle,alpha);};
   for(const f of g.effects)if(f.type==='yiBuffRange'&&f.life>0)this.vfx.groundDisc(c,camera,f,f.r,()=>{
    c.globalAlpha=Math.min(1,f.life/.15);c.fillStyle='#d6c78b14';c.strokeStyle='#e2d29bd9';c.lineWidth=.018;c.beginPath();c.arc(0,0,1,0,Math.PI*2);c.fill();c.stroke();
@@ -265,7 +268,7 @@ export class ChampionVFX {
    if(f.type==='cracks')this.cracks(c,camera,f,f.r||2,fade);
    if(f.type==='yanGroundSlam')this.yanGroundSlam(c,camera,f,age);
    if(f.type==='chainStrike')for(let i=0;i<7;i++){const a=f.angle+(i/6-.5)*f.spread*.94,len=f.r*(1-Math.exp(-age*18));for(let j=0;j<Math.floor(len/.3);j++){const p=world({x:f.x+Math.cos(a)*j*.3,y:f.y+Math.sin(a)*j*.3},.18);c.save();c.translate(p.x,p.y);c.rotate(a);c.globalAlpha=fade*.5;c.strokeStyle=j%2?'#d5d8d9':'#78818b';c.lineWidth=camera.scale*.023;c.beginPath();c.ellipse(0,0,camera.scale*.15,camera.scale*.06,j%2*.7,0,Math.PI*2);c.stroke();c.restore();}}
-   if(f.type==='roots')for(let i=0;i<7;i++){const a=i*2.4,p={x:f.x+Math.cos(a)*(f.r||2)*.7,y:f.y+Math.sin(a)*(f.r||2)*.7};this.root(c,camera,p,Math.sin(Math.PI*t)*1.8,fade);}
+   if(f.type==='roots')for(let i=0;i<7;i++){const a=i*2.4,p={x:f.x+Math.cos(a)*(f.r||2)*.7,y:f.y+Math.sin(a)*(f.r||2)*.7};this.root(c,camera,p,Math.sin(Math.PI*t)*1.8,fade,e.key==='marton');}
    if(f.type==='petalField'||f.type==='petalExplosions')for(let i=0;i<24;i++){const a=i*2.4,rad=(f.r||3)*Math.sqrt(noise(i,f.at,4)),p={x:f.x+Math.cos(a)*rad,y:f.y+Math.sin(a)*rad};sprite('petal',f.type==='petalField'?'#b35765':'#e0c56b',p,.15+Math.sin(age*4+i)*.2,.14,fade*.55,a+age);}
    if(f.type==='petalField')this.rangeField(c,camera,f,f.r,'#b83c55',fade*.55,'#ef9ca9');
    if(f.type==='formulaField')this.field(c,camera,f,f.r,'#f5f5f0',fade*.3);
@@ -319,8 +322,8 @@ export class ChampionVFX {
    if(e.state.tether){const target=g.units.find(t=>t.id===e.state.tether.target&&t.alive);if(target)this.rope(c,camera,e,target);}
    if(e.state.swordGrab?.target?.alive)this.sword(c,camera,e,e.state.swordGrab.target);
    if(e.key==='marton'&&e.state.fairy?.until>g.time){
-    c.save();clipShape(c,camera,{...e,shape:{kind:'circle',range:6.8}});for(const wave of inwardWaves(g.time,e.state.fairy.at??e.state.fairy.until-2.5,6.8))this.smallImpact(c,camera,e,wave.r,0,'#7ad7c4',wave.alpha);
-    for(let i=0;i<24;i++){const a=i*2.4,u=(g.time*1.4+i*.13)%1,r=6.8*(1-u),p=camera.worldToScreen({x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r},.25+u*.5);this.mote(c,'spark','#8ed8c6',p.x,p.y,camera.scale*.08,a,.75);}c.restore();
+    c.save();clipShape(c,camera,{...e,shape:{kind:'circle',range:6.8}});for(const wave of inwardWaves(g.time,e.state.fairy.at??e.state.fairy.until-2.5,6.8))this.smallImpact(c,camera,e,wave.r,0,FAIRY_COLORS.main,wave.alpha);
+    for(let i=0;i<24;i++){const a=i*2.4,u=(g.time*1.4+i*.13)%1,r=6.8*(1-u),p=camera.worldToScreen({x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r},.25+u*.5);this.mote(c,'spark',FAIRY_COLORS.light,p.x,p.y,camera.scale*.08,a,.75);}c.restore();
    }
    if(e.key==='honglu'&&g.time-(e.attackAt??-99)<.3)for(let i=0;i<3;i++){const a=(g.time-e.attackAt)*20+i*Math.PI*2/3,r=g.attackRange(e);this.smallSlash(c,camera,{x:e.x,y:e.y},r,a,'#73aaa6',.28);}
   }
@@ -371,8 +374,8 @@ export class ChampionVFX {
   const age=time-f.at,from=camera.worldToScreen(f,1.1),to=camera.worldToScreen(owner,1.15),scale=camera.scale;
   for(let i=0;i<8;i++){
    const u=(age-i*.018)/.45;if(u<0||u>1)continue;const x=from.x+(to.x-from.x)*u,y=from.y+(to.y-from.y)*u-Math.sin(u*Math.PI)*scale*.6,alpha=Math.min(1,(1-u)*5),a=i*2.4+u*3,nodes=[[0,0],[Math.cos(a)*.21,Math.sin(a)*.21],[Math.cos(a+2)*.19,Math.sin(a+2)*.19]];
-   c.save();c.globalAlpha=alpha;c.strokeStyle='#8be0c5';c.lineWidth=Math.max(1.2,scale*.035);c.beginPath();for(const [dx,dy] of nodes.slice(1)){c.moveTo(x,y);c.lineTo(x+dx*scale,y+dy*scale);}c.stroke();
-   for(const [j,[dx,dy]] of nodes.entries()){this.mote(c,'glow','#8fe9cf',x+dx*scale,y+dy*scale,scale*.16,0,.95);c.fillStyle=j?'#a2ebd4':'#e5fff2';c.strokeStyle='#367d71';c.lineWidth=1;c.beginPath();c.arc(x+dx*scale,y+dy*scale,scale*(j?.065:.095),0,Math.PI*2);c.fill();c.stroke();}c.restore();
+   c.save();c.globalAlpha=alpha;c.strokeStyle='#02ebf7';c.lineWidth=Math.max(1.2,scale*.035);c.beginPath();for(const [dx,dy] of nodes.slice(1)){c.moveTo(x,y);c.lineTo(x+dx*scale,y+dy*scale);}c.stroke();
+   for(const [j,[dx,dy]] of nodes.entries()){this.mote(c,'glow','#78fff0',x+dx*scale,y+dy*scale,scale*.16,0,.95);c.fillStyle=j?'#99fff3':'#d9fffc';c.strokeStyle='#157b80';c.lineWidth=1;c.beginPath();c.arc(x+dx*scale,y+dy*scale,scale*(j?.065:.095),0,Math.PI*2);c.fill();c.stroke();}c.restore();
   }
  }
  guboReticle(c,time){
@@ -394,7 +397,7 @@ export class ChampionVFX {
   c.restore();
  }
  cracks(c,camera,p,r,alpha){c.save();c.globalAlpha=alpha*.5;c.strokeStyle='#211f22';c.lineWidth=camera.scale*.035;for(let i=0;i<9;i++){const a=i*2.4;c.beginPath();for(let j=0;j<6;j++){const b=a+(noise(i,j,3)-.5)*.25,q=camera.worldToScreen({x:p.x+Math.cos(b)*r*j/6,y:p.y+Math.sin(b)*r*j/6},.07);j?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y);}c.stroke();}c.restore();}
- root(c,camera,p,height,alpha){const base=camera.worldToScreen(p,.08),tip=camera.worldToScreen({x:p.x+.2,y:p.y},height);c.save();c.globalAlpha=alpha;const grad=c.createLinearGradient(base.x,base.y,tip.x,tip.y);grad.addColorStop(0,'#302218');grad.addColorStop(.65,'#71533b');grad.addColorStop(1,'#b69b6c');c.fillStyle=grad;c.beginPath();c.moveTo(base.x-camera.scale*.22,base.y);c.bezierCurveTo(base.x,tip.y+camera.scale*.35,tip.x,tip.y,tip.x,tip.y);c.quadraticCurveTo(base.x+camera.scale*.35,base.y,base.x+camera.scale*.22,base.y);c.closePath();c.fill();c.restore();}
+ root(c,camera,p,height,alpha,cyan=false){const base=camera.worldToScreen(p,.08),tip=camera.worldToScreen({x:p.x+.2,y:p.y},height);c.save();c.globalAlpha=alpha;const grad=c.createLinearGradient(base.x,base.y,tip.x,tip.y);grad.addColorStop(0,cyan?FAIRY_COLORS.dark:'#302218');grad.addColorStop(.65,cyan?FAIRY_COLORS.main:'#71533b');grad.addColorStop(1,cyan?FAIRY_COLORS.light:'#b69b6c');c.fillStyle=grad;c.beginPath();c.moveTo(base.x-camera.scale*.22,base.y);c.bezierCurveTo(base.x,tip.y+camera.scale*.35,tip.x,tip.y,tip.x,tip.y);c.quadraticCurveTo(base.x+camera.scale*.35,base.y,base.x+camera.scale*.22,base.y);c.closePath();c.fill();c.restore();}
  treeRange(c,camera,z,time){
   const area=treeAttackArea(z,time);if(!area)return;
   const at=camera.worldToScreen(z,.12),x=camera.worldToScreen({x:z.x+1,y:z.y},.12),y=camera.worldToScreen({x:z.x,y:z.y+1},.12),r=area.r;

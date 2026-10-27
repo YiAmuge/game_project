@@ -56,6 +56,7 @@ export class RooftopScenery{
   const group=new THREE.Group();group.name='rooftop-environment';group.userData.decorative=true;parent.add(group);this.group=group;
   const outline=roofOutline(layout),shape=new THREE.Shape();outline.forEach(([x,z],i)=>i?shape.lineTo(x,z):shape.moveTo(x,z));shape.closePath();
   const slab=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.8,bevelEnabled:false}),new THREE.MeshLambertMaterial({color:'#373d3e'}));slab.rotation.x=Math.PI/2;slab.position.y=-.12;slab.name='roof-slab';group.add(slab);
+  if(!layout.terrain){for(const sky of [...this.background.children]){sky.geometry.dispose();sky.material.dispose();this.background.remove(sky);}return group;}
   const windowMat=new THREE.MeshBasicMaterial({map:this.textures.windows,color:'#b6c9cd',side:THREE.DoubleSide,fog:false});
   const fogMat=new THREE.MeshBasicMaterial({map:this.textures.smoke,color:'#6095a8',transparent:true,opacity:.85,depthWrite:false,side:THREE.DoubleSide,fog:false});
   for(const edge of roofSegments(layout)){

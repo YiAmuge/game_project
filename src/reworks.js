@@ -23,7 +23,7 @@ export function releaseHeath(g,e,p){
  if(e.key!=='heathcliff'||e.state.chargeAt===undefined)return false;
  if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.stat(e,'root')||g.stat(e,'captured')||e.motion||g.hidden(e)){cancelHeath(e);return false;}
  const shape=heathCharge(g,e,p||e.state.chargeAim),d=direction(e,shape.landing);cancelHeath(e);e.qCd=g.cooldown(e,'q');e.lastAttackAt=g.time;
- return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{kind:'leap',ignoreWalls:true,arcHeight:3,minDuration:distance(e,shape.landing)/RULES.dashSpeed,phaseEnemies:true,onComplete:()=>{
+ return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{kind:'leap',actionTag:'heathQ',ignoreWalls:true,arcHeight:3,minDuration:distance(e,shape.landing)/RULES.dashSpeed,phaseEnemies:true,onComplete:()=>{
   e.state.heathSlamAt=g.time;e.state.heathSlamFacing=Math.atan2(d.y,d.x);
   area(g,e,e,shape.radius,shape.damage,t=>{if(shape.stun)g.status(t,'stun',1,shape.stun,e);});g.effects.push({type:'burst',x:e.x,y:e.y,r:shape.radius,theme:'heathcliff',life:.5,maxLife:.5});
  }}));
@@ -67,7 +67,7 @@ export function honglu(g,e,slot,p,d){
  }else{
   const z=g.zones.find(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time);
   if(z)z.moving=!z.moving;
-  else g.zones.push({kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,damage:60,heal:75+50*g.bonusHealthPercent(e),tickEvery:.5,cleanse:true,cleansed:new Set()});
+  else g.zones.push({kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,damage:60,heal:75+15*g.bonusHealthPercent(e),firstTick:true,tickEvery:.5,cleanse:true,cleansed:new Set()});
  }
  return true;
 }
@@ -86,7 +86,7 @@ export function tick(g,e){
 export function finishInsight(g,e){
  const s=e.state;if(s.insightUntil===undefined)return;
  delete s.insightUntil;delete e.buffs.insight;e.shields=e.shields.filter(a=>a.source!==`insight-${e.id}`);e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;
- for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500+20*g.bonusHealthPercent(e),false,{healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
+ for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500+7*g.bonusHealthPercent(e),false,{skillHeal:true,healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
  g.effects.push({type:'hongluRipple',source:e.id,theme:'honglu',x:e.x,y:e.y,r:5,life:.8,maxLife:.8});
 }
 export function easterEggs(g,dt){
