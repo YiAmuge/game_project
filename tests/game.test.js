@@ -115,8 +115,8 @@ test('shop requires spawn and peace, charges progressive costs, enforces caps',(
   const g=isolated(),p=g.player;assert.ok(g.buy(p,'power'));assert.equal(p.gold,90);assert.equal(p.upgrades.power,1);
   assert.equal(g.buy(p,'power'),false);p.gold=5000;p.lastCombat=g.time;assert.equal(g.buy(p,'power'),false);
   p.lastCombat=-99;p.x=20;assert.equal(g.buy(p,'power'),false);Object.assign(p,FOUNTAINS[0]);
-  for(let i=0;i<4;i++)assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,2960);
-  for(let i=0;i<3;i++)assert.ok(g.buy(p,'speed'));assert.equal(g.buy(p,'speed'),false);
+  for(let i=0;i<2;i++)assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,4340);
+  for(let i=0;i<2;i++)assert.ok(g.buy(p,'speed'));assert.equal(g.buy(p,'speed'),false);
 });
 test('experience is personal, caps at level ten and increases max HP',()=>{
   const g=isolated(),p=g.player,other=g.champions(0)[1];g.award(p,10000,0);

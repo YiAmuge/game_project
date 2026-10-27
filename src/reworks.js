@@ -30,9 +30,8 @@ export function releaseHeath(g,e,p){
 }
 export function faust(g,e,slot,p,d){
  if(slot==='q'){
-  g.cone(e,d,3,1.4,150);
-  g.cone(e,d,3,Math.PI,230,t=>{
-   const away=direction(e,t),len=Math.max(0,3+t.radius+.18-distance(e,t));
+  g.cone(e,d,5,Math.PI,230,t=>{
+   const away=direction(e,t),len=Math.max(0,5+t.radius+.18-distance(e,t));
    g.startMotion(t,away,len,{kind:'knock',source:e,speed:18,forcedMaxSpeed:18});
    if(e.level===RULES.maxLevel)g.status(t,'slow',.2,1.5,e);
   });g.addBuff(e,'explore',4);

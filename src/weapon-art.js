@@ -165,6 +165,7 @@ export function targetTorsoPoint(g,e,target,camera){
 export function skillWeaponPose(g,e,p=equipmentPose(g,e),camera){
  const cast=e.visualCast,age=g.time-(cast?.at??-99),motion=e.motion,phase=motion?Math.max(0,Math.min(1,1-motion.remaining/Math.max(.001,motion.total))):0;
  const cut=(angle,progress,part,arc=2.5)=>({angle:angle+(swingProgress(progress)-.5)*arc*weaponOrientation(angle).flip,mode:'swing',progress,part,trail:true});
+ if(e.key==='yan'&&!g.buff(e,'yanDistorted')&&e.state.yanSweep){const s=e.state.yanSweep,t=(g.time-s.at)/.3;if(t>=0&&t<1)return cut(s.angle,t,'yan-q-'+s.serial,Math.PI);}
  if(e.key==='faust'&&cast?.slot==='q'&&age>=0&&age<.36)return cut(cast.angle,age/.36,'faust-sweep',Math.PI);
  if(e.key==='outis'&&cast?.slot==='r'){
   const recoil=g.time-(e.state.outisRecoilAt??-99);

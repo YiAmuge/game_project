@@ -11,7 +11,7 @@ export function start(g,e,target){
  g.schedule(e,GUBO_ULTIMATE.aim,()=>{
   if(e.state.guboAim!==aim||!target.alive||!g.units.includes(target)){cancel(g,e);return;}
   delete e.state.guboAim;const d=direction(e,target),p={source:e,target,homing:true,guboUltimate:true,ward:aim.ward,allied,damageKind:'skill',slot:'r',theme:'gubo',bornAt:g.time,origin:{x:e.x,y:e.y},x:e.x,y:e.y,dx:d.x,dy:d.y,speed:GUBO_ULTIMATE.speed,width:.16,remaining:3,damage:GUBO_ULTIMATE.damage};
-  if(p.ward){p.ward.projectile=p;p.ward.until=g.time+3;}g.projectiles.push(p);g.effects.push({source:e.id,theme:'gubo',type:'guboLaser',x:e.x,y:e.y,to:{x:target.x,y:target.y},life:.16,maxLife:.16});
+  if(p.ward){p.ward.projectile=p;p.ward.until=g.time+3;}g.emitSound?.('shot',e);g.projectiles.push(p);g.effects.push({source:e.id,theme:'gubo',type:'guboLaser',x:e.x,y:e.y,to:{x:target.x,y:target.y},life:.16,maxLife:.16});
  });return true;
 }
 export function tick(g){

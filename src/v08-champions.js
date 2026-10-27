@@ -19,7 +19,7 @@ export function basic(g,e,p,d){
   const len=Math.min(g.attackRange(e),distance(e,p)),point={x:e.x+d.x*len,y:e.y+d.y*len};
   e.state.martonGroundStrike=len>=2.5?e.attackSerial:null;
   if(len<2.5)g.cone(e,d,2.5,Math.PI,190,()=>g.addBuff(e,'martonStride',2.25));else area(g,e,point,2.2,100);
-  g.effects.push({type:len<2.5?'slash':'burst',x:len<2.5?e.x:point.x,y:len<2.5?e.y:point.y,r:len<2.5?2.5:2.2,angle:Math.atan2(d.y,d.x),spread:Math.PI,theme:e.key,life:.4,maxLife:.4});return true;
+  g.effects.push({damageKind:'basic',type:len<2.5?'slash':'burst',x:len<2.5?e.x:point.x,y:len<2.5?e.y:point.y,r:len<2.5?2.5:2.2,angle:Math.atan2(d.y,d.x),spread:Math.PI,theme:e.key,life:.4,maxLife:.4});return true;
  }
  if(e.key==='queequeg'){
   g.addBuff(e,'queegAttack',.42,{copy:false});for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>rectangle(g,e,d,g.attackRange(e),1.8,28,t=>{

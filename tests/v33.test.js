@@ -36,14 +36,14 @@ test('fountain applies to enemy minions, neutral creeps and invulnerable summons
 test('battery begins at two seconds without taking damage even while attacking, caps and grants ten haste',()=>{
  const {g,p}=arena();p.augments=['forceBattery'];p.lastDamageAt=10;p.lastAttackAt=100;g.time=11.99;A.tick(g,p,.1);close(g.shield(p),0);g.time=12;A.tick(g,p,1);close(g.shield(p),p.maxHp*.13);close(g.haste(p),.1);A.tick(g,p,3);close(g.shield(p),p.maxHp*.3);p.shields[0].value=p.maxHp*.099;close(g.haste(p),0);
 });
-test('sword union gives ten power and ten percent armor penetration in real damage',()=>{
- const {g,p}=arena(),t=hero(g);t.armor=100;const power=g.powerScale(p);p.augments=['power15'];close(g.powerScale(p)/power,1.1);const hit=g.deal(p,t,100,{proc:false});close(hit,damageFormula(100,4,1)*1.1/(1+.9));
+test('sword union gives ten power and twenty percent armor penetration in real damage',()=>{
+ const {g,p}=arena(),t=hero(g);t.armor=100;const power=g.powerScale(p);p.augments=['power15'];close(g.powerScale(p)/power,1.1);const hit=g.deal(p,t,100,{proc:false});close(hit,damageFormula(100,4,1)*1.1/(1+.8));
 });
 test('glaive heals thirty percent of actual HP damage, including periodic damage, without healing from absorbed damage',()=>{
  const {g,p}=arena(),t=hero(g);p.augments=['glaive'];p.hp-=1000;let hp=p.hp;const actual=g.deal(p,t,100);close(p.hp-hp,actual*.3);hp=p.hp;g.addShield(t,1000,'test',3);g.deal(p,t,100);close(p.hp,hp);t.shields=[];g.deal(p,t,100,{fixed:true,proc:false});close(p.hp-hp,30);
 });
-test('wisdom preserves half-speed magazine reload during attacking and full speed when idle',()=>{
- const {g,p}=arena();p.augments=['wisdom'];p.ammo=0;p.attackCd=10;const gap=g.reloadInterval(p);run(g,gap);close(p.reloadProgress,gap*.5,1/60);assert.equal(p.ammo,0);p.attackCd=0;g.input.fire=false;run(g,gap*.52);assert.ok(p.ammo>=1);
+test('wisdom preserves thirty-percent magazine reload during attacking and full speed when idle',()=>{
+ const {g,p}=arena();p.augments=['wisdom'];p.ammo=0;p.attackCd=10;const gap=g.reloadInterval(p);run(g,gap);close(p.reloadProgress,gap*.3,1/60);assert.equal(p.ammo,0);p.attackCd=0;g.input.fire=false;run(g,gap*.72);assert.ok(p.ammo>=1);
 });
 test('duel manual power follows actual bonus movement without recursive stat calculation',()=>{
  const {g,p}=arena();p.augments=['duelManual'];close(g.speed(p)/g.baseSpeed(p),1.05);close(g.powerScale(p),1.05);g.addBuff(p,'hohenheimStride',1);close(g.powerScale(p),1.35);p.upgrades.speed=3;close(g.powerScale(p),1.44);

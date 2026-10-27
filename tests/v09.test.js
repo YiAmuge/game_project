@@ -22,8 +22,8 @@ test('Dongbaek base damage is 165, and existing consecutive-hit damage scaling r
 test('Nelly marks deal exactly 4.5 percent max HP fixed damage and Q has two independent charges',()=>{
  const {g,p,t}=quiet('nelly');t.x=41;t.armor=999;g.attack(p,t);const hp=t.hp;p.attackCd=0;g.attack(p,t);const basic=210*1.12*.9*100/1099;close(hp-t.hp,4500+basic);assert.equal(p.state.knifeCharges,2);assert.ok(g.cast(p,'q',t));assert.ok(g.cast(p,'q',t));assert.equal(p.state.knifeCharges,0);assert.equal(g.cast(p,'q',t),false);g.time=5.01;g.step(.01);assert.equal(p.state.knifeCharges,1);
 });
-test('Rodya sword wave reaches 4.2; coin probability changes at levels five and ten',()=>{
- const {g,p,t}=quiet('rodya');close(g.attackRange(p),4.2);for(const [level,heads]of [[1,0],[4,0],[5,3],[9,3],[10,3]]){p.level=level;p.qCd=0;g.random=()=>.55;g.cast(p,'q',p);assert.equal(p.state.coinHeads,heads);close(p.state.coinChance,.5+Math.floor(level/5)*.1);}p.level=10;p.qCd=0;g.random=()=>.69;g.cast(p,'q',p);assert.equal(p.state.coinHeads,3);p.qCd=0;g.random=()=>.71;g.cast(p,'q',p);assert.equal(p.state.coinHeads,0);
+test('Rodya sword wave reaches 4.65; coin probability changes at levels five and ten',()=>{
+ const {g,p,t}=quiet('rodya');close(g.attackRange(p),4.65);for(const [level,heads]of [[1,0],[4,0],[5,3],[9,3],[10,3]]){p.level=level;p.qCd=0;g.random=()=>.55;g.cast(p,'q',p);assert.equal(p.state.coinHeads,heads);close(p.state.coinChance,.5+Math.floor(level/5)*.1);}p.level=10;p.qCd=0;g.random=()=>.69;g.cast(p,'q',p);assert.equal(p.state.coinHeads,3);p.qCd=0;g.random=()=>.71;g.cast(p,'q',p);assert.equal(p.state.coinHeads,0);
 });
 test('Rodya ice ticks fifty per half second with a fifty-percent initial power debuff',()=>{
  const {g,p,t}=quiet('rodya');t.x=46;g.cast(p,'r',{x:48,y:7});run(g,.3);const z=g.zones.find(z=>z.kind==='ice');assert.ok(z);close(z.damage,50);close(z.tickEvery,.5);const hp=t.hp;run(g,.5);close(hp-t.hp,50*.91*.9);close(g.powerWeak(t),.5);const baseline=g.deal(t,p,100);delete t.status.weak;const without=g.deal(t,p,100);close(baseline/without,.5);t.y=13;run(g,.8);assert.equal(g.powerWeak(t),0);

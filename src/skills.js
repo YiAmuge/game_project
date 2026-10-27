@@ -306,7 +306,7 @@ export function tick(g,e,dt){
   tickRudolphWeapon(g,e);
   if(s.exhaustedUntil){if(s.exhaustedUntil>g.time)return;delete s.exhaustedUntil;delete s.exhaustedAt;delete s.recoveryDuration;e.ammo=ammoCap(g,e);return;}
   if(e.ammo<=0){const duration=s.recoveryDuration||2.5;s.exhaustedAt=g.time;s.recoveryDuration=duration;s.exhaustedUntil=g.time+duration;g.status(e,'silence',1,duration);g.status(e,'disarm',1,duration);return;}
-  if(g.reloadRate(e)>0&&(g.time-e.lastAttackAt>.4||has(e,'wisdom')))e.ammo=Math.min(ammoCap(g,e),e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt*g.reloadRate(e));
+  if(g.reloadRate(e)>0&&(g.time-e.lastAttackAt>.4||has(e,'wisdom')||has(e,'reloadStacks')&&e.state.augReloadStacks>=5))e.ammo=Math.min(ammoCap(g,e),e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt*g.reloadRate(e));
  }
 
 }

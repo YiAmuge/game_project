@@ -48,7 +48,7 @@ export function release(g,e,p){
  if(e.key!=='yan'||!e.state.yanCharge)return false;
  if(!e.alive||distorted(g,e)||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall){cancelCharge(e);return false;}
  const shape=chargeShape(g,e,p||e.state.yanCharge.aim),elapsed=Math.max(0,g.time-e.state.yanCharge.startedAt);cancelCharge(e);
- e.attackCd=Math.max(g.attackInterval(e),.85-elapsed);e.lastAttackAt=g.time;e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.facing=e.attackFacing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;
+ g.emitSound?.('swing',e);e.attackCd=Math.max(g.attackInterval(e),.85-elapsed);e.lastAttackAt=g.time;e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.facing=e.attackFacing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;
  g.action(e,'basic',()=>{
   for(const t of [...g.units])if(g.hostile(e,t)&&g.clearLine(e,t)){
    const dx=t.x-e.x,dy=t.y-e.y,along=dx*shape.d.x+dy*shape.d.y,side=Math.abs(dy*shape.d.x-dx*shape.d.y);
@@ -130,7 +130,7 @@ export function tick(g,e,dt){
  }
  const q=e.state.yanBarrage;if(!q)return;
  if(g.stat(e,'stun')||g.stat(e,'silence')||g.time>=q.until){if(g.time>=q.until)e.state.yanInstantUntil=q.until+1;delete e.state.yanBarrage;return;}
- while(q.ticks<6&&g.time+1e-8>=q.next){q.next+=YAN.qEvery;q.ticks++;e.lastAttackAt=g.time;
+ while(q.ticks<6&&g.time+1e-8>=q.next){q.next+=YAN.qEvery;q.ticks++;e.lastAttackAt=g.time;e.state.yanSweep={at:g.time,angle:Math.atan2(q.d.y,q.d.x),serial:q.ticks};g.emitSound?.('swing',e);
   g.action(e,'skill',()=>{for(const t of [...g.units]){const d=direction(e,t);if(g.hostile(e,t)&&distance(e,t)<=YAN.qRange+t.radius&&d.x*q.d.x+d.y*q.d.y>=0&&g.clearLine(e,t)){
    g.deal(e,t,YAN.qDamage);q.hits[t.id]=(q.hits[t.id]||0)+1;if(q.hits[t.id]===6)g.status(t,'slow',.5,1.5,e);
   }}});

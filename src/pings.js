@@ -27,7 +27,7 @@ export function send(g,kind,point,choiceId){
  point=choice||point;const b=g.bounds;
  if(!Number.isFinite(point?.x)||!Number.isFinite(point?.y)||point.x<b.x||point.x>b.x+b.w||point.y<b.y||point.y>b.y+b.h)return false;
  const p={kind,x:point.x,y:point.y,targetId:choice?.targetId,icon:choice?{...choice}:null,at:g.time,until:g.time+8,team:g.player.team,label:text(kind,choice,g.player.team)};
- g.pings??=[];g.pings.push(p);g.pings=g.pings.slice(-8);g.pingReady=g.time+.65;g.log(p.label,kind==='danger'?'enemy':'ally');return p;
+ g.pings??=[];g.pings.push(p);g.pings=g.pings.slice(-8);g.pingReady=g.time+.65;g.emitSound?.('ping',g.player,{ping:kind});g.log(p.label,kind==='danger'?'enemy':'ally');return p;
 }
 export function live(g){return (g.pings||[]).filter(p=>p.until>g.time);}
 // A champion target is a local instruction, not a reason for distant lanes to abandon combat.

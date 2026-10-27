@@ -2,10 +2,10 @@ import { WORLD, MAP_CENTER } from './data.js';
 // World position is the character's feet. Track the standing sprite's center.
 export class Camera {
   constructor(){this.x=32;this.y=18;this.scale=1;this.width=1;this.height=1;}
-  update(width,height,player,playing){
+  update(width,height,player,playing,view=1){
     this.width=Math.max(1,width);this.height=Math.max(1,height);
     if(playing){
-      this.scale=Math.max(this.width/30,this.height/18);
+      this.scale=Math.max(this.width/30,this.height/18)/view;
       this.x=player.x;this.y=player.y-.7;
     } else {
       this.scale=Math.min(this.width/WORLD.w,this.height/WORLD.h);

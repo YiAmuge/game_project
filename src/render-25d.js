@@ -1,3 +1,4 @@
+import{endingCore}from'./match-presentation.js';
 import{bossVisualHeight}from'./boss-art.js';
 import{minionHeight}from'./minion-art.js';
 import{needleVisualHeight}from'./needle-art.js';
@@ -142,7 +143,7 @@ export class Renderer25D {
   this.units.clear();
   for(const e of game.units){
 
-   const s=this.camera.worldToScreen(e),visible=e.alive&&(!game.hidden(e)||e.motion?.kind==='leap')&&game.visibleTo(0,e)&&s.x>-220&&s.x<this.base.width+220&&s.y>-220&&s.y<this.base.height+220;
+   const s=this.camera.worldToScreen(e),visible=(e.alive||endingCore(game,e)&&game.presentation.elapsed<1)&&(!game.hidden(e)||e.motion?.kind==='leap')&&game.visibleTo(0,e)&&s.x>-220&&s.x<this.base.width+220&&s.y>-220&&s.y<this.base.height+220;
    if(visible)this.units.set(e.id,{entity:e,feet:projectFeet(this.camera,e)});
   }
  }
@@ -211,9 +212,9 @@ export class Renderer25D {
   // Orthographic camera motion is a screen translation. Keep a guard band of
   // scenery and pan that cached image until its edge approaches the viewport.
   // Units, aiming and floor effects continue updating on every animation frame.
-  if(this.sceneryDirty||Math.abs(pan.x)>this.padding*.7||Math.abs(pan.y)>this.padding*.7){
+  if(this.sceneryDirty||this.sceneryScale!==this.camera.scale||Math.abs(pan.x)>this.padding*.7||Math.abs(pan.y)>this.padding*.7){
    const c=this.sceneryCamera;c.copy(this.camera.native);const extra=this.padding/this.camera.scale;c.left-=extra;c.right+=extra;c.top+=extra;c.bottom-=extra;c.updateProjectionMatrix();
-   this.webgl.render(this.rooftop.background,c);this.webgl.autoClear=false;this.webgl.clearDepth();this.webgl.render(this.scene,c);this.webgl.autoClear=true;this.sceneryAnchor={x:this.camera.x,y:this.camera.y};this.sceneryDirty=false;this.canvas.style.transform='translate3d(0,0,0)';
+   this.webgl.render(this.rooftop.background,c);this.webgl.autoClear=false;this.webgl.clearDepth();this.webgl.render(this.scene,c);this.webgl.autoClear=true;this.sceneryAnchor={x:this.camera.x,y:this.camera.y};this.sceneryScale=this.camera.scale;this.sceneryDirty=false;this.canvas.style.transform='translate3d(0,0,0)';
   }else this.canvas.style.transform=`translate3d(${pan.x}px,${pan.y}px,0)`;
   this.hud(game,playing);
  }

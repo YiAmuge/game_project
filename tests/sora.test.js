@@ -14,8 +14,8 @@ function transform(g,p){p.state.unlock=5;assert.ok(g.cast(p,'r',p));}
 test('Sora is an ordinary assassin with requested grades and default two-ammo reload rules',()=>{
  const {g,p}=quiet(),c=CHAMPIONS.sora;assert.equal(Object.keys(CHAMPIONS).length,29);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,31);assert.deepEqual([c.role,c.power,c.health,c.speed,c.ammo,c.reload],['암살',3,2,3,2,3]);close(g.reloadInterval(p),.56/.52);assert.ok(c.growth.power>0);
 });
-test('passive marks once per three seconds, excludes boss, and maintains two six-second marks',()=>{
- const {g,p}=quiet(),a=creep(g,42,7),b=creep(g,43,8),c=creep(g,44,6);creep(g,41,7,'boss');run(g,2.99);assert.equal(Sora.orders(g,p).length,0);run(g,.02);assert.ok(Sora.marked(g,p,a));assert.equal(a.hostile,undefined);run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.marked(g,p,b));run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.orders(g,p).every(m=>m.target!==g.units.find(e=>e.camp==='boss').id));
+test('passive marks every three seconds, includes bosses and maintains two expiring six-second marks',()=>{
+ const {g,p}=quiet(),a=creep(g,42,7),b=creep(g,43,8),boss=creep(g,41,7,'boss');run(g,2.99);assert.equal(Sora.orders(g,p).length,0);run(g,.02);assert.ok(Sora.marked(g,p,boss));assert.equal(boss.hostile,undefined);boss.x=70;run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.marked(g,p,a));run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.marked(g,p,b));assert.equal(Sora.marked(g,p,boss),false);
 });
 test('the first own hit consumes the mark and awards one unlock, never per extra hit',()=>{
  const {g,p}=quiet(),t=creep(g);Sora.mark(g,p,t);g.deal(p,t,1,{fixed:true});close(p.state.unlock,1);assert.equal(Sora.marked(g,p,t),false);g.deal(p,t,400,{fixed:true});close(p.state.unlock,1);
@@ -26,7 +26,7 @@ test('foreign damage and expired/returning marks cannot award unlock; absorbed d
  const returning=creep(g);Sora.mark(g,p,returning);returning.returning=true;assert.equal(Sora.orders(g,p).some(m=>m.target===returning.id),false);
 });
 test('ultimate prioritizes nearby ordinary creeps over buffs then lowest current champion HP',()=>{
- const {g,p}=quiet(),n=creep(g,47,7),b=creep(g,42,7,'blessing'),e=enemy(g,43,8),f=enemy(g,45,7);e.hp=900;f.hp=1000;assert.equal(Sora.ultimateTarget(g,p),n);n.alive=false;assert.equal(Sora.ultimateTarget(g,p),b);b.alive=false;assert.equal(Sora.ultimateTarget(g,p),e);creep(g,41,7,'boss');assert.equal(Sora.ultimateTarget(g,p),e);e.x=60;assert.equal(Sora.ultimateTarget(g,p),f);
+ const {g,p}=quiet(),n=creep(g,47,7),b=creep(g,42,7,'blessing'),e=enemy(g,43,8),f=enemy(g,45,7);e.hp=900;f.hp=1000;assert.equal(Sora.ultimateTarget(g,p),n);n.alive=false;assert.equal(Sora.ultimateTarget(g,p),b);b.alive=false;assert.equal(Sora.ultimateTarget(g,p),e);const boss=creep(g,41,7,'boss');assert.equal(Sora.ultimateTarget(g,p),boss);boss.alive=false;assert.equal(Sora.ultimateTarget(g,p),e);e.x=60;assert.equal(Sora.ultimateTarget(g,p),f);
 });
 test('ultimate refresh keeps active marks, allows a third mark and does not wake neutral creeps',()=>{
  const {g,p}=quiet(),a=creep(g,43,7),b=creep(g,44,8),c=creep(g,42,7);Sora.mark(g,p,a);Sora.mark(g,p,b);g.time=1;assert.ok(g.cast(p,'r',p));assert.equal(Sora.orders(g,p).length,3);close(p.state.orders[a.id].until,7);assert.equal(p.state.orders[c.id].origin,'ultimate');assert.equal(c.hostile,undefined);close(p.rCd,10);

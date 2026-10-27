@@ -16,6 +16,7 @@ export const CHAMPION_STYLES={
 export function combatStyle(key,g,e,{kind='basic',slot,type}={}){
  let s={...(CHAMPION_STYLES[key]||NEUTRAL)};
  if(key==='sora'&&e&&g.buff(e,'soraEgo'))s=style('#171820','metal','#59606a','#050609');
+ if(key==='marton'&&kind==='basic'&&e&&e.state.martonGroundStrike!==e.attackSerial)s=style('#8d6e46','wood','#c6ae7a','#302218');
  if(key==='yan'&&e&&g.buff(e,'yanDistorted'))s=style('#13141b','liquid','#454853','#030407');
  if(key==='gubo'&&(type==='guboBlast'||e&&g.buff(e,'guboReload')))s=style('#6f162a','metal','#bb4255','#200711');
  if(key==='myo'&&e&&g.buff(e,'rabbitFrenzy'))s=style('#efab61','metal','#ffe0a6','#784425');

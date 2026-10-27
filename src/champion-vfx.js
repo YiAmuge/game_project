@@ -1,3 +1,4 @@
+import{drawAugmentEffects,drawAugmentGround}from'./v60-effects.js';
 import{drawMartonFairy,FAIRY_COLORS}from'./fairy-art.js';
 import{v58Ground,v58Front}from'./v58-effects.js';
 import { combatStyle,clipShape } from './combat-style.js';
@@ -44,7 +45,7 @@ export function inwardWaves(time,startedAt,r){
 export function championPresentation(g,e){
  const s=e.state||{},buff=k=>g.buff(e,k),status=k=>g.stat(e,k);let aura=null,dim=1,frozen=false;
  const set=(color,element='smoke',strength=.65)=>{aura={color,form:element,strength};};
- if(Object.values(e.buffs||{}).some(t=>t>g.time))set('#c6cbd0','smoke',.5);
+ if(Object.entries(e.buffs||{}).some(([key,t])=>t>g.time&&key!=='augBattleHaste'))set('#c6cbd0','smoke',.5);
  if(g.shield(e)>0)set('#b5c7ce','mist',.7);
  if(e.key==='alisa'&&(s.heat||0)>0)set('#b86132','flame',.7);if(s.detonatesAt>g.time)set('#f05832','flame',.65+.3*Math.min(1,(g.time-(s.detonationAt??g.time))/2));
  if(buff('marks'))set('#a2c879');if(buff('resolve'))set('#d9dce0','glow');if(buff('chainArmor'))set('#eef0e7','glow',.7);
@@ -61,6 +62,7 @@ export function championPresentation(g,e){
  if(e.key==='rudolph'&&s.exhaustedUntil>g.time)dim=.67;
  if(e.key==='dongbaek'&&status('disarm'))dim=.7;
  if(status('stun')&&e.status.stun.theme==='rodya')frozen=true;
+ if(e.visuals?.ampule?.until>g.time)set('#24d66a','glow',.95);
  if(e.key==='dongbaek'&&aura)aura.rimOnly=true;
  return {aura,dim,frozen,lift:levitationLift(g,e)};
 }
@@ -214,7 +216,7 @@ export class ChampionVFX {
   else if(f.type==='shout'){c.save();c.translate(.2,-1.7);c.strokeStyle='#b2c8c2';c.lineWidth=.025;c.globalAlpha=(1-t)*.45;for(let i=0;i<3;i++){const size=.15+age*(1+i*.3);c.beginPath();c.arc(0,0,size,-.65,.65);c.stroke();}c.restore();}
  }
  events(c,camera,g){
-  v58Front(c,camera,g);
+  v58Front(c,camera,g);drawAugmentEffects(c,camera,g);
   c.save();
   for(const f of this.effects){
    if(f.type==='formulaField'){this.formulaArea(c,camera,f,g.time-f.at,1-(g.time-f.at)/f.life);continue;}
@@ -236,7 +238,7 @@ export class ChampionVFX {
   c.restore();
  }
  ground(c,camera,g){
-  v58Ground(c,camera,g);
+  v58Ground(c,camera,g);drawAugmentGround(c,camera,g);
   const world=(p,h=0)=>camera.worldToScreen(p,h),sprite=(form,color,p,h,size,alpha=.5,angle=0)=>{const at=world(p,h);this.mote(c,form,color,at.x,at.y,size*camera.scale,angle,alpha);};
   for(const f of g.effects)if(f.type==='yiBuffRange'&&f.life>0)this.vfx.groundDisc(c,camera,f,f.r,()=>{
    c.globalAlpha=Math.min(1,f.life/.15);c.fillStyle='#d6c78b14';c.strokeStyle='#e2d29bd9';c.lineWidth=.018;c.beginPath();c.arc(0,0,1,0,Math.PI*2);c.fill();c.stroke();
@@ -268,7 +270,7 @@ export class ChampionVFX {
    if(f.type==='cracks')this.cracks(c,camera,f,f.r||2,fade);
    if(f.type==='yanGroundSlam')this.yanGroundSlam(c,camera,f,age);
    if(f.type==='chainStrike')for(let i=0;i<7;i++){const a=f.angle+(i/6-.5)*f.spread*.94,len=f.r*(1-Math.exp(-age*18));for(let j=0;j<Math.floor(len/.3);j++){const p=world({x:f.x+Math.cos(a)*j*.3,y:f.y+Math.sin(a)*j*.3},.18);c.save();c.translate(p.x,p.y);c.rotate(a);c.globalAlpha=fade*.5;c.strokeStyle=j%2?'#d5d8d9':'#78818b';c.lineWidth=camera.scale*.023;c.beginPath();c.ellipse(0,0,camera.scale*.15,camera.scale*.06,j%2*.7,0,Math.PI*2);c.stroke();c.restore();}}
-   if(f.type==='roots')for(let i=0;i<7;i++){const a=i*2.4,p={x:f.x+Math.cos(a)*(f.r||2)*.7,y:f.y+Math.sin(a)*(f.r||2)*.7};this.root(c,camera,p,Math.sin(Math.PI*t)*1.8,fade,e.key==='marton');}
+   if(f.type==='roots')for(let i=0;i<7;i++){const a=i*2.4,p={x:f.x+Math.cos(a)*(f.r||2)*.7,y:f.y+Math.sin(a)*(f.r||2)*.7};this.root(c,camera,p,Math.sin(Math.PI*t)*1.8,fade,false);}
    if(f.type==='petalField'||f.type==='petalExplosions')for(let i=0;i<24;i++){const a=i*2.4,rad=(f.r||3)*Math.sqrt(noise(i,f.at,4)),p={x:f.x+Math.cos(a)*rad,y:f.y+Math.sin(a)*rad};sprite('petal',f.type==='petalField'?'#b35765':'#e0c56b',p,.15+Math.sin(age*4+i)*.2,.14,fade*.55,a+age);}
    if(f.type==='petalField')this.rangeField(c,camera,f,f.r,'#b83c55',fade*.55,'#ef9ca9');
    if(f.type==='formulaField')this.field(c,camera,f,f.r,'#f5f5f0',fade*.3);

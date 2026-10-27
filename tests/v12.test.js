@@ -46,7 +46,7 @@ for(const key of ['ryoshu','ahab','sinclair','starbuck'])test(`capture also conf
  const {g,t}=capture(key),net={...t.state.netTrap};g.units=[t];g.time+=.01;t.rCd=0;t.channelUntil=0;assert.ok(g.cast(t,'r',{x:55,y:7}));run(g,.8);assert.ok(distance(t,net)<=net.r+1e-5,`${key} escaped`);
 });
 test('Queequeg stats follow missing health immediately, including healing and max-HP growth',()=>{
- const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),98);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),62);g.award(p,6900,0);close(g.armor(p),50);close(g.attackRange(p),3);
+ const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),68);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),32);g.award(p,6900,0);close(g.armor(p),20);close(g.attackRange(p),3);
 });
 test('Don tactical starts cooldown on release and rejects another charge until ready',()=>{
  const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,0);assert.equal(g.cast(p,'q',p),false);run(g,1);assert.ok(Don.release(g,p,{x:45,y:7}));close(p.qCd,12);assert.equal(p.state.donCharge,undefined);assert.equal(g.cast(p,'q',p),false);run(g,12.01);assert.ok(g.cast(p,'q',p));

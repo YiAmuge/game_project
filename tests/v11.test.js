@@ -79,7 +79,7 @@ test('Ahab gains a third magazine, guard movement and defense, and a 6.5-range u
  const {g,p}=quiet('ahab');assert.equal(p.ammo,3);assert.equal(g.ammoCap(p),3);const speed=g.speed(p),armor=g.armor(p);g.cast(p,'q',p);close(g.speed(p)/speed,1.12);close((100+g.armor(p))/(100+armor),1.12);close(skillTargeting(g,p,'r').range,6.5);p.qCd=0;g.cast(p,'q',p);close(g.speed(p),speed);close(g.armor(p),armor);g.cast(p,'r',{x:60,y:7});close(p.x,46.5);close(p.y,7);
 });
 test('Queequeg link lasts indefinitely and boosts both defense efficiencies while retaining target flat armor',()=>{
- const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);close(g.armor(p),65);close(g.armor(a),65);assert.equal(p.state.tether.until,Infinity);g.time=100;g.step(.01);assert.equal(p.state.tether.until,Infinity);assert.ok(g.buff(p,'tetherGuard'));assert.ok(g.buff(a,'tetherArmor'));assert.equal(a.state.tetherResistance,4);
+ const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);close(g.armor(p),32);close(g.armor(a),65);assert.equal(p.state.tether.until,Infinity);g.time=100;g.step(.01);assert.equal(p.state.tether.until,Infinity);assert.ok(g.buff(p,'tetherGuard'));assert.ok(g.buff(a,'tetherArmor'));assert.equal(a.state.tetherResistance,4);
 });
 for(const cc of ['stun','root','silence','disarm','slow','taunt','captured'])test(`Queequeg takes fifty percent while linked ally has ${cc}, then returns to thirty`,()=>{
  const {g,p,t}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);g.status(a,cc,cc==='slow'?.2:1,1,t);let hp=a.hp,owner=p.hp;g.deal(t,a,100,{fixed:true});close(hp-a.hp,50);close(owner-p.hp,50);delete a.status[cc];hp=a.hp;owner=p.hp;g.deal(t,a,100,{fixed:true});close(hp-a.hp,70);close(owner-p.hp,30);

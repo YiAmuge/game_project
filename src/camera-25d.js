@@ -8,9 +8,9 @@ export class Camera25D {
   this.ray=new Raycaster();this.ground=new Plane(new Vector3(0,1,0),0);
   this.width=1;this.height=1;this.scale=1;this.x=0;this.y=0;
  }
- update(width,height,player){
+ update(width,height,player,playing=true,view=1){
   this.width=Math.max(1,width);this.height=Math.max(1,height);
-  this.scale=Math.max(this.width/32,this.height/21);
+  this.scale=Math.max(this.width/32,this.height/21)/view;
   const w=this.width/this.scale,h=this.height/this.scale,c=this.native;
   c.left=-w/2;c.right=w/2;c.top=h/2;c.bottom=-h/2;
   this.x=player.x;this.y=player.y;

@@ -64,8 +64,8 @@ test('targeting includes ground teleports, self effects and charge releases whil
 test('champion death leaves a corpse at the death location before the living unit respawns elsewhere',()=>{
  const {g,p,t}=quiet();t.x=43;t.y=8;g.kill(t,p);assert.equal(g.corpses.length,1);close(g.corpses[0].x,43);close(g.corpses[0].y,8);g.time=t.respawnAt;g.step(.01);close(g.corpses[0].x,43);assert.ok(t.alive);assert.notEqual(t.x,43);
 });
-test('dead upgrades work up to five/three stages without healing a dead champion',()=>{
- const {g,p,t}=quiet();g.kill(p,t);p.gold=10000;for(const u of UPGRADES){for(let i=0;i<u.max;i++)assert.ok(g.buy(p,u.key),u.key);assert.equal(g.buy(p,u.key),false);}assert.equal(p.hp,0);assert.equal(g.buy(p,'potion'),false);assert.equal(p.upgrades.health,5);assert.equal(p.upgrades.haste,3);
+test('dead upgrades work up to three/two stages without healing a dead champion',()=>{
+ const {g,p,t}=quiet();g.kill(p,t);p.gold=10000;for(const u of UPGRADES){for(let i=0;i<u.max;i++)assert.ok(g.buy(p,u.key),u.key);assert.equal(g.buy(p,u.key),false);}assert.equal(p.hp,0);assert.equal(g.buy(p,'potion'),false);assert.equal(p.upgrades.health,3);assert.equal(p.upgrades.haste,2);
 });
 test('augment gates, unique ownership, six slots, refund and repurchase are enforced',()=>{
  const {g,p}=quiet();p.alive=false;p.hp=0;p.gold=10000;assert.equal(g.buyAugment(p,'power15'),false);p.upgrades.power=3;p.upgrades.health=3;p.upgrades.speed=3;for(const k of ['power15','blackOrb','magazine2','cooldown15','glaive','kAmpule'])assert.ok(g.buyAugment(p,k));assert.equal(g.buyAugment(p,'power15'),false);assert.equal(g.buyAugment(p,'range7'),false);const gold=p.gold;assert.ok(g.sellAugment(p,'power15'));close(p.gold-gold,350);assert.ok(g.buyAugment(p,'range7'));assert.equal(p.hp,0);
@@ -84,7 +84,7 @@ test('K ampule restores fatal damage once per sixty seconds and clears control',
  const {g,p,t}=quiet();p.augments=['kAmpule'];p.hp=1;g.status(p,'stun',1,5,t);g.deal(t,p,99999,{fixed:true});assert.ok(p.alive);close(p.hp,p.maxHp*.5);close(g.stat(p,'stun'),0);close(p.state.ampuleReady,60);assert.ok(p.ccImmuneUntil>g.time);g.time=1.1;g.deal(t,p,99999,{fixed:true});assert.equal(p.alive,false);
 });
 test('battle haste requires three seconds of continuous combat and clears out of combat',()=>{
- const {g,p,t}=quiet();p.augments=['battleHaste'];for(let i=0;i<110;i++){if(i%30===0)g.deal(p,t,1);g.step(1/30);}assert.ok(g.buff(p,'augBattleHaste'));close(g.haste(p),.15);run(g,3.1);assert.equal(g.buff(p,'augBattleHaste'),false);
+ const {g,p,t}=quiet();p.augments=['battleHaste'];for(let i=0;i<110;i++){if(i%30===0)g.deal(p,t,1);g.step(1/30);}assert.ok(g.buff(p,'augBattleHaste'));close(g.haste(p),.25);run(g,3.1);assert.equal(g.buff(p,'augBattleHaste'),false);
 });
 test('Gahwan gaze becomes contempt at seven hits and amplifies skills but not basics',()=>{
  const {g,p,t}=quiet('gahwan');for(let i=0;i<7;i++)g.deal(p,t,1,{damageKind:'basic'});assert.ok(t.state.contempt[p.id]>g.time);let hp=t.hp;g.deal(p,t,100,{proc:false,damageKind:'basic'});const basic=hp-t.hp;hp=t.hp;g.deal(p,t,100,{proc:false,damageKind:'skill'});close((hp-t.hp)/basic,1.12);

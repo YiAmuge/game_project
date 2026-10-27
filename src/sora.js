@@ -16,7 +16,7 @@ export function orders(g,e){
 }
 export function marked(g,e,t){return e.key==='sora'&&Boolean(e.state.orders?.[t.id]?.until>g.time);}
 export function mark(g,e,t,origin='passive'){
- if(!t?.alive||t.camp==='boss'||!g.hostile(e,t)||!['neutral','champion'].includes(t.kind)||g.debuffImmune?.(t))return false;
+ if(ego(g,e)||!t?.alive||!g.hostile(e,t)||!['neutral','champion'].includes(t.kind)||g.debuffImmune?.(t))return false;
  const active=orders(g,e),previous=e.state.orders[t.id];
  if(origin==='passive'&&!previous&&active.filter(m=>m.origin==='passive').length>=SORA.passiveCap)return false;
  g.triggerDisrupt(e,t);e.state.orders[t.id]={target:t.id,until:g.time+SORA.markDuration,origin:origin==='ultimate'||previous?.origin==='ultimate'?'ultimate':'passive'};
@@ -25,7 +25,7 @@ export function mark(g,e,t,origin='passive'){
 export function ultimateTarget(g,e){
  const targets=g.units.filter(t=>g.hostile(e,t)&&!t.returning&&g.visibleTo(e.team,t)&&distance(e,t)<=SORA.ultimateRange+t.radius&&g.clearLine(e,t));
  const nearest=list=>list.sort((a,b)=>distance(e,a)-distance(e,b)||a.id-b.id)[0];
- return nearest(targets.filter(t=>t.kind==='neutral'&&['central','side'].includes(t.camp)))||nearest(targets.filter(t=>t.kind==='neutral'&&['amplify','blessing'].includes(t.camp)))||targets.filter(t=>t.kind==='champion').sort((a,b)=>a.hp-b.hp||distance(e,a)-distance(e,b))[0];
+ return nearest(targets.filter(t=>t.kind==='neutral'&&!['amplify','blessing','boss','sewingKing'].includes(t.camp)))||nearest(targets.filter(t=>t.kind==='neutral'&&['amplify','blessing'].includes(t.camp)))||nearest(targets.filter(t=>t.kind==='neutral'))||targets.filter(t=>t.kind==='champion').sort((a,b)=>a.hp-b.hp||distance(e,a)-distance(e,b))[0];
 }
 export function validate(g,e,slot){
  if(e.key!=='sora')return true;
@@ -97,9 +97,9 @@ export function cast(g,e,slot,p,d){
  return true;
 }
 export function afterDamage(g,e,t,actual,absorbed=0){
- if(e.key!=='sora'||!e.alive||actual+absorbed<=0)return;
+ if(e.key!=='sora'||ego(g,e)||!e.alive||actual+absorbed<=0)return;
  const m=e.state.orders?.[t.id];if(!m||m.until<=g.time)return;
- delete e.state.orders[t.id];e.state.unlock=Math.min(SORA.maxUnlock,(e.state.unlock||0)+1);if(!ego(g,e))e.ammo=Math.min(g.ammoCap(e),e.ammo+1);if(ready(g,e))e.rCd=0;g.effects.push({type:'number',x:e.x,y:e.y-2,text:`해금 ${e.state.unlock}/${SORA.maxUnlock}`,color:'#73d6ff',life:1,maxLife:1});
+ delete e.state.orders[t.id];e.state.unlock=Math.min(SORA.maxUnlock,(e.state.unlock||0)+1);e.ammo=Math.min(g.ammoCap(e),e.ammo+1);if(ready(g,e))e.rCd=0;g.effects.push({type:'number',x:e.x,y:e.y-2,text:`해금 ${e.state.unlock}/${SORA.maxUnlock}`,color:'#73d6ff',life:1,maxLife:1});
 }
 export function tick(g,e){
  if(e.key!=='sora')return;
@@ -109,11 +109,11 @@ export function tick(g,e){
   while(e.state.egoQCharges<SORA.egoQCharges&&g.time+1e-8>=e.state.egoQReady){e.state.egoQCharges++;e.state.egoQReady=e.state.egoQCharges<SORA.egoQCharges?e.state.egoQReady+g.cooldown(e,'q'):Infinity;}
   e.qCd=e.state.egoQCharges>0?0:Math.max(0,e.state.egoQReady-g.time);
  }
- const active=orders(g,e);
+ const active=orders(g,e);if(ego(g,e))return;
  if(g.time+1e-8<(e.state.orderAt??g.time+SORA.markEvery))return;
  e.state.orderAt=g.time+SORA.markEvery;
  if(active.filter(m=>m.origin==='passive').length>=SORA.passiveCap)return;
- const target=g.units.filter(t=>t.kind==='neutral'&&t.camp!=='boss'&&t.alive&&!t.returning&&!marked(g,e,t)&&distance(e,t)<=SORA.passiveRange+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];
+ const target=g.units.filter(t=>['neutral','champion'].includes(t.kind)&&g.hostile(e,t)&&g.visibleTo(e.team,t)&&t.alive&&!t.returning&&!marked(g,e,t)&&distance(e,t)<=SORA.passiveRange+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];
  mark(g,e,target);
 }
 export function onRespawn(g,e){if(e.key==='sora')init(g,e);}

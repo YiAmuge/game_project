@@ -1,3 +1,4 @@
+import{cinematicCamera,endingCore}from'./match-presentation.js';
 import{drawMartonFairy}from'./fairy-art.js';
 import{drawBoss,bossVisualHeight}from'./boss-art.js';
 import{drawMinion,minionHeight}from'./minion-art.js';
@@ -42,7 +43,7 @@ export class Renderer {
     this.camera=game.training25d?this.scene25d.camera:this.flatCamera;
     if(this.scene25d)this.scene25d.canvas.hidden=!game.training25d;
   }
-  follow(game,playing){this.prepare(game);this.camera.update(this.width,this.height,game.player.state.infiltration?.point||renderAnchor(game.player),playing);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
+  follow(game,playing){this.prepare(game);const cinematic=cinematicCamera(game);this.camera.update(this.width,this.height,cinematic?.anchor||game.player.state.infiltration?.point||renderAnchor(game.player),playing,cinematic?.view||1);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
   point(clientX,clientY) {const r=this.canvas.getBoundingClientRect();return this.camera.screenToWorld(clientX-r.left,clientY-r.top);}
   circle(x,y,r,fill,stroke=null,width=.07) {const c=this.ctx;c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
   line(points,color,width,dash=[]) {const c=this.ctx;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.setLineDash(dash);c.stroke();c.setLineDash([]);}
@@ -104,7 +105,9 @@ export class Renderer {
     c.fillStyle='#081317';c.fillRect(x-.05,y-.05,width+.1,.31);
     paintHealth(c,e,game,x,y,width,.21,e.team===0?'#87b8bc':e.team===1?'#c78578':e.camp==='boss'?'#b38ecb':'#b0a16d');
   }
-  structure(e,game) {
+  structure(e,game,ignoreEnding=false) {
+    if(!ignoreEnding&&endingCore(game,e)){const t=game.presentation.elapsed;if(t>=1)return;const c=this.ctx,shake=t*t*.16;c.save();c.translate(Math.sin(t*110)*shake,Math.cos(t*137)*shake);c.filter=`brightness(${1+t*t*18})`;this.structure({...e,alive:true},game,true);c.restore();return;}
+
     const color=e.team===0?'#8bb8c2':'#c4897e',dark=e.team===0?'#3b6169':'#704941';
     if(!e.alive){this.circle(e.x,e.y,e.radius,'#151f22','#536058');this.line([{x:e.x-.5,y:e.y-.5},{x:e.x+.5,y:e.y+.5}],'#64705a',.12);return;}
     const locked=game.locked(e);
@@ -154,6 +157,7 @@ export class Renderer {
       c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);
       if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),left,top,w,h);c.restore();}
       if(game.buff(e,'queequegUlt')&&this.skillVfx){c.save();c.globalAlpha*=.22;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#c44034'),left,top,w,h);c.restore();}
+      if(e.visuals?.ampule?.until>game.time&&this.skillVfx){c.save();c.globalCompositeOperation='multiply';c.globalAlpha*=.65*Math.min(1,(e.visuals.ampule.until-game.time)/.35);c.drawImage(this.skillVfx.tintFrame(atlas,f,'#22c65e'),left,top,w,h);c.restore();}
       if(appearance.frozen&&this.skillVfx){c.save();c.globalAlpha*=.28;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#a7d0e5'),left,top,w,h);c.restore();}
       const light=this.skillVfx?.lightAt(e);if(light?.strength>.01){c.save();c.globalCompositeOperation='lighter';c.globalAlpha*=light.strength;c.drawImage(this.skillVfx.tintFrame(atlas,f,light.color),left,top,w,h);c.restore();}
       if(e.key==='myo'&&game.buff(e,'rabbitFrenzy'))drawEyeGlow(c,f,{left,top,w,h},game.time);

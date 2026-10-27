@@ -57,7 +57,7 @@ export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!NEW_CHAMPION_KEYS.includes(key)));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const ARMOR_GRADES={yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:5,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:3,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
+export const ARMOR_GRADES={yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:3,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS))c.armor=ARMOR_GRADES[key]??2;
 export const GROWTH={
  faust:[.055,.045,.008],yi:[.042,.052,.012],sinclair:[.058,.048,.016],meursault:[.038,.075,.007],don:[.052,.061,.013],ryoshu:[.064,.04,.017],honglu:[.046,.055,.014],heathcliff:[.061,.063,.01],ishmael:[.043,.072,.009],rodya:[.054,.065,.011],outis:[.06,.047,.01],gregor:[.045,.074,.008],gubo:[.063,.044,.006],gahwan:[.051,.049,.011],nelly:[.066,.043,.018],ahab:[.057,.041,.009],alisa:[.058,.057,.012],rudolph:[.05,.048,.007],moses:[.036,.058,.01],ezra:[.052,.067,.012],myo:[.064,.038,.015],dongbaek:[.053,.044,.01],dongrang:[.041,.075,.008],hohenheim:[.06,.039,.008],marton:[.038,.077,.009],queequeg:[.046,.079,.008],starbuck:[.058,.06,.013],kim:[.048,.068,.011],ppui:[.035,.054,.012],sora:[.06,.046,.013],yan:[.043,.058,.01],
@@ -65,7 +65,7 @@ export const GROWTH={
 export const ATTACK_STYLES={faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
 
-CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=4.2;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
+CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=4.65;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
 
 CHAMPIONS.gubo.damage=240;CHAMPIONS.rudolph.damage=57;CHAMPIONS.marton.color='#02ebf7';
 CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
@@ -85,13 +85,10 @@ export const POSITIONS={
   support:{name:'서포터',lane:1,recommend:['지원','방해'],description:'바텀 보호·하단 2vs2·로밍 · 지원·방해 추천'},
 };
 export const POSITION_ORDER=['top','jungle','bottom','support'];
-export const UPGRADES = [
-  { key: 'power', name: '전투력', effect: '+4%', max: 5 },
-  { key: 'health', name: '최대 체력', effect: '+6%', max: 5 },
-  { key: 'speed', name: '이동속도', effect: '+3%', max: 3 },
-  { key: 'haste', name: '스킬 가속', effect: '+5%', max: 3 },
-  { key: 'reload', name: '장전 성능', effect: '+5%', max: 3 },
-];
+export const UPGRADE_STEPS={power:[.04,.06,.10],health:[.08,.10,.12],speed:[.03,.06],haste:[.06,.09],reload:[.06,.09]};
+export const UPGRADE_TOTALS=Object.fromEntries(Object.entries(UPGRADE_STEPS).map(([key,steps])=>[key,[0,...steps.map((_,i)=>steps.slice(0,i+1).reduce((a,b)=>a+b,0))]]));
+export const upgradeRate=(e,key)=>UPGRADE_TOTALS[key]?.[Math.max(0,Math.min(UPGRADE_STEPS[key].length,Math.floor(e.upgrades?.[key]||0)))]||0;
+export const UPGRADES=Object.entries(UPGRADE_STEPS).map(([key,steps])=>({key,name:{power:'전투력',health:'최대 체력',speed:'이동속도',haste:'스킬 가속',reload:'장전 속도'}[key],steps,effect:steps.map(n=>'+'+Math.round(n*100)+'%').join(' / '),max:steps.length}));
 const leftWalls = [
   { x: 13, y: 11, w: 6, h: 1.6 }, { x: 20, y: 8.5, w: 8, h: 1.6 },
   { x: 13, y: 23.4, w: 6, h: 1.6 }, { x: 20, y: 25.9, w: 8, h: 1.6 },
@@ -146,23 +143,23 @@ CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
 export const AUGMENT_RULES={cost:500,refund:.7,slots:6,categorySlots:2};
 export const AUGMENTS=[
  {key:'finalBullet',group:'combat',name:'마탄',text:'7초마다 적 챔피언 적중 시 최종 체력 피해의 7% 고정 피해'},
- {key:'power15',group:'combat',name:'신검합일',text:'전투력 +10% · 방어관통 +10%'},
+ {key:'power15',group:'combat',name:'신검합일',text:'전투력 +10% · 방어관통 +20%'},
  {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 돌진형 기본 공격은 공격 사거리와 돌진거리 각각 +1'},
- {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소'},
+ {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소. 최대 중첩 중 공격 중에도 장전이 15% 속도로 진행'},
  {key:'glaive',group:'survival',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
- {key:'wisdom',group:'combat',name:'지혜성도',text:'전투력 +5% · 공격 중에도 장전이 50% 속도로 진행'},
+ {key:'wisdom',group:'combat',name:'지혜성도',text:'전투력 +5% · 공격 중에도 장전이 30% 속도로 진행'},
  {key:'duelManual',group:'combat',name:'듀엘교본 3권',text:'이동속도 +5% · 기본 이동속도를 초과한 현재 이동속도의 비율만큼 전투력 증가'},
  {key:'resentment',group:'survival',name:'원한 문신',text:'잃은 체력 10%마다 전투력·방어력·장전속도 +5%, 최대 8중첩. 현재 체력에 따라 실시간 적용'},
- {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:'치명적인 피해를 받으면 체력을 최대 체력의 50%로 복구하고 모든 군중제어 해제. 1초간 군중제어 면역·이동속도 +30%. 재사용 대기시간 60초'},
- {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:'2초간 피해를 받지 않으면 초당 최대 체력의 13% 보호막 충전, 최대 30%. 최대 체력의 10% 이상 보호막 보유 중 스킬 가속 +10%'},
+ {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:'장전 속도 +7%. 치명적인 피해를 받으면 체력을 최대 체력의 50%로 복구하고 모든 군중제어 해제. 1초간 군중제어 면역·이동속도 +30%. 재사용 대기시간 60초'},
+ {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:'2초간 피해를 받지 않으면 초당 최대 체력의 13% 보호막 충전, 최대 30%. 최대 체력의 10% 이상 보호막 보유 중 스킬 가속 +10% · 이동속도 +10%'},
  {key:'blackOrb',group:'combat',name:'흑수환',text:'전투력·이동속도·장전속도 +10%'},
  {key:'antimatter',group:'survival',name:'반물질 옷',text:'최대 체력 +10% · 사거리 1.6의 적에게 0.5초마다 20 고정 피해'},
  {key:'writtenOrder',group:'survival',name:'쪽지로 전해진 지령',text:'공격 적중 시 방어력 +5%, 최대 5중첩. 각 중첩은 5초 유지. 최대 중첩 중 일반 피해의 10%를 고정 피해로 전환하고 해당 고정 피해만큼 5초 보호막 획득, 최대 500 누적'},
  {key:'traumaGuard',group:'survival',name:'트라우마 방지장',text:'최대 체력 +5% · 방어력 +5% · 군중제어를 받을 때 해당 효과를 무효화하고 탄창 1개 충전. 재사용 대기시간 16초'},
- {key:'battleHaste',group:'tech',name:'사랑과 증오의 이름으로',text:'전투를 3초 이상 유지하면 스킬 가속 +15%. 비전투 시 해제'},
+ {key:'battleHaste',group:'tech',name:'사랑과 증오의 이름으로',text:'전투를 3초 이상 유지하면 스킬 가속 +25%. 비전투 시 해제'},
  {key:'cooldown15',group:'tech',name:'주민등록 마이크로칩',text:'전술기·궁극기 기본 재사용 대기시간 −15%'},
  {key:'magazine2',group:'tech',name:'카포를 위하여',text:'최대 탄창 +2'},
- {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'스킬 가속 +5%. 카테고리별 증강 2개 제한을 해제한다. 전체 보유 한도 6개에는 포함된다'},
+ {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'스킬 가속 +3% · 이동속도 +3%. 카테고리별 증강 2개 제한을 해제한다. 전체 보유 한도 6개에는 포함된다'},
  {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'적에게 상태이상·디버프를 부여하면 남은 스킬 재사용 대기시간 20% 감소 및 빈 탄창 1개 충전. 재사용 대기시간 10초'},
  {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 방어력 +7%. 어디서든 귀환이 침투로 대체된다. 1.75초 정신집중 후 전장에서 사라지고 시전 위치를 중심으로 사거리 35 안의 착지 위치를 WASD로 이동한다. 우클릭 또는 전술기 버튼을 누르면 정밀 이동하며 기본공격으로 확정하면 0.5초 후 나타난다. 이후 2초간 이동속도 +10%. 재사용 대기시간 75초. B로 취소 시 재사용 대기시간 1.5초'},
  {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:'비전투 이동속도 +15% · 전투 중 +7%'},
