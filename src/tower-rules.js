@@ -18,7 +18,7 @@ export function onDamage(g,source,victim,damage){
  }
 }
 export function attackable(g,tower,u){
- return u.alive&&u.team!==tower.team&&u.team!==2&&!g.hidden(u)&&g.visibleTo(tower.team,u)&&u.invulnerableUntil!==Infinity&&['champion','minion','bait','summon'].includes(u.kind)&&distance(tower,u)<=tower.range;
+ return u.alive&&u.team!==tower.team&&u.team!==2&&!g.hidden(u)&&g.visibleTo(tower.team,u)&&u.invulnerableUntil!==Infinity&&['champion','minion','bait','summon','trooper'].includes(u.kind)&&distance(tower,u)<=tower.range;
 }
 const rank=u=>u.kind==='minion'?(u.siege?0:u.ranged?2:1):u.kind==='champion'?4:3;
 export function acquire(g,tower){

@@ -1,3 +1,4 @@
+import{JAMILA_FRAMES}from'./jamila-sprites.js';
 import{BOSS_FRAMES}from'./boss-sprites.js';
 import { MINION_FRAMES } from './minion-sprites.js';
 import { NEEDLE_FRAMES } from './needle-sprites.js';
@@ -29,11 +30,12 @@ export const FRAMES = {
   outis:{"x": 768, "y": 532, "w": 384, "h": 492, "sheet": 1},
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
-Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES,BOSS_FRAMES);
-export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55'];
-const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55'];
+Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES,BOSS_FRAMES,JAMILA_FRAMES);
+export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62'];
+const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62'];
 const atlasImages=new Map();
 export function visualForm(g,e){
+ if(e.lcaTrooper)return 'jamilaTrooper';
  if(e.key==='sora'&&g.buff(e,'soraEgo'))return 'soraEgo';
  if(e.key==='yan'&&g.buff(e,'yanDistorted'))return 'yanDistorted';
  if(e.key==='queequeg'&&g.buff(e,'queequegUlt'))return 'queequegUlt';
@@ -41,6 +43,7 @@ export function visualForm(g,e){
 }
 export const spriteHeight=(key,height=2.1)=>height*(FRAMES[key]?.heightScale||1);
 export const THEMES = {
+ jamila:{light:'#e3d28a',dark:'#292c2c',accent:'#d8b64b',weapon:'rifle'},
   yan:{light:'#c3e6ff',dark:'#344d69',accent:'#83c6f6',weapon:'yanSword'},
   sora:{light:'#f2d697',dark:'#32313d',accent:'#f0ba5b',weapon:'restraint'},
   kim:{light:'#90cbff',dark:'#243d69',accent:'#5f9dff',weapon:'katana'},ppui:{light:'#ffd1d6',dark:'#94364e',accent:'#dc536e',weapon:'nail'},

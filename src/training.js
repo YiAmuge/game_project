@@ -133,7 +133,7 @@ export function changeChampion(g,key){
  if(!g.training||!RUNTIME_CHAMPIONS[key])return false;
  const old=g.player,point=old.alive?{x:old.x,y:old.y}:{...spawn(g)},saved={level:old.level,xp:old.xp,gold:old.gold,upgrades:{...old.upgrades},augments:[...old.augments]};
  if(old.alive)g.kill(old,old);g.corpses=[];
- g.units=g.units.filter(e=>e!==old);g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old);
+ const army=new Set(g.units.filter(e=>e.lcaTrooper&&e.owner===old.id));g.units=g.units.filter(e=>e!==old&&!army.has(e));g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old&&!army.has(e.source));
  g.makeChampion(key,0,0,old.position);g.player=g.units.find(e=>e.player);Object.assign(g.player,saved,point);
  g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,spawn(g));refreshOptions(g);return true;
 }

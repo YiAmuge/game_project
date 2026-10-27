@@ -1,3 +1,4 @@
+import * as Jamila from './jamila.js';
 import * as Reworks from './reworks.js';
 import * as Don from './don.js';
 import * as Infestation from './infestation.js';
@@ -81,6 +82,7 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.key==='jamila')return Jamila.validate(g,e,slot);
  if(e.state.donCharge)return false;if(e.key==='ryoshu'&&slot==='q'&&(e.state.ryoshuCharges??2)<=0)return false;
  if(!Hohenheim.validate(g,e,slot,p)||!Sora.validate(g,e,slot,p)||!Yan.validate(g,e,slot))return false;
  if(!V12.validate(g,e,slot,p))return false;
@@ -98,6 +100,7 @@ export function validateSkill(g,e,slot,p,options={}){
  return true;
 }
 export function ammoCap(g,e){
+ if(e.lcaTrooper)return 16;if(e.key==='jamila')return 16+(has(e,'magazine2')?8:0);
  const extra=(has(e,'magazine2')?2:0)+(e.key==='faust'&&e.level===RULES.maxLevel?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
  if(e.key==='ezra')return (g.buff(e,'ezraUlt')?4:EZRA_WEAPONS[e.state.weapon||0].ammo)+extra;
  return CHAMPIONS[e.key].ammo+extra*(e.key==='rudolph'?15:1);
@@ -117,6 +120,7 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
+ if(Jamila.basic(g,e,p,d))return true;
  if(Sora.basic(g,e,p,d)||V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
@@ -166,6 +170,7 @@ function shockIshmael(g,e){
 }
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
+ if(e.key==='jamila')return Jamila.cast(g,e,slot,p,d,options);
  const state=e.state;
  if(e.key==='faust')return Reworks.faust(g,e,slot,p,d);
  if(Yan.cast(g,e,slot,p,d)||Sora.cast(g,e,slot,p,d)||V12.cast(g,e,slot,p,d,options)||V10.cast(g,e,slot,p,d,options)||V08.cast(g,e,slot,p,d,options)||New.cast(g,e,slot,p,d,options)||V06.cast(g,e,slot,p,d,options))return true;

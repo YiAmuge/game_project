@@ -100,10 +100,10 @@ export class Renderer {
       if(game.training){this.text(`${Math.floor(timer.seconds/60)}:${String(timer.seconds%60).padStart(2,'0')}`,p.x,p.y+.98,'#ecd59b',.28);}
     }
   }
-  bar(e,width,y,game) {
+  bar(e,width,y,game,{height=.21}={}) {
     const c=this.ctx,x=e.x-width/2;
-    c.fillStyle='#081317';c.fillRect(x-.05,y-.05,width+.1,.31);
-    paintHealth(c,e,game,x,y,width,.21,e.team===0?'#87b8bc':e.team===1?'#c78578':e.camp==='boss'?'#b38ecb':'#b0a16d');
+    c.fillStyle='#081317';c.fillRect(x-.05,y-.05,width+.1,height+.1);
+    paintHealth(c,e,game,x,y,width,height,e.team===0?'#87b8bc':e.team===1?'#c78578':e.camp==='boss'?'#b38ecb':'#b0a16d');
   }
   structure(e,game,ignoreEnding=false) {
     if(!ignoreEnding&&endingCore(game,e)){const t=game.presentation.elapsed;if(t>=1)return;const c=this.ctx,shake=t*t*.16;c.save();c.translate(Math.sin(t*110)*shake,Math.cos(t*137)*shake);c.filter=`brightness(${1+t*t*18})`;this.structure({...e,alive:true},game,true);c.restore();return;}
@@ -225,7 +225,7 @@ export class Renderer {
       return;
     }
     // Nameplates render after bushes and effects; the player's is always last.
-    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
+    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.lcaTrooper)this.bar(e,2.1,e.y-2.3,game,{height:.26});else if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
     for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)).sort((a,b)=>Number(a.player)-Number(b.player))){championEffects(this,e,game);CombatVisuals.front(this,e,game);championHud(this,e,game);CombatVisuals.meter(this,e,game);}
     for(const e of game.champions().filter(e=>e.easterText?.until>game.time))this.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   }

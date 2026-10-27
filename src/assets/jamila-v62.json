@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "source": {
+    "file": "source/jamila-v62.png",
+    "sha256": "9369acb1a8b6eb6a1891edbe32104bf558288d520aff23192f3c5b347b156443"
+  },
+  "frames": {
+    "jamila": {
+      "x": 8,
+      "y": 8,
+      "w": 220,
+      "h": 400,
+      "sheet": 15,
+      "rotation": 0,
+      "source": "source/jamila-v62.png",
+      "sourceRect": [
+        264,
+        93,
+        359,
+        652
+      ],
+      "referenceHeight": 400,
+      "crownOffset": 0,
+      "heightScale": 1,
+      "heightBasis": "crown",
+      "foot": [
+        0.55,
+        1
+      ],
+      "face": [
+        12,
+        6,
+        196,
+        196
+      ]
+    },
+    "jamilaTrooper": {
+      "x": 236,
+      "y": 8,
+      "w": 185,
+      "h": 400,
+      "sheet": 15,
+      "rotation": 0,
+      "source": "source/jamila-v62.png",
+      "sourceRect": [
+        955,
+        104,
+        296,
+        641
+      ],
+      "referenceHeight": 400,
+      "crownOffset": 0,
+      "heightScale": 1,
+      "heightBasis": "crown",
+      "foot": [
+        0.55,
+        1
+      ],
+      "face": [
+        8,
+        5,
+        169,
+        169
+      ]
+    },
+    "jamilaKopis": {
+      "x": 8,
+      "y": 416,
+      "w": 719,
+      "h": 138,
+      "sheet": 15,
+      "rotation": 0,
+      "source": "source/jamila-v62.png",
+      "sourceRect": [
+        27,
+        784,
+        719,
+        138
+      ]
+    },
+    "jamilaRifle": {
+      "x": 8,
+      "y": 562,
+      "w": 711,
+      "h": 208,
+      "sheet": 15,
+      "rotation": 0,
+      "source": "source/jamila-v62.png",
+      "sourceRect": [
+        793,
+        763,
+        711,
+        208
+      ]
+    }
+  }
+}

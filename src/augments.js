@@ -3,6 +3,10 @@ import { AUGMENTS,AUGMENT_RULES } from './data.js';
 export { AUGMENTS,AUGMENT_RULES };
 export const has=(e,key)=>e.augments?.includes(key)||false;
 export function unlocked(e,group){return group==='combat'?e.upgrades.power>=3:group==='survival'?e.upgrades.health>=3:e.upgrades.speed+e.upgrades.reload+e.upgrades.haste>=3;}
+export const exclusive=(e,key)=>e.key==='kim'&&key==='power15'||e.key==='jamila'&&key==='highRisk';
+export const unlockedItem=(e,key)=>exclusive(e,key)||unlocked(e,AUGMENTS.find(a=>a.key===key)?.group);
+export const unlockedGroup=(e,group)=>unlocked(e,group)||AUGMENTS.some(a=>a.group===group&&exclusive(e,a.key));
+export function augmentText(e,item){if(!item)return '';return item.text+(e.key==='kim'&&item.key==='power15'?'\n김삿갓 전용: 강화시술 구매 조건 없이 구매 가능. 2초마다 최대 체력의 1% 보호막을 얻으며 최대 12%까지 누적되고 5초간 유지된다.':e.key==='jamila'&&item.key==='highRisk'?'\n자밀라 전용: 강화시술 구매 조건 없이 구매 가능. 침투 사거리 +10. 전장에서 사라진 동안 궁극기를 사용하면 선택 위치에 전투원 2명과 함께 즉시 나타나며 전투원의 지속시간이 15초가 된다.':'');}
 export const categoryCount=(e,group)=>e.augments.filter(key=>AUGMENTS.find(a=>a.key===key)?.group===group).length;
 export const resentment=e=>has(e,'resentment')?Math.min(8,Math.floor((1-e.hp/e.maxHp+1e-8)*10))*.05:0;
 export function tick(g,e,dt=0){
@@ -11,6 +15,7 @@ export function tick(g,e,dt=0){
  if(has(e,'antimatter'))e.state.antimatterNext??=g.time+.5;
  if(has(e,'antimatter')&&g.time+1e-8>=e.state.antimatterNext){e.state.antimatterNext=g.time+.5;for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=1.6+t.radius&&g.clearLine(e,t))g.deal(e,t,20,{fixed:true,proc:false});}
  const s=e.state;
+ if(e.key==='kim'&&has(e,'power15')){s.unityNext??=g.time+2;while(g.time+1e-8>=s.unityNext){s.unityNext+=2;const id=`unity-${e.id}`,old=e.shields.find(a=>a.source===id&&a.until>g.time)?.value||0;g.addShield(e,Math.min(e.maxHp*.12,old+e.maxHp*.01),id,5);}}else delete s.unityNext;
  if(g.time-e.lastCombat>3){delete s.augCombatAt;delete e.buffs.augBattleHaste;}
  else{s.augCombatAt??=g.time;if(has(e,'battleHaste')&&g.time-s.augCombatAt>=3){if(!g.buff(e,'augBattleHaste')){g.addBuff(e,'augBattleHaste',3,{copy:false});e.visuals.battleHaste={at:g.time,until:g.time+1};}else e.buffs.augBattleHaste=g.time+3;}}
  if(s.augReloadStacks>0&&g.time+1e-8>=s.augReloadDecay){while(s.augReloadStacks>0&&g.time+1e-8>=s.augReloadDecay){s.augReloadStacks--;s.augReloadDecay+=3;}if(!s.augReloadStacks)delete e.buffs.augReload;}

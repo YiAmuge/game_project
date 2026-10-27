@@ -15,7 +15,7 @@ function quiet(key='faust'){
 }
 function ally(g,key='yi'){const e=g.makeChampion(key,0,5);Object.assign(e,{x:42,y:9});return e;}
 test('27 ordinary champions include all four additions; XP accrues at three per second (Faust nine) even while dead',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,29);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,31);
+ assert.equal(Object.keys(CHAMPIONS).length,30);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,32);
  for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,key==='faust'?9:3);g.kill(p,t);run(g,1);close(p.xp,key==='faust'?18:6);}
 });
 test('central, side, needle and buff camps award their configured XP; building HP stays reduced',()=>{

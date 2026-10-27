@@ -28,7 +28,7 @@ export class ProjectileVFX {
   return camera.worldToScreen(p,height);
  }
  effectVisible(p,g,camera,height){
-  if(p.source?.key!=='gubo'||!p.origin)return true;
+  if(!['gubo','jamila'].includes(p.source?.key)||!p.origin)return true;
   let reach=this.guboRanges.get(p);if(reach===undefined){reach=guboEffectAxis(g,p.source,camera,p.origin,{height,angle:Math.atan2(p.dy,p.dx)}).reach;this.guboRanges.set(p,reach);}
   const start=camera.worldToScreen(p.origin,height),at=camera.worldToScreen(p,height);
   return Math.hypot(at.x-start.x,at.y-start.y)+1e-7>=reach*camera.scale;

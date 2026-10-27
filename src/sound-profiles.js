@@ -1,5 +1,6 @@
 // Sound timbres describe the held material and the ability, independently of team tint.
 export const WEAPON_VOICES={
+ jamila:['rifle','metal',1],
  yi:['glass','mirror',.45],faust:['blade','metal',.85],sinclair:['axe','metal',1.25],don:['spear','blood',.9],meursault:['punch','metal',1.2],
  gubo:['rifle','metal',1.2],kim:['katana','metal',.85],queequeg:['spear','water',1],ppui:['nail','blood',.4],gahwan:['blade','arcane',.85],
  hohenheim:['staff','electric',.8],alisa:['club','fire',1.2],marton:['hammer','wood',1.4],nelly:['knife','metal',.45],myo:['knife','metal',.65],
@@ -8,6 +9,7 @@ export const WEAPON_VOICES={
  ahab:['spear','water',1.15],starbuck:['spear','water',1],sora:['punch','chain',1.4],yan:['greatsword','metal',1.5],moses:['smoke','smoke',.55],ezra:['punch','metal',1.1],
 };
 export const SKILL_VOICES={
+ jamila:{q:['blade','wind'],r:['radio','metal']},
  yi:{q:['glass','mirror'],r:['phase','mirror']},faust:{q:['blade','metal'],r:['arcane','arcane']},sinclair:{q:['axe','wind'],r:['axe','wood']},
  don:{q:['spear','wind'],r:['spear','blood']},meursault:{q:['chain','chain'],r:['chain','chain']},gubo:{q:['rifle','blood'],r:['rifle','blood']},
  kim:{q:['katana','metal'],r:['katana','wind']},queequeg:{q:['chain','water'],r:['spear','water']},ppui:{q:['chime','blood'],r:['nail','blood']},
@@ -35,7 +37,7 @@ export function soundVoice(e){
  if(e.key==='ezra'&&e.stance===3)family='punch';
  if(e.transforming&&e.slot==='r'){family='phase';element='shadow';}
  family=e.family||family;element=e.element||element;weight=e.weight||weight;
- let cue=e.cue||({hit:e.periodic?'tick':'impact',swing:'weapon',shot:'weapon',cast:'cast',ultimate:'cast',charge:'charge',slam:'slam',detonation:'burst',explosion:'explosion',water:'water',waterfall:'waterfall',death:'death',intro:'arrival',spawn:'arrival',shop:'shop',ping:'ping',victory:'victory',defeat:'defeat'})[e.kind]||'cast';
+ let cue=e.cue||({hit:e.periodic?'tick':'impact',swing:'weapon',shot:'weapon',cast:'cast',ultimate:'cast',charge:'charge',slam:'slam',detonation:'burst',explosion:'explosion',water:'water',waterfall:'waterfall',death:'death',intro:'arrival',spawn:'arrival',reload:'reload',shop:'shop',ping:'ping',victory:'victory',defeat:'defeat'})[e.kind]||'cast';
  if(e.kind==='explosion'&&e.phase==='outis-shotgun'){cue='shotgun';family='shotgun';element='fire';}
  if(e.shielded&&cue==='impact'){family='shield';weight*=.7;}
  return{cue,family,element,weight,variant:e.variant||0,priority:e.kind==='ping'?5:['explosion','waterfall','victory','defeat'].includes(e.kind)?4:['cast','ultimate','slam','detonation'].includes(e.kind)?3:e.kind==='hit'?1:2};

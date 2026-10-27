@@ -2,7 +2,7 @@ import { loadAtlas } from './art.js';
 
 export const UNCHANGED_HANDS=new Set(['meursault','sora','ppui','queequeg','gregor']);
 export const TWO_HANDED_GRIPS=new Set(['sinclair','marton','honglu','dongrang','hohenheim','rudolph']);
-const BLACK_GLOVES=new Set(['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim']);
+const BLACK_GLOVES=new Set(['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila']);
 const BROWN_GLOVES=new Set(['alisa','dongrang']);
 // Midtones sampled from the latest body faces, independent of team tint.
 export const BARE_HAND_COLORS={yi:'#f8d8c0',faust:'#f0e0d8',don:'#f8d8c0',ryoshu:'#f8d0c0',honglu:'#f8d8c8',heathcliff:'#d09880',ishmael:'#f8d0c0',rodya:'#f8d8c8',outis:'#e0a880',nelly:'#f0a888',dongbaek:'#f8d8b8',marton:'#c89878',starbuck:'#d88848'};
@@ -21,6 +21,7 @@ export function gripAppearance(key){
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
 export const GRIP_PATHS={
+ jamilaKopis:[[.055,.48],[.22,.48]],jamilaRifle:[[.238,.80],[.238,.80]],
  yiDagger:[[.075,.49],[.33,.49]],faustSword:[[.035,.49],[.175,.49]],sinclairHalberd:[[.16,.39],[.62,.37]],
  donLance:[[.04,.49],[.22,.49]],ryoshuSword:[[.07,.36],[.245,.37]],hongluGlaive:[[.11,.19],[.37,.25]],
  heathcliffBat:[[.055,.47],[.30,.48]],ishmaelMace:[[.06,.53],[.43,.52]],rodyaAxe:[[.07,.53],[.50,.31]],
@@ -42,7 +43,7 @@ const layouts=new Map();
 export function gripLayout(key,asset,m,pivot){
  if(!gripAppearance(key)||!m||!GRIP_PATHS[asset])return [];
  const cacheKey=[key,asset,m.scale,pivot].join('/');if(layouts.has(cacheKey))return layouts.get(cacheKey);
- const [a,b]=GRIP_PATHS[asset],at=t=>gripSourcePoint([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],m,pivot),first=at(0),last=at(1),kind=asset==='guboRifle'||asset==='myoRifle'?'gun':asset==='ishmaelShield'?'shield':'shaft';
+ const [a,b]=GRIP_PATHS[asset],at=t=>gripSourcePoint([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],m,pivot),first=at(0),last=at(1),kind=asset==='guboRifle'||asset==='myoRifle'||asset==='jamilaRifle'?'gun':asset==='ishmaelShield'?'shield':'shaft';
  const nearest=x=>{let low=0,high=1;const target=Math.max(Math.min(first.x,last.x),Math.min(Math.max(first.x,last.x),x));for(let i=0;i<24;i++){const t=(low+high)/2;if((at(t).x<target)===(last.x>=first.x))low=t;else high=t;}return {...at((low+high)/2),kind};};
  const primary=nearest(0),support=key==='rudolph'?{...gripSourcePoint([.50,.53],m,pivot),kind,offHand:true}:{...nearest(primary.x+.27),offHand:true},points=TWO_HANDED_GRIPS.has(key)?[primary,support]:[primary];
  if(layouts.size>=64)layouts.delete(layouts.keys().next().value);layouts.set(cacheKey,points);return points;

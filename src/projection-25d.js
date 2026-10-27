@@ -7,7 +7,7 @@ export function sceneryPixelRatio(width,height,dpr=1){return Math.min(dpr,1,Math
 // Project the ground first, then draw the upright art from that feet coordinate.
 export function feetOffset(e){
  if(e.trainingDummy)return .37;
- if(e.kind==='champion')return .325;
+ if(e.kind==='champion'||e.lcaTrooper)return .325;
  if(e.kind==='neutral')return ['boss','amplify','blessing','needle','sewingKing'].includes(e.camp)?0:.65;
  if(e.kind==='minion')return 0;
  if(e.kind==='bait')return .67;
