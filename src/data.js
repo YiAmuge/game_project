@@ -19,6 +19,9 @@ export const MAP_CENTER=worldPoint(32,18);
 // Preserve the central battlefield coordinates; add only rear wings and the two flank rooms.
 export const WORLD={x:-8.5,y:-8,w:87.72,h:62.8};
 export const TERRAIN=[{x:0,y:0,w:83.2,h:46.8},{x:-10,y:16.4,w:12,h:14},{x:81.2,y:16.4,w:12,h:14},{x:29.6,y:-8,w:24,h:9.5},{x:29.6,y:45.3,w:24,h:9.5}].map(p=>({...p,x:p.x*MAP_X,w:p.w*MAP_X}));
+export const SOUTH_TERRACE=TERRAIN[4];
+{const r=SOUTH_TERRACE,oldWidth=r.w;r.w*=1.1;r.x-=(r.w-oldWidth)/2;r.h*=.5;r.bevel=r.h-1.5;r.polygon=[[r.x,r.y],[r.x+r.w,r.y],[r.x+r.w,r.y+1.5],[r.x+r.w-r.bevel,r.y+r.h],[r.x+r.bevel,r.y+r.h],[r.x,r.y+1.5]];}
+export function footprintContains(r,x,y){if(x<r.x||x>r.x+r.w||y<r.y||y>r.y+r.h)return false;if(!r.polygon)return true;let inside=false;for(let i=0,j=r.polygon.length-1;i<r.polygon.length;j=i++){const a=r.polygon[i],b=r.polygon[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])inside=!inside;}return inside;}
 // The battlefield ends at the former diagonal walls' inner face, leaving the fountain intact.
 const approachSlope=20.9/16.2,approachTipX=(20.9+.55*Math.hypot(1,approachSlope))/approachSlope,approachStopX=TERRAIN[1].x+TERRAIN[1].w,approachStopY=TERRAIN[1].y;
 export const APPROACH={tipX:approachTipX,tipY:approachStopY/(1-approachStopX/approachTipX),stopX:approachStopX,stopY:approachStopY};
@@ -26,7 +29,7 @@ const approachEnd={x:APPROACH.stopX,y:APPROACH.tipY*(1-APPROACH.stopX/APPROACH.t
 const approachCutout=[[0,0],[APPROACH.tipX,0],[approachEnd.x,APPROACH.stopY],[0,APPROACH.stopY]];
 export const APPROACH_CUTOUTS=[...Array(4)].map((_,i)=>approachCutout.map(([x,y])=>[i&1?RULES.width-x:x,i&2?RULES.height-y:y]));
 export const inApproachCutout=(x,y)=>{const xx=Math.min(x,RULES.width-x),yy=Math.min(y,RULES.height-y);return xx>=0&&yy>=0&&xx<APPROACH.tipX&&yy<APPROACH.tipY*(1-xx/APPROACH.tipX)&&!(xx<APPROACH.stopX&&yy>=APPROACH.stopY);};
-export const terrainContains=(x,y)=>!inApproachCutout(x,y)&&TERRAIN.some(p=>x>=p.x&&x<=p.x+p.w&&y>=p.y&&y<=p.y+p.h);
+export const terrainContains=(x,y)=>!inApproachCutout(x,y)&&TERRAIN.some(p=>footprintContains(p,x,y));
 export const FOUNTAINS=[{x:-6.7*MAP_X,y:MAP_CENTER.y},{x:89.9*MAP_X,y:MAP_CENTER.y}];
 export const MINIONS={size:1.15*1.2,health:{melee:680,ranged:480,siege:1320},spawnGap:.35,growthEvery:120,maxGrowth:6,hpGrowth:.06,attackGrowth:.05};
 export const CAMP_RULES={radius:3.4,leashDistance:3.4,leashDelay:1.85,returnSpeed:9,neutralRespawn:20,buffRespawn:45,buffHealth:1.33,buffDuration:60,patternEvery:5,firstPattern:1.5};
@@ -73,7 +76,7 @@ CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=4.65;CHAMPIONS.rodya.brief='검기로
 CHAMPIONS.gubo.damage=240;CHAMPIONS.rudolph.damage=57;CHAMPIONS.marton.color='#02ebf7';
 CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
 
-CHAMPIONS.honglu.q=12;
+CHAMPIONS.honglu.q=12;CHAMPIONS.don.q=8;CHAMPIONS.don.range=2.5;
 
 CHAMPIONS.marton.range=5;
 CHAMPIONS.queequeg.range=3;
@@ -129,7 +132,7 @@ for(const [index,side]of [[4,-1],[11,1]]){const wall=WALLS[index],w=1.35;mist(si
 const sideWall=WALLS[4],capWall=WALLS[5];
 const centralMist=[[sideWall.x,sideWall.y],[sideWall.x+sideWall.w,sideWall.y],[capWall.x,capWall.y+capWall.h],[capWall.x,capWall.y]];
 for(const side of [false,true])for(const bottom of [false,true]){const polygon=centralMist.map(([x,y])=>[side?RULES.width-x:x,bottom?RULES.height-y:y]),xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]),x=Math.min(...xs),y=Math.min(...ys);BUSHES.push({id:BUSHES.length,x,y,w:Math.max(...xs)-x,h:Math.max(...ys)-y,polygon});}
-for(const [i,room]of TERRAIN.slice(3).entries()){const thickness=1.35,capY=i?room.y+room.h-thickness:room.y;mist(room.x,capY,room.w,thickness);for(const x of [room.x,room.x+room.w-thickness])mist(x,i?room.y:room.y+thickness,thickness,room.h-thickness);}
+for(const [i,room]of TERRAIN.slice(3).entries()){const thickness=1.35;if(room.polygon){const p=room.polygon,norm=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);return[-dy/len,dx/len];},inner=p.map((v,j)=>{const a=norm(p[(j+p.length-1)%p.length],v),b=norm(v,p[(j+1)%p.length]),m=[a[0]+b[0],a[1]+b[1]],k=thickness/(m[0]*b[0]+m[1]*b[1]);return[v[0]+m[0]*k,v[1]+m[1]*k];});inner[2]=[p[2][0]-thickness*Math.SQRT2,p[2][1]];inner[5]=[p[5][0]+thickness*Math.SQRT2,p[5][1]];for(const j of[2,3,4]){const k=(j+1)%p.length,polygon=[p[j],p[k],inner[k],inner[j]],xs=polygon.map(v=>v[0]),ys=polygon.map(v=>v[1]);BUSHES.push({id:BUSHES.length,x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys),polygon,southSmoke:true});}continue;}const capY=room.y;mist(room.x,capY,room.w,thickness);for(const x of[room.x,room.x+room.w-thickness])mist(x,room.y+thickness,thickness,room.h-thickness);}
 // Full perimeter, including all four corners, without putting concealment inside the wall.
 {const {x,y,w,h}=NORTH_DIVIDER,t=1.2;for(const r of [{x:x-t,y:y-t,w:w+2*t,h:t},{x:x-t,y:y+h,w:w+2*t,h:t},{x:x-t,y,w:t,h},{x:x+w,y,w:t,h}])BUSHES.push({...r,id:BUSHES.length,northSmoke:true});}
 export const lanePath = (team, lane) => {
@@ -165,7 +168,7 @@ export const AUGMENTS=[
  {key:'magazine2',group:'tech',name:'카포를 위하여',text:'최대 탄창 +2'},
  {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'스킬 가속 +3% · 이동속도 +3%. 카테고리별 증강 2개 제한을 해제한다. 전체 보유 한도 6개에는 포함된다'},
  {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'적에게 상태이상·디버프를 부여하면 남은 스킬 재사용 대기시간 20% 감소 및 빈 탄창 1개 충전. 재사용 대기시간 10초'},
- {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 방어력 +7%. 어디서든 귀환이 침투로 대체된다. 1.75초 정신집중 후 전장에서 사라지고 시전 위치를 중심으로 사거리 35 안의 착지 위치를 WASD로 이동한다. 우클릭 또는 전술기 버튼을 누르면 정밀 이동하며 기본공격으로 확정하면 0.5초 후 나타난다. 이후 2초간 이동속도 +10%. 재사용 대기시간 75초. B로 취소 시 재사용 대기시간 1.5초'},
+ {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 방어력 +7%. 어디서든 귀환이 침투로 대체된다. 1.75초 정신집중 후 전장에서 사라지고 시전 위치를 중심으로 사거리 35 안의 착지 위치를 WASD로 이동한다. 우클릭 또는 전술기 버튼을 누르면 정밀 이동하며 기본공격으로 확정하면 0.5초 후 나타난다. 위치 선택시간은 10초이며 시간이 끝나면 현재 선택한 위치 주변의 유효한 지점으로 이동한다. 위치 선택 중 시야가 30% 넓어지고 전술기 버튼을 유지하면 원래 시야로 돌아온다. 이후 2초간 이동속도 +10%. 재사용 대기시간 75초. B로 취소 시 재사용 대기시간 1.5초'},
  {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:'비전투 이동속도 +15% · 전투 중 +7%'},
 ];
 

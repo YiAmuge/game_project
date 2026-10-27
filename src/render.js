@@ -1,3 +1,4 @@
+import * as Infiltration from './infiltration.js';
 import{cinematicCamera,endingCore}from'./match-presentation.js';
 import{drawMartonFairy}from'./fairy-art.js';
 import{drawBoss,bossVisualHeight}from'./boss-art.js';
@@ -43,7 +44,7 @@ export class Renderer {
     this.camera=game.training25d?this.scene25d.camera:this.flatCamera;
     if(this.scene25d)this.scene25d.canvas.hidden=!game.training25d;
   }
-  follow(game,playing){this.prepare(game);const cinematic=cinematicCamera(game);this.camera.update(this.width,this.height,cinematic?.anchor||game.player.state.infiltration?.point||renderAnchor(game.player),playing,cinematic?.view||1);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
+  follow(game,playing){this.prepare(game);const cinematic=cinematicCamera(game);const now=performance.now(),dt=Math.min(.1,Math.max(0,(now-(this.viewAt??now))/1000));this.viewAt=now;const target=Infiltration.cameraView(game,game.player);this.viewBlend=cinematic?.view??((this.viewBlend??1)+(target-(this.viewBlend??1))*(1-Math.exp(-dt/ .085)));if(Math.abs(this.viewBlend-target)<.001&&!cinematic)this.viewBlend=target;this.camera.update(this.width,this.height,cinematic?.anchor||game.player.state.infiltration?.point||renderAnchor(game.player),playing,this.viewBlend);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
   point(clientX,clientY) {const r=this.canvas.getBoundingClientRect();return this.camera.screenToWorld(clientX-r.left,clientY-r.top);}
   circle(x,y,r,fill,stroke=null,width=.07) {const c=this.ctx;c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
   line(points,color,width,dash=[]) {const c=this.ctx;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.setLineDash(dash);c.stroke();c.setLineDash([]);}
@@ -95,7 +96,7 @@ export class Renderer {
       this.circle(camp.home.x,camp.home.y,camp.radius,color+'12',color+'55',.065);c.setLineDash([.15,.22]);this.circle(camp.home.x,camp.home.y,camp.radius+.15,null,color+'44',.04);c.setLineDash([]);
       if(game.training)this.text(camp.name+' 캠프',camp.home.x,camp.home.y+camp.radius+.45,color,.29);
     }
-    for(const timer of game.campTimers()){
+    for(const timer of game.campTimers({upcoming:true})){
       const p=timer.home,ratio=Math.max(0,Math.min(1,1-timer.seconds/(timer.total||60)));this.circle(p.x,p.y,.65,'#10202ddd','#7a9ca6',.05);c.save();c.beginPath();c.arc(p.x,p.y,.52,-Math.PI/2,-Math.PI/2+Math.PI*2*ratio);c.strokeStyle='#d2d8a0';c.lineWidth=.13;c.stroke();c.restore();this.line([{x:p.x,y:p.y},{x:p.x+Math.sin(ratio*Math.PI*2)*.34,y:p.y-Math.cos(ratio*Math.PI*2)*.34}],'#dcebdc',.06);this.circle(p.x,p.y,.065,'#e5f4e5');
       if(game.training){this.text(`${Math.floor(timer.seconds/60)}:${String(timer.seconds%60).padStart(2,'0')}`,p.x,p.y+.98,'#ecd59b',.28);}
     }
@@ -214,7 +215,7 @@ export class Renderer {
     if(!this.groundPass)for(const e of game.units.filter(e=>!['core','tower'].includes(e.kind)).sort((a,b)=>a.y-b.y))this.unit(e,game);
     if(!game.training)for(const b of BUSHES)this.bush(b,true);
     for(const fx of game.effects){
-      if(fx.type==='number'){c.save();c.globalAlpha=Math.max(0,fx.life/fx.maxLife);this.text(fx.text,fx.x,fx.y-(1-fx.life/fx.maxLife),fx.color,.48);c.restore();}
+      if(fx.type==='number'&&!this.groundPass){c.save();c.globalAlpha=Math.max(0,fx.life/fx.maxLife);c.font='bold .53px Arial';c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=.085;c.strokeStyle='#05070c';c.strokeText(String(fx.text),fx.x,fx.y-2.5-(1-fx.life/fx.maxLife));c.fillStyle=fx.color;c.fillText(String(fx.text),fx.x,fx.y-2.5-(1-fx.life/fx.maxLife));c.restore();}
       if(fx.type==='slash'){
         const t=1-fx.life/fx.maxLife,side=fx.side||1,a=fx.angle+(t-.5)*fx.spread*side,r=fx.r*(.68+.22*t);
         this.slashTrails??=new MotionTrails();this.slashTrails.sample(fx,'cut',{time:game.time,key:'cut',active:true,anchor:{x:fx.x,y:fx.y-.35},inner:{x:Math.cos(a)*r*.65,y:Math.sin(a)*r*.65},outer:{x:Math.cos(a)*r,y:Math.sin(a)*r}});

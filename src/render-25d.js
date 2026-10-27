@@ -1,3 +1,4 @@
+import{drawCombatNumbers}from'./combat-text.js';
 import{endingCore}from'./match-presentation.js';
 import{bossVisualHeight}from'./boss-art.js';
 import{minionHeight}from'./minion-art.js';
@@ -195,7 +196,7 @@ export class Renderer25D {
    championEffects(r,e,game);CombatVisuals.front(r,e,game);championHud(r,e,game);CombatVisuals.meter(r,e,game);
    if(e.easterText?.until>game.time)r.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   },true);
-  c.save();c.setTransform(r.dpr,0,0,r.dpr,0,0);drawPings(c,this.camera,game);c.restore();
+  c.save();c.setTransform(r.dpr,0,0,r.dpr,0,0);drawPings(c,this.camera,game);drawCombatNumbers(c,this.camera,game);c.restore();
   if(this.contextLost){c.fillStyle='#102331dd';c.fillRect(0,r.height/2-45,r.width,90);c.fillStyle='#ffe1a6';c.font='16px sans-serif';c.textAlign='center';c.fillText('3D 화면 복구 중 · 계속 표시되면 페이지를 새로고침해 주세요.',r.width/2,r.height/2);}
  }
  configureArena(game){

@@ -52,7 +52,7 @@ export function championPresentation(g,e){
  if(e.key==='marton'&&(buff('martonDrain')||s.fairy))set(FAIRY_COLORS.main,'glow',.65);
  if(buff('donLifesteal'))set('#8e2d3e');if(buff('guboReload'))set('#6c1429','flame',.8);
  if(buff('tetherGuard')||buff('tetherArmor'))set('#3c807e');if(buff('queequegUlt'))set('#a7333c','flame',.8);
- if(buff('redEncouragement'))set('#ad485b','petal');if(buff('insight'))set('#6bb7ad','mist',.75);
+ if(buff('redEncouragement'))set('#ad485b','petal');if(buff('insight')||buff('hongluCare'))set('#6bb7ad','mist',.75);
  if(buff('rabbitFrenzy'))set('#db8a49','bolt',e.motion?.actionKind==='basic'?.95:.7);
  if(buff('mutant'))set('#5c412d');if(buff('alisaReload'))set('#b86132','flame',.75);
  if(buff('flowerStride')||buff('flowerReload'))set('#dcc66e','petal');

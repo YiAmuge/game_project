@@ -23,8 +23,8 @@ export function castPoint(e,point,spec,bounds=WORLD){
  const d=direction(e,point),len=Math.min(spec.range,distance(e,point));return {x:clamp(e.x+d.x*len,bounds.x+e.radius,bounds.x+bounds.w-e.radius),y:clamp(e.y+d.y*len,bounds.y+e.radius,bounds.y+bounds.h-e.radius)};
 }
 export function targetingPreview(r,g){
- if(!g.targeting||!g.player.alive)return;
- const e=g.player,spec=skillTargeting(g,e,g.targeting.slot),p=castPoint(e,g.input.aim,spec,g.bounds),d=direction(e,p),color=g.targeting.slot==='r'?'#e4bbff':'#8ee5ed',c=r.ctx;
+ if((!g.targeting&&!g.mobileAim)||!g.player.alive||g.mobileAim?.slot==='basic')return;
+ const slot=g.mobileAim?.slot||g.targeting.slot,e=g.player,spec=skillTargeting(g,e,slot),p=castPoint(e,g.input.aim,spec,g.bounds),d=direction(e,p),color=slot==='r'?'#e4bbff':'#8ee5ed',c=r.ctx;
  c.save();c.setLineDash([.15,.15]);if(spec.range)r.circle(e.x,e.y,spec.range,color+'08',color+'aa',.045);c.setLineDash([]);
  if(['circle','self','target'].includes(spec.kind)){r.circle(p.x,p.y,spec.radius,color+'25',color,.075);r.circle(p.x,p.y,.16,color);}
  if(spec.kind==='line'){
@@ -32,5 +32,5 @@ export function targetingPreview(r,g){
   r.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],color+'20',color);if(spec.impact)r.circle(end.x,end.y,spec.impact,null,color+'77',.06);
  }
  if(spec.kind==='cone'){const angle=Math.atan2(d.y,d.x);c.beginPath();c.moveTo(e.x,e.y);c.arc(e.x,e.y,spec.range,angle-spec.radius/2,angle+spec.radius/2);c.closePath();c.fillStyle=color+'22';c.fill();c.strokeStyle=color;c.lineWidth=.06;c.stroke();}
- r.text('좌클릭 시전 · 우클릭 / Esc 취소',e.x,e.y+2.2,color,.32);c.restore();
+ if(!g.mobileAim)r.text('좌클릭 시전 · 우클릭 / Esc 취소',e.x,e.y+2.2,color,.32);c.restore();
 }

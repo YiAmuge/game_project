@@ -49,7 +49,7 @@ test('Queequeg stats follow missing health immediately, including healing and ma
  const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),68);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),32);g.award(p,6900,0);close(g.armor(p),20);close(g.attackRange(p),3);
 });
 test('Don tactical starts cooldown on release and rejects another charge until ready',()=>{
- const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,0);assert.equal(g.cast(p,'q',p),false);run(g,1);assert.ok(Don.release(g,p,{x:45,y:7}));close(p.qCd,12);assert.equal(p.state.donCharge,undefined);assert.equal(g.cast(p,'q',p),false);run(g,12.01);assert.ok(g.cast(p,'q',p));
+ const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,0);assert.equal(g.cast(p,'q',p),false);run(g,1);assert.ok(Don.release(g,p,{x:45,y:7}));close(p.qCd,8);assert.equal(p.state.donCharge,undefined);assert.equal(g.cast(p,'q',p),false);run(g,8.01);assert.ok(g.cast(p,'q',p));
 });
 test('Don ultimate accepts an empty coordinate and applies seven-second lifesteal',()=>{
  const {g,p}=quiet('don');g.units=[p];assert.equal(skillTargeting(g,p,'r').confirm,false);assert.ok(g.cast(p,'r',{x:45,y:7}));close(p.motion.total,5);close(p.buffs.donLifesteal,7);run(g,.7);close(p.x,45);

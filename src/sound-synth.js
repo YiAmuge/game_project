@@ -51,7 +51,7 @@ export class SoundSynth{
   else if(v.cue==='charge'){const d=Math.min(2,event.duration||.5);this.noise(out,{d,v:.13,color:'brown',filter:'bandpass',freq:250,end:2200,attack:.08,hold:d*.45});this.tone(out,{freq:68,end:180,d,v:.07,type:'triangle',attack:.08,hold:d*.4});}
   else if(v.cue==='death'){this.thud(out,v.weight,.85,.7);this.noise(out,{d:.38,v:.18,color:'brown',freq:850,end:120});}
   else if(v.cue==='arrival'){this.tone(out,{freq:220,end:440,d:.34,v:.1,attack:.02});this.tone(out,{freq:330,end:660,d:.42,v:.07,delay:.03});this.noise(out,{d:.3,v:.13,color:'pink',freq:1800,end:500,attack:.04});}
-  else if(v.cue==='reload'){this.metal(out,event.phase==='lca-ready'?1150:680,.04,.13);this.noise(out,{d:.06,v:.14,filter:'bandpass',freq:1600,q:2,delay:.035});}
+  else if(v.cue==='reload'){if(event.phase==='lca-ready'){this.metal(out,1350,.035,.24);this.metal(out,820,.045,.2,.045);}else this.metal(out,680,.04,.13);this.noise(out,{d:.06,v:.14,filter:'bandpass',freq:1600,q:2,delay:.035});}
   else if(v.cue==='shop'){this.metal(out,1750,.045,.18);this.metal(out,2400,.035,.18,.07);}
   else if(v.cue==='victory'||v.cue==='defeat'){const notes=v.cue==='victory'?[392,494,587,784]:[392,349,294,196];notes.forEach((f,i)=>this.tone(out,{freq:f,d:.36,v:.12,type:'triangle',delay:i*.14,attack:.016}));}
   else if(v.cue==='ping')this.ping(out,event.ping||'attack');

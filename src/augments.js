@@ -8,7 +8,7 @@ export const unlockedItem=(e,key)=>exclusive(e,key)||unlocked(e,AUGMENTS.find(a=
 export const unlockedGroup=(e,group)=>unlocked(e,group)||AUGMENTS.some(a=>a.group===group&&exclusive(e,a.key));
 export const EXCLUSIVE_AUGMENTS={
  kim:[{key:'power15',name:'신검합일',text:'강화시술 구매 조건 없이 구매 가능. 2초마다 최대 체력의 1% 보호막을 얻으며 최대 12%까지 누적되고 5초간 유지된다. 이 보호막은 본국검술 보호막으로 취급되어 보유 중 장전 속도와 스킬 가속이 12% 증가한다.'}],
- jamila:[{key:'highRisk',name:'고위험 작전용 장비',text:'강화시술 구매 조건 없이 구매 가능. 침투 사거리 +10. 전장에서 사라진 동안 궁극기를 사용하면 선택 위치에 전투원 2명과 함께 즉시 나타나며 전투원의 지속시간이 15초가 된다.'}],
+ jamila:[{key:'highRisk',name:'고위험 작전용 장비',text:'강화시술 구매 조건 없이 구매 가능. 침투 사거리 +10, 위치 선택시간 15초. 전장에서 사라진 동안 궁극기를 사용하면 선택 위치에 전투원 2명과 함께 즉시 나타나며 전투원의 지속시간이 15초가 된다.'}],
 };
 export const exclusiveAugments=key=>EXCLUSIVE_AUGMENTS[key]||[];
 export function augmentText(e,item){if(!item)return '';const effect=exclusiveAugments(e.key).find(a=>a.key===item.key);return item.text+(effect?'\n'+(e.key==='kim'?'김삿갓':'자밀라')+' 전용: '+effect.text:'');}

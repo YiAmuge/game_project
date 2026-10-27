@@ -17,7 +17,7 @@ export function drawPingIcon(c,item,x,y,size,team=0){
   c.strokeStyle=item.type==='danger'?'#ff6774':item.type==='attack'?'#ffab72':'#90dcff';c.fillStyle=c.strokeStyle;c.lineWidth=size*.065;c.lineCap='round';
   if(item.type==='danger'){c.beginPath();c.moveTo(size*.5,size*.22);c.lineTo(size*.5,size*.55);c.stroke();c.beginPath();c.arc(size*.5,size*.73,size*.045,0,Math.PI*2);c.fill();}
   else if(item.type==='defend'){c.beginPath();c.moveTo(size*.5,size*.2);c.lineTo(size*.75,size*.32);c.lineTo(size*.69,size*.63);c.lineTo(size*.5,size*.8);c.lineTo(size*.31,size*.63);c.lineTo(size*.25,size*.32);c.closePath();c.stroke();}
-  else for(const side of [-1,1]){c.beginPath();c.moveTo(size*(.5-side*.24),size*.75);c.lineTo(size*(.5+side*.24),size*.25);c.stroke();}
+  else for(const side of [-1,1]){c.save();c.translate(size*.5,size*.5);c.rotate(side*Math.PI/4);c.fillStyle='#dbebef';c.strokeStyle='#131b25';c.lineWidth=size*.025;c.beginPath();c.moveTo(-size*.055,size*.09);c.lineTo(-size*.055,-size*.24);c.lineTo(0,-size*.36);c.lineTo(size*.055,-size*.24);c.lineTo(size*.055,size*.09);c.closePath();c.fill();c.stroke();c.fillStyle='#f1b566';c.fillRect(-size*.13,size*.07,size*.26,size*.055);c.fillStyle='#9b6951';c.fillRect(-size*.038,size*.125,size*.076,size*.15);c.fillStyle='#f1b566';c.fillRect(-size*.065,size*.255,size*.13,size*.045);c.restore();}
  }
  c.restore();c.strokeStyle=color;c.lineWidth=size*.05;frame();c.stroke();c.restore();
 }

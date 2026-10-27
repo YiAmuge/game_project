@@ -39,7 +39,7 @@ export function cast(g,e,slot,p,d){
  const s=e.state;
  if(e.key==='myo'){
   if(slot==='q'){
-   e.ammo-=1;e.attackCd=Math.max(e.attackCd,.35);e.lastAttackAt=g.time;
+   e.qCd=Math.max(e.qCd,.15);e.ammo-=1;e.attackCd=Math.max(e.attackCd,.35);e.lastAttackAt=g.time;
    for(let i=0;i<4;i++)g.schedule(e,i*.075,()=>{const a=Math.atan2(d.y,d.x)+(i-1.5)*.045;g.bullet(e,{x:Math.cos(a),y:Math.sin(a)},65,7,{slot:'q',speed:24,width:.14,onHit:t=>{if(t.kind==='champion'&&!g.debuffImmune?.(t)){t.state.rabbitMark??={};t.state.rabbitMark[e.id]=g.time+3;t.visuals.rabbitMark={until:g.time+3,theme:'myo'};}}});});
   }else{g.addBuff(e,'rabbitFrenzy',4.5,{copy:false});s.frenzyWas=true;e.ammo=Math.min(g.ammoCap(e),e.ammo+1);}return true;
  }

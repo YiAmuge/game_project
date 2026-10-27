@@ -15,7 +15,7 @@ export function rooftopImages(){
 export function roofOutline(layout){
  const b=layout.bounds;if(!layout.terrain)return[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]];
  const [,left,right,top,bottom]=TERRAIN,W=RULES.width,H=RULES.height,a=APPROACH.tipX,s=APPROACH.stopX,t=left.y,v=left.y+left.h;
- return[[a,0],[top.x,0],[top.x,top.y],[top.x+top.w,top.y],[top.x+top.w,0],[W-a,0],[W-s,t],[right.x+right.w,t],[right.x+right.w,v],[W-s,v],[W-a,H],[bottom.x+bottom.w,H],[bottom.x+bottom.w,bottom.y+bottom.h],[bottom.x,bottom.y+bottom.h],[bottom.x,H],[a,H],[s,v],[left.x,v],[left.x,t],[s,t]];
+ return[[a,0],[top.x,0],[top.x,top.y],[top.x+top.w,top.y],[top.x+top.w,0],[W-a,0],[W-s,t],[right.x+right.w,t],[right.x+right.w,v],[W-s,v],[W-a,H],[bottom.x+bottom.w,H],[bottom.x+bottom.w-bottom.bevel,bottom.y+bottom.h],[bottom.x+bottom.bevel,bottom.y+bottom.h],[bottom.x,H],[a,H],[s,v],[left.x,v],[left.x,t],[s,t]];
 }
 export function roofSegments(layout){const p=roofOutline(layout);return p.map((a,i)=>{const b=p[(i+1)%p.length],dx=b[0]-a[0],dz=b[1]-a[1];return{a,b,length:Math.hypot(dx,dz),angle:-Math.atan2(dz,dx)};});}
 export function roofPath(c,layout){c.beginPath();roofOutline(layout).forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();}
@@ -77,7 +77,7 @@ export class RooftopScenery{
   // pass permits a soft vertical fade without ever covering the roof or actors.
   // Keep the original painting's aspect ratio. Anchor the tower's smoke outlet
   // above the roof instead of compressing a tall skyline into a shallow strip.
-  const sky=new THREE.Mesh(new THREE.PlaneGeometry(width,height),skyMat);sky.name='crimson-city-backdrop';sky.rotation.x=tilt;sky.position.set(b.x+b.w/2+(.5-ROOFTOP.skyOutletX)*width,0,b.y-ROOFTOP.skyRise);sky.position.addScaledVector(up,(.42-.5)*height);sky.renderOrder=-100;this.background.add(sky);
+  const sky=new THREE.Mesh(new THREE.PlaneGeometry(width,height),skyMat);sky.name='crimson-city-backdrop';sky.rotation.x=tilt;sky.position.set(b.x+b.w/2+(.5-ROOFTOP.skyOutletX)*width,0,-ROOFTOP.skyRise);sky.position.addScaledVector(up,(.42-.5)*height);sky.renderOrder=-100;this.background.add(sky);
   return group;
  }
 }

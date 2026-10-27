@@ -16,14 +16,14 @@ test('twenty-four ordinary and two experimental champions retain finite stats an
 });
 test('new rear wings and two flank rooms are walkable and connected; void corners stay blocked',()=>{
  close(WORLD.w,87.72);close(WORLD.h,62.8);
- for(const p of [...FOUNTAINS,{x:41.6,y:-4},{x:41.6,y:50.6}]){assert.ok(!blocked(p.x,p.y,.48));assert.ok(findPath({x:40,y:7},p).length);}
+ for(const p of [...FOUNTAINS,{x:41.6,y:-4},{x:35.36,y:49}]){assert.ok(!blocked(p.x,p.y,.48));assert.ok(findPath({x:40,y:7},p).length);}
  assert.ok(blocked(-8,-4));assert.ok(blocked(70,-4));assert.ok(blocked(20,51));
  for(const team of [0,1]){assert.ok(distance(FOUNTAINS[team],CORE_POSITIONS[team])>9);const g=new Game();assert.ok(g.inSpawn({...FOUNTAINS[team],team}));assert.ok(!g.inSpawn({...CORE_POSITIONS[team],team}));}
  assert.ok(BUSHES.some(b=>b.y<0));assert.ok(BUSHES.some(b=>b.y>RULES.height));
 });
-test('three two-unit neutral camps and a four-unit needle camp match the camp rules',()=>{
- const g=new Game();assert.equal(g.units.filter(u=>u.kind==='neutral').length,14);g.time=90;g.step(.001);assert.equal(g.units.filter(u=>u.kind==='neutral').length,18);
- const sides=g.campViews().filter(c=>c.kind==='side');assert.equal(sides.length,3);assert.ok(sides.every(c=>c.units.length===2));assert.equal(g.campViews().find(c=>c.kind==='needle').units.length,4);
+test('two two-unit neutral camps and a four-unit needle camp match the camp rules',()=>{
+ const g=new Game();assert.equal(g.units.filter(u=>u.kind==='neutral').length,12);g.time=90;g.step(.001);assert.equal(g.units.filter(u=>u.kind==='neutral').length,16);
+ const sides=g.campViews().filter(c=>c.kind==='side');assert.equal(sides.length,2);assert.ok(sides.every(c=>c.units.length===2));assert.equal(g.campViews().find(c=>c.kind==='needle').units.length,4);
  for(const e of g.units.filter(u=>u.kind==='neutral')){if(['central','side'].includes(e.camp))assert.equal(e.respawnDelay,20);else if(['blessing','amplify'].includes(e.camp)){close(e.maxHp,e.camp==='amplify'?1700:1600);assert.equal(e.respawnDelay,45);}}
 });
 test('neutral and buff creeps actually respawn after twenty and forty-five seconds',()=>{

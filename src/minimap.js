@@ -7,7 +7,7 @@ export function drawMinimap(r,canvas,g){
  const c=canvas.getContext('2d'),b=g.bounds,sx=canvas.width/b.w,sy=canvas.height/b.h,ui=canvas.width/Math.max(1,canvas.getBoundingClientRect().width),expanded=canvas.id!=='minimap';
  const screen=p=>({x:(p.x-b.x)*sx,y:(p.y-b.y)*sy});
  c.clearRect(0,0,canvas.width,canvas.height);c.fillStyle='#142321';c.fillRect(0,0,canvas.width,canvas.height);
- c.save();c.scale(sx,sy);c.translate(-b.x,-b.y);c.fillStyle='#253f35';for(const room of g.training?[b]:TERRAIN)c.fillRect(room.x,room.y,room.w,room.h);
+ c.save();c.scale(sx,sy);c.translate(-b.x,-b.y);c.fillStyle='#253f35';for(const room of g.training?[b]:TERRAIN){if(room.polygon){c.beginPath();room.polygon.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();}else c.fillRect(room.x,room.y,room.w,room.h);}
  if(g.training)for(const a of Training.areas(g)){c.fillStyle=a.color+'55';c.fillRect(a.x,a.y,a.w,a.h);}
  if(!g.training){c.fillStyle='#142321';for(const points of APPROACH_CUTOUTS){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();}}c.fillStyle='#526558';for(const w of g.map?.walls||WALLS){c.save();c.translate(w.x+w.w/2,w.y+w.h/2);c.rotate(w.angle||0);c.fillRect(-w.w/2,-w.h/2,w.w,w.h);c.restore();}c.fillStyle='#3e6582';for(const w of g.training?[]:BUSHES){if(w.polygon){c.beginPath();w.polygon.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();}else c.fillRect(w.x,w.y,w.w,w.h);}
  if(!g.training)for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#aa4d4266':'#4eabb366';c.fillRect(a.x,a.y,a.w,a.h);}

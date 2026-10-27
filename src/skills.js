@@ -124,7 +124,7 @@ export function basic(g,e,p,d,options={}){
  if(Sora.basic(g,e,p,d)||V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
- case 'don':dash(g,e,d,dashLength(e,2),230,()=>{},{hitWidth:.72});return true;
+ case 'don':dash(g,e,d,dashLength(e,2.5),230,()=>{},{hitWidth:.72});return true;
  case 'ryoshu':cone(g.attackRange(e),Math.PI,220);return true;
  case 'honglu':area(g,e,e,g.attackRange(e),190);g.effects.push({type:'hongluSweep',x:e.x,y:e.y,r:g.attackRange(e),life:.4,maxLife:.4});return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
@@ -177,7 +177,7 @@ export function cast(g,e,slot,p,d,options={}){
  switch(e.key){
  case 'don':
   if(slot==='q')Don.start(g,e,p);
-  else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
+  else{e.qCd=0;g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
   return true;
  case 'ryoshu':
   if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;const len=3.8;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
@@ -243,12 +243,12 @@ export function damageBonus(g,e,t){
 export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
  Yan.afterDamage(g,e,t,actual,proc,absorbed);Sora.afterDamage(g,e,t,actual,absorbed);V12.afterDamage(g,e,t,actual,proc,kind,absorbed);
  New.afterDamage(g,e,t,actual,proc,kind);
+ if(e.kind==='champion'&&e.key==='don'&&actual+absorbed>0&&t.kind==='champion'&&t.hp>0&&e.state.villain===t.id&&(e.state.villainHits?.[t.id]||0)<=g.time){e.state.villainHits??={};e.state.villainHits[t.id]=g.time+6;g.deal(e,t,15+g.combatPower(t)*.1,{fixed:true,proc:false});g.status(t,'root',1,.75,e);}
  if(!proc)return;
  if(e.kind==='champion'){
   if(g.buff(e,'donLifesteal'))g.heal(e,e,g.buffValue(e,'donLifesteal',actual*.25),false);
   if(g.buff(e,'heathUlt'))g.heal(e,e,actual*.2,false);
   if(e.key==='gregor')gregorStack(g,e);
-  if(e.key==='don'&&t.kind==='champion'&&t.hp>0&&e.state.villain===t.id&&(e.state.villainHits?.[t.id]||0)<=g.time){e.state.villainHits??={};e.state.villainHits[t.id]=g.time+6;g.deal(e,t,60,{fixed:true,proc:false});g.status(t,'root',1,.75,e);}
  }
  if(t.kind==='champion'){
   if(t.key==='gregor'&&(t.state.receivedStackAt||0)<=g.time){t.state.receivedStackAt=g.time+.3;gregorStack(g,t);}

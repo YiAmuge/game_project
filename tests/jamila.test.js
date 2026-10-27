@@ -19,9 +19,9 @@ test('Jamila is a bottom marksman/protector with the specified stats, ammo and c
  const {g,p}=arena();assert.deepEqual(CHAMPIONS.jamila.roles,['저격','보호']);assert.equal(CHAMPIONS.jamila.recommendedPosition,'bottom');
  near(p.maxHp,3400);near(g.armor(p),40);near(g.speed(p),3.45);near(g.attackInterval(p),.15);near(g.reloadInterval(p),1.5);near(g.ammoCap(p),16);near(g.bonusStats(p).reload,0);
 });
-test('one rifle round uses range 6.6 and only sixty percent of power correction',()=>{
+test('one rifle round uses range 6.6 and 55 percent of power correction',()=>{
  const {g,p}=arena(),e=enemy(g);assert.ok(g.attack(p,e));assert.equal(g.projectiles.length,1);near(g.projectiles[0].remaining,6.6);assert.equal(p.ammo,15);run(g,.2);
- const normal=damageFormula(1,1,1)*g.powerScale(p);near(100000-e.hp,65*(1+(normal-1)*.6));near(g.shield(p),p.maxHp*.01);
+ const normal=damageFormula(1,1,1)*g.powerScale(p);near(100000-e.hp,50*(1+(normal-1)*.55)*1.15);near(g.shield(p),p.maxHp*.01);
 });
 test('one-point reload upgrades gain 1.5 times their percentage and extra magazines are quadrupled',()=>{
  const {g,p}=arena();g.buy(p,'reload');near(g.reloadInterval(p),1.5/1.09);p.augments=['magazine2'];near(g.ammoCap(p),24);
@@ -41,14 +41,12 @@ test('shooting a remaining round during reload discards progress and restarts th
  const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,3.8);assert.ok(Jamila.reloadFraction(p)>.4);assert.ok(g.attack(p,{x:47,y:25}));
  assert.equal(p.ammo,14);assert.equal(Jamila.reloading(p),false);near(p.reloadProgress,0);run(g,2.99);assert.equal(Jamila.reloading(p),false);
 });
-test('Udjat shield stacks to twenty percent, refreshes for five seconds, and adds true damage above fifteen percent',()=>{
- const {g,p}=arena(),e=enemy(g);for(let n=0;n<14;n++)g.deal(p,e,10,{damageKind:'basic'});near(g.shield(p),p.maxHp*.14);
- const before=e.hp;g.deal(p,e,10,{damageKind:'basic'});near(before-e.hp,10*(1+(damageFormula(1,1,1)-1)*.6)*1.15);near(g.shield(p),p.maxHp*.15);
- for(let n=0;n<20;n++)g.deal(p,e,10,{damageKind:'basic'});near(g.shield(p),p.maxHp*.2);run(g,5.01);near(g.shield(p),0);
+test('Udjat shield caps at 7.5 percent and its armor-mitigated bonus applies on every hit',()=>{
+ const {g,p}=arena(),e=enemy(g);const before=e.hp;g.deal(p,e,10,{damageKind:'basic'});near(before-e.hp,10*(1+(damageFormula(1,1,1)-1)*.55)*1.15);near(g.shield(p),p.maxHp*.01);for(let n=0;n<20;n++)g.deal(p,e,10,{damageKind:'basic'});near(g.shield(p),p.maxHp*.075);run(g,5.01);near(g.shield(p),0);
 });
 test('tactical sweeps a forward semicircle after its dash and retreats four units once',()=>{
  const {g,p}=arena(),front=enemy(g,46),behind=enemy(g,42,28.8);assert.ok(g.cast(p,'q',{x:50,y:25}));assert.equal(p.state.jamilaQ.phase,'dash');run(g,.19);
- assert.equal(p.state.jamilaQ.phase,'slash');near(100000-front.hp,damageFormula(225,1,1));near(behind.hp,100000);near(g.stat(front,'weak'),.07);near(g.stat(front,'armorWeak'),.07);
+ assert.equal(p.state.jamilaQ.phase,'slash');near(100000-front.hp,damageFormula(225,1,1)*1.15);near(behind.hp,100000);near(g.stat(front,'weak'),.07);near(g.stat(front,'armorWeak'),.07);
  run(g,.55);near(p.x,39.5,.02);assert.equal(p.state.jamilaQ,undefined);assert.equal(g.effects.filter(e=>e.type==='slash'&&e.theme==='jamila').length<=1,true);
 });
 test('an enemy collision triggers an early slash, while terrain only stops the dash and causes retreat',()=>{
@@ -64,9 +62,9 @@ test('ultimate snapshots two targetable soldiers, keeps cooldown running and exp
  near(g.speed(p),baseSpeed*1.1);near(g.reloadMultiplier(p),1.1);const hp=units[0].maxHp,armor=g.armor(units[0]);p.upgrades.health=3;p.upgrades.power=3;p.armor=90;g.refreshEquipment(p);near(units[0].maxHp,hp);near(g.armor(units[0]),armor);
  run(g,1);near(p.rCd,74);g.kill(units[0],p);near(Jamila.squadBonus(g,p),.05);run(g,9.02);assert.equal(Jamila.army(g,p).length,0);near(p.rCd,64.975,.02);
 });
-test('soldiers receive half of the passive shield and never trigger the extra true damage themselves',()=>{
+test('soldiers receive half of the passive shield and never trigger the extra damage themselves',()=>{
  const {g,p}=arena(),e=enemy(g);g.cast(p,'r',p);const [u]=Jamila.army(g,p);g.deal(p,e,10,{damageKind:'basic'});near(g.shield(u),p.maxHp*.005);
- g.addShield(p,p.maxHp*.2,'test',5);const before=e.hp,shield=g.shield(p);g.deal(u,e,15,{damageKind:'basic'});near(before-e.hp,15*(1+(u.snapshot.damagePower-1)*.6));near(g.shield(p),shield);
+ g.addShield(p,p.maxHp*.2,'test',5);const before=e.hp,shield=g.shield(p);g.deal(u,e,15,{damageKind:'basic'});near(before-e.hp,15*(1+(u.snapshot.damagePower-1)*.55));near(g.shield(p),shield);
 });
 test('soldiers prefer the commanded enemy over a nearer enemy and inherit no extra-magazine bonuses',()=>{
  const {g,p}=arena(),a=enemy(g,44,26),b=enemy(g,42,24);p.augments=['magazine2'];g.cast(p,'r',p);g.deal(p,a,1,{damageKind:'basic'});run(g,.01);

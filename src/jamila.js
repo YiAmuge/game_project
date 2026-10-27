@@ -3,7 +3,7 @@ import {distance,direction} from './geometry.js';
 import {canOccupy} from './collision.js';
 import * as Infiltration from './infiltration.js';
 
-export const JAMILA={ammo:16,range:6.6,damage:65,trooperDamage:15,interval:.15,idle:3,reload:1.5,powerRatio:.6,shield:.01,shieldCap:.2,shieldTime:5,threshold:.15,trueDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
+export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,reload:1.5,powerRatio:.55,shield:.01,shieldCap:.075,shieldTime:5,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
 export const isTrooper=e=>Boolean(e.lcaTrooper);
 export const army=(g,e)=>g.units.filter(t=>t.lcaTrooper&&t.owner===e.id&&t.alive&&t.until>g.time);
 export const commander=(g,e)=>e.lcaTrooper?g.units.find(t=>t.id===e.owner):e;
@@ -37,7 +37,7 @@ export function afterDamage(g,e,t,actual,proc,damageKind,absorbed){
  const id=`udjat-${e.id}`,old=e.shields.find(s=>s.source===id&&s.until>g.time)?.value||0,increment=e.maxHp*JAMILA.shield;
  g.addShield(e,Math.min(e.maxHp*JAMILA.shieldCap,old+increment),id,JAMILA.shieldTime);
  for(const u of army(g,e)){const shared=`udjat-shared-${e.id}`,before=u.shields.find(s=>s.source===shared&&s.until>g.time)?.value||0;g.addShield(u,before+increment*.5,shared,JAMILA.shieldTime);}
- if(g.shield(e)+1e-8>=e.maxHp*JAMILA.threshold&&t.alive&&t.hp>0)g.deal(e,t,(actual+absorbed)*JAMILA.trueDamage,{fixed:true,proc:false,campBonus:false,damageKind});
+ if(t.alive&&t.hp>0)g.deal(e,t,(actual+absorbed)*JAMILA.bonusDamage,{rawPower:true,proc:false,campBonus:false,damageKind});
 }
 export function validate(g,e,slot){return !e.state.jamilaQ&&(slot!=='q'||!g.stat(e,'root')&&!g.stat(e,'captured')&&!g.stat(e,'netCapture'));}
 function endQ(e){delete e.state.jamilaQ;}

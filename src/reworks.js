@@ -66,7 +66,7 @@ export function honglu(g,e,slot,p,d){
  }else{
   const z=g.zones.find(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time);
   if(z)z.moving=!z.moving;
-  else {const zone={kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+4,nextTick:g.time+.5,tickEvery:.5,cleanse:true,cleansed:new Set()};g.zones.push(zone);g.emitSound?.('waterfall',e,{slot:'r',x:zone.x,y:zone.y,duration:4,phase:'waterfall-start'});waterfallPulse(g,zone,true);}
+  else {const zone={kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+3,nextTick:g.time+.5,tickEvery:.5,cleanse:true,cleansed:new Set()};g.zones.push(zone);g.emitSound?.('waterfall',e,{slot:'r',x:zone.x,y:zone.y,duration:3,phase:'waterfall-start'});waterfallPulse(g,zone,true);}
  }
  return true;
 }

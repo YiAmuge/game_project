@@ -48,7 +48,7 @@ test('category limits allow two combat and two survival augments',()=>{
  assert.ok(A.AUGMENTS.every(a=>!['armorHealth','emergencyHeal','health15','reloadRetaliation'].includes(a.key)));
 });
 test('range augment adds flat range, and dash distance independently gains one',()=>{
- for(const key of ['faust','don','rodya','myo','starbuck','gregor']){const {g,p,t}=arena(key);if(key==='gregor')g.addBuff(p,'mutant',10);const range=g.attackRange(p);p.augments=['range7'];close(g.attackRange(p)-range,S.dashBasic(g,p)?1:2.5);if(S.dashBasic(g,p)){g.attack(p,t);assert.ok(p.motion);const baseline={don:2,rodya:2.4,myo:2.4,starbuck:2.875,gregor:2.5}[key];close(p.motion.total,baseline+1);}}
+ for(const key of ['faust','don','rodya','myo','starbuck','gregor']){const {g,p,t}=arena(key);if(key==='gregor')g.addBuff(p,'mutant',10);const range=g.attackRange(p);p.augments=['range7'];close(g.attackRange(p)-range,S.dashBasic(g,p)?1:2.5);if(S.dashBasic(g,p)){g.attack(p,t);assert.ok(p.motion);const baseline={don:2.5,rodya:2.4,myo:2.4,starbuck:2.875,gregor:2.5}[key];close(p.motion.total,baseline+1);}}
 });
 test('resentment changes power, armor and reload in real time with current health',()=>{
  const {g,p}=arena();const power=g.powerScale(p),reload=g.reloadInterval(p);p.augments=['resentment'];p.hp=p.maxHp*.51;close(A.resentment(p),.2);close(g.powerScale(p),power*1.2);close(g.armor(p),44);close(g.reloadInterval(p),reload/1.2);p.hp=1;close(A.resentment(p),.4);p.hp=p.maxHp;close(g.powerScale(p),power);

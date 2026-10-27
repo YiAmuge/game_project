@@ -32,11 +32,11 @@ test('Diagonal walls and their footing stay outside both fountain rectangles; ev
 });
 
 test('Central mist uses four straight polygon strips outside the camp and concealment follows their visible boundaries',()=>{
- const g=new Game(),strips=BUSHES.filter(b=>b.polygon&&!b.towerSmoke);assert.equal(strips.length,4);
+ const g=new Game(),strips=BUSHES.filter(b=>b.polygon&&!b.towerSmoke&&!b.southSmoke);assert.equal(strips.length,4);
  for(const b of strips){const center={x:b.polygon.reduce((n,p)=>n+p[0],0)/4,y:b.polygon.reduce((n,p)=>n+p[1],0)/4};assert.ok(regionContains(b,center));assert.equal(g.bushAt(center)?.id,b.id);assert.ok([{x:b.x+.01,y:b.y+.01},{x:b.x+b.w-.01,y:b.y+.01},{x:b.x+.01,y:b.y+b.h-.01},{x:b.x+b.w-.01,y:b.y+b.h-.01}].some(p=>!regionContains(b,p)));for(const [x,y]of b.polygon)assert.ok(distance({x,y},MAP_CENTER)>4.7);}
 });
 
 test('Central concealment completely joins the wall end faces without gaps or protruding endpoints',()=>{
- const side=WALLS[4],cap=WALLS[5],strip=BUSHES.find(b=>b.polygon&&!b.towerSmoke);assert.deepEqual(strip.polygon,[[side.x,side.y],[side.x+side.w,side.y],[cap.x,cap.y+cap.h],[cap.x,cap.y]]);
+ const side=WALLS[4],cap=WALLS[5],strip=BUSHES.find(b=>b.polygon&&!b.towerSmoke&&!b.southSmoke);assert.deepEqual(strip.polygon,[[side.x,side.y],[side.x+side.w,side.y],[cap.x,cap.y+cap.h],[cap.x,cap.y]]);
  for(const [a,b]of [[1,8],[3,10],[5,12],[6,13]]){const left=WALLS[a],right=WALLS[b],patch=BUSHES.find(p=>!p.polygon&&Math.abs(p.x-left.x-left.w)<1e-7&&Math.abs(p.y-left.y)<1e-7);assert.ok(patch);near(patch.x+patch.w,right.x);near(patch.h,left.h);}
 });

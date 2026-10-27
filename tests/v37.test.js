@@ -76,7 +76,7 @@ test('Meursault next basic roots only on its second hit and only for that attack
  const {g,p}=arena('meursault'),t=target(g);g.cast(p,'q',p);g.attack(p,t);close(g.stat(t,'root'),0);run(g,.1);close(g.stat(t,'root'),1);close(t.status.root.until-g.time,.8);run(g,.82);g.attack(p,t);run(g,.1);close(g.stat(t,'root'),0);
 });
 for(const progress of [0,.5,1])test(`Don release at ${progress} interpolates one rectangle and refills only a fully charged hit`,()=>{
- const {g,p}=arena('don'),t=target(g,42.8);p.ammo=0;g.cast(p,'q',t);g.time=progress*1.5;const shape=Don.chargeShape(g,p,t);close(shape.range,3+3.5*progress);close(shape.damage,120+330*progress);assert.ok(Don.release(g,p,t));close(100000-t.hp,damage(g,p,shape.damage));close(p.qCd,12);assert.equal(p.ammo,progress===1?2:0);close(g.stat(t,'stun'),progress===1?1:0);assert.equal(p.state.donCharge,undefined);assert.equal(Don.release(g,p,t),false);
+ const {g,p}=arena('don'),t=target(g,42.8);p.ammo=0;g.cast(p,'q',t);g.time=progress*1.2;const shape=Don.chargeShape(g,p,t);close(shape.range,3+3.5*progress);close(shape.damage,120+330*progress);assert.ok(Don.release(g,p,t));close(100000-t.hp,damage(g,p,shape.damage));close(p.qCd,progress===1?7.2:8);assert.equal(p.ammo,progress===1?2:0);close(g.stat(t,'stun'),progress===1?1:0);assert.equal(p.state.donCharge,undefined);assert.equal(Don.release(g,p,t),false);
 });
 test('Don full-charge hitbox includes body edges, refunds once across multiple enemies and misses do not refund',()=>{
  const {g,p}=arena('don'),edge=target(g,46,8.5),outside=target(g,46,8.6);target(g,44);p.ammo=0;g.cast(p,'q',{x:47,y:7});g.time=1.5;Don.release(g,p,{x:47,y:7});assert.ok(edge.hp<100000);close(outside.hp,100000);assert.equal(p.ammo,2);
@@ -85,7 +85,7 @@ test('Don full-charge hitbox includes body edges, refunds once across multiple e
 });
 test('Don charging defense and movement modifiers end on release or interruption and maximum charge auto-fires once',()=>{
  const {g,p}=arena('don'),t=target(g,45);const speed=g.speed(p),armor=g.armor(p);g.cast(p,'q',t);close((100+g.armor(p))/(100+armor),1.5);close(g.speed(p)/speed,.9);assert.equal(g.attack(p,t),false);assert.equal(g.cast(p,'q',t),false);assert.equal(skillTargeting(g,p,'q').confirm,false);run(g,1.51);assert.equal(p.state.donCharge,undefined);close(g.armor(p),armor);close(g.speed(p),speed);const hp=t.hp;run(g,.2);close(t.hp,hp);
- const b=arena('don');b.g.cast(b.p,'q',t);b.g.status(b.p,'silence',1,1);run(b.g,.01);assert.equal(b.p.state.donCharge,undefined);assert.ok(b.p.qCd>11.9);assert.equal(b.p.state.donThrust,undefined);
+ const b=arena('don');b.g.cast(b.p,'q',t);b.g.status(b.p,'silence',1,1);run(b.g,.01);assert.ok(b.p.state.donCharge);assert.equal(b.g.stat(b.p,'silence'),0);Don.cancel(b.g,b.p);assert.ok(b.p.qCd>7.9);assert.equal(b.p.state.donThrust,undefined);
 });
 test('Honglu healing emits three expanding water ripples from the actual healing center',()=>{
  const {g,p}=arena('honglu');p.hp-=1000;g.cast(p,'q',p);run(g,1.21);const f=g.effects.find(x=>x.type==='hongluRipple');assert.ok(f);close(f.x,p.x);close(f.y,p.y);close(f.r,5);assert.equal(healingRipples(f,.3).length,3);assert.ok(healingRipples(f,.4)[0].r>healingRipples(f,.3)[0].r);assert.equal(healingRipples(f,.81).length,0);

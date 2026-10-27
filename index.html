@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11191b">
   <title>도시 경계</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23c7ac72' d='M32 2 60 18v28L32 62 4 46V18zm0 9L12 23v18l20 12 20-12V23z'/%3E%3C/svg%3E">
@@ -12,7 +12,7 @@
   <header class="masthead">
     <a id="home" class="brand" href="#" aria-label="도시 경계 처음으로"><span class="brand-mark">◈</span><span>도시 경계<small>CITY BORDER</small></span></a>
     <nav><span class="nav-active">아레나</span><button id="archive-open">도감</button><button id="help-open">플레이 가이드 ↗</button></nav>
-    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.63.0</b></span>
+    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.64.0</b></span>
   </header>
   <main>
     <section class="match-bar" aria-label="경기 상태">
@@ -21,11 +21,11 @@
       <div class="team red"><span id="red-towers" class="tower-count">▰ ▰</span><strong id="red-score">0</strong><div><small>SECTOR 02</small><b>적군 진영</b></div><span class="team-sigil">◇</span></div>
     <div id="enemy-portraits" class="match-portraits"></div></section>
     <section class="arena-shell">
-      <div class="field-top"><span id="field-title"><i class="live-dot"></i> 제13구역 <em>/</em> 경계 전장</span><div><span id="boss-time">쌓인 것 · 05:00</span><button id="sound-toggle" aria-label="사운드 켜기 또는 끄기" aria-pressed="true">♪ 사운드</button><button id="fullscreen" title="F12 전체 화면">⛶ 전체 화면</button><button id="field-help" title="플레이 가이드">?</button><button id="speed" title="시뮬레이션 속도 변경">1×</button><button id="pause" title="Esc 일시정지" disabled>Ⅱ</button></div></div>
+      <div class="field-top"><span id="field-title" hidden><i class="live-dot"></i> 제13구역 <em>/</em> 경계 전장</span><div><span id="boss-time">쌓인 것 · 05:00</span><button id="sound-toggle" aria-label="사운드 켜기 또는 끄기" aria-pressed="true">♪ 사운드</button><button id="fullscreen" title="F12 전체 화면">⛶ 전체 화면</button><button id="field-help" title="플레이 가이드">?</button><button id="speed" title="시뮬레이션 속도 변경">1×</button><button id="pause" title="Esc 일시정지" disabled>Ⅱ</button></div></div>
       <canvas id="arena" aria-label="플레이어 중심 4대4 전장. WASD 이동, 마우스 조준, 좌클릭 공격, 우클릭 전술기, Space 궁극기, F12 전체 화면." tabindex="0"></canvas>
       <canvas id="minimap" width="224" height="126" aria-label="팀 위치와 현재 카메라 범위" class="minimap hidden"></canvas>
       <div class="field-legend"><span class="blue-dot">아군</span><span class="red-dot">적군</span><span class="gold-dot">중립</span><span class="purple-dot">보스</span><span class="map-note">푸른연기 · 원거리 은닉 / 근접 탐지</span></div>
-      <div id="ping-controls" class="ping-controls" aria-label="팀 신호"><button data-ping="attack" title="Q / 휠클릭 짧게: 공격! · 길게 누르고 드래그: 대상 선택"><kbd>Q</kbd> 공격</button><button data-ping="defend" title="E / 마우스4 짧게: 도움! · 길게 누르고 드래그: 대상 선택"><kbd>E</kbd> 도움</button><button data-ping="danger" title="R / 마우스5 짧게: 후퇴! · 길게 누르고 드래그: 대상 선택"><kbd>R</kbd> 후퇴</button></div>
+      <div id="ping-controls" class="ping-controls" aria-label="팀 신호"><button data-ping="attack" title="Q / 휠클릭 짧게: 공격! · 길게 누르고 드래그: 대상 선택"><kbd>Q</kbd> 공격</button><button data-ping="defend" title="E / 마우스5 짧게: 도움! · 길게 누르고 드래그: 대상 선택"><kbd>E</kbd> 도움</button><button data-ping="danger" title="R / 마우스4 짧게: 후퇴! · 길게 누르고 드래그: 대상 선택"><kbd>R</kbd> 후퇴</button></div>
       <div id="infiltration-help" class="infiltration-help hidden" role="status"></div>
       <div id="event-feed" class="event-feed" aria-live="polite"></div>
       <section id="battle-announcement" class="battle-announcement hidden" role="status" aria-live="polite" aria-atomic="true"><span id="announcement-kicker"></span><strong id="announcement-title"></strong><p id="announcement-detail"></p></section>
@@ -39,12 +39,13 @@
       <section id="result" class="result hidden" aria-live="polite"><span class="eyebrow">OPERATION COMPLETE</span><h1 id="result-title"></h1><p id="result-reason"></p><div id="result-stats"></div><button id="restart" class="primary">다시 출격 준비 <span>→</span></button></section>
     </section>
     <section class="hud" aria-label="플레이어 상태와 기술">
-      <div class="player-card"><div id="portrait" class="portrait"><canvas id="hud-face" width="80" height="80"></canvas><small id="level">LV.1</small></div><div class="player-vitals"><div><b id="player-name">파우스트</b><span id="kda">0 / 0</span></div><div class="xp-track"><i id="xp-fill"></i></div><button id="recall-btn" class="recall-btn" title="B · 3초 정신집중 후 부활소로 귀환"><kbd>B</kbd><span>귀환</span></button><output id="jamila-ammo" class="fps-ammo hidden" aria-label="현재 탄창 | 최대 탄창"></output><span id="champion-live-status" class="sr-only"></span></div></div>
+      <div class="player-card"><div id="portrait" class="portrait"><canvas id="hud-face" width="80" height="80"></canvas><small id="level">LV.1</small></div><div class="player-vitals"><div><b id="player-name">파우스트</b><span id="kda">0 / 0</span></div><div class="xp-track"><i id="xp-fill"></i></div><output id="jamila-ammo" class="fps-ammo hidden" aria-label="현재 탄창 | 최대 탄창"></output><span id="champion-live-status" class="sr-only"></span></div></div>
       <div class="abilities"><div id="passive-slot" class="ability passive" tabindex="0" role="status" aria-label="챔피언 패시브"><kbd>PASSIVE</kbd><span></span><small>패시브</small><b class="cooldown"></b></div><button id="basic-btn" class="ability"><kbd>LMB</kbd><span>대상 분석</span><small>수동 조준</small></button><button id="q-btn" class="ability"><kbd>RMB</kbd><span>탐구</span><small>전술기</small><b class="cooldown"></b></button><button id="r-btn" class="ability ultimate"><kbd>SPACE</kbd><span>표상방출기</span><small>궁극기</small><b class="cooldown"></b></button></div>
+      <button id="recall-btn" class="recall-btn" title="B · 3초 정신집중 후 부활소로 귀환"><kbd>B</kbd><span>귀환</span></button>
       <button id="shop-toggle" class="shop-toggle"><span>◈ <b id="gold">250</b></span><small>부활소 상점 <kbd>G</kbd></small></button>
     </section>
     <aside id="buff-tray" class="buff-tray hidden" aria-label="최근 획득한 버프"><span>보유 버프 · 최근 획득순</span><div id="buff-list"></div></aside>
-    <section class="underbar"><span><kbd>W A S D</kbd> 이동 <i>·</i> 좌클릭 공격 <i>·</i> 우클릭 전술기 <i>·</i> <kbd>SPACE</kbd> 궁극기 <i>·</i> <kbd>Q / E / R</kbd> 신호 <i>·</i> <kbd>TAB</kbd> 지도·점수 <i>·</i> <kbd>G</kbd> 상점 <i>·</i> <kbd>B</kbd> 귀환 <i>·</i> <kbd>F12</kbd> 전체 화면</span><span id="field-objective">포탑을 파괴하고 적 본진을 공략하세요.</span></section>
+    <section class="underbar" hidden><span><kbd>W A S D</kbd> 이동 <i>·</i> 좌클릭 공격 <i>·</i> 우클릭 전술기 <i>·</i> <kbd>SPACE</kbd> 궁극기 <i>·</i> <kbd>Q / E / R</kbd> 신호 <i>·</i> <kbd>TAB</kbd> 지도·점수 <i>·</i> <kbd>G</kbd> 상점 <i>·</i> <kbd>B</kbd> 귀환 <i>·</i> <kbd>F12</kbd> 전체 화면</span><span id="field-objective">포탑을 파괴하고 적 본진을 공략하세요.</span></section>
     <button id="score-toggle" class="score-toggle hidden">확대 지도 · 점수 <kbd>TAB</kbd></button>
     <aside id="shop" class="shop hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
       <div class="shop-heading"><div><span class="eyebrow">SUPPLY STATION</span><h2 id="shop-title">부활소 보급</h2></div><button id="shop-close" aria-label="상점 닫기">×</button></div><p id="shop-status"></p>

@@ -1,19 +1,19 @@
 import {MAP_CENTER} from './data.js';
 import {distance,direction} from './geometry.js';
 
-export const SEWING={spawnAt:270,health:4000,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:6,windup:.25,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
+export const SEWING={spawnAt:210,health:4000,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:6,windup:.25,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
 export const NEEDLE={spawnAt:90,health:350,armor:0,damage:55,interval:.65,respawn:Infinity,xp:45,gold:35};
 export const NORTH_CAMP={x:MAP_CENTER.x,y:-3.8};
 export const isSewing=e=>e.kind==='neutral'&&['needle','sewingKing'].includes(e.camp);
 export function makeNeedle(g,x,y,index=0,{summoned=false}={}){
  const e=g.makeNeutral(x,y,'needle');e.needleColor=index%2?'red':'green';e.campId=summoned?'sewing-king':'needle-north';e.campCenter=g.training?{x,y}:{...NORTH_CAMP};e.summonedNeedle=summoned;if(summoned){e.respawnDelay=Infinity;e.invulnerableUntil=g.time+1.5;e.hostile=true;summonedAI(g,e,0);}return e;
 }
-export function makeCamp(g){if(g.needleCampSpawned)return;g.needleCampSpawned=true;for(const [i,[dx,dy]]of [[-.85,-.6],[.85,-.6],[-.85,.6],[.85,.6]].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y+dy,i);}
+export function makeCamp(g){if(g.needleCampSpawned)return;g.needleCampSpawned=true;for(const [i,[dx,dy]]of [[-2,-1.35],[2,-1.35],[-2,1.35],[2,1.35]].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y+dy,i);}
 export function spawnKing(g){
  if(g.sewingKingSpawned)return;g.sewingKingSpawned=true;
  for(const n of g.units.filter(e=>e.camp==='needle'&&!e.summonedNeedle)){n.alive=false;n.hp=0;n.retired=true;n.respawnAt=Infinity;cancel(n);}
  const e=g.makeNeutral(NORTH_CAMP.x,NORTH_CAMP.y,'sewingKing');e.campId='sewing-king';e.campCenter={...NORTH_CAMP};
- g.log('04:30 · 바느질의 왕 등장','boss');g.announce('boss-spawn','바느질의 왕 등장','상단 캠프의 바늘이를 처형하고 등장했습니다.');g.effects.push({type:'ring',...e.home,r:3.4,color:'#c7ba72',life:1.5,maxLife:1.5});
+ g.log('03:30 · 바느질의 왕 등장','boss');g.announce('boss-spawn','바느질의 왕 등장','상단 캠프의 바늘이를 처형하고 등장했습니다.');g.effects.push({type:'ring',...e.home,r:3.4,color:'#c7ba72',life:1.5,maxLife:1.5});
 }
 export function engage(g,e){if(!e.hostile)e.needleReady=g.time+SEWING.needleEvery;e.hostile=true;}
 export function cancel(e){delete e.needleCast;delete e.channelUntil;}
