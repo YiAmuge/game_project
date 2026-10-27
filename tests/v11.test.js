@@ -8,10 +8,10 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*60);i++)g.step(1/60);};
 function quiet(key='meursault'){
  const g=new Game(key,'top',{seed:17});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};
- const p=g.player,t=g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:43,y:7,maxHp:100000,hp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
+ const p=g.player,t=g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{armor:0,x:43,y:7,maxHp:100000,hp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 function ally(g,key='meursault',x=42,y=9){const a=g.makeChampion(key,0,9);Object.assign(a,{x,y});return a;}
-function enemy(g,x=46,y=7){const t=g.makeChampion('faust',1,10+g.nextId);Object.assign(t,{x,y,maxHp:100000,hp:100000});return t;}
+function enemy(g,x=46,y=7){const t=g.makeChampion('faust',1,10+g.nextId);Object.assign(t,{armor:0,x,y,maxHp:100000,hp:100000});return t;}
 const minion=(g,team=0)=>g.entity({kind:'minion',team,x:42,y:8,maxHp:1000,radius:.322});
 for(const kind of ['tower','core','minion','neutral'])test(`${kind} last-hit credits the last enemy champion at exactly ten seconds`,()=>{
  const {g,p,t}=quiet();g.deal(p,t,100,{fixed:true});g.time=10;const cause=g.entity({kind,team:kind==='neutral'?2:0,x:44,y:7,maxHp:1000});g.deal(cause,t,1e7,{fixed:true});assert.equal(p.kills,1);assert.equal(g.kills[0],1);assert.equal(t.lastDeath.killerId,p.id);assert.equal(t.lastDeath.finisher,kind);assert.equal(t.lastDeath.execution,false);
@@ -38,7 +38,7 @@ test('delayed Hohenheim death freezes the ten-second decision at the lethal hit'
  const {g,p,t}=quiet('hohenheim');g.deal(t,p,1,{fixed:true});g.time=9.9;g.deal(minion(g,1),p,1e7,{fixed:true});assert.ok(p.state.posthumous);run(g,2.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.lastDeath.killerId,t.id);
 });
 test('nested Nelly mark damage cannot bypass Hohenheim delayed death or award a second takedown',()=>{
- const {g,p}=quiet('nelly'),t=g.makeChampion('hohenheim',1,9);g.units=[p,t];Object.assign(t,{x:41.4,y:7,hp:300});t.state.nellyMarks={[p.id]:{active:true,ready:Infinity,hold:0,until:7}};g.attack(p,t);assert.ok(t.alive&&t.state.posthumous);assert.equal(p.kills,0);assert.equal(g.firstBlood,null);run(g,2.6);assert.equal(t.alive,false);assert.equal(p.kills,1);assert.equal(t.deaths,1);assert.equal(g.firstBlood.victimId,t.id);close(p.gold,250+160+g.time);
+ const {g,p}=quiet('nelly'),t=g.makeChampion('hohenheim',1,9);g.units=[p,t];Object.assign(t,{armor:0,x:41.4,y:7,hp:300});t.state.nellyMarks={[p.id]:{active:true,ready:Infinity,hold:0,until:7}};g.attack(p,t);assert.ok(t.alive&&t.state.posthumous);assert.equal(p.kills,0);assert.equal(g.firstBlood,null);run(g,2.6);assert.equal(t.alive,false);assert.equal(p.kills,1);assert.equal(t.deaths,1);assert.equal(g.firstBlood.victimId,t.id);close(p.gold,250+160+g.time);
 });
 test('first blood adds a third of each participant currency exactly once and leaves XP unchanged',()=>{
  const {g,p,t}=quiet(),a=ally(g);g.deal(a,t,1,{fixed:true});g.deal(p,t,1e7,{fixed:true});close(p.gold,250+160);close(a.gold,250+40*4/3);close(p.xp,120);close(a.xp,70);assert.deepEqual(g.firstBlood.assistIds,[a.id]);assert.ok(g.currentAnnouncement().first);
@@ -79,7 +79,7 @@ test('Ahab gains a third magazine, guard movement and defense, and a 6.5-range u
  const {g,p}=quiet('ahab');assert.equal(p.ammo,3);assert.equal(g.ammoCap(p),3);const speed=g.speed(p),armor=g.armor(p);g.cast(p,'q',p);close(g.speed(p)/speed,1.12);close((100+g.armor(p))/(100+armor),1.12);close(skillTargeting(g,p,'r').range,6.5);p.qCd=0;g.cast(p,'q',p);close(g.speed(p),speed);close(g.armor(p),armor);g.cast(p,'r',{x:60,y:7});close(p.x,46.5);close(p.y,7);
 });
 test('Queequeg link lasts indefinitely and boosts both defense efficiencies while retaining target flat armor',()=>{
- const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);close(g.armor(p),10);close(g.armor(a),43);assert.equal(p.state.tether.until,Infinity);g.time=100;g.step(.01);assert.equal(p.state.tether.until,Infinity);assert.ok(g.buff(p,'tetherGuard'));assert.ok(g.buff(a,'tetherArmor'));assert.equal(a.state.tetherResistance,4);
+ const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);close(g.armor(p),65);close(g.armor(a),65);assert.equal(p.state.tether.until,Infinity);g.time=100;g.step(.01);assert.equal(p.state.tether.until,Infinity);assert.ok(g.buff(p,'tetherGuard'));assert.ok(g.buff(a,'tetherArmor'));assert.equal(a.state.tetherResistance,4);
 });
 for(const cc of ['stun','root','silence','disarm','slow','taunt','captured'])test(`Queequeg takes fifty percent while linked ally has ${cc}, then returns to thirty`,()=>{
  const {g,p,t}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);g.status(a,cc,cc==='slow'?.2:1,1,t);let hp=a.hp,owner=p.hp;g.deal(t,a,100,{fixed:true});close(hp-a.hp,50);close(owner-p.hp,50);delete a.status[cc];hp=a.hp;owner=p.hp;g.deal(t,a,100,{fixed:true});close(hp-a.hp,70);close(owner-p.hp,30);

@@ -15,13 +15,13 @@ function arena(key='faust'){
  const g=new Game(key,'top',{seed:250});g.units=[g.player];g.wave=100;g.map={bounds:{x:0,y:0,w:80,h:50},walls:[]};g.bounds=g.map.bounds;
  for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};
  const p=g.player;Object.assign(p,{x:20,y:20,lastAttackAt:100,lastDamageAt:100});
- const t=g.makeChampion('faust',1,10);Object.assign(t,{x:23,y:20,hp:100000,maxHp:100000,lastAttackAt:100,lastDamageAt:100});
+ const t=g.makeChampion('faust',1,10);Object.assign(t,{armor:0,x:23,y:20,hp:100000,maxHp:100000,lastAttackAt:100,lastDamageAt:100});
  return {g,p,t};
 }
 test('all matches and training entries use 2.5D; each training session owns its geometry',()=>{
  const m=new Game(),a=new Game('faust','top',{mode:'training'}),b=new Game('faust','top',{mode:'training25d'});
  assert.ok(m.training25d&&!m.training);assert.ok(a.training25d&&b.training25d);assert.deepEqual(a.map,b.map);assert.notEqual(a.map.walls[0],b.map.walls[0]);
- a.time=1300;a.step(.1);assert.equal(a.winner,null);assert.equal(a.units.filter(e=>e.kind==='neutral').length,7);
+ a.time=1300;a.step(.1);assert.equal(a.winner,null);assert.equal(a.units.filter(e=>e.kind==='neutral').length,12);
 });
 test('champion role metadata, including Meursault protection/disruption, drives recommendations',()=>{
  assert.deepEqual(CHAMPIONS.meursault.roles,['보호','방해']);assert.equal(CHAMPIONS.meursault.recommendedPosition,'top');
@@ -51,7 +51,7 @@ test('range augment adds flat range, and dash distance independently gains one',
  for(const key of ['faust','don','rodya','myo','starbuck','gregor']){const {g,p,t}=arena(key);if(key==='gregor')g.addBuff(p,'mutant',10);const range=g.attackRange(p);p.augments=['range7'];close(g.attackRange(p)-range,S.dashBasic(g,p)?1:2.5);if(S.dashBasic(g,p)){g.attack(p,t);assert.ok(p.motion);const baseline={don:2,rodya:2.4,myo:2.4,starbuck:2.875,gregor:2.5}[key];close(p.motion.total,baseline+1);}}
 });
 test('resentment changes power, armor and reload in real time with current health',()=>{
- const {g,p}=arena();const power=g.powerScale(p),reload=g.reloadInterval(p);p.augments=['resentment'];p.hp=p.maxHp*.51;close(A.resentment(p),.2);close(g.powerScale(p),power*1.2);close(g.armor(p),20);close(g.reloadInterval(p),reload/1.2);p.hp=1;close(A.resentment(p),.4);p.hp=p.maxHp;close(g.powerScale(p),power);
+ const {g,p}=arena();const power=g.powerScale(p),reload=g.reloadInterval(p);p.augments=['resentment'];p.hp=p.maxHp*.51;close(A.resentment(p),.2);close(g.powerScale(p),power*1.2);close(g.armor(p),44);close(g.reloadInterval(p),reload/1.2);p.hp=1;close(A.resentment(p),.4);p.hp=p.maxHp;close(g.powerScale(p),power);
 });
 test('K ampule stops a fatal hit, purges crowd control and returns on its cooldown',()=>{
  const {g,p,t}=arena();p.augments=['kAmpule'];g.status(p,'root',1,10,t);g.status(p,'captured',1,10,t);p.hp=100;g.deal(t,p,1000,{fixed:true});assert.ok(p.alive);close(p.hp,p.maxHp*.5);close(g.stat(p,'root'),0);close(g.stat(p,'captured'),0);close(p.state.ampuleReady,60);g.status(p,'stun',1,2,t);close(g.stat(p,'stun'),0);g.time=60;p.hp=1;g.deal(t,p,100,{fixed:true});assert.ok(p.alive);close(p.state.ampuleReady,120);

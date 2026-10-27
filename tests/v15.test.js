@@ -8,7 +8,7 @@ import { carried } from '../src/attachments.js';
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
 function quiet(key){const g=new Game(key,'top',{seed:53});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];return {g,p};}
-function target(g,x=42,y=7,team=1){const t=g.makeChampion('faust',team,9);Object.assign(t,{x,y,lastAttackAt:100,lastDamageAt:100});return t;}
+function target(g,x=42,y=7,team=1){const t=g.makeChampion('faust',team,9);Object.assign(t,{armor:0,x,y,lastAttackAt:100,lastDamageAt:100});return t;}
 test('normal Sora gets one ammo per consumed directive; EGO consumes the same marks without refilling',()=>{
  const {g,p}=quiet('sora'),t=target(g);p.ammo=0;Sora.mark(g,p,t,'ultimate');g.deal(p,t,t.maxHp*.2,{fixed:true});close(p.ammo,1);
  p.state.unlock=5;g.cast(p,'r',p);p.ammo=0;Sora.mark(g,p,t,'ultimate');g.deal(p,t,t.maxHp*.2,{fixed:true});close(p.ammo,0);

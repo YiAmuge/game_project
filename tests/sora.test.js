@@ -8,7 +8,7 @@ import * as Sora from '../src/sora.js';
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*60);i++)g.step(1/60);};
 function quiet(){const g=new Game('sora','jungle',{seed:42});for(const fn of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[fn]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,lastCombat:0,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];return {g,p};}
-function enemy(g,x=42,y=7,key='faust'){const t=g.makeChampion(key,1,9);Object.assign(t,{x,y,maxHp:10000,hp:10000,lastDamageAt:100,lastAttackAt:100});return t;}
+function enemy(g,x=42,y=7,key='faust'){const t=g.makeChampion(key,1,9);Object.assign(t,{armor:0,x,y,maxHp:10000,hp:10000,lastDamageAt:100,lastAttackAt:100});return t;}
 function creep(g,x=42,y=7,camp='side'){const t=g.makeNeutral(x,y,camp);t.maxHp=t.hp=1000;return t;}
 function transform(g,p){p.state.unlock=5;assert.ok(g.cast(p,'r',p));}
 test('Sora is an ordinary assassin with requested grades and default two-ammo reload rules',()=>{

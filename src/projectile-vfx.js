@@ -17,7 +17,7 @@ export function beamAppearance(key){
 }
 export const whipVisualInterval=(g,e)=>g.attackInterval(e)*1.2;
 export function projectileAsset(p){
- const key=p.theme||p.source?.key;if(key==='yi'&&p.damageKind!=='skill'||p.slot==='r'&&['ishmael','rodya'].includes(key))return false;
+ const key=p.theme||p.source?.key;if(p.swordWave||key==='yi'&&p.damageKind!=='skill'||p.slot==='r'&&['ishmael','rodya'].includes(key))return false;
  return {yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[key];
 }
 export class ProjectileVFX {

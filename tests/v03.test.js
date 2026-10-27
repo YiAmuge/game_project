@@ -104,8 +104,8 @@ test('Gregor transforms at 12 hits and restores max health after five seconds',(
 test('structures cannot be displaced by Gregor or Ezra area attacks',()=>{
  for(const key of ['gregor','ezra']){const {g,p}=quiet(key);const tower=g.entity({kind:'tower',team:1,x:31,y:5.5,maxHp:7600,range:8.5});const x=tower.x,y=tower.y;g.cast(p,'q',tower,key==='ezra'?{direction:'left'}:{});if(key==='ezra'){p.attackCd=0;g.attack(p,tower);}run(g,.5);close(tower.x,x);close(tower.y,y);}
 });
-test('direct and assist KDA and Rodion reset trigger once per champion takedown',()=>{
- const {g,p,t}=quiet('rodya');const ally=g.makeChampion('faust',0,4,'bottom');ally.x=30;ally.y=5.5;g.deal(ally,t,1,{fixed:true});p.qCd=10;p.rCd=20;g.deal(p,t,100000,{fixed:true});assert.equal(p.kills,1);assert.equal(ally.assists,1);assert.equal(p.qCd,6);assert.equal(p.rCd,16);g.deal(p,t,100000,{fixed:true});assert.equal(ally.assists,1);
+test('direct and assist KDA trigger once per champion takedown',()=>{
+ const {g,p,t}=quiet('rodya');const ally=g.makeChampion('faust',0,4,'bottom');ally.x=30;ally.y=5.5;g.deal(ally,t,1,{fixed:true});p.qCd=10;p.rCd=20;g.deal(p,t,100000,{fixed:true});assert.equal(p.kills,1);assert.equal(ally.assists,1);assert.equal(p.qCd,10);assert.equal(p.rCd,20);g.deal(p,t,100000,{fixed:true});assert.equal(ally.assists,1);
 });
 test('buff display order tracks last acquired and refreshed buffs',()=>{
  const {g,p}=quiet();g.addBuff(p,'blessing',25);g.addBuff(p,'amplify',45);g.addBuff(p,'explore',4);g.addBuff(p,'blessing',25);assert.deepEqual(g.activeBuffs(p).slice(0,3).map(b=>b.key),['blessing','explore','amplify']);

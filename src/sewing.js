@@ -6,7 +6,7 @@ export const NEEDLE={spawnAt:90,health:350,armor:0,damage:55,interval:.65,respaw
 export const NORTH_CAMP={x:MAP_CENTER.x,y:-3.8};
 export const isSewing=e=>e.kind==='neutral'&&['needle','sewingKing'].includes(e.camp);
 export function makeNeedle(g,x,y,index=0,{summoned=false}={}){
- const e=g.makeNeutral(x,y,'needle');e.needleColor=index%2?'red':'green';e.campId=summoned?'sewing-king':'needle-north';e.campCenter={...NORTH_CAMP};e.summonedNeedle=summoned;if(summoned)e.respawnDelay=Infinity;return e;
+ const e=g.makeNeutral(x,y,'needle');e.needleColor=index%2?'red':'green';e.campId=summoned?'sewing-king':'needle-north';e.campCenter=g.training?{x,y}:{...NORTH_CAMP};e.summonedNeedle=summoned;if(summoned)e.respawnDelay=Infinity;return e;
 }
 export function makeCamp(g){if(g.needleCampSpawned)return;g.needleCampSpawned=true;for(const [i,[dx,dy]]of [[-.85,-.6],[.85,-.6],[-.85,.6],[.85,.6]].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y+dy,i);}
 export function spawnKing(g){

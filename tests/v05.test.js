@@ -12,7 +12,7 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*30);i++)g.step(1/30);};
 function quiet(key='faust'){
  const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[fn]=()=>{};
- const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];return {g,p,t};
+ const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{armor:0,x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];return {g,p,t};
 }
 function ally(g,key='yi'){const a=g.makeChampion(key,0,5,'support');a.x=41;a.y=7;return a;}
 
@@ -46,13 +46,13 @@ test('creeps never initiate attacks before being hurt and deaggro after 1.85 sec
  const {g,p}=quiet();const n=g.makeNeutral(40,7,'side');p.x=41;const hp=p.hp;g.aiNeutral=Game.prototype.aiNeutral;run(g,1);close(p.hp,hp);assert.ok(!n.hostile);g.deal(p,n,1,{fixed:true});assert.ok(n.hostile);run(g,.1);assert.ok(p.hp<hp);n.x=45;g.time+=.1;g.aiNeutral(n,.01);assert.ok(n.hostile);g.time+=1.8;g.aiNeutral(n,.01);assert.ok(!n.returning);g.time+=.06;g.aiNeutral(n,.01);assert.ok(n.returning);assert.equal(n.hostile,false);assert.equal(n.aggro,null);
 });
 test('Don tactical allows slower movement while charging and releases in the current aim direction',()=>{
- const {g,p,t}=quiet('don');t.x=43;g.input.aim={x:45,y:7};const speed=g.speed(p);g.cast(p,'q',t);assert.ok(!p.motion);close(g.speed(p),speed*.9);close(g.armor(p),50);const before=p.x;g.input.y=1;run(g,.3);close(p.x,before);assert.ok(p.y>7);assert.ok(p.state.donCharge);assert.equal(g.attack(p,t),false);g.input.y=0;assert.ok(Don.release(g,p,t));assert.equal(p.state.donCharge,undefined);close(g.armor(p),0);close(g.speed(p),speed);
+ const {g,p,t}=quiet('don');t.x=43;g.input.aim={x:45,y:7};const speed=g.speed(p);g.cast(p,'q',t);assert.ok(!p.motion);close(g.speed(p),speed*.9);close(g.armor(p),110);const before=p.x;g.input.y=1;run(g,.3);close(p.x,before);assert.ok(p.y>7);assert.ok(p.state.donCharge);assert.equal(g.attack(p,t),false);g.input.y=0;assert.ok(Don.release(g,p,t));assert.equal(p.state.donCharge,undefined);close(g.armor(p),40);close(g.speed(p),speed);
 });
-test('Rodion now travels before basic damage and tactical cooldown is twelve seconds',()=>{
- const {g,p,t}=quiet('rodya');t.x=42;g.attack(p,t);close(t.hp,100000);assert.ok(p.motion);run(g,.3);assert.ok(t.hp<100000);assert.equal(CHAMPIONS.rodya.q,12);
+test('Rodion sword wave travels before damage while its caster remains in place',()=>{
+ const {g,p,t}=quiet('rodya');t.x=42;g.attack(p,t);close(t.hp,100000);assert.equal(p.motion,undefined);close(p.x,40);run(g,.3);assert.ok(t.hp<100000);assert.equal(CHAMPIONS.rodya.q,12);
 });
 test('Heath ultimate radius preview matches damage, Ishmael targets the first champion at range 16 and Outis uses a contact dash',()=>{
- const a=quiet('heathcliff');a.t.x=47;a.g.cast(a.p,'r',a.p);run(a.g,.6);assert.ok(a.t.hp<100000);close(skillTargeting(a.g,a.p,'r').radius,7.5);
+ const a=quiet('heathcliff');a.t.x=45;a.g.cast(a.p,'r',a.p);run(a.g,.6);assert.ok(a.t.hp<100000);close(skillTargeting(a.g,a.p,'r').radius,5.5);
  const {g,p,t}=quiet('ishmael');t.x=46;const t2=g.makeChampion('yi',1,5);t2.x=50;t2.y=7;g.cast(p,'r',t);assert.equal(g.projectiles.length,0);run(g,.25);assert.ok(g.projectiles[0].remaining<=16);run(g,.6);assert.ok(t.hp<100000);close(t2.hp,t2.maxHp);
  const o=quiet('outis');o.g.cast(o.p,'r',o.t);assert.ok(o.p.motion);close(o.p.motion.total,4.5);run(o.g,.8);assert.ok(o.t.hp<100000);assert.equal(o.g.projectiles.length,0);
 });

@@ -14,7 +14,7 @@ function arena(key='faust'){
  for(const f of ['aiChampion','aiMinion','aiNeutral'])g[f]=()=>{};
  Object.assign(p,{x:20,y:20,lastAttackAt:100,lastDamageAt:100});return {g,p};
 }
-function hero(g,x,y,team=1,key='faust'){const e=g.makeChampion(key,team,10+g.units.length);Object.assign(e,{x,y,hp:100000,maxHp:100000,lastAttackAt:100,lastDamageAt:100});return e;}
+function hero(g,x,y,team=1,key='faust'){const e=g.makeChampion(key,team,10+g.units.length);Object.assign(e,{armor:0,x,y,hp:100000,maxHp:100000,lastAttackAt:100,lastDamageAt:100});return e;}
 function tower(g){return g.entity({kind:'tower',team:0,x:20,y:20,maxHp:5168,armor:120,range:8.5,damage:280,interval:1.05});}
 function minion(g,x,y,flags={}){return g.entity({kind:'minion',team:1,x,y,maxHp:100000,radius:.3,...flags});}
 function run(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.step(1/120);}

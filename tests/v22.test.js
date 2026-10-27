@@ -10,7 +10,7 @@ import * as Yan from '../src/yan.js';
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
 function quiet(key){const g=new Game(key,'top',{seed:22});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.wave=100;g.minionQueue=[];g.map={bounds:WORLD,walls:[]};return {g,p};}
-function target(g,x=44,y=7,team=1,key='faust'){const t=g.makeChampion(key,team,9);Object.assign(t,{x,y,maxHp:100000,hp:100000,level:10,lastAttackAt:100,lastDamageAt:100});return t;}
+function target(g,x=44,y=7,team=1,key='faust'){const t=g.makeChampion(key,team,9);Object.assign(t,{armor:0,x,y,maxHp:100000,hp:100000,level:10,lastAttackAt:100,lastDamageAt:100});return t;}
 const damage=(g,e,n)=>damageFormula(n,RUNTIME_CHAMPIONS[e.key].power,1)*g.powerScale(e);
 test('Ishmael winds up for .235 seconds, aims a fixed direction, then fires one speed-28 range-16 harpoon',()=>{
  const {g,p}=quiet('ishmael');g.cast(p,'r',{x:60,y:7});assert.equal(g.projectiles.length,0);close(p.channelUntil,.235);close(g.speed(p),0);run(g,.225);assert.equal(g.projectiles.length,0);run(g,.017);const b=g.projectiles[0];assert.ok(b);close(b.speed,28);close(b.remaining+distance(b.origin,b),16);close(b.dx,1);close(skillTargeting(g,p,'r').range,16);

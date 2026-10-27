@@ -11,7 +11,7 @@ const close=(a,b,t=1e-6)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.ceil(s*60);i++)g.step(1/60);};
 function quiet(key='faust'){
  const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[fn]=()=>{};
- const p=g.player,t=g.champions(1).find(e=>e.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
+ const p=g.player,t=g.champions(1).find(e=>e.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{armor:0,x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 function ally(g,key='yi'){const e=g.makeChampion(key,0,5);Object.assign(e,{x:42,y:9});return e;}
 test('27 ordinary champions include all four additions; XP accrues at three per second (Faust nine) even while dead',()=>{
@@ -41,7 +41,7 @@ test('Hohenheim death state lasts 2.5 seconds, cannot move, heal or ult, and onl
  const {g,p,t}=quiet('hohenheim');g.deal(t,p,100000,{fixed:true});assert.ok(p.alive&&p.state.posthumous);close(p.hp,0);p.ammo=0;const x=p.x;g.input.x=1;assert.ok(g.cast(p,'q',t));assert.equal(g.cast(p,'r',t),false);g.heal(null,p,1000,false);close(p.hp,0);run(g,1);close(p.x,x);assert.ok(g.attack(p,t));assert.equal(t.kills,0);run(g,1.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.state.posthumous,undefined);close(p.ccImmuneUntil,0);
 });
 test('Hohenheim beam strikes three times and second and later targets each take exactly twenty percent less',()=>{
- const {g,p,t}=quiet('hohenheim');t.x=43;const b=g.makeChampion('faust',1,6),c=g.makeChampion('faust',1,7);Object.assign(b,{x:45,y:7,hp:100000,maxHp:100000});Object.assign(c,{x:47,y:7,hp:100000,maxHp:100000});g.attack(p,t);run(g,1.5);Hohenheim.release(g,p,t);run(g,.3);close((100000-b.hp)/(100000-t.hp),.8);close(100000-b.hp,100000-c.hp);
+ const {g,p,t}=quiet('hohenheim');t.x=43;const b=g.makeChampion('faust',1,6),c=g.makeChampion('faust',1,7);Object.assign(b,{armor:0,x:45,y:7,hp:100000,maxHp:100000});Object.assign(c,{armor:0,x:47,y:7,hp:100000,maxHp:100000});g.attack(p,t);run(g,1.5);Hohenheim.release(g,p,t);run(g,.3);close((100000-b.hp)/(100000-t.hp),.8);close(100000-b.hp,100000-c.hp);
 });
 test('Marton lifesteals, drains without healing theft and leaves a destructible 500HP bait that enemies attack',()=>{
  const {g,p,t}=quiet('marton');p.hp-=1000;p.lastAttackAt=0;const hp=p.hp;g.attack(p,t);assert.ok(p.hp>hp);assert.ok(g.cast(p,'q',p));run(g,.5);assert.ok(g.buff(p,'martonDrain'));assert.equal(g.stat(t,'healingWeak'),0);g.kill(p,t);const bait=g.units.find(e=>e.kind==='bait');assert.equal(bait.hp,500);t.attackCd=0;t.ammo=3;run(g,1.2);assert.ok(bait.hp<500||!bait.alive);assert.ok(t.state.tauntedBy===bait.id||!bait.alive);
@@ -50,7 +50,7 @@ test('Queequeg spends one of five ammo on six attacks and refreshes capture ever
  const {g,p,t}=quiet('queequeg');g.attack(p,t);assert.equal(p.ammo,4);run(g,.5);assert.equal(p.state.captureHits[t.id],6);assert.ok(g.stat(t,'captured'));t.qCd=0;t.key='sinclair';assert.equal(g.cast(t,'q',p),false);const old=t.x;g.moveToward(t,{x:t.x+1,y:t.y},.1);assert.ok(t.x>old);p.attackCd=0;g.attack(p,t);run(g,.5);assert.equal(p.state.captureHits[t.id],12);assert.ok(t.status.captured.until>g.time+.8);
 });
 test('Queequeg damage stacks update with healing; tether transfers thirty percent and breaks after sustained separation',()=>{
- const {g,p,t}=quiet('queequeg'),a=ally(g);const hp=p.hp;g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.heal(null,p,1000,false);assert.equal(p.state.endurance,0);g.cast(p,'q',a);close(g.armor(a),43);const ahp=a.hp,php=p.hp;g.deal(t,a,100,{fixed:true});close(ahp-a.hp,70);close(php-p.hp,30);a.x=53;run(g,1.7);assert.equal(p.state.tether,undefined);close(g.armor(a),0);assert.ok(p.hp<=hp);
+ const {g,p,t}=quiet('queequeg'),a=ally(g);const hp=p.hp;g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.heal(null,p,1000,false);assert.equal(p.state.endurance,0);g.cast(p,'q',a);close(g.armor(a),54);const ahp=a.hp,php=p.hp;g.deal(t,a,100,{fixed:true});close(ahp-a.hp,70);close(php-p.hp,30);a.x=53;run(g,1.7);assert.equal(p.state.tether,undefined);close(g.armor(a),10);assert.ok(p.hp<=hp);
 });
 test('Queequeg ultimate cannot fall below one HP, including fixed damage, then heals missing health',()=>{
  const {g,p,t}=quiet('queequeg');g.cast(p,'r',p);g.deal(t,p,999999,{fixed:true});close(p.hp,1);p.lastDamageAt=g.time+4;run(g,4.05);assert.ok(p.alive&&p.hp>1);assert.equal(g.buff(p,'queequegUlt'),false);g.deal(t,p,999999,{fixed:true});assert.equal(p.alive,false);

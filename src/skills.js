@@ -39,7 +39,7 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
  }
  return hits;
 }
-export const dashBasic=(g,e)=>['don','rodya','myo','starbuck'].includes(e.key)||e.key==='gregor'&&g.buff(e,'mutant')||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0));
+export const dashBasic=(g,e)=>['don','myo','starbuck'].includes(e.key)||e.key==='gregor'&&g.buff(e,'mutant')||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0));
 export const dashLength=(e,n)=>n+(has(e,'range7')?1:0);
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set();
@@ -120,11 +120,11 @@ export function basic(g,e,p,d,options={}){
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
  case 'don':dash(g,e,d,dashLength(e,2),230,()=>{},{hitWidth:.72});return true;
- case 'ryoshu':cone(g.attackRange(e),1.7,220);return true;
+ case 'ryoshu':cone(g.attackRange(e),Math.PI,220);return true;
  case 'honglu':area(g,e,e,g.attackRange(e),190);g.addBuff(e,'hongluStride',1);g.effects.push({type:'hongluSweep',x:e.x,y:e.y,r:g.attackRange(e),life:.4,maxLife:.4});return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
  case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive&&!(t.invulnerableUntil>g.time)&&!(t.ccImmuneUntil>g.time)&&!g.debuffImmune(t)&&!(g.training&&t===g.player&&g.practice.invincible)){t.state.ishmaelWeak??={};const prior=t.state.ishmaelWeak[e.id],old=prior?.until>g.time?prior.stacks:0;t.state.ishmaelWeak[e.id]={stacks:Math.min(2,old+1),until:g.time+1.5};if(old<2)g.triggerDisrupt(e,t);}});return true;
- case 'rodya':{const hit=t=>{if((t.rodyaSlowUntil||0)<=g.time){g.status(t,'slow',.18,2,e);g.status(t,'weak',.1,2,e);t.rodyaSlowUntil=g.time+2.5;}};dash(g,e,d,dashLength(e,2.4),220,hit,{onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8*1.2,220,hit,{exclude:hitIds})});return true;}
+ case 'rodya':g.bullet(e,d,220,g.attackRange(e),{swordWave:true,pierce:Infinity,speed:13,width:.75,onHit:t=>{g.status(t,'slow',.03,2.2,e);g.status(t,'weak',.035,2.2,e);}});return true;
  case 'outis':g.bullet(e,d,215,g.attackRange(e),{width:.16});return true;
  case 'gregor':if(g.buff(e,'mutant'))dash(g,e,d,dashLength(e,2.5),210,()=>{},{hitWidth:1.08,onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8*1.3*1.2,210,()=>{},{exclude:hitIds})});else cone(g.attackRange(e),1.8,210);return true;
  case 'gubo':{
@@ -173,7 +173,7 @@ export function cast(g,e,slot,p,d,options={}){
   else{g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
   return true;
  case 'ryoshu':
-  if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;const len=4;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
+  if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;const len=3.8;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
   else{
    const len=Math.min(7,distance(e,p)),rawDest={x:clamp(e.x+d.x*len,g.bounds.x+.6,g.bounds.x+g.bounds.w-.6),y:clamp(e.y+d.y*len,g.bounds.y+.6,g.bounds.y+g.bounds.h-.6)};
    const dest=trapPoint(g,e,rawDest);if(!g.blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
@@ -182,7 +182,7 @@ export function cast(g,e,slot,p,d,options={}){
   }return true;
  case 'honglu':return Reworks.honglu(g,e,slot,p,d);
  case 'heathcliff':
-  if(slot==='q'){if(state.chargeAt!==undefined)return false;state.chargeAt=g.time;state.chargeAim={...p};e.qCd=0;}else{state.heathExtensions=0;g.addBuff(e,'heathUlt',5);state.auraTick=g.time+.5;}return true;
+  if(slot==='q'){if(state.chargeAt!==undefined)return false;state.chargeAt=g.time;state.chargeAim={...p};e.qCd=0;}else{state.heathExtensions=0;g.addBuff(e,'heathUlt',5);state.auraTick=g.time+.3;}return true;
  case 'ishmael':
   if(slot==='q'){if(g.buff(e,'ishmaelShield'))shockIshmael(g,e);else {g.addShield(e,e.maxHp*.12,`wreck-${e.id}`,2.5);g.addBuff(e,'ishmaelShield',2.5);state.shockAt=g.time+2.5;}}
   else{
@@ -227,7 +227,7 @@ export function damageBonus(g,e,t){
  let b=1;
  if(e.key==='outis'&&distance(e,t)<=2.5)b*=1.25;
  if(e.key==='sora'&&e.actionKind==='basic'&&!Sora.ego(g,e)&&Sora.marked(g,e,t))b*=1.1;
- if(e.key==='heathcliff'&&t.hp/t.maxHp>e.hp/e.maxHp)b*=1.18;
+ if(e.key==='heathcliff'&&t.hp/t.maxHp>e.hp/e.maxHp)b*=1.15;
  if(g.buff(e,'mutant'))b*=1.2;
  if(g.buff(e,'power'))b*=1+g.buffValue(e,'power',.12);
 
@@ -257,7 +257,7 @@ export function takedown(g,e,victim,direct){
  if(!e||e.kind!=='champion')return;
  if(e.key==='starbuck'&&victim.kind==='neutral'&&direct)g.heal(e,e,150,false);
  V06.takedown(g,e,victim,direct);
- if(e.key==='rodya'&&victim.kind==='champion'){e.qCd=Math.max(0,e.qCd-4);e.rCd=Math.max(0,e.rCd-4);e.ammo=Math.min(ammoCap(g,e),e.ammo+1);}
+
  if(e.key==='gubo'&&victim.kind==='champion')e.qCd=0;
  if(e.key==='heathcliff'&&victim.kind==='champion'&&g.buff(e,'heathUlt')&&(e.state.heathExtensions||0)<4){e.state.heathExtensions++;e.buffs.heathUlt+=1+(direct?.5:0);}
 }
@@ -293,7 +293,7 @@ export function tick(g,e,dt){
  if(e.key==='don'&&(s.villainAt||0)<=g.time){s.villainAt=g.time+6;const enemies=g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=7);enemies.sort((a,b)=>(b.lastChampionKill||-99)-(a.lastChampionKill||-99)||distance(e,a)-distance(e,b));s.villain=enemies[0]?.id;}
  if(e.key==='heathcliff'){
 
-  if(g.buff(e,'heathUlt')&&s.auraTick<=g.time){s.auraTick+=.5;area(g,e,e,7.5,80);}
+  while(g.buff(e,'heathUlt')&&s.auraTick<=g.time+1e-8){s.auraTick+=.3;area(g,e,e,5.5,65);}
  }
  if(e.key==='ishmael'&&s.shockAt>0&&s.shockAt<=g.time)shockIshmael(g,e);
  if(e.key==='gregor'){

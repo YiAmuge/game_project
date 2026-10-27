@@ -9,9 +9,9 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*60);i++)g.step(1/60);};
 const training=(key='faust')=>new Game(key,'bottom',{mode:'training',seed:54});
 
-test('training has one player, five champion dummies, requested seven creeps and two lane towers',()=>{
+test('training has one player, five champion dummies, twelve creeps and two lane towers',()=>{
  const g=training();assert.ok(g.training);assert.equal(g.champions().length,6);assert.equal(g.champions().filter(c=>!c.player&&!c.trainingDummy).length,0);
- assert.deepEqual(g.units.filter(e=>e.kind==='neutral').map(e=>e.camp).sort(),['central','central','central','central','amplify','blessing','boss'].sort());assert.equal(g.units.filter(e=>e.kind==='tower').length,2);assert.equal(g.units.filter(e=>e.kind==='core').length,0);
+ assert.deepEqual(g.units.filter(e=>e.kind==='neutral').map(e=>e.camp).sort(),['central','central','central','central','amplify','blessing','boss','needle','needle','needle','needle','sewingKing'].sort());assert.equal(g.units.filter(e=>e.kind==='tower').length,2);assert.equal(g.units.filter(e=>e.kind==='core').length,0);
  assert.ok(T.AREAS[0].y>T.AREAS[2].y&&T.AREAS[2].y>T.AREAS[4].y);
 });
 test('training terrain is independent of the match walls and keeps its rectangular boundary',()=>{
@@ -38,9 +38,9 @@ test('moving dummy routes around its obstacle, remains inside its patrol region,
  for(let i=0;i<1200;i++){g.step(1/60);side=Math.max(side,Math.abs(t.x-62));maxY=Math.max(maxY,t.y);assert.equal(g.blocked(t.x,t.y,t.radius),false);assert.ok(t.y>=17.5&&t.y<=28.5);}
  assert.ok(side>1.4&&maxY>27.5);g.kill(t,g.player);run(g,5.02);assert.ok(t.alive);close(t.maxHp,1000);
 });
-test('finite dummy takedowns count as champion kills and activate takedown passives',()=>{
+test('finite dummy takedowns count as champion kills and retain kill credit',()=>{
  const g=training('rodya'),p=g.player,t=g.champions(1).find(e=>!e.trainingDummy.infinite);p.qCd=10;p.rCd=20;g.deal(p,t,10000,{fixed:true});
- assert.equal(p.kills,1);close(p.qCd,6);close(p.rCd,16);close(t.respawnAt-g.time,5);assert.equal(g.corpses.length,0);
+ assert.equal(p.kills,1);close(p.qCd,10);close(p.rCd,20);close(t.respawnAt-g.time,5);assert.equal(g.corpses.length,0);
 });
 test('destroying either lane tower freezes its minions, towers and waves until reset',()=>{
  const g=training();run(g,4.5);assert.ok(g.units.some(e=>e.kind==='minion'));const tower=g.towers(1)[0];g.kill(tower,g.player);assert.ok(g.practice.lineStopped);

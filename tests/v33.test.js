@@ -15,7 +15,7 @@ function arena(key='faust'){
  Object.assign(p,{x:20,y:20,lastAttackAt:100,lastDamageAt:100});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};
  return {g,p};
 }
-function hero(g,x=23,y=20,team=1,key='faust'){const t=g.makeChampion(key,team,10+g.units.length);Object.assign(t,{x,y,maxHp:100000,hp:100000,lastAttackAt:100,lastDamageAt:100});return t;}
+function hero(g,x=23,y=20,team=1,key='faust'){const t=g.makeChampion(key,team,10+g.units.length);Object.assign(t,{armor:0,x,y,maxHp:100000,hp:100000,lastAttackAt:100,lastDamageAt:100});return t;}
 function run(g,s){for(let i=0;i<Math.round(s*120);i++)g.step(1/120);}
 function upgrade(p){p.upgrades={power:3,health:3,speed:1,reload:1,haste:1};p.gold=10000;}
 test('fountains cover all four inclusive corners of each rear room and exclude neighboring terrain',()=>{
@@ -53,7 +53,7 @@ test('antimatter adds health and ticks on half-second boundaries only inside ran
 });
 test('written orders expire individually, grant armor and convert ten percent before armor',()=>{
  const {g,p}=arena(),t=hero(g);p.augments=['writtenOrder'];t.armor=100;
- for(let i=0;i<5;i++){g.time=10+i;g.deal(p,t,1);}close(g.armor(p),25);const hit=g.deal(p,t,100,{proc:false});close(hit,damageFormula(100,4,1)*(.9/2+.1));g.time=15;close(g.armor(p),20);g.time=19;close(g.armor(p),0);
+ for(let i=0;i<5;i++){g.time=10+i;g.deal(p,t,1);}close(g.armor(p),50);const hit=g.deal(p,t,100,{proc:false});close(hit,damageFormula(100,4,1)*(.9/2+.1));g.time=15;close(g.armor(p),44);g.time=19;close(g.armor(p),20);
 });
 test('trauma negates one CC, restores one magazine, retains its sixteen-second cooldown through death and covers knockback',()=>{
  const {g,p}=arena(),t=hero(g);p.augments=['traumaGuard'];p.ammo=0;g.status(p,'armorDown',10,1,t);assert.equal(p.state.traumaReady,undefined);g.status(p,'stun',1,2,t);close(g.stat(p,'stun'),0);close(p.ammo,1);close(p.state.traumaReady,26);g.status(p,'root',1,2,t);close(g.stat(p,'root'),1);g.kill(p,t);close(p.state.traumaReady,26);

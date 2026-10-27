@@ -11,7 +11,7 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*60);i++)g.step(1/60);};
 function quiet(key='starbuck'){
  const g=new Game(key,'top',{seed:27});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};
- const p=g.player,t=g.makeChampion('faust',1,9);Object.assign(p,{x:40,y:7});Object.assign(t,{x:42,y:7,hp:10000,maxHp:10000});g.units=[p,t];return {g,p,t};
+ const p=g.player,t=g.makeChampion('faust',1,9);Object.assign(p,{x:40,y:7});Object.assign(t,{armor:0,x:42,y:7,hp:10000,maxHp:10000});g.units=[p,t];return {g,p,t};
 }
 function ally(g,key='meursault',x=41,y=9){const a=g.makeChampion(key,0,9);Object.assign(a,{x,y});return a;}
 test('automatic XP is three per second except Faust nine, alive or dead',()=>{
@@ -46,7 +46,7 @@ for(const key of ['ryoshu','ahab','sinclair','starbuck'])test(`capture also conf
  const {g,t}=capture(key),net={...t.state.netTrap};g.units=[t];g.time+=.01;t.rCd=0;t.channelUntil=0;assert.ok(g.cast(t,'r',{x:55,y:7}));run(g,.8);assert.ok(distance(t,net)<=net.r+1e-5,`${key} escaped`);
 });
 test('Queequeg stats follow missing health immediately, including healing and max-HP growth',()=>{
- const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),48);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),12);g.award(p,6900,0);close(g.armor(p),0);close(g.attackRange(p),3);
+ const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.4,{fixed:true});close(g.powerScale(p),1.16);close(g.armor(p),98);g.heal(null,p,p.maxHp*.3,false);close(g.powerScale(p),1.04);close(g.armor(p),62);g.award(p,6900,0);close(g.armor(p),50);close(g.attackRange(p),3);
 });
 test('Don tactical starts cooldown on release and rejects another charge until ready',()=>{
  const {g,p}=quiet('don');g.cast(p,'q',{x:45,y:7});close(p.qCd,0);assert.equal(g.cast(p,'q',p),false);run(g,1);assert.ok(Don.release(g,p,{x:45,y:7}));close(p.qCd,12);assert.equal(p.state.donCharge,undefined);assert.equal(g.cast(p,'q',p),false);run(g,12.01);assert.ok(g.cast(p,'q',p));
@@ -61,7 +61,7 @@ test('Yi ground effect spends ammo once per target per zone and stacks 3.5% slow
  const {g,p,t}=quiet('yi');t.ammo=3;t.attackCd=10;g.cast(p,'q',t);run(g,.52);close(t.ammo,2);close(g.stat(t,'slow'),.035);run(g,1);close(t.ammo,2);close(g.stat(t,'slow'),.105);assert.ok(g.stat(t,'silence'));
 });
 test('Myo Q deals 65 per shot and frenzy lasts 4.5 with fifty percent basic-dash reduction',()=>{
- const {g,p,t}=quiet('myo');g.cast(p,'q',t);run(g,.25);assert.ok(g.projectiles.every(b=>b.damage===65));p.qCd=0;g.cast(p,'r',p);close(p.buffs.rabbitFrenzy-g.time,4.5);p.attackCd=0;g.attack(p,{x:47,y:7});const hp=p.hp;g.deal(t,p,100);close(hp-p.hp,100*1.12*.9*.5);
+ const {g,p,t}=quiet('myo');g.cast(p,'q',t);run(g,.25);assert.ok(g.projectiles.every(b=>b.damage===65));p.qCd=0;g.cast(p,'r',p);close(p.buffs.rabbitFrenzy-g.time,4.5);p.attackCd=0;g.attack(p,{x:47,y:7});const hp=p.hp;g.deal(t,p,100);close(hp-p.hp,100*1.12*.9*.5/1.1);
 });
 test('Ppui gains fifteen percent assist XP, without changing kill XP or ally rewards',()=>{
  const {g,p,t}=quiet('ppui'),a=ally(g);g.deal(p,t,1,{fixed:true});g.deal(a,t,1e6,{fixed:true});close(p.xp,80.5);close(a.xp,120);close(p.gold,250+40*4/3);

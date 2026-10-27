@@ -44,7 +44,7 @@ export function championHud(r,e,g){
  const resourceY=y+.51,cap=g.ammoCap(e);
  if(e.key==='hohenheim'){
   const shape=Hohenheim.chargeShape(g,e,e.player?g.input.aim:e.state.hohenCharge?.aim||{x:e.x+1,y:e.y});
-  c.fillStyle='#173439';c.fillRect(x,resourceY,width,.24);c.fillStyle=shape.progress>=1?'#d3ffff':'#82d9df';c.fillRect(x,resourceY,width*shape.progress,.24);r.text(`${e.state.posthumous?'최대 전류':'충전 '+Math.round(shape.progress*100)+'%'} · ${shape.hits}타`,e.x,resourceY+.12,'#e0ffff',.205);
+  const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}r.text(e.state.posthumous?`사후 공격 ${Math.max(0,2-(e.state.posthumous.attacks||0))}/2 · ${shape.hits}타`:`${shape.hits}타 · 충전 ${Math.round(shape.progress*100)}%`,e.x,resourceY+.12,'#e0ffff',.205);
  }else if(e.key==='yan'){
   const progress=Yan.chargeShape(g,e,e.player?g.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}).progress;
   c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);r.text(Yan.distorted(g,e)?'손 조종':`검 충전 ${Math.round(progress*100)}%`,e.x,resourceY+.12,'#e7f7ff',.205);
@@ -115,7 +115,7 @@ export function championGroundEffects(r,e,g){
  if(e.key==='ahab'&&e.player)outline(AHAB.orderRadius);
  if(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))outline(4.5);
  if(g.buff(e,'martonDrain'))outline(5.5);
- if(g.buff(e,'heathUlt'))outline(7.5);
+ if(g.buff(e,'heathUlt'))outline(5.5);
  if(e.state.detonatesAt>g.time)r.circle(e.x,e.y,4,'#d94e262e','#ff7957',.085);
  if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,2.5,null,'#d1dcb799',.035);
  if(e.key==='honglu'&&e.player&&e.alive&&g.buff(e,'insight'))r.circle(e.x,e.y,5,null,'#87d8c999',.045);

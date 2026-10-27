@@ -9,7 +9,7 @@ import * as Sora from '../src/sora.js';
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
 function quiet(){const g=new Game('sora','jungle',{seed:61});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];return {g,p};}
-function target(g,x=42,y=7,team=1){const t=g.makeChampion('faust',team,9);Object.assign(t,{x,y,hp:10000,maxHp:10000,lastAttackAt:100,lastDamageAt:100});return t;}
+function target(g,x=42,y=7,team=1){const t=g.makeChampion('faust',team,9);Object.assign(t,{armor:0,x,y,hp:10000,maxHp:10000,lastAttackAt:100,lastDamageAt:100});return t;}
 function ego(g,p){p.state.unlock=5;g.cast(p,'r',p);}
 
 test('one point absorbed by a shield consumes a directive; foreign hits and immunity do not',()=>{

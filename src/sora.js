@@ -1,3 +1,4 @@
+import{championDescription}from'./champion-reference.js';
 import { distance,direction,segmentDistance } from './geometry.js';
 import { settleBody } from './collision.js';
 import { dash,area } from './skills.js';
@@ -118,7 +119,6 @@ export function tick(g,e){
 export function onRespawn(g,e){if(e.key==='sora')init(g,e);}
 export function onDeath(g,e){if(e.key==='sora')restoreGuard(e);}
 export function abilityInfo(g,e){
- if(e.key!=='sora')return {};
- const transformed=ego(g,e),unlocked=ready(g,e);
- return {basic:transformed?'대행: 새기기':'머리 으깨기',tactical:transformed?'대행: 말살':'얌전히 으깨져주세요',ultimate:transformed?'대행 전개 중':unlocked?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:transformed?`충전 ${e.state.egoQCharges}/2 · 1회 충전 5초. 커서 방향으로 즉시 초속 24 무적 돌진(최대 6.5)·240 피해. 후속 장판 좌우 +30%·전후 +10%, 실제 경로에 1.2초간 0.2초마다 45 추가 피해·감속 30% 1초 갱신.`:'사거리 7 좌표로 포물선을 그리며 도약해 지형을 넘고, 처음 닿은 적에게 210 피해·기절 1초. 적중 시 250 보호막 2초. 적중·돌진 종료 위치에 원형 충격파·지면 균열. 지령 대상이면 탄창 1개 장전. 쿨다운 9초.',rText:unlocked||transformed?'해금 5 소모, 20초간 최대 체력 −20%·장전 +30%·이동 +10%·전투력 +25%. 기본/전술기 변경. 변신 자체 쿨다운 없음.':'반경 8의 중립→버프 크립 우선, 없으면 현재 체력이 가장 낮은 적 챔피언에게 6초 지령. 기존 표식 시간 갱신, 표식 수 제한 무시. 쿨다운 10초.'};
+ if(e.key!=='sora')return {};const transformed=ego(g,e),c=championDescription(e.key,transformed);
+ return {basic:c.basic,tactical:c.tactical,ultimate:transformed?'':ready(g,e)?'개화 E.G.O::대행':'단말기로 정해진 지령',qText:c.qText,rText:transformed?'':ready(g,e)?c.baseUltimates[1].description:c.baseUltimates[0].description};
 }

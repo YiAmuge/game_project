@@ -12,7 +12,7 @@ const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*60);i++)g.step(1/60);};
 function quiet(key='meursault'){
  const g=new Game(key,'top',{seed:17});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};
- const p=g.player,t=g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:43,y:7,maxHp:100000,hp:100000});g.units=[p,t];g.minionQueue=[];return{g,p,t};
+ const p=g.player,t=g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{armor:0,x:43,y:7,maxHp:100000,hp:100000});g.units=[p,t];g.minionQueue=[];return{g,p,t};
 }
 function ally(g,key='meursault',x=42,y=9){const a=g.makeChampion(key,0,9);Object.assign(a,{x,y});return a;}
 test('central, side and buff creep experience and gold follow their configured rewards',()=>{
@@ -53,7 +53,7 @@ test('attacking dash resolves an endpoint inside an enemy by moving only its cas
 test('a stunned offensive dash settles its caster without moving the overlapped enemy',()=>{
  const {g,p,t}=quiet('myo');t.x=41.2;g.attack(p,t);run(g,.15);assert.ok(distance(p,t)<p.radius+t.radius);g.status(p,'stun',1,1,t);run(g,.02);assert.equal(p.motion,undefined);close(t.x,41.2);close(t.y,7);assert.ok(distance(p,t)>=p.radius+t.radius);assert.equal(blocked(p.x,p.y,p.radius),false);
 });
-test('Rodion hits an enemy crossed by her basic exactly once and can also hit an enemy beyond the landing',()=>{
+test('Rodion sword wave pierces each enemy once without moving the caster',()=>{
  const {g,p,t}=quiet('rodya');t.x=41.4;const beyond=g.makeChampion('faust',1,9);Object.assign(beyond,{x:44.5,y:7,hp:100000,maxHp:100000});const hits=new Map(),deal=g.deal.bind(g);g.deal=(source,target,n,o)=>{if(source===p&&o?.proc!==false)hits.set(target.id,(hits.get(target.id)||0)+1);return deal(source,target,n,o);};g.attack(p,{x:46,y:7});run(g,.4);assert.equal(hits.get(t.id),1);assert.equal(hits.get(beyond.id),1);close(t.x,41.4);close(beyond.x,44.5);
 });
 test('minion departures start outside the core and preserve each lane centerline',()=>{

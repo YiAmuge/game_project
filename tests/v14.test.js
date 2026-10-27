@@ -17,7 +17,7 @@ function quiet(key='kim'){
  const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];return {g,p};
 }
 function champ(g,team=1,x=42,y=7,key='faust'){
- const t=g.makeChampion(key,team,9);Object.assign(t,{x,y,hp:10000,maxHp:10000,lastAttackAt:100,lastDamageAt:100});return t;
+ const t=g.makeChampion(key,team,9);Object.assign(t,{armor:0,x,y,hp:10000,maxHp:10000,lastAttackAt:100,lastDamageAt:100});return t;
 }
 function grab(){const {g,p}=quiet(),t=champ(g);g.cast(p,'q',t);run(g,.2);assert.equal(carried(g,p),t);return {g,p,t};}
 

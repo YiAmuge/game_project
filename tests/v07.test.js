@@ -8,14 +8,14 @@ import { ultGrowth } from '../src/v06-champions.js';
 import { skillTargeting } from '../src/targeting.js';
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.ceil(s*60);i++)g.step(1/60);};
-function quiet(key){const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{x:44,y:7,hp:10000,maxHp:10000});g.units=[p,t];g.minionQueue=[];return {g,p,t};}
-function enemy(g,x=44,y=7){const t=g.makeChampion('faust',1,8);Object.assign(t,{x,y,hp:10000,maxHp:10000});return t;}
+function quiet(key){const g=new Game(key);for(const fn of ['aiChampion','aiMinion','aiStructure','aiNeutral'])g[fn]=()=>{};const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{armor:0,x:44,y:7,hp:10000,maxHp:10000});g.units=[p,t];g.minionQueue=[];return {g,p,t};}
+function enemy(g,x=44,y=7){const t=g.makeChampion('faust',1,8);Object.assign(t,{armor:0,x,y,hp:10000,maxHp:10000});return t;}
 
 test('Don charged thrust covers a side-edge target and reports half width 1.05',()=>{
  const {g,p,t}=quiet('don');Object.assign(t,{x:40+2*Math.cos(.7),y:7+2*Math.sin(.7)});g.cast(p,'q',{x:45,y:7});Don.release(g,p,{x:45,y:7});assert.ok(t.hp<10000);assert.equal(skillTargeting(g,p,'q').radius,1.05);
 });
 test('Meursault two-hit basic, tactical refill and temporary ultimate armor affect actual combat',()=>{
- const {g,p,t}=quiet('meursault');t.x=41;assert.equal(g.ammoCap(p),3);g.attack(p,t);close(10000-t.hp,120*.9);run(g,.1);close(10000-t.hp,240*.9);p.ammo=0;g.cast(p,'q',p);assert.equal(p.ammo,1);g.cast(p,'r',t);close(g.armor(p),10);run(g,3.05);close(g.armor(p),0);
+ const {g,p,t}=quiet('meursault');t.x=41;assert.equal(g.ammoCap(p),3);g.attack(p,t);close(10000-t.hp,120*.9);run(g,.1);close(10000-t.hp,240*.9);p.ammo=0;g.cast(p,'q',p);assert.equal(p.ammo,1);g.cast(p,'r',t);close(g.armor(p),65);run(g,3.05);close(g.armor(p),50);
 });
 test('Gubo normal shot pierces all three enemies',()=>{
  const {g,p,t}=quiet('gubo'),b=enemy(g,46),c=enemy(g,48);g.attack(p,t);run(g,.8);assert.ok(t.hp<10000);assert.ok(b.hp<10000);assert.ok(c.hp<10000);
@@ -58,7 +58,7 @@ test('Dongbaek ultimate delivers four 105-damage pulses, gives only a timed relo
  const {g,p,t}=quiet('dongbaek');const gap=g.reloadInterval(p);g.cast(p,'r',t);close(10000-t.hp,105*.9);run(g,.76);close(10000-t.hp,420*.9);assert.ok(!p.channelUntil);assert.equal(g.pending.length,0);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.reloadInterval(p)<gap);run(g,3.05);close(g.reloadInterval(p),gap);
 });
 test('Dongrang grade two converts power into health and armor, never damage or incoming healing',()=>{
- const {g,p,t}=quiet('dongrang');close(p.maxHp,RULES.health[5]*1.13);close(g.armor(p),13);p.hp-=100;close(g.heal(null,p,50,false),50);p.upgrades.power=3;g.refreshEquipment(p);assert.ok(g.armor(p)>13);assert.ok(p.maxHp>RULES.health[5]*1.13);t.x=41;g.attack(p,t);close(10000-t.hp,260);
+ const {g,p,t}=quiet('dongrang');close(p.maxHp,RULES.health[5]*1.13);close(g.armor(p),46.9);p.hp-=100;close(g.heal(null,p,50,false),50);p.upgrades.power=3;g.refreshEquipment(p);assert.ok(g.armor(p)>13);assert.ok(p.maxHp>RULES.health[5]*1.13);t.x=41;g.attack(p,t);close(10000-t.hp,260);
 });
 test('Dongrang passive power purchases apply health immediately and augment removal refreshes converted stats',()=>{
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);

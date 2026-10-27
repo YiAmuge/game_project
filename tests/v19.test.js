@@ -15,7 +15,7 @@ function quiet(key){
  const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];g.wave=100;g.map={bounds:WORLD,walls:[]};return {g,p};
 }
 function target(g,x=44,y=7,team=1,key='faust'){
- const t=g.makeChampion(key,team,9);Object.assign(t,{x,y,maxHp:10000,hp:10000,lastAttackAt:100,lastDamageAt:100});return t;
+ const t=g.makeChampion(key,team,9);Object.assign(t,{armor:0,x,y,maxHp:10000,hp:10000,lastAttackAt:100,lastDamageAt:100});return t;
 }
 test('six consumed directives cap ominous power and switch R even while normal R is cooling down',()=>{
  const {g,p}=quiet('yan');for(let i=0;i<7;i++){const t=target(g);Yan.mark(g,p,t);p.rCd=9;g.deal(p,t,1,{fixed:true});close(p.state.ominous,Math.min(i+1,6));assert.equal(Yan.ready(g,p),i>=5);}

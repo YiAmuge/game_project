@@ -86,7 +86,15 @@ export class Renderer {
     c.restore();
     c.restore();for(const room of TERRAIN.slice(1)){c.strokeStyle='#6c887855';c.lineWidth=.12;c.strokeRect(room.x+.08,room.y+.08,room.w-.16,room.h-.16);}
   }
-  camps(game){}
+  camps(game){
+    const c=this.ctx;
+    for(const camp of game.campViews()){
+      const color=['boss','blessing','amplify'].includes(camp.kind)?CAMP_RANGE_COLOR:'#92966e';
+      this.circle(camp.home.x,camp.home.y,camp.radius,color+'12',color+'55',.065);c.setLineDash([.15,.22]);this.circle(camp.home.x,camp.home.y,camp.radius+.15,null,color+'44',.04);c.setLineDash([]);
+      if(game.training)this.text(camp.name+' 캠프',camp.home.x,camp.home.y+camp.radius+.45,color,.29);
+    }
+    if(game.training)for(const timer of game.campTimers()){const p=timer.home;this.circle(p.x,p.y,.65,'#182720','#9b9568',.05);this.text(`${Math.floor(timer.seconds/60)}:${String(timer.seconds%60).padStart(2,'0')}`,p.x,p.y,'#ecd59b',.38);this.text('재생성',p.x,p.y+.55,'#97a586',.22);}
+  }
   bar(e,width,y,game) {
     const c=this.ctx,x=e.x-width/2;
     c.fillStyle='#081317';c.fillRect(x-.05,y-.05,width+.1,.31);

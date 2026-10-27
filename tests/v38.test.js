@@ -10,7 +10,7 @@ import { championPresentation } from '../src/champion-vfx.js';
 
 const close=(a,b,t=1e-7)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 function arena(key){const g=new Game(key,'top',{seed:380});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,facing:0,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];g.wave=100;g.map={bounds:WORLD,walls:[]};g.input.aim={x:46,y:7};return {g,p};}
-function target(g,x=44,y=7){const t=g.makeChampion('faust',1,9);Object.assign(t,{x,y,maxHp:100000,hp:100000,lastAttackAt:100,lastDamageAt:100});return t;}
+function target(g,x=44,y=7){const t=g.makeChampion('faust',1,9);Object.assign(t,{armor:0,x,y,maxHp:100000,hp:100000,lastAttackAt:100,lastDamageAt:100});return t;}
 const run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
 
 test('held art rotates through only a half circle and mirrors horizontally without reversing its aim',()=>{

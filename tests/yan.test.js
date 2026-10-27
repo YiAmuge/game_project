@@ -9,7 +9,7 @@ import * as Yan from '../src/yan.js';
 const close=(a,b,t=1e-5)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
 function quiet(){const g=new Game('yan','bottom',{seed:101});for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];return {g,p};}
-function target(g,x=42,y=7,team=1,key='faust'){const t=g.makeChampion(key,team,9);Object.assign(t,{x,y,maxHp:10000,hp:10000,lastAttackAt:100,lastDamageAt:100});return t;}
+function target(g,x=42,y=7,team=1,key='faust'){const t=g.makeChampion(key,team,9);Object.assign(t,{armor:0,x,y,maxHp:10000,hp:10000,lastAttackAt:100,lastDamageAt:100});return t;}
 function transform(g,p){p.state.ominous=6;assert.ok(g.cast(p,'r',p));}
 
 test('Yan has requested grades, no ammunition, and a charge resource instead',()=>{

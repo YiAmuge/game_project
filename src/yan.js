@@ -1,3 +1,4 @@
+import{championDescription}from'./champion-reference.js';
 import { settleBody } from './collision.js';
 import { RULES, WORLD } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
@@ -138,6 +139,6 @@ export function tick(g,e,dt){
 }
 export function onDeath(g,e){if(e.key==='yan'){cancelCharge(e);removeHand(g,e);}}
 export function abilityInfo(g,e){
- if(e.key!=='yan')return {};
- return {basic:distorted(g,e)?'잠금':'의지의 검',tactical:distorted(g,e)?'뒤틀린 검':'맹목적인 신념',ultimate:distorted(g,e)?'뒤틀림 전개 중':ready(g,e)?'enlxmfflsdis':'도시의 의지',qText:distorted(g,e)?'사거리 9 커서 빠른 시전, 1.75초 뒤 반경 7.5에 360 피해·1.5초 기절. 쿨다운 5초.':'반월 사거리 5, 1.8초 동안 0.3초마다 30 피해(6회). 전부 적중 시 감속 50% 1.5초. 이동 가능·군중제어 면역·방어력 +30%, 종료 후 1초 내 다음 의지의 검 즉시 완충. 쿨다운 9초.',rText:distorted(g,e)?'변신 중 궁극기 비활성화·불길한 힘 획득 중지.':ready(g,e)?'불길한 힘 6 소모, 20초 뒤틀림. 전투력 −10%, 최대 체력·방어력 +12%. 무적 손 소환.':'반경 7.5의 모든 적 챔피언에게 가짜 지령 6초, 기존 표식 갱신. 재부여 제한 무시, 쿨다운 10초.'};
+ if(e.key!=='yan')return {};const transformed=distorted(g,e),c=championDescription(e.key,transformed);
+ return {basic:c.basic,tactical:c.tactical,ultimate:transformed?'':ready(g,e)?'enlxmfflsdis':'도시의 의지',qText:c.qText,rText:transformed?'':ready(g,e)?c.baseUltimates[1].description:c.baseUltimates[0].description};
 }

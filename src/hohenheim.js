@@ -2,7 +2,7 @@ import { RULES } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
 import { has } from './augments.js';
 
-export const HOHENHEIM={chargeTime:1.5,minDamage:100,maxDamage:150,minRange:6,maxRange:9,interval:.65,width:.2,burstGap:.12,duration:2.1,every:.25,damage:15,radius:7.5,castRange:8,followSpeed:6};
+export const HOHENHEIM={chargeTime:1.5,minDamage:100,maxDamage:100,minRange:6,maxRange:9,interval:.65,width:.2,burstGap:.12,duration:2.1,every:.25,damage:15,radius:7.5,castRange:8,followSpeed:6};
 export const isChampion=e=>e.key==='hohenheim';
 export function cancelCharge(e){if(isChampion(e))delete e.state.hohenCharge;}
 export const reloadRate=(g,e)=>(RULES.reload[3]/RULES.reloadEfficiency)/g.reloadInterval(e);
@@ -22,7 +22,7 @@ function fire(g,e,point){
 }
 export function attack(g,e,p){
  g.cancelRecall(e);e.lastAttackAt=g.time;
- if(e.state.posthumous)return fire(g,e,p);
+ if(e.state.posthumous){if((e.state.posthumous.attacks||0)>=2)return false;e.state.posthumous.attacks=(e.state.posthumous.attacks||0)+1;return fire(g,e,p);}
  if(e.state.hohenCharge){e.state.hohenCharge.aim={...p};return false;}
  e.state.hohenCharge={progress:0,aim:{...p}};return true;
 }

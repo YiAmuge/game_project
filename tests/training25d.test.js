@@ -14,7 +14,7 @@ test('training entries share one garden layout and own per-session collision dat
  assert.equal(g.map.id,'training-25d');assert.deepEqual(g.map.walls,legacy.map.walls);
  assert.notEqual(g.map,other.map);assert.notEqual(g.map.walls[0],other.map.walls[0]);
  assert.deepEqual({x:g.player.x,y:g.player.y},MAP.spawn);assert.deepEqual({x:legacy.player.x,y:legacy.player.y},T.SPAWN);
- assert.equal(g.champions().length,6);assert.equal(g.units.filter(e=>e.kind==='neutral').length,7);
+ assert.equal(g.champions().length,6);assert.equal(g.units.filter(e=>e.kind==='neutral').length,12);
  assert.ok(g.champions().filter(e=>e.trainingDummy?.infinite).every(e=>e.x<T.hazard(g).x));
  assert.deepEqual(T.AREAS[0],MAP.areas[0]);
 });

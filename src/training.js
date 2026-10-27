@@ -1,3 +1,4 @@
+import * as Sewing from './sewing.js';
 import * as Yan from './yan.js';
 import * as V08 from './v08-champions.js';
 import { onDeath as releaseReferences } from './v12-champions.js';
@@ -23,7 +24,7 @@ export const areas=()=>AREAS;
 export function lanePath(team){const p=TRAINING_25D.lane.map(p=>({...p}));return team?p.reverse():p;}
 function dummy(g,team,x,y,{hp=3000,infinite=false,mode='still',name='허수아비'}={}){
  const e=g.makeChampion('faust',team,10+g.champions().length,'bottom');
- Object.assign(e,{x,y,player:false,name,maxHp:hp,hp,range:10.5,damage:100,interval:1.3});
+ Object.assign(e,{x,y,player:false,name,maxHp:hp,hp,armor:0,range:10.5,damage:100,interval:1.3});
  e.trainingDummy={home:{x,y},hp,infinite,mode,leash:12,respawn:5};if(infinite)e.trainingDummy.meter={kind:team===0?'healing':'damage',total:0,last:0,samples:[],groups:{},lastStarted:-Infinity};return e;
 }
 export function init(g,key,position){
@@ -35,11 +36,22 @@ export function init(g,key,position){
  const a=dummy(g,0,pa.x,pa.y,{mode:'duel',name:'아군 대치 허수아비'}),b=dummy(g,1,pb.x,pb.y,{mode:'duel',name:'적 대치 허수아비'});
  a.trainingDummy.opponent=b.id;b.trainingDummy.opponent=a.id;
  const patrol=layout?.patrol||{x:62,y:18,to:28};const moving=dummy(g,1,patrol.x,patrol.y,{hp:1000,mode:'patrol',name:'이동 허수아비'});moving.trainingDummy.patrolTo=patrol.to;
- const central=layout?.central||[{x:57,y:35},{x:60,y:35},{x:57,y:38},{x:60,y:38}];
- const center={x:central.reduce((s,p)=>s+p.x,0)/4,y:central.reduce((s,p)=>s+p.y,0)/4};
- for(const {x,y} of central){const n=g.makeNeutral(x,y,'central');n.campCenter={...center};n.campId='training-central';}
- for(const {x,y,kind} of layout?.camps||[{x:68,y:35,kind:'amplify'},{x:75,y:35,kind:'blessing'},{x:72,y:42,kind:'boss'}]){const n=g.makeNeutral(x,y,kind);n.respawnDelay=kind==='boss'?10:n.respawnDelay;}
+ makeCreeps(g);
  resetLane(g);g.log('연습장 · 우측 상단 옵션 · G 무료 상점');
+}
+function makeCreeps(g){
+ const layout=TRAINING_25D,center={x:56.5,y:36.5};
+ for(const {x,y} of layout.central){const n=g.makeNeutral(x,y,'central');n.campCenter={...center};n.campId='training-central';}
+ for(const {x,y,kind} of layout.camps){const n=g.makeNeutral(x,y,kind);n.respawnDelay=kind==='boss'?10:n.respawnDelay;}
+ const king=g.makeNeutral(63,42,'sewingKing');king.campId='training-sewing-king';king.respawnDelay=Infinity;
+ for(const [i,[x,y]]of [[50,41.5],[53,41.5],[50,44],[53,44]].entries()){const n=Sewing.makeNeedle(g,x,y,i);n.campId='training-needles';n.campCenter={x:51.5,y:42.75};}
+}
+export function resetCreeps(g){
+ if(!g.training)return false;
+ const ids=new Set(g.units.filter(e=>e.kind==='neutral').map(e=>e.id));
+ g.units=g.units.filter(e=>!ids.has(e.id));g.events=g.events.filter(e=>!ids.has(e.source.id));g.pending=g.pending.filter(e=>!ids.has(e.source.id));g.zones=g.zones.filter(e=>!ids.has(e.source.id));g.projectiles=g.projectiles.filter(e=>!ids.has(e.source.id)&&!ids.has(e.target?.id));g.corpses=g.corpses.filter(e=>!ids.has(e.unitId));
+ for(const e of g.units){if(ids.has(e.aggro))e.aggro=null;if(e.needleBleeds){for(const id of ids)delete e.needleBleeds[id];if(!Object.keys(e.needleBleeds).length)delete e.needleBleeds;}}
+ g.sewingWinner=null;makeCreeps(g);return true;
 }
 export function resetLane(g){
  if(!g.training)return false;

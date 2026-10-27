@@ -9,7 +9,7 @@ export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||e.phaseEne
  if(structure(other))return !(e.kind==='minion'&&other.kind==='tower'&&e.team===other.team);
  if(paired(g,e,other))return false;
  if(e.team===other.team&&e.team<2&&(['champion','minion'].includes(e.kind)||['champion','minion'].includes(other.kind)))return false;
- if((phaseEnemies||e.phaseEnemiesUntil>g.time||other.phaseEnemiesUntil>g.time||other.motion?.phaseEnemies)&&e.team!==other.team)return false;
+ if((phaseEnemies||e.phaseEnemiesUntil>g.time||other.phaseEnemiesUntil>g.time||other.motion?.phaseEnemies||g.buff?.(e,'heathUlt')||g.buff?.(other,'heathUlt'))&&e.team!==other.team)return false;
  return true;
 }
 export function carryFits(g,e,p){
