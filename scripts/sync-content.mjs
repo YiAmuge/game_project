@@ -1,6 +1,7 @@
 import {readFile,writeFile} from 'node:fs/promises';
 import { RUNTIME_CHAMPIONS,POSITIONS,AUGMENTS,AUGMENT_RULES } from '../src/data.js';
 import{REFERENCE_RULES as GAME_RULES,MONSTER_GUIDE as MONSTERS}from'../src/reference-content.js';
+import{exclusiveAugments}from'../src/augments.js';
 const root=new URL('../',import.meta.url),roster=JSON.parse(await readFile(new URL('src/roster.json',root),'utf8')),text={};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){
  const record=roster.find(r=>r.id===c.id);
@@ -13,8 +14,8 @@ sections.push('## 증강\n',`기본 최대 ${AUGMENT_RULES.slots}개·카테고�
 for(const [group,name] of [['combat','전투'],['survival','생존'],['tech','기술']])sections.push(`### ${name}\n`,...AUGMENTS.filter(a=>a.group===group).map(a=>`#### ${a.name}\n\n${a.text}.\n`));
 sections.push('## 몹과 건물\n',...MONSTERS.map(m=>`### ${m.name}\n\n체력 ${m.hp}·방어력 ${m.armor}·공격 ${m.attack}. 보상 ${m.reward}.\n\n${m.sections.map(([title,text])=>`**${title}**\n\n${text}`).join('\n\n')}\n`));
 sections.push('## 챔피언\n');
-for(const c of Object.values(RUNTIME_CHAMPIONS).filter(c=>![19,20].includes(c.id))){
- const r=roster.find(r=>r.id===c.id);sections.push(`### ${c.name}\n\n${r.note}\n\n${r.stats}.\n`,...r.skills.map(s=>`**${s.kind} — ${s.name}**\n\n${s.description}\n`),...(r.forms?[`**${r.forms.transformed.name}**\n`,...r.forms.transformed.skills.map((s,i)=>`**${['패시브','기본','전술기'][i]} — ${s.name}**\n\n${s.description}\n`)]:[]));
+for(const[key,c]of Object.entries(RUNTIME_CHAMPIONS).filter(([,c])=>![19,20].includes(c.id))){
+ const r=roster.find(r=>r.id===c.id),effects=exclusiveAugments(key);sections.push(`### ${c.name}\n\n${r.note}\n\n${r.stats}.\n`,...r.skills.map((s,i)=>`**${s.kind} — ${s.name}**\n\n${s.description}\n`+(i===0&&effects.length?'\n**증강 전용 효과**\n\n'+effects.map(a=>`**${a.name}** — ${a.text}`).join('\n\n')+'\n':'')),...(r.forms?[`**${r.forms.transformed.name}**\n`,...r.forms.transformed.skills.map((s,i)=>`**${['패시브','기본','전술기'][i]} — ${s.name}**\n\n${s.description}\n`)]:[]));
 }
 await writeFile(new URL('docs/CURRENT_RULES.md',root),sections.join('\n'));
 console.log('Current encyclopedia, tooltips and rules reference synchronized.');

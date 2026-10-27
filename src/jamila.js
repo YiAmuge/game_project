@@ -3,7 +3,7 @@ import {distance,direction} from './geometry.js';
 import {canOccupy} from './collision.js';
 import * as Infiltration from './infiltration.js';
 
-export const JAMILA={ammo:16,range:6.6,damage:25,trooperDamage:15,interval:.25,idle:3,reload:1.75,powerRatio:.3,shield:.01,shieldCap:.2,shieldTime:5,threshold:.15,trueDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,duration:10,infiltrationDuration:15};
+export const JAMILA={ammo:16,range:6.6,damage:65,trooperDamage:15,interval:.15,idle:3,reload:1.5,powerRatio:.6,shield:.01,shieldCap:.2,shieldTime:5,threshold:.15,trueDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
 export const isTrooper=e=>Boolean(e.lcaTrooper);
 export const army=(g,e)=>g.units.filter(t=>t.lcaTrooper&&t.owner===e.id&&t.alive&&t.until>g.time);
 export const commander=(g,e)=>e.lcaTrooper?g.units.find(t=>t.id===e.owner):e;
@@ -16,6 +16,7 @@ export function tickReload(g,e,dt){
  // Avoid an extra simulation frame between rounds from floating-point residue.
  if(e.attackCd<1e-8)e.attackCd=0;
  const cap=g.ammoCap(e);if(e.ammo>=cap){delete e.state.lcaReload;e.reloadProgress=0;return;}
+ if(e.ammo<1&&e.state.jamilaQ&&!reloading(e))return;
  if(!reloading(e)&&(e.ammo<1||g.time-(e.state.lcaShotAt??-Infinity)>=JAMILA.idle-1e-8))beginReload(g,e);
  const r=e.state.lcaReload;if(!r)return;
  r.progress+=dt*Math.max(.2,1+1.5*(g.reloadMultiplier(e)-1));e.reloadProgress=reloadFraction(e)*reloadDuration(g,e);
@@ -24,6 +25,8 @@ export function tickReload(g,e,dt){
 export function basic(g,e,p,d){
  if(e.key!=='jamila')return false;
  delete e.state.lcaReload;e.reloadProgress=0;e.state.lcaShotAt=g.time;
+ // Carry at most one simulation frame of timing debt instead of slowing sustained fire.
+ const due=e.state.lcaNextShot,at=due!==undefined&&due<=g.time+1e-8&&g.time-due<=1/30+1e-8?due:g.time;e.state.lcaNextShot=at+JAMILA.interval;e.attackCd=Math.max(0,e.state.lcaNextShot-g.time);
  g.bullet(e,d,e.lcaTrooper?JAMILA.trooperDamage:JAMILA.damage,g.attackRange(e),{speed:28,width:.11,color:'#e6cd77',theme:'jamila',lca:true});
  if(e.ammo<1)beginReload(g,e);return true;
 }
@@ -47,12 +50,14 @@ function slash(g,e,q){
  if(e.state.jamilaQ!==q||!e.alive)return;
  q.phase='slash';q.slashAt=g.time;e.channelUntil=g.time+JAMILA.qSlash;
  g.emitSound('swing',e,{slot:'q',phase:'kopis-cut',family:'blade'});
- g.cone(e,q.d,JAMILA.qRange,Math.PI,JAMILA.qDamage,t=>{g.status(t,'weak',JAMILA.qDebuff,JAMILA.qDebuffTime,e);g.status(t,'armorWeak',JAMILA.qDebuff,JAMILA.qDebuffTime,e);});
+ let hit=false;g.cone(e,q.d,JAMILA.qRange,Math.PI,JAMILA.qDamage,t=>{hit=true;g.status(t,'weak',JAMILA.qDebuff,JAMILA.qDebuffTime,e);g.status(t,'armorWeak',JAMILA.qDebuff,JAMILA.qDebuffTime,e);});
+ if(hit){e.ammo=Math.min(g.ammoCap(e),e.ammo+JAMILA.qAmmo);delete e.state.lcaReload;e.reloadProgress=0;e.state.lcaShotAt=g.time;}
  g.schedule(e,JAMILA.qSlash,()=>retreat(g,e,q));
 }
 export function tactical(g,e,d){
  const q=e.state.jamilaQ={at:g.time,phase:'dash',d:{...d},angle:Math.atan2(d.y,d.x)};let attack=true;
- if(!g.startMotion(e,d,JAMILA.qRange,{speed:JAMILA.qSpeed,maxSpeed:JAMILA.qSpeed,actionTag:'jamila-dash',onCollision:c=>{attack=c.kind==='unit'&&g.hostile(e,c.obstacle);},onComplete:()=>attack?slash(g,e,q):retreat(g,e,q)})){endQ(e);return false;}return true;
+ if(!g.startMotion(e,d,JAMILA.qRange,{speed:JAMILA.qSpeed,maxSpeed:JAMILA.qSpeed,actionTag:'jamila-dash',onCollision:c=>{attack=c.kind==='unit'&&g.hostile(e,c.obstacle);},onComplete:()=>attack?slash(g,e,q):retreat(g,e,q)})){endQ(e);return false;}
+ if(e.ammo<1){delete e.state.lcaReload;e.reloadProgress=0;}return true;
 }
 export function formationPoint(e,index){const side=index?1:-1,a=e.facing||0;return {x:e.x+Math.cos(a)*side*1.7-Math.sin(a)*.9,y:e.y+Math.sin(a)*side*1.7+Math.cos(a)*.9};}
 function spawnPoint(g,e,index){

@@ -78,7 +78,7 @@ test('Ppui ultimate deals five waves totaling seven hundred twenty before scalin
  const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,5);close(amounts.reduce((a,b)=>a+b,0),720);
 });
 test('Kim hitting a champion gives 120 shields to nearby allies with reload/haste benefit',()=>{
- const {g,p,t}=quiet('kim'),a=ally(g,'yi');g.attack(p,t);run(g,.02);close(g.shield(p),120);close(g.shield(a),120);close(g.haste(p),.12);const shields=g.shield(p);run(g,.3);close(g.shield(p),shields);
+ const {g,p,t}=quiet('kim'),a=ally(g,'yi');g.attack(p,t);run(g,.02);close(g.shield(p),60+p.maxHp*.012);close(g.shield(a),60+p.maxHp*.012);close(g.haste(p),.12);const shields=g.shield(p);run(g,.3);close(g.shield(p),shields);
 });
 test('Kim Q stabs and grabs, recast throws without a new cooldown and cleans up on death',()=>{
  const {g,p,t}=quiet('kim');assert.ok(g.cast(p,'q',t));run(g,.2);assert.equal(p.state.swordGrab.target,t);assert.equal(g.stat(t,'stun'),1);run(g,.2);const cd=p.qCd;assert.ok(g.cast(p,'q',{x:48,y:7}));close(p.qCd,cd);assert.equal(p.state.swordGrab,undefined);assert.equal(g.stat(t,'stun'),0);assert.ok(t.motion?.forced);
@@ -98,6 +98,6 @@ test('capture respects status resistance and a full cleanse releases the arena i
 });
 
 test('new champion hit passives work against shields and a cleansed sword grab releases immediately',()=>{
- const {g,p,t}=quiet('kim');g.addShield(t,1000,'test');g.attack(p,t);run(g,.02);close(g.shield(p),120);p.qCd=0;run(g,.3);g.cast(p,'q',t);run(g,.2);assert.ok(p.state.swordGrab);t.status={};run(g,.02);assert.equal(p.state.swordGrab,undefined);
+ const {g,p,t}=quiet('kim');g.addShield(t,1000,'test');g.attack(p,t);run(g,.02);close(g.shield(p),60+p.maxHp*.012);p.qCd=0;run(g,.3);g.cast(p,'q',t);run(g,.2);assert.ok(p.state.swordGrab);t.status={};run(g,.02);assert.equal(p.state.swordGrab,undefined);
  const f=quiet('ppui'),a=ally(f.g,'meursault',41,7);f.g.attack(f.p,a);f.g.addShield(f.t,1000,'test');f.g.attack(a,f.t);run(f.g,.02);assert.equal(f.g.projectiles.filter(b=>b.theme==='ppui').length,0);
 });

@@ -26,7 +26,7 @@ test('all 32 catalog champions and all runtime champions share the cumulative re
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){
   const {g,p}=quiet(key);p.lastCombat=g.time;
   if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
-  close(g.reloadInterval(p),key==='jamila'?1.75:RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1));
+  close(g.reloadInterval(p),key==='jamila'?1.5:RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1));
  }
 });
 test('natural healing waits three seconds after attacks including missed attacks',()=>{

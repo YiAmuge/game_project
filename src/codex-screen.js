@@ -4,6 +4,7 @@ import{CHAMPIONS,CHAMPIONS as PLAYABLE,POSITIONS,RULES,AUGMENTS,AUGMENT_RULES}fr
 import{MONSTER_GUIDE,REFERENCE_RULES}from'./reference-content.js';
 import{preview}from'./asset-preview.js';
 import*as AugmentArt from'./augment-art.js';
+import{exclusiveAugments}from'./augments.js';
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const slots=[['패시브','passive','passiveText','자동'],['기본 공격','basic','basicText','LMB'],['전술기','tactical','qText','RMB'],['궁극기','ultimate','rText','SPACE']];
 export class CodexScreen{
@@ -21,6 +22,7 @@ export class CodexScreen{
   const [name,title,field,hotkey]=slots[this.skill],target=detail.querySelector('#skill-description');
   if(this.skill===3&&!f&&base.baseUltimates){target.innerHTML=`<span class="skill-kind">궁극기 <kbd>SPACE</kbd></span>${base.baseUltimates.map(u=>`<section class="ultimate-variant"><h3>${escape(u.name)}</h3><p>${escape(u.description)}</p></section>`).join('')}`;}
   else target.innerHTML=`<span class="skill-kind">${name} <kbd>${hotkey}</kbd></span><h3>${escape(c[title])}</h3>${c[field].split(/(?<=[.!?])\s+(?=[가-힣A-Za-z])/u).filter(Boolean).map(t=>`<p>${escape(t)}</p>`).join('')}`;
+  if(this.skill===0){const effects=exclusiveAugments(this.key);if(effects.length)target.insertAdjacentHTML('beforeend',`<section class="champion-exclusive"><h3>증강 전용 효과</h3>${effects.map(a=>`<h4>${escape(a.name)}</h4><p>${escape(a.text)}</p>`).join('')}</section>`);}
  }
 
  monsters(body){body.innerHTML=`<section class="monster-list" aria-label="몹과 목표물 목록"></section><article class="monster-detail"></article>`;for(const m of MONSTER_GUIDE){const b=document.createElement('button');b.className='monster-choice'+(m.id===this.monster?' active':'');b.innerHTML=`<canvas width="120" height="145"></canvas><span>${escape(m.name)}</span>`;b.onclick=()=>{this.monster=m.id;this.monsters(body);};body.querySelector('.monster-list').append(b);preview(b.querySelector('canvas'),m.art);}const m=MONSTER_GUIDE.find(m=>m.id===this.monster)||MONSTER_GUIDE[0],article=body.querySelector('.monster-detail');article.innerHTML=`<div class="monster-overview"><canvas width="320" height="400" aria-label="${escape(m.name)}"></canvas><div><small>몹 · 목표물</small><h2>${escape(m.name)}</h2><dl class="monster-stats"><div><dt>체력</dt><dd>${m.hp.toLocaleString()}</dd></div><div><dt>방어력</dt><dd>${m.armor}</dd></div><div><dt>기본 공격</dt><dd>${escape(m.attack)}</dd></div><div><dt>처치 보상</dt><dd>${escape(m.reward)}</dd></div></dl></div></div><div class="monster-skills">${m.sections.map(([title,text])=>`<section><h3>${escape(title)}</h3><p>${escape(text)}</p></section>`).join('')}</div>`;preview(article.querySelector('canvas'),m.art);}

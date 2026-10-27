@@ -54,7 +54,7 @@ with sync_playwright() as pw:
  p.evaluate('advance62(2)');assert p.evaluate('__moba.game.shield(__moba.game.player)>0')
  p.keyboard.press('Escape');p.click('#pause-archive');p.click('.archive-champion[data-key="jamila"]')
  expect(p.locator('#archive-name')).to_have_text('자밀라');expect(p.locator('.archive-champion')).to_have_count(30)
- p.click('#skill-tab-1');expect(p.locator('#skill-description')).to_contain_text('1.75초');p.click('#skill-tab-3');expect(p.locator('#skill-description')).to_contain_text('전투원 2명')
+ p.click('#skill-tab-1');expect(p.locator('#skill-description')).to_contain_text('1.5초');p.click('#skill-tab-3');expect(p.locator('#skill-description')).to_contain_text('전투원 2명')
  p.screenshot(path=str(art/f'v62-jamila-codex{suffix}.png'))
  assert not errors,errors
  if offline:assert not requests,requests

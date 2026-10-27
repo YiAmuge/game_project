@@ -8,7 +8,7 @@ import{CodexScreen}from'./codex-screen.js';
 import{PickScreen}from'./pick-screen.js';
 import * as Infiltration from './infiltration.js';
 import * as AugmentArt from './augment-art.js';
-import { PING_KEYS } from './pings.js';
+import { PING_KEYS,PING_MOUSE_BUTTONS } from './pings.js';
 import { PingMenu } from './ping-menu.js';
 import * as Training from './training.js';
 import * as Sora from './sora.js';
@@ -48,6 +48,13 @@ for(const button of $('ping-controls').querySelectorAll('button')){
  button.onclick=e=>{if(e.detail===0){const b=button.getBoundingClientRect();if(pingMenu.begin(button.dataset.ping,b.x+b.width/2,b.y+b.height/2,'accessible'))pingMenu.end('accessible');}};
 }
 window.addEventListener('pointermove',e=>{if(inMatch())pointer={x:e.clientX,y:e.clientY};pingMenu.move(e.clientX,e.clientY);});
+// Additional mouse buttons become pointermove events while the primary button is held.
+function mousePingPointer(e){if(e.pointerType!=='mouse'||!PING_MOUSE_BUTTONS[e.button]||!inMatch())return;const mask={1:4,3:8,4:16}[e.button];e.preventDefault();if(e.buttons&mask)pingMenu.begin(PING_MOUSE_BUTTONS[e.button],e.clientX,e.clientY,'mouse-'+e.button);else pingMenu.end('mouse-'+e.button);}
+for(const type of ['pointerdown','pointermove','pointerup'])window.addEventListener(type,mousePingPointer,true);
+// Preserve native mouse support and suppress automatic scrolling/history navigation.
+window.addEventListener('mousedown',e=>{const kind=PING_MOUSE_BUTTONS[e.button];if(!kind||!inMatch())return;e.preventDefault();if(pingMenu.begin(kind,e.clientX,e.clientY,'mouse-'+e.button)){$('arena').focus();}},true);
+window.addEventListener('mouseup',e=>{if(!PING_MOUSE_BUTTONS[e.button]||!inMatch())return;e.preventDefault();pingMenu.end('mouse-'+e.button);},true);
+window.addEventListener('auxclick',e=>{if(PING_MOUSE_BUTTONS[e.button]&&inMatch())e.preventDefault();},true);
 
 function chargeChampion(e){return ['yan','hohenheim'].includes(e.key);}
 function cancelBasicCharge(e){Yan.cancelCharge(e);Hohenheim.cancelCharge(e);cancelHeath(e);Don.cancel(game,e);}
@@ -209,6 +216,7 @@ function updateDrag(e){
 }
 $('arena').addEventListener('pointermove',updatePointer);window.addEventListener('pointermove',updateDrag);
 $('arena').addEventListener('pointerdown',e=>{
+ if(PING_MOUSE_BUTTONS[e.button])return;
  if(!active()||globalTarget||scoreOpen||!$('shop').classList.contains('hidden'))return;updatePointer(e);e.preventDefault();$('arena').focus();
  if(Infiltration.absent(game.player)){if(e.button===0)confirmOrAttack();if(e.button===2){game.input.precision=true;$('arena').setPointerCapture(e.pointerId);}return;}
  if(e.button===0){if(game.targeting){confirmOrAttack();return;}game.input.fire=true;game.attack(game.player,game.input.aim);}
@@ -271,7 +279,8 @@ function updateHud(){
  const boss=game.units.find(u=>u.camp==='boss');$('boss-time').textContent=boss?(boss.alive?`쌓인 것 · ${Math.ceil(boss.hp).toLocaleString()} HP`:`보스 재등장 ${clock(Math.max(0,boss.respawnAt-game.time))}`):`보스까지 ${clock(Math.max(0,300-game.time))}`;
  $('player-name').textContent=`${c.name} · ${game.training?'연습장':POSITIONS[p.position].name}`;$('level').textContent=`LV.${p.level}`;$('kda').textContent=`${p.kills} / ${p.deaths} / ${p.assists}`;
  $('xp-fill').style.width=`${p.level===RULES.maxLevel?100:Math.min(100,(p.xp-RULES.xp[p.level-1])/(RULES.xp[p.level]-RULES.xp[p.level-1])*100)}%`;
- $('champion-live-status').textContent=p.key==='yan'?`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${Yan.distorted(game,p)?'손 공격':'충전 '+Math.round(Yan.chargeShape(game,p,game.input.aim).progress*100)+'%'}`:p.key==='hohenheim'?`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${Hohenheim.chargeShape(game,p,game.input.aim).hits}타 · 충전 ${Math.round(Hohenheim.chargeShape(game,p,game.input.aim).progress*100)}%`:`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${p.key==='rudolph'?'정신력':'탄약'} ${Math.floor(p.ammo)} / ${game.ammoCap(p)}`;
+ $('champion-live-status').textContent=p.key==='yan'?`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${Yan.distorted(game,p)?'손 공격':'충전 '+Math.round(Yan.chargeShape(game,p,game.input.aim).progress*100)+'%'}`:p.key==='hohenheim'?`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${Hohenheim.chargeShape(game,p,game.input.aim).hits}타 · 충전 ${Math.round(Hohenheim.chargeShape(game,p,game.input.aim).progress*100)}%`:`체력 ${Math.ceil(p.hp)} / ${Math.round(p.maxHp)} · ${p.key==='rudolph'?'정신력':'탄약'} ${Math.floor(p.ammo)} ${p.key==='jamila'?'|':'/'} ${game.ammoCap(p)}`;
+ $('jamila-ammo').classList.toggle('hidden',p.key!=='jamila');$('jamila-ammo').textContent=`${Math.floor(p.ammo)} | ${game.ammoCap(p)}`;$('jamila-ammo').classList.toggle('empty',p.ammo<1);
  $('recall-btn').title=Infiltration.replacesRecall(game,p)?'B · 1.75초 집중 → WASD 위치 이동 · 우클릭 유지로 정밀 이동 · 좌클릭 확정 → 0.5초 후 등장 · B로 취소':'B · 3초 정신집중 후 부활소로 귀환';$('recall-btn').querySelector('span').textContent=Infiltration.absent(p)?(Infiltration.selecting(p)?'침투 위치 선택':'침투 중'):p.recall?`${p.recall.infiltration?'침투 ':''}${Math.max(0,p.recall.until-game.time).toFixed(1)}s`:Infiltration.replacesRecall(game,p)?`침투${(p.state.infiltrationReady||0)>game.time?' '+Math.ceil(p.state.infiltrationReady-game.time)+'s':''}`:'귀환';$('recall-btn').classList.toggle('recalling',Boolean(p.recall)||Infiltration.absent(p));$('infiltration-help').classList.toggle('hidden',!Infiltration.absent(p)||!inMatch());$('infiltration-help').textContent=Infiltration.selecting(p)?'WASD 위치 이동 · 우클릭 / 전술기 버튼 유지: 정밀 이동 · 좌클릭 / 기본공격: 착지 확정'+(p.key==='jamila'&&p.rCd<=0?' · 궁극기: 즉시 선봉 투입':'')+' · B: 취소':'침투 중';
  $('basic-btn').querySelector('span').textContent=p.key==='ezra'?(game.buff(p,'ezraUlt')?'총공 모드':EZRA_WEAPONS[p.state.weapon||0].name):c.basic;
  for(const [slot,name,description] of [['q',c.tactical,c.qText],['r',c.ultimate,c.rText]]){const b=$(slot+'-btn');b.querySelector('span').textContent=name;b.title=description;b.disabled=slot==='r'&&(Yan.distorted(game,p)||Sora.ego(game,p));const cd=p.key==='yan'&&slot==='r'?(Yan.distorted(game,p)?p.buffs.yanDistorted-game.time:Yan.ready(game,p)?0:p.rCd):p.key==='sora'&&slot==='r'?(Sora.ego(game,p)?p.buffs.soraEgo-game.time:Sora.ready(game,p)?0:p.rCd):p[slot+'Cd'];const charges=skillCharges(game,p,slot),displayCd=Math.max(cd,charges?.remaining||0);b.querySelector('small').textContent=charges?`전술기 · ${charges.current}/${charges.max}`:slot==='q'?'전술기':'궁극기';const tracking=slot==='r'&&((p.key==='honglu'&&game.zones.find(z=>z.kind==='waterfall'&&z.source===p&&z.until>game.time)));b.querySelector('.cooldown').textContent=tracking?Math.ceil(tracking.until-game.time):displayCd>0?Math.ceil(displayCd):'';b.classList.toggle('on-cooldown',cd>0&&!tracking);b.classList.toggle('can-recast',Boolean(tracking));if(p.key==='heathcliff'&&slot==='q'&&p.state.chargeAt!==undefined)b.querySelector('span').textContent=`충전 ${Math.round(Math.min(1,(game.time-p.state.chargeAt)/1.5)*100)}% · 놓기`;if(p.key==='don'&&slot==='q'&&p.state.donCharge)b.querySelector('span').textContent=`충전 ${Math.round(Don.chargeShape(game,p,game.input.aim).progress*100)}% · 놓기`;if(p.key==='sora'&&slot==='q'&&Sora.ego(game,p))b.querySelector('span').textContent=`대행: 말살 · ${p.state.egoQCharges}/2`;}
@@ -301,6 +310,8 @@ function frame(t){
   game.input.x=globalTarget?0:Number(keys.has('KeyD'))-Number(keys.has('KeyA'));game.input.y=globalTarget?0:Number(keys.has('KeyS'))-Number(keys.has('KeyW'));
   accumulator+=elapsed*speed;while(accumulator>=1/30&&game.winner===null){renderer.follow(game,true);if(pointer)game.input.aim=renderer.point(pointer.x,pointer.y);game.step(1/30);accumulator-=1/30;}if(game.winner!==null)handleOutcome();
  }else accumulator=0;
+ document.body.classList.toggle('match-intro',inMatch()&&game.presentation?.type==='intro');
+ document.body.classList.toggle('match-cinematic',inMatch()&&presentation.blocking);
  if(mode!=='menu'&&mode!=='codex'&&mode!=='practice'&&mode!=='exited')renderer.draw(game,inMatch());if(inMatch()){renderer.minimap($('minimap'),game);const c=renderer.ctx;c.save();c.setTransform(renderer.dpr,0,0,renderer.dpr,0,0);Infiltration.draw(c,renderer.camera,game);presentation.draw(c,renderer.camera,game);c.restore();}if(scoreOpen)renderer.minimap($('score-map'),game);
  if(globalTarget){renderer.minimap($('target-map'),game);if(globalPoint){const c=$('target-map').getContext('2d'),sx=$('target-map').width/game.bounds.w,sy=$('target-map').height/game.bounds.h,radius=globalKind==='ultimate'?5.25:.75;c.beginPath();c.ellipse((globalPoint.x-game.bounds.x)*sx,(globalPoint.y-game.bounds.y)*sy,radius*sx,radius*sy,0,0,Math.PI*2);c.fillStyle='#ffac5033';c.fill();c.strokeStyle='#ffd396';c.lineWidth=2;c.stroke();}}
  audio.sync(game,{paused:paused||modalOpen(),playing:inMatch()});

@@ -309,3 +309,13 @@ body.in-game .augment-tray,body.in-game .augment-tray.carrier{--cell:56px;grid-t
 @media(max-width:760px){body.in-game #sound-toggle{position:fixed;left:162px;right:auto;top:67px;width:28px;height:28px;min-width:28px;padding:0;font-size:0;line-height:28px;letter-spacing:0;background:#172522ed;border:1px solid #617d7e;z-index:12}body.in-game #sound-toggle:before{content:'♪';font-size:17px}body.in-game #sound-toggle[aria-pressed=false]:before{opacity:.4}}@media(max-width:540px){body.in-game #sound-toggle{left:141px}}
 
 #detail-effect{white-space:pre-line}
+
+.fps-ammo{position:absolute;right:54px;bottom:6px;color:#f0d69b;font:bold 16px monospace;font-variant-numeric:tabular-nums;letter-spacing:1px;text-shadow:0 1px 3px #000}.fps-ammo.empty{color:#ec9b8b}.champion-exclusive{margin-top:24px;padding-top:16px;border-top:1px solid #53696c}.champion-exclusive h4{color:#cfbc8b;margin:14px 0 7px;font-size:14px}
+
+body.match-intro .hud,body.match-intro .match-bar,body.match-intro .field-top,body.match-intro .underbar,body.match-intro #minimap,body.match-intro #score-toggle,body.match-intro #ping-controls,body.match-intro #buff-tray,body.match-intro #augment-tray,body.match-intro #event-feed,body.match-intro #battle-announcement{visibility:hidden;pointer-events:none}
+
+body.match-cinematic #augment-tray,body.match-cinematic #shop,body.match-cinematic #shop-toggle{visibility:hidden;pointer-events:none}
+
+@font-face{font-family:"City Tactical";src:url("./assets/chakra-petch-bold.ttf") format("truetype");font-style:normal;font-weight:700;font-display:block}
+
+@media(max-width:760px){.fps-ammo{font-size:14px;letter-spacing:.5px;right:49px}}@media(max-width:540px){.fps-ammo{font-size:12px;letter-spacing:.3px}}

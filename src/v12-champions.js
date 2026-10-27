@@ -5,7 +5,7 @@ import { settleBody } from './collision.js';
 import { dash,targetAt } from './skills.js';
 import { KIM_WAVE_HALF_WIDTH,KIM_COUNTER_HALF_WIDTH } from './projectile-rules.js';
 
-export const KIM={shield:120,qRange:2.8,qDamage:250,grab:1.8,throwDamage:100,rDamage:450,counterDamage:338};
+export const KIM={shield:60,shieldRatio:.012,shieldTime:5,qRange:2.8,qDamage:250,grab:1.8,throwDamage:100,rDamage:450,counterDamage:338};
 export function recast(g,e,slot){return e.key==='kim'&&slot==='q'&&e.state.swordGrab?.until>g.time&&Boolean(carried(g,e));}
 export function validate(g,e,slot,p){
  if(e.key==='kim'&&slot==='q'&&!recast(g,e,slot)&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
@@ -70,7 +70,7 @@ export function cast(g,e,slot,p,d){
 export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
  if(t.key==='kim'&&t.state.counter&&actual+absorbed>0&&e.team!==t.team)counterWave(g,t,true);
  if(proc&&actual+absorbed>0&&e.key==='kim'&&t.kind==='champion'&&e.team!==t.team&&e.passiveReady<=g.time){
-  e.passiveReady=g.time+1;for(const ally of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=4)){g.addShield(ally,KIM.shield,`sword-${e.id}`,3);g.addBuff(ally,'swordDiscipline',3,{copy:false});}g.support(e);
+  e.passiveReady=g.time+1;for(const ally of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=4)){g.addShield(ally,KIM.shield+e.maxHp*KIM.shieldRatio,`sword-${e.id}`,KIM.shieldTime);g.addBuff(ally,'swordDiscipline',KIM.shieldTime,{copy:false});}g.support(e);
  }
 }
 

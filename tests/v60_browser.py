@@ -8,7 +8,7 @@ with sync_playwright() as pw:
  if offline:
   p.route('http*://**/*',lambda r:r.abort());html=(root/'dist/city-border.html').read_text().replace('if (new URLSearchParams(location.search).has("debug"))','if (true)');p.set_content(html,wait_until='networkidle',timeout=60000)
  else:p.goto('http://127.0.0.1:5180/?debug=1',wait_until='networkidle')
- p.click('#practice-open');p.click('#start');p.evaluate('''()=>{const g=__moba.game,v=__moba.presentation;window.tickPresent60=v.tick.bind(v);v.tick=()=>{};v.state.elapsed=0;g.step=()=>{};g.time=0;}''');p.wait_for_function('__moba.renderer.scene25d.decor.ready');p.wait_for_timeout(80)
+ p.click('#practice-open');p.click('#start');p.evaluate('''()=>{const g=__moba.game,v=__moba.presentation;window.tickPresent60=v.tick.bind(v);v.tick=()=>{};v.state.elapsed=1.8;g.step=()=>{};g.time=0;}''');p.wait_for_function('__moba.renderer.scene25d.decor.ready');p.wait_for_timeout(80)
  assert p.evaluate('__moba.game.time===0&&__moba.game.hidden(__moba.game.player)&&__moba.game.hidden(__moba.game.units.find(e=>e.kind==="neutral"))')
  assert p.evaluate('Math.abs(__moba.renderer.camera.scale/Math.max(__moba.renderer.width/32,__moba.renderer.height/21)-.625)<1e-6')
  p.screenshot(path=str(art/f'v60-intro-overview{suffix}.png'));p.evaluate('tickPresent60(.2,__moba.game)');p.wait_for_timeout(80);assert p.evaluate('!__moba.game.hidden(__moba.game.units.find(e=>e.kind==="neutral"))&&__moba.game.hidden(__moba.game.player)');p.screenshot(path=str(art/f'v60-creep-spawn{suffix}.png'))

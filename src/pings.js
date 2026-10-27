@@ -3,6 +3,7 @@ import { MAP_CENTER } from './data.js';
 import { drawPingIcon } from './ping-icons.js';
 export const PING_COLORS={attack:'#ff9b61',defend:'#86d8f7',danger:'#ff626c'};
 export const PING_KEYS={KeyQ:'attack',KeyE:'defend',KeyR:'danger'};
+export const PING_MOUSE_BUTTONS={1:'attack',3:'defend',4:'danger'};
 export const PING_LABELS={attack:'공격!',defend:'도움!',danger:'후퇴!'};
 export function choices(g,kind){
  const team=g.player.team,items=[];

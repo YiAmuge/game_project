@@ -12,7 +12,7 @@
   <header class="masthead">
     <a id="home" class="brand" href="#" aria-label="도시 경계 처음으로"><span class="brand-mark">◈</span><span>도시 경계<small>CITY BORDER</small></span></a>
     <nav><span class="nav-active">아레나</span><button id="archive-open">도감</button><button id="help-open">플레이 가이드 ↗</button></nav>
-    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.62.0</b></span>
+    <span class="build-tag"><i></i> LOCAL PROTOTYPE <b>0.63.0</b></span>
   </header>
   <main>
     <section class="match-bar" aria-label="경기 상태">
@@ -25,7 +25,7 @@
       <canvas id="arena" aria-label="플레이어 중심 4대4 전장. WASD 이동, 마우스 조준, 좌클릭 공격, 우클릭 전술기, Space 궁극기, F12 전체 화면." tabindex="0"></canvas>
       <canvas id="minimap" width="224" height="126" aria-label="팀 위치와 현재 카메라 범위" class="minimap hidden"></canvas>
       <div class="field-legend"><span class="blue-dot">아군</span><span class="red-dot">적군</span><span class="gold-dot">중립</span><span class="purple-dot">보스</span><span class="map-note">푸른연기 · 원거리 은닉 / 근접 탐지</span></div>
-      <div id="ping-controls" class="ping-controls" aria-label="팀 신호"><button data-ping="attack" title="Q 짧게: 공격! · 길게 누르고 드래그: 대상 선택"><kbd>Q</kbd> 공격</button><button data-ping="defend" title="E 짧게: 도움! · 길게 누르고 드래그: 대상 선택"><kbd>E</kbd> 도움</button><button data-ping="danger" title="R 짧게: 후퇴! · 길게 누르고 드래그: 대상 선택"><kbd>R</kbd> 후퇴</button></div>
+      <div id="ping-controls" class="ping-controls" aria-label="팀 신호"><button data-ping="attack" title="Q / 휠클릭 짧게: 공격! · 길게 누르고 드래그: 대상 선택"><kbd>Q</kbd> 공격</button><button data-ping="defend" title="E / 마우스4 짧게: 도움! · 길게 누르고 드래그: 대상 선택"><kbd>E</kbd> 도움</button><button data-ping="danger" title="R / 마우스5 짧게: 후퇴! · 길게 누르고 드래그: 대상 선택"><kbd>R</kbd> 후퇴</button></div>
       <div id="infiltration-help" class="infiltration-help hidden" role="status"></div>
       <div id="event-feed" class="event-feed" aria-live="polite"></div>
       <section id="battle-announcement" class="battle-announcement hidden" role="status" aria-live="polite" aria-atomic="true"><span id="announcement-kicker"></span><strong id="announcement-title"></strong><p id="announcement-detail"></p></section>
@@ -39,7 +39,7 @@
       <section id="result" class="result hidden" aria-live="polite"><span class="eyebrow">OPERATION COMPLETE</span><h1 id="result-title"></h1><p id="result-reason"></p><div id="result-stats"></div><button id="restart" class="primary">다시 출격 준비 <span>→</span></button></section>
     </section>
     <section class="hud" aria-label="플레이어 상태와 기술">
-      <div class="player-card"><div id="portrait" class="portrait"><canvas id="hud-face" width="80" height="80"></canvas><small id="level">LV.1</small></div><div class="player-vitals"><div><b id="player-name">파우스트</b><span id="kda">0 / 0</span></div><div class="xp-track"><i id="xp-fill"></i></div><button id="recall-btn" class="recall-btn" title="B · 3초 정신집중 후 부활소로 귀환"><kbd>B</kbd><span>귀환</span></button><span id="champion-live-status" class="sr-only"></span></div></div>
+      <div class="player-card"><div id="portrait" class="portrait"><canvas id="hud-face" width="80" height="80"></canvas><small id="level">LV.1</small></div><div class="player-vitals"><div><b id="player-name">파우스트</b><span id="kda">0 / 0</span></div><div class="xp-track"><i id="xp-fill"></i></div><button id="recall-btn" class="recall-btn" title="B · 3초 정신집중 후 부활소로 귀환"><kbd>B</kbd><span>귀환</span></button><output id="jamila-ammo" class="fps-ammo hidden" aria-label="현재 탄창 | 최대 탄창"></output><span id="champion-live-status" class="sr-only"></span></div></div>
       <div class="abilities"><div id="passive-slot" class="ability passive" tabindex="0" role="status" aria-label="챔피언 패시브"><kbd>PASSIVE</kbd><span></span><small>패시브</small><b class="cooldown"></b></div><button id="basic-btn" class="ability"><kbd>LMB</kbd><span>대상 분석</span><small>수동 조준</small></button><button id="q-btn" class="ability"><kbd>RMB</kbd><span>탐구</span><small>전술기</small><b class="cooldown"></b></button><button id="r-btn" class="ability ultimate"><kbd>SPACE</kbd><span>표상방출기</span><small>궁극기</small><b class="cooldown"></b></button></div>
       <button id="shop-toggle" class="shop-toggle"><span>◈ <b id="gold">250</b></span><small>부활소 상점 <kbd>G</kbd></small></button>
     </section>

@@ -17,25 +17,25 @@ function arena(key='jamila'){
 function enemy(g,x=45,y=25){const e=g.makeChampion('faust',1,g.nextId+20);Object.assign(e,{x,y,maxHp:100000,hp:100000,armor:0,lastDamageAt:999,lastAttackAt:999});return e;}
 test('Jamila is a bottom marksman/protector with the specified stats, ammo and cadence',()=>{
  const {g,p}=arena();assert.deepEqual(CHAMPIONS.jamila.roles,['저격','보호']);assert.equal(CHAMPIONS.jamila.recommendedPosition,'bottom');
- near(p.maxHp,3400);near(g.armor(p),40);near(g.speed(p),3.45);near(g.attackInterval(p),.25);near(g.reloadInterval(p),1.75);near(g.ammoCap(p),16);near(g.bonusStats(p).reload,0);
+ near(p.maxHp,3400);near(g.armor(p),40);near(g.speed(p),3.45);near(g.attackInterval(p),.15);near(g.reloadInterval(p),1.5);near(g.ammoCap(p),16);near(g.bonusStats(p).reload,0);
 });
-test('one rifle round uses range 6.6 and only thirty percent of power correction',()=>{
+test('one rifle round uses range 6.6 and only sixty percent of power correction',()=>{
  const {g,p}=arena(),e=enemy(g);assert.ok(g.attack(p,e));assert.equal(g.projectiles.length,1);near(g.projectiles[0].remaining,6.6);assert.equal(p.ammo,15);run(g,.2);
- const normal=damageFormula(1,1,1)*g.powerScale(p);near(100000-e.hp,25*(1+(normal-1)*.3));near(g.shield(p),p.maxHp*.01);
+ const normal=damageFormula(1,1,1)*g.powerScale(p);near(100000-e.hp,65*(1+(normal-1)*.6));near(g.shield(p),p.maxHp*.01);
 });
 test('one-point reload upgrades gain 1.5 times their percentage and extra magazines are quadrupled',()=>{
- const {g,p}=arena();g.buy(p,'reload');near(g.reloadInterval(p),1.75/1.09);p.augments=['magazine2'];near(g.ammoCap(p),24);
+ const {g,p}=arena();g.buy(p,'reload');near(g.reloadInterval(p),1.5/1.09);p.augments=['magazine2'];near(g.ammoCap(p),24);
 });
-test('holding fire produces actual shots every quarter second without accumulating an extra frame',()=>{
- const {g,p}=arena();g.input.fire=true;g.input.aim={x:27,y:25};run(g,1.05);const shots=g.soundEvents.filter(e=>e.kind==='shot'&&e.sourceId===p.id);assert.equal(shots.length,5);for(let i=1;i<shots.length;i++)near(shots[i].at-shots[i-1].at,.25);
+test('holding fire produces actual shots every 0.15 seconds without accumulating an extra frame',()=>{
+ const {g,p}=arena();g.input.fire=true;g.input.aim={x:27,y:25};run(g,1.05);const shots=g.soundEvents.filter(e=>e.kind==='shot'&&e.sourceId===p.id);assert.equal(shots.length,7);for(let i=1;i<shots.length;i++)near(shots[i].at-shots[i-1].at,.15);
 });
-test('a partial magazine waits three seconds and then fills after a complete 1.75 second reload',()=>{
+test('a partial magazine waits three seconds and then fills after a complete 1.5 second reload',()=>{
  const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,2.99);assert.equal(p.ammo,15);assert.equal(Jamila.reloading(p),false);
- run(g,.02);assert.ok(Jamila.reloading(p));run(g,1.7);assert.equal(p.ammo,15);run(g,.05);assert.equal(p.ammo,16);assert.equal(Jamila.reloading(p),false);
+ run(g,.02);assert.ok(Jamila.reloading(p));run(g,1.45);assert.equal(p.ammo,15);run(g,.05);assert.equal(p.ammo,16);assert.equal(Jamila.reloading(p),false);
 });
 test('an empty magazine starts immediate full reload and cannot fire during it',()=>{
  const {g,p}=arena();for(let n=0;n<16;n++){p.attackCd=0;assert.ok(g.attack(p,{x:47,y:25}));}assert.equal(p.ammo,0);assert.ok(Jamila.reloading(p));assert.equal(g.attack(p,{x:47,y:25}),false);
- run(g,1.74);assert.equal(p.ammo,0);run(g,.02);assert.equal(p.ammo,16);
+ run(g,1.49);assert.equal(p.ammo,0);run(g,.02);assert.equal(p.ammo,16);
 });
 test('shooting a remaining round during reload discards progress and restarts the idle delay',()=>{
  const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,3.8);assert.ok(Jamila.reloadFraction(p)>.4);assert.ok(g.attack(p,{x:47,y:25}));
@@ -43,7 +43,7 @@ test('shooting a remaining round during reload discards progress and restarts th
 });
 test('Udjat shield stacks to twenty percent, refreshes for five seconds, and adds true damage above fifteen percent',()=>{
  const {g,p}=arena(),e=enemy(g);for(let n=0;n<14;n++)g.deal(p,e,10,{damageKind:'basic'});near(g.shield(p),p.maxHp*.14);
- const before=e.hp;g.deal(p,e,10,{damageKind:'basic'});near(before-e.hp,10*(1+(damageFormula(1,1,1)-1)*.3)*1.15);near(g.shield(p),p.maxHp*.15);
+ const before=e.hp;g.deal(p,e,10,{damageKind:'basic'});near(before-e.hp,10*(1+(damageFormula(1,1,1)-1)*.6)*1.15);near(g.shield(p),p.maxHp*.15);
  for(let n=0;n<20;n++)g.deal(p,e,10,{damageKind:'basic'});near(g.shield(p),p.maxHp*.2);run(g,5.01);near(g.shield(p),0);
 });
 test('tactical sweeps a forward semicircle after its dash and retreats four units once',()=>{
@@ -66,7 +66,7 @@ test('ultimate snapshots two targetable soldiers, keeps cooldown running and exp
 });
 test('soldiers receive half of the passive shield and never trigger the extra true damage themselves',()=>{
  const {g,p}=arena(),e=enemy(g);g.cast(p,'r',p);const [u]=Jamila.army(g,p);g.deal(p,e,10,{damageKind:'basic'});near(g.shield(u),p.maxHp*.005);
- g.addShield(p,p.maxHp*.2,'test',5);const before=e.hp,shield=g.shield(p);g.deal(u,e,15,{damageKind:'basic'});near(before-e.hp,15*(1+(u.snapshot.damagePower-1)*.3));near(g.shield(p),shield);
+ g.addShield(p,p.maxHp*.2,'test',5);const before=e.hp,shield=g.shield(p);g.deal(u,e,15,{damageKind:'basic'});near(before-e.hp,15*(1+(u.snapshot.damagePower-1)*.6));near(g.shield(p),shield);
 });
 test('soldiers prefer the commanded enemy over a nearer enemy and inherit no extra-magazine bonuses',()=>{
  const {g,p}=arena(),a=enemy(g,44,26),b=enemy(g,42,24);p.augments=['magazine2'];g.cast(p,'r',p);g.deal(p,a,1,{damageKind:'basic'});run(g,.01);

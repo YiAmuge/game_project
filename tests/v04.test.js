@@ -22,7 +22,7 @@ test('battlefield uses compressed horizontal geometry and preserves entity sizes
 });
 test('35 percent additional reload reduction applies to all runtime and future roster champions',()=>{
  close(RULES.reloadEfficiency,.8*.65);const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),key==='jamila'?1.75:RULES.reload[grade]/.8/.65/(key==='ahab'?1.15:1));}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),key==='jamila'?1.5:RULES.reload[grade]/.8/.65/(key==='ahab'?1.15:1));}
 });
 test('growth reaches level ten, caps there, and updates health and score growth',()=>{
  const {g,p}=quiet('meursault');g.award(p,RULES.xp[9],0);assert.equal(p.level,10);close(p.maxHp,4600*1.675);assert.equal(g.bonusStats(p).health,68);g.award(p,1e6,0);assert.equal(p.level,10);assert.ok(Number.isFinite(g.bonusStats(p).power));

@@ -29,7 +29,7 @@ test('packed silhouettes are separate, have transparent gutters and no detached 
 test('black round glove positions touch both handles and coincide with the rotation axes',()=>{
  assert.equal(gripAppearance('jamila').material,'black');
  for(const [asset,pivot,gripY,length]of [['jamilaRifle',.238,.3,2.25],['jamilaKopis',.12,-.02,1.75]]){
-  const m=weaponGeometry(asset,length),hands=gripLayout('jamila',asset,m,pivot);assert.equal(hands.length,1);near(hands[0].x,0);near(hands[0].y-gripY*m.height*m.scale,0);
+  const m=weaponGeometry(asset,length),hands=gripLayout('jamila',asset,m,pivot);assert.equal(hands.length,asset==='jamilaRifle'?2:1);near(hands[0].x,0);near(hands[0].y-gripY*m.height*m.scale,0);
  }
 });
 test('tactical uses the shared swing pose, returns to rifle after the cut and dims only during reload',()=>{
