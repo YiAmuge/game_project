@@ -1,6 +1,6 @@
 import { distance } from './geometry.js';
 
-export const TOWER_RULES={victimRange:1.75,heatPerStack:.2,maxHeat:6,heatReset:3};
+export const TOWER_RULES={victimRange:1.75,heatPerStack:.2,maxHeat:6,heatReset:3,armorPen:.3};
 // Summons may name their champion owner by entity or ID. Never loop on bad ownership.
 export function damageOwner(g,source){
  const seen=new Set();let e=source;

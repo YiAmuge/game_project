@@ -138,7 +138,7 @@ export class Game {
   }
   updateMotion(e,dt){
     const m=e.motion;if(!m)return;
-    if(!e.alive||!m.forced&&(this.stat(e,'stun')||this.stat(e,'root'))){delete e.motion;if(m.kind==='leap')e.untargetableUntil=0;if(e.alive)settleBody(this,e,m.lastClear);return;}
+    if(!e.alive||!m.forced&&(this.stat(e,'stun')||this.stat(e,'root'))){delete e.motion;if(m.kind==='leap'||e.key==='sinclair'&&e.castSlot==='r')e.untargetableUntil=0;if(e.alive){if(m.ignoreWalls&&this.blocked(e.x,e.y,e.radius))Object.assign(e,m.lastClear);settleBody(this,e,m.lastClear);}return;}
     if(m.follow?.alive){const d=direction(e,m.follow);m.dx=d.x;m.dy=d.y;m.remaining=Math.max(0,distance(e,m.follow)-m.stopDistance);}
     m.elapsed+=dt;
     const length=Math.min(m.remaining,m.speed*dt),n=Math.max(1,Math.ceil(length/.12));let collided=false,collision;
@@ -307,7 +307,7 @@ export class Game {
       amount*=Skills.receivedMultiplier?.(this,source,target,damageKind)??1;
       if(source.kind==='champion'&&Augments.converts(this,source)){bypass=amount*.1;amount*=.9;}
       if(target.state?.outisRush)amount*=.5;
-      amount*=100/(100+Math.max(0,this.armor(target)-this.stat(target,'armorDown'))*(1-Augments.armorPen(source)));
+      amount*=100/(100+Math.max(0,this.armor(target)-this.stat(target,'armorDown'))*(1-Math.min(1,Augments.armorPen(source)+(source.kind==='tower'?Towers.TOWER_RULES.armorPen:0))));
       if(target.kind==='minion'&&['tower','core'].includes(source.kind))amount*=target.siege?.5:target.ranged?.8:.7;
       if(target.kind==='champion') {
         if(target.key==='heathcliff'&&source.hp/source.maxHp>target.hp/target.maxHp)amount*=.9;
@@ -554,9 +554,9 @@ export class Game {
         this.support(e);this.effects.push({type:'yiBuffRange',source:e.id,theme:'yi',x:e.x,y:e.y,r:5.5,color:'#cdbb87',life:.45,maxLife:.45});
       }
       if(e.key==='sinclair') {
-        let p=destination(6);if(this.blocked(p.x,p.y,e.radius))p={x:e.x,y:e.y};
+        const p=this.safeLanding(e,point,6);
         const healthy=e.hp/e.maxHp>=.5,len=distance(e,p),travel=Math.max(.05,len/24);e.untargetableUntil=this.time+travel;
-        this.startMotion(e,direction(e,p),len,{kind:'dash',speed:24,maxSpeed:24,minDuration:travel,phaseEnemies:true,onComplete:()=>{e.untargetableUntil=0;e.state.sinclairSpinAt=this.time;e.state.sinclairSpinFacing=e.visualCast?.angle??e.facing;Skills.area(this,e,e,3.8,390);this.effects.push({type:'burst',x:e.x,y:e.y,r:3.8,theme:e.key,life:.65,maxLife:.65});}});
+        this.startMotion(e,direction(e,p),len,{kind:'dash',speed:24,maxSpeed:24,minDuration:travel,phaseEnemies:true,ignoreWalls:true,onComplete:()=>{e.untargetableUntil=0;e.state.sinclairSpinAt=this.time;e.state.sinclairSpinFacing=e.visualCast?.angle??e.facing;Skills.area(this,e,e,3.8,390);this.effects.push({type:'burst',x:e.x,y:e.y,r:3.8,theme:e.key,life:.65,maxLife:.65});}});
         if(healthy)this.addMark(e,3);else {this.addShield(e,e.maxHp*.15,`branch-${e.id}`);e.rCd*=.8;}
       }
       if(e.key==='meursault'){this.effects.push({type:'coneRange',x:e.x,y:e.y,angle:e.facing,r:8,spread:Math.PI*100/180,color:'#b3d9e6',life:.9,maxLife:.9});e.state.chainRecoveryUntil=this.time+.275;this.addBuff(e,'chainArmor',3);this.cone(e,d,8,Math.PI*100/180,270,t=>{this.status(t,'root',1,1.25);this.status(t,'weak',.12,4);});}

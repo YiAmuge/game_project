@@ -3,7 +3,6 @@ import { AHAB, RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 import { rectangle } from './reworks.js';
-import { canOccupy } from './collision.js';
 
 export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}onRespawn(g,e);}
 export function onRespawn(g,e){if(e.key==='ahab'){e.state.order='cover';g.addBuff(e,'ahabOrder',Infinity,{copy:false});}}
@@ -38,18 +37,11 @@ function harpoonBonus(g,e,t){
 }
 export function validate(g,e,slot,p){
  if(e.key==='nelly'&&slot==='q')return (e.state.knifeCharges??2)>0;
- if(e.key==='nelly'&&slot==='r')return !g.stat(e,'root')&&Boolean(targetAt(g,e,p,7));
+ if(e.key==='nelly'&&slot==='r')return !g.stat(e,'root');
  if(e.key==='ahab'&&slot==='r')return !g.stat(e,'root')&&!g.blocked(p.x,p.y,e.radius);
  return true;
 }
 export function recast(g,e,slot){return e.key==='ahab'&&slot==='r'&&e.state.recastUntil>g.time&&!e.state.recastSpent;}
-export function nellyFrontLanding(g,e,t){
- const incoming=direction(t,e),front=Math.hypot(incoming.x,incoming.y)>.01?incoming:{x:-Math.cos(e.facing||0),y:-Math.sin(e.facing||0)},angle=Math.atan2(front.y,front.x),gap=e.radius+t.radius+.15;
- for(const extra of [0,.3,.6])for(const turn of [0,Math.PI/6,-Math.PI/6,Math.PI/3,-Math.PI/3]){
-  const p=trapPoint(g,e,{x:t.x+Math.cos(angle+turn)*(gap+extra),y:t.y+Math.sin(angle+turn)*(gap+extra)});
-  if((p.x-t.x)*front.x+(p.y-t.y)*front.y>0&&canOccupy(g,e,p,{phaseEnemies:false}))return p;
- }return {x:e.x,y:e.y};
-}
 export function receivedMultiplier(g,e,t,kind){return e.key==='gahwan'&&kind==='skill'&&t.state?.contempt?.[e.id]>g.time?1.12:1;}
 function gaze(g,e,t,n=1){
  if(t.kind!=='champion'||!t.alive||t.hp<=0||g.debuffImmune?.(t))return;
@@ -109,9 +101,9 @@ export function cast(g,e,slot,p,d){
    s.knifeCharges=(s.knifeCharges??2)-1;if(!Number.isFinite(s.knifeReady))s.knifeReady=g.time+g.cooldown(e,'q');e.qCd=s.knifeCharges>0?0:s.knifeReady-g.time;let refunded=false;
    for(const off of [-.28,-.14,0,.14,.28])g.bullet(e,{x:Math.cos(e.facing+off),y:Math.sin(e.facing+off)},70,7,{speed:18,pierce:Infinity,beforeHit:t=>{e.state.knifeRefundCast=true;if(!refunded&&t.state?.nellyMarks?.[e.id]?.active){refunded=true;refundKnife(g,e);}},onHit:()=>{delete e.state.knifeRefundCast;}});
   }else{
-   e.ammo=Math.min(g.ammoCap(e),e.ammo+2);const t=targetAt(g,e,p,7);Object.assign(e,nellyFrontLanding(g,e,t));
+   e.ammo=Math.min(g.ammoCap(e),e.ammo+2);Object.assign(e,g.safeLanding(e,p,7));const t=targetAt(g,e,e,1.2);
    // Apply the forced mark after the opening strike so the following three hits preserve it.
-   g.deal(e,t,300);if(t.alive){g.status(t,'root',1,.7,e);nellyMark(g,e,t,true);}g.effects.push({type:'slash',x:e.x,y:e.y,r:2,angle:e.facing,spread:2.8,theme:e.key,life:.5,maxLife:.5});
+   if(t){g.deal(e,t,300);if(t.alive){g.status(t,'root',1,.7,e);nellyMark(g,e,t,true);}}g.effects.push({type:'slash',x:e.x,y:e.y,r:2,angle:e.facing,spread:2.8,theme:e.key,life:.5,maxLife:.5});
   }return true;
  }
  if(e.key==='ahab'){

@@ -1,4 +1,4 @@
-import{mobileAutoAim,mobileManualAim,mobileAttackTargets,attackCategory,ATTACK_CATEGORIES,rememberManualAim}from'./mobile-aim.js';
+import{mobileAutoAim,mobileManualAim,mobileAttackTargets,attackCategory,ATTACK_CATEGORIES,rememberManualAim,dashSlidePriority}from'./mobile-aim.js';
 import{gestureMode,targetButtonPositions}from'./mobile-gestures.js';
 import{installTouchScroll}from'./touch-scroll.js';
 import{targetIcon,pingIcon}from'./mobile-icons.js';
@@ -45,11 +45,12 @@ export class MobileControls{
   if(s.slot==='move'){const dx=s.x-s.cx,dy=s.y-s.cy,n=Math.hypot(dx,dy),scale=Math.min(1,n/44);this.axes={x:n>7?dx/(n||1)*scale:0,y:n>7?dy/(n||1)*scale:0};if(n>7)this.api.game().player.mobileMoveDirection={x:dx/n,y:dy/n};$('mobile-stick').style.setProperty('--stick-x',Math.max(-44,Math.min(44,dx))+'px');$('mobile-stick').style.setProperty('--stick-y',Math.max(-44,Math.min(44,dy))+'px');return;}
   if(s.precision)return;this.updateGesture(s);if(s.manual||s.autoLocked||this.chargeGesture(s,this.api.game().player))this.aim(s);
  }
- updateGesture(s){const p=this.api.game().player,charge=this.chargeGesture(s,p),continuous=charge||s.slot==='basic'&&(AUTO_HOLD.has(p.key)||distorted(this.api.game(),p));const mode=gestureMode(s,performance.now(),continuous,charge);s.manual=mode==='manual';return mode;}
+ updateGesture(s){const g=this.api.game(),p=g.player,charge=this.chargeGesture(s,p),continuous=charge||s.slot==='basic'&&(AUTO_HOLD.has(p.key)||distorted(g,p));const mode=gestureMode(s,performance.now(),continuous,charge,dashSlidePriority(g,p,s.slot));s.manual=mode==='manual';return mode;}
+ manualPoint(s){const g=this.api.game();return mobileManualAim(g,g.player,s.slot,s.x-(s.shortSlide?s.startX:s.cx),s.y-(s.shortSlide?s.startY:s.cy),this.api.camera(),{category:s.category});}
  autoAim(s){const g=this.api.game(),auto=mobileAutoAim(g,g.player,s.slot,{category:s.category,targetId:s.autoTarget,movement:this.axes});s.autoTarget=auto.target?.id;return auto;}
  aim(s){
   const g=this.api.game(),p=g.player;if(!this.api.allowed()||s.owner!==p.id||s.game!==g)return;
-  const dx=s.x-s.cx,dy=s.y-s.cy;s.point=s.manual?mobileManualAim(g,p,s.slot,dx,dy,this.api.camera()):this.autoAim(s).point;g.input.aim=s.point;g.mobileAim={slot:s.slot,point:s.point,autoTarget:s.manual?undefined:s.autoTarget};
+  s.point=s.manual?this.manualPoint(s):this.autoAim(s).point;g.input.aim=s.point;g.mobileAim={slot:s.slot,point:s.point,autoTarget:s.manual?undefined:s.autoTarget};
   const rect=$('mobile-cancel').getBoundingClientRect();s.cancel=s.manual&&s.x>=rect.left&&s.x<=rect.right&&s.y>=rect.top&&s.y<=rect.bottom;document.body.classList.add('mobile-aiming');document.body.classList.toggle('mobile-canceling',Boolean(s.cancel));
   if(s.cancel){g.input.fire=false;return;}
   // A held button remains queued when an automatic discharge/cancel ends a charge.
@@ -63,6 +64,7 @@ export class MobileControls{
   if(canceled||s.cancel||!this.api.allowed()||s.owner!==p.id||s.game!==g){this.api.cancelCharge(p);this.finishAim(g);return;}
   if(Infiltration.selecting(p)&&s.slot==='basic'){this.api.confirm();this.finishAim(g);return;}
   if(s.autoHeld&&!s.manual){this.finishAim(g);return;}
+  s.x=e.clientX;s.y=e.clientY;this.updateGesture(s);if(s.manual)s.point=this.manualPoint(s);
   const auto=this.autoAim(s);if(!s.manual&&auto.unavailable){this.api.cancelCharge(p);this.finishAim(g);return;}const point=s.manual?(s.point||auto.point):auto.point;g.input.aim=point;this.api.takeAim();
   if(s.manual)rememberManualAim(p,s.slot,point);
   if(s.slot==='basic'){
