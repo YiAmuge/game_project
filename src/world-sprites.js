@@ -177,6 +177,11 @@ export const WORLD_FRAMES={
       0.49980642663569497,
       0.9807692307692307
     ],
+    "ground": [
+      0.49980642663569497,
+      0.9206730769230769
+    ],
+    "groundBasis": "plinth-footprint-center",
     "heightBasis": "crown-to-ground"
   },
   "uniform_blue_core": {
@@ -232,6 +237,11 @@ export const WORLD_FRAMES={
       0.49980642663569497,
       0.9807692307692307
     ],
+    "ground": [
+      0.49980642663569497,
+      0.9180975274725275
+    ],
+    "groundBasis": "plinth-footprint-center",
     "heightBasis": "crown-to-ground"
   },
   "uniform_red_core": {
@@ -287,6 +297,11 @@ export const WORLD_FRAMES={
       0.49908487760237935,
       0.9807692307692307
     ],
+    "ground": [
+      0.49908487760237935,
+      0.9176895799236225
+    ],
+    "groundBasis": "plinth-footprint-center",
     "heightBasis": "crown-to-ground"
   },
   "suit_blue_core": {
@@ -342,6 +357,11 @@ export const WORLD_FRAMES={
       0.4987380111055023,
       0.9807692307692307
     ],
+    "ground": [
+      0.4987380111055023,
+      0.9162136450122317
+    ],
+    "groundBasis": "plinth-footprint-center",
     "heightBasis": "crown-to-ground"
   },
   "suit_red_core": {

@@ -3,7 +3,7 @@ import {distance,direction} from './geometry.js';
 import {canOccupy} from './collision.js';
 import * as Infiltration from './infiltration.js';
 
-export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,reload:1.5,powerRatio:.55,shield:.01,shieldCap:.075,shieldTime:5,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
+export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,idlePerRound:.12,idleReductionCap:1.2,reload:1.5,powerRatio:.55,shield:.015,shieldEvery:4,shieldCap:.075,shieldTime:3,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
 export const isTrooper=e=>Boolean(e.lcaTrooper);
 export const army=(g,e)=>g.units.filter(t=>t.lcaTrooper&&t.owner===e.id&&t.alive&&t.until>g.time);
 export const commander=(g,e)=>e.lcaTrooper?g.units.find(t=>t.id===e.owner):e;
@@ -11,13 +11,19 @@ export const squadBonus=(g,e)=>{const owner=commander(g,e);return owner?.key==='
 export const reloadDuration=(g,e)=>JAMILA.reload/Math.max(.2,1+1.5*(g.reloadMultiplier(e)-1));
 export const reloading=e=>Boolean(e.state?.lcaReload);
 export const reloadFraction=e=>Math.min(1,(e.state?.lcaReload?.progress||0)/JAMILA.reload);
+export const idleDelay=e=>JAMILA.idle-Math.min(JAMILA.idleReductionCap,Math.max(0,e.ammo)*JAMILA.idlePerRound);
+export const shieldRounds=e=>Math.ceil(Math.max(0,e.ammo)/JAMILA.shieldEvery);
+export function shareShield(g,e,gained,seconds,source){
+ if(e.key!=='jamila'||e.kind!=='champion'||!e.alive)return;
+ for(const u of army(g,e)){const id=`udjat-shared-${e.id}-${source}`,ward=u.shields.find(s=>s.source===id&&s.until>g.time);if(gained>0)g.addShield(u,(ward?.value||0)+gained*.5,id,seconds,false);else if(ward)ward.until=g.time+seconds;}
+}
 export function beginReload(g,e){if(!e.state.lcaReload&&e.ammo<g.ammoCap(e)){e.state.lcaReload={at:g.time,progress:0};e.reloadProgress=0;g.emitSound('reload',e,{phase:'lca-reload'});}}
 export function tickReload(g,e,dt){
  // Avoid an extra simulation frame between rounds from floating-point residue.
  if(e.attackCd<1e-8)e.attackCd=0;
  const cap=g.ammoCap(e);if(e.ammo>=cap){delete e.state.lcaReload;e.reloadProgress=0;return;}
  if(e.ammo<1&&e.state.jamilaQ&&!reloading(e))return;
- if(!reloading(e)&&(e.ammo<1||g.time-(e.state.lcaShotAt??-Infinity)>=JAMILA.idle-1e-8))beginReload(g,e);
+ if(!reloading(e)&&(e.ammo<1||g.time-(e.state.lcaShotAt??-Infinity)>=idleDelay(e)-1e-8))beginReload(g,e);
  const r=e.state.lcaReload;if(!r)return;
  r.progress+=dt*Math.max(.2,1+1.5*(g.reloadMultiplier(e)-1));e.reloadProgress=reloadFraction(e)*reloadDuration(g,e);
  if(r.progress+1e-8>=JAMILA.reload){e.ammo=cap;delete e.state.lcaReload;e.reloadProgress=0;g.emitSound('reload',e,{phase:'lca-ready'});}
@@ -27,16 +33,15 @@ export function basic(g,e,p,d){
  delete e.state.lcaReload;e.reloadProgress=0;e.state.lcaShotAt=g.time;
  // Carry at most one simulation frame of timing debt instead of slowing sustained fire.
  const due=e.state.lcaNextShot,at=due!==undefined&&due<=g.time+1e-8&&g.time-due<=1/30+1e-8?due:g.time;e.state.lcaNextShot=at+JAMILA.interval;e.attackCd=Math.max(0,e.state.lcaNextShot-g.time);
- g.bullet(e,d,e.lcaTrooper?JAMILA.trooperDamage:JAMILA.damage,g.attackRange(e),{speed:28,width:.11,color:'#e6cd77',theme:'jamila',lca:true});
+ const special=!e.lcaTrooper&&e.ammo%JAMILA.shieldEvery===0;
+ g.bullet(e,d,e.lcaTrooper?JAMILA.trooperDamage:JAMILA.damage,g.attackRange(e),{speed:28,width:.11,color:special?'#59b8ff':'#e6cd77',theme:'jamila',lca:true,lcaShieldRound:special});
+ if(special){const id=`udjat-${e.id}`,old=e.shields.find(s=>s.source===id&&s.until>g.time)?.value||0;g.addShield(e,Math.min(e.maxHp*JAMILA.shieldCap,old+e.maxHp*JAMILA.shield),id,JAMILA.shieldTime);}
  if(e.ammo<1)beginReload(g,e);return true;
 }
 export function afterDamage(g,e,t,actual,proc,damageKind,absorbed){
  if(e.lcaTrooper){const owner=commander(g,e);if(owner&&actual+absorbed>0){owner.lastCombat=owner.lastAttackAt=g.time;owner.totalDamage=(owner.totalDamage||0)+actual;if(owner.player)g.damageDone+=actual;if(t.kind==='champion'){t.lastEnemyDamage={id:owner.id,at:g.time};t.contributors[owner.id]=g.time;}}return;}
  if(e.key!=='jamila'||e.kind!=='champion'||!proc||!(actual+absorbed>0)||e.team===t.team||!e.alive)return;
  e.state.lcaTarget=t.id;
- const id=`udjat-${e.id}`,old=e.shields.find(s=>s.source===id&&s.until>g.time)?.value||0,increment=e.maxHp*JAMILA.shield;
- g.addShield(e,Math.min(e.maxHp*JAMILA.shieldCap,old+increment),id,JAMILA.shieldTime);
- for(const u of army(g,e)){const shared=`udjat-shared-${e.id}`,before=u.shields.find(s=>s.source===shared&&s.until>g.time)?.value||0;g.addShield(u,before+increment*.5,shared,JAMILA.shieldTime);}
  if(t.alive&&t.hp>0)g.deal(e,t,(actual+absorbed)*JAMILA.bonusDamage,{rawPower:true,proc:false,campBonus:false,damageKind});
 }
 export function validate(g,e,slot){return !e.state.jamilaQ&&(slot!=='q'||!g.stat(e,'root')&&!g.stat(e,'captured')&&!g.stat(e,'netCapture'));}

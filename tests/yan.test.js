@@ -43,8 +43,8 @@ test('uncharged taps cannot repeat faster than .85 seconds; charged time counts 
  const {g,p}=quiet(),t=target(g);p.upgrades.reload=3;g.attack(p,t);Yan.release(g,p,t);close(p.attackCd,.85);run(g,.84);assert.equal(g.attack(p,t),false);run(g,.02);assert.ok(g.attack(p,t));run(g,.5);Yan.release(g,p,t);close(p.attackCd,.65);
  transform(g,p);p.attackCd=0;g.attack(p,p);close(p.attackCd,.15);
 });
-test('full charge reaches 6.5, uses 200 maximum damage, slows movement ten percent, and never autofires for players',()=>{
- const {g,p}=quiet(),t=target(g,46.5),base=g.speed(p);g.attack(p,t);close(g.speed(p),base*.9);run(g,1.6);close(t.hp,10000);close(Yan.chargeShape(g,p,t).progress,1);Yan.release(g,p,t);close(10000-t.hp,damageFormula(200,2,1));close(g.speed(p),base);
+test('full charge reaches seven, uses 200 maximum damage, slows movement ten percent, and never autofires for players',()=>{
+ const {g,p}=quiet(),t=target(g,47),base=g.speed(p);g.attack(p,t);close(g.speed(p),base*.9);run(g,1.6);close(t.hp,10000);close(Yan.chargeShape(g,p,t).progress,1);Yan.release(g,p,t);close(10000-t.hp,damageFormula(200,2,1));close(g.speed(p),base);
 });
 test('half charge interpolates between minimum 50 and the fully charged 200',()=>{
  const {g,p}=quiet(),t=target(g);g.attack(p,t);run(g,.75);Yan.release(g,p,t);close(10000-t.hp,damageFormula(125,2,1));

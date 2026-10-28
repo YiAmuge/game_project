@@ -51,8 +51,8 @@ const pad=8,referenceHeight=400,sprites=entries.map(entry=>{
   let left=im.width,right=0;for(const at of p.pixels)if((at/im.width|0)>=p.b-(p.b-p.t)*.09){left=Math.min(left,at%im.width);right=Math.max(right,at%im.width+1);}anchor=(left+right)/2;
  }
  let groundAnchor;
- if(entry.kind==='core'){
-  // The headquarters' world location is the center of its round footprint,
+ if(['core','tower'].includes(entry.kind)){
+  // A building's world location is the center of its round footprint,
   // not the front lip. Opposite plinth side corners define its ground midline.
   const edge=(p.r-p.l)*.02;let left=-Infinity,right=-Infinity;
   for(const at of p.pixels){const x=at%im.width,y=at/im.width|0;if(x<=p.l+edge)left=Math.max(left,y);if(x>=p.r-1-edge)right=Math.max(right,y);}

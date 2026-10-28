@@ -9,7 +9,7 @@ export function projectileAppearance(p,g){
  const type=key==='sewingNeedle'?'needle':key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?(p.visualHeight??1):p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
- return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(type==='swordRay'?{visualWidth:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:p.guboUltimate?'#d24b66':empowered?'#a32b44':null};
+ return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(p.lcaShieldRound?{color:'#59b8ff',accent:'#c1ebff',dark:'#173c69'}:{}),...(type==='swordRay'?{visualWidth:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:p.lcaShieldRound?'#3b9eff':p.guboUltimate?'#d24b66':empowered?'#a32b44':null};
 }
 export function beamAppearance(key){
  const width=key==='gubo'?2.5:key==='rudolph'?3.5:1,color=key==='gubo'?'#74192e':key==='rudolph'?'#dc9852':'#a3d6d2',tuned=['gubo','rudolph'].includes(key);

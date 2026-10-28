@@ -21,7 +21,7 @@ test('Jamila is a bottom marksman/protector with the specified stats, ammo and c
 });
 test('one rifle round uses range 6.6 and 55 percent of power correction',()=>{
  const {g,p}=arena(),e=enemy(g);assert.ok(g.attack(p,e));assert.equal(g.projectiles.length,1);near(g.projectiles[0].remaining,6.6);assert.equal(p.ammo,15);run(g,.2);
- const normal=damageFormula(1,1,1)*g.powerScale(p);near(100000-e.hp,50*(1+(normal-1)*.55)*1.15);near(g.shield(p),p.maxHp*.01);
+ const normal=damageFormula(1,1,1)*g.powerScale(p);near(100000-e.hp,50*(1+(normal-1)*.55)*1.15);near(g.shield(p),0);
 });
 test('one-point reload upgrades gain 1.5 times their percentage and extra magazines are quadrupled',()=>{
  const {g,p}=arena();g.buy(p,'reload');near(g.reloadInterval(p),1.5/1.09);p.augments=['magazine2'];near(g.ammoCap(p),24);
@@ -29,8 +29,8 @@ test('one-point reload upgrades gain 1.5 times their percentage and extra magazi
 test('holding fire produces actual shots every 0.15 seconds without accumulating an extra frame',()=>{
  const {g,p}=arena();g.input.fire=true;g.input.aim={x:27,y:25};run(g,1.05);const shots=g.soundEvents.filter(e=>e.kind==='shot'&&e.sourceId===p.id);assert.equal(shots.length,7);for(let i=1;i<shots.length;i++)near(shots[i].at-shots[i-1].at,.15);
 });
-test('a partial magazine waits three seconds and then fills after a complete 1.5 second reload',()=>{
- const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,2.99);assert.equal(p.ammo,15);assert.equal(Jamila.reloading(p),false);
+test('a partial magazine starts early according to remaining rounds and fills after a complete 1.5 second reload',()=>{
+ const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,1.79);assert.equal(p.ammo,15);assert.equal(Jamila.reloading(p),false);
  run(g,.02);assert.ok(Jamila.reloading(p));run(g,1.45);assert.equal(p.ammo,15);run(g,.05);assert.equal(p.ammo,16);assert.equal(Jamila.reloading(p),false);
 });
 test('an empty magazine starts immediate full reload and cannot fire during it',()=>{
@@ -38,11 +38,12 @@ test('an empty magazine starts immediate full reload and cannot fire during it',
  run(g,1.49);assert.equal(p.ammo,0);run(g,.02);assert.equal(p.ammo,16);
 });
 test('shooting a remaining round during reload discards progress and restarts the idle delay',()=>{
- const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,3.8);assert.ok(Jamila.reloadFraction(p)>.4);assert.ok(g.attack(p,{x:47,y:25}));
- assert.equal(p.ammo,14);assert.equal(Jamila.reloading(p),false);near(p.reloadProgress,0);run(g,2.99);assert.equal(Jamila.reloading(p),false);
+ const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,2.6);assert.ok(Jamila.reloadFraction(p)>.4);assert.ok(g.attack(p,{x:47,y:25}));
+ assert.equal(p.ammo,14);assert.equal(Jamila.reloading(p),false);near(p.reloadProgress,0);run(g,1.79);assert.equal(Jamila.reloading(p),false);
 });
-test('Udjat shield caps at 7.5 percent and its armor-mitigated bonus applies on every hit',()=>{
- const {g,p}=arena(),e=enemy(g);const before=e.hp;g.deal(p,e,10,{damageKind:'basic'});near(before-e.hp,10*(1+(damageFormula(1,1,1)-1)*.55)*1.15);near(g.shield(p),p.maxHp*.01);for(let n=0;n<20;n++)g.deal(p,e,10,{damageKind:'basic'});near(g.shield(p),p.maxHp*.075);run(g,5.01);near(g.shield(p),0);
+test('Udjat shield comes from special fired rounds and its bonus applies on every hit',()=>{
+ const {g,p}=arena(),e=enemy(g);const before=e.hp;g.deal(p,e,10,{damageKind:'basic'});near(before-e.hp,10*(1+(damageFormula(1,1,1)-1)*.55)*1.15);near(g.shield(p),0);
+ for(let n=0;n<20;n++){p.attackCd=0;if(!p.ammo)p.ammo=16;g.attack(p,{x:30,y:25});}near(g.shield(p),p.maxHp*.075);run(g,3.01);near(g.shield(p),0);
 });
 test('tactical sweeps a forward semicircle after its dash and retreats four units once',()=>{
  const {g,p}=arena(),front=enemy(g,46),behind=enemy(g,42,28.8);assert.ok(g.cast(p,'q',{x:50,y:25}));assert.equal(p.state.jamilaQ.phase,'dash');run(g,.19);
@@ -59,12 +60,12 @@ test('low-health tactical cooldown runs fifty percent faster and adjusts immedia
 test('ultimate snapshots two targetable soldiers, keeps cooldown running and expires both after ten seconds',()=>{
  const {g,p}=arena(),baseSpeed=g.speed(p);assert.ok(g.cast(p,'r',p));const units=Jamila.army(g,p);assert.equal(units.length,2);
  for(const u of units){near(u.maxHp,p.maxHp*.45);near(g.armor(u),40*.45);near(g.combatPower(u),g.combatPower(p)*.2);near(g.ammoCap(u),16);assert.ok(g.hostile(enemy(g,70),u));near(g.speed(u),baseSpeed*1.1);}
- near(g.speed(p),baseSpeed*1.1);near(g.reloadMultiplier(p),1.1);const hp=units[0].maxHp,armor=g.armor(units[0]);p.upgrades.health=3;p.upgrades.power=3;p.armor=90;g.refreshEquipment(p);near(units[0].maxHp,hp);near(g.armor(units[0]),armor);
+ near(g.speed(p),baseSpeed*1.1);near(g.reloadMultiplier(p),1);const hp=units[0].maxHp,armor=g.armor(units[0]);p.upgrades.health=3;p.upgrades.power=3;p.armor=90;g.refreshEquipment(p);near(units[0].maxHp,hp);near(g.armor(units[0]),armor);
  run(g,1);near(p.rCd,74);g.kill(units[0],p);near(Jamila.squadBonus(g,p),.05);run(g,9.02);assert.equal(Jamila.army(g,p).length,0);near(p.rCd,64.975,.02);
 });
-test('soldiers receive half of the passive shield and never trigger the extra damage themselves',()=>{
- const {g,p}=arena(),e=enemy(g);g.cast(p,'r',p);const [u]=Jamila.army(g,p);g.deal(p,e,10,{damageKind:'basic'});near(g.shield(u),p.maxHp*.005);
- g.addShield(p,p.maxHp*.2,'test',5);const before=e.hp,shield=g.shield(p);g.deal(u,e,15,{damageKind:'basic'});near(before-e.hp,15*(1+(u.snapshot.damagePower-1)*.55));near(g.shield(p),shield);
+test('soldiers receive half of newly acquired shields and never trigger the extra damage themselves',()=>{
+ const {g,p}=arena(),e=enemy(g);g.cast(p,'r',p);const [u]=Jamila.army(g,p);g.deal(p,e,10,{damageKind:'basic'});near(g.shield(u),0);
+ g.addShield(p,p.maxHp*.2,'test',5);const before=e.hp,shield=g.shield(p);g.deal(u,e,15,{damageKind:'basic'});near(before-e.hp,15*(1+(u.snapshot.damagePower*1.1-1)*.55));near(g.shield(p),shield);
 });
 test('soldiers prefer the commanded enemy over a nearer enemy and inherit no extra-magazine bonuses',()=>{
  const {g,p}=arena(),a=enemy(g,44,26),b=enemy(g,42,24);p.augments=['magazine2'];g.cast(p,'r',p);g.deal(p,a,1,{damageKind:'basic'});run(g,.01);

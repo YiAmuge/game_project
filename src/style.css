@@ -549,3 +549,28 @@ body.mobile-ui #mobile-status{--status-size:clamp(18px,calc((100vw - 480px)/5),2
 body.mobile-ui #mobile-status .mobile-status-icon{flex:none;width:var(--status-size);height:calc(var(--status-size) + 3px)}
 body.mobile-ui #mobile-status .mobile-status-icon canvas{width:calc(var(--status-size) - 2px);height:calc(var(--status-size) - 2px)}
 @media(max-height:360px){body.mobile-ui.in-game .hud #q-btn{right:62px;bottom:108px}body.mobile-ui.in-game .hud #r-btn{right:126px;bottom:166px}}
+
+/* Champion skill facts and optional concise descriptions. */
+.skill-description-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.skill-view-toggle{display:flex;gap:5px;flex-wrap:wrap}
+.skill-view-toggle button{font-size:12px;padding:7px 11px;border:1px solid #536979;background:#122330;border-radius:4px;color:#a9bbc7}
+.skill-view-toggle button[aria-pressed=true]{color:#f2e2ba;background:#344457;border-color:#baa36f}
+.skill-record+.skill-record{border-top:1px solid #52647477;padding-top:22px;margin-top:22px}
+.skill-heading{display:flex;align-items:baseline;gap:10px 16px;flex-wrap:wrap;margin-bottom:12px}
+#roster-detail .skill-heading h3{font-size:30px;line-height:1.35;margin:0;min-width:0;overflow-wrap:anywhere;color:#f1e9d9}
+.skill-cooldown{font-size:12px;line-height:1.7;color:#d8c68d;overflow-wrap:anywhere}
+.skill-ranges{margin:0 0 18px;padding:10px 12px;background:#0c1a2580;border-left:2px solid #648da1;display:grid;gap:7px}
+.skill-ranges>div{display:flex;flex-wrap:wrap;gap:3px 12px;min-width:0}
+.skill-ranges dt{font-size:11px;color:#8fa9b9;min-width:74px}
+.skill-ranges dd{font-size:12px;color:#d4e4ee;margin:0;min-width:0;overflow-wrap:anywhere}
+#roster-detail .skill-body p,#roster-detail .champion-exclusive p{font-size:14px;line-height:1.9;color:#c4d0d6;margin:0 0 12px;overflow-wrap:anywhere}
+.skill-value{font-weight:700}.skill-value.damage{color:#ff9c53}.skill-value.healing{color:#72df9c}.skill-value.true{color:#c79aff}
+.fps-ammo{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fps-ammo-numbers{flex:none;text-align:left}.fps-shield-rounds{display:flex;justify-content:flex-end;gap:4px;align-items:center}
+.shield-round{display:block;width:5px;height:15px;border-radius:5px 5px 1px 1px;border:1px solid #4d7192;background:#1a2e43}
+.shield-round.ready{background:linear-gradient(90deg,#368dd4,#8ed3ff);border-color:#8cd0ff;box-shadow:0 0 4px #5baeff55}
+body.mobile-ui #roster-detail .skill-heading h3{font-size:24px}
+body.mobile-ui .skill-description-tools{gap:7px;margin-bottom:10px}
+body.mobile-ui .skill-view-toggle button{font-size:10px;padding:5px 8px}
+body.mobile-ui .skill-cooldown,body.mobile-ui .skill-ranges dd{font-size:11px}
+body.mobile-ui #roster-detail .skill-body p,body.mobile-ui #roster-detail .champion-exclusive p{font-size:12px;line-height:1.8}

@@ -57,8 +57,8 @@ test('Rudolph cooldown reversal also delays ready charged skills and running cha
 test('Dongbaek ultimate delivers four 105-damage pulses, gives only a timed reload buff and no bonus basic stacks',()=>{
  const {g,p,t}=quiet('dongbaek');const gap=g.reloadInterval(p);g.cast(p,'r',t);close(10000-t.hp,105*.9);run(g,.76);close(10000-t.hp,420*.9);assert.ok(!p.channelUntil);assert.equal(g.pending.length,0);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.reloadInterval(p)<gap);run(g,3.05);close(g.reloadInterval(p),gap);
 });
-test('Dongrang grade two converts power into health and armor, never damage or incoming healing',()=>{
- const {g,p,t}=quiet('dongrang');close(p.maxHp,RULES.health[5]*1.13);close(g.armor(p),46.9);p.hp-=100;close(g.heal(null,p,50,false),50);p.upgrades.power=3;g.refreshEquipment(p);assert.ok(g.armor(p)>13);assert.ok(p.maxHp>RULES.health[5]*1.13);t.x=41;g.attack(p,t);close(10000-t.hp,260);
+test('Dongrang converts bonus power into health and armor, never damage or incoming healing',()=>{
+ const {g,p,t}=quiet('dongrang');close(p.maxHp,RULES.health[5]);close(g.armor(p),30);p.hp-=100;close(g.heal(null,p,50,false),50);p.upgrades.power=3;g.refreshEquipment(p);assert.ok(g.armor(p)>13);assert.ok(p.maxHp>RULES.health[5]);t.x=41;g.attack(p,t);close(10000-t.hp,260);
 });
 test('Dongrang passive power purchases apply health immediately and augment removal refreshes converted stats',()=>{
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);

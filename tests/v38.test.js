@@ -19,7 +19,7 @@ test('held art rotates through only a half circle and mirrors horizontally witho
 });
 test('long weapon grips move halfway from center toward the rear, leaving 50 percent more weapon in front',()=>{
  for(const key of MIDDLE_GRIP){close(gripPivot(key),.25);close((1-gripPivot(key))/.5,1.5);}close(gripPivot('faust'),.12);
- close(WEAPON_ART.honglu[1],2.65);close(HANDLE_EXTENSIONS.hongluGlaive.scale,1.25);close(WEAPON_ART.sora[1],.84*.75);close(SORA_CLAW_LENGTH,1.65*.8);assert.ok(ISHMAEL_SHIELD_LENGTH<.5);
+ close(WEAPON_ART.honglu[1],2.65);close(HANDLE_EXTENSIONS.hongluGlaive.scale,1.25);close(WEAPON_ART.sora[1],.84*.75);close(SORA_CLAW_LENGTH,1.65*.8*.88);assert.ok(ISHMAEL_SHIELD_LENGTH<.5);
  const {g,p}=arena('honglu');close(g.attackRange(p),2.7);
 });
 test('Marton distinguishes ranged root attacks from melee swings without changing their damage',()=>{
@@ -38,7 +38,7 @@ test('Ahab completes her fast harpoon slam before the unchanged 0.45-second retu
  const b=arena('ahab'),t=target(b.g,46);b.g.cast(b.p,'r',t);run(b.g,.46);assert.ok(b.p.motion);assert.equal(b.p.motion.kind,'dash');assert.equal(ahabSlamPose(b.g,b.p,equipmentPose(b.g,b.p)),null);assert.deepEqual(b.p.state.ahabUlt.origin,{x:40,y:7});
 });
 test('gun and staff emission points match the visible tip across body mirroring and Z levitation',()=>{
- for(const key of ['gubo','rudolph']){const {g,p}=arena(key);for(const angle of [0,.6,Math.PI,Math.PI*1.3]){p.facing=angle;const pose=equipmentPose(g,p),tip=weaponEmissionPoint(g,p),m=weaponGeometry(...WEAPON_ART[key]),[u,v]=EMISSION_ANCHORS[key],dx=tip.x-pose.right.x,dy=tip.y-pose.right.y;close(dx*Math.cos(angle)+dy*Math.sin(angle),m.span*(u-gripPivot(key)));close(-dx*Math.sin(angle)+dy*Math.cos(angle),weaponOrientation(angle).flip*(v-.5)*m.height*m.scale);}
+ for(const key of ['gubo','rudolph']){const {g,p}=arena(key);for(const angle of [0,.6,Math.PI,Math.PI*1.3]){p.facing=angle;const pose=equipmentPose(g,p),tip=weaponEmissionPoint(g,p),m=weaponGeometry(...WEAPON_ART[key]),[u,v]=EMISSION_ANCHORS[key],dx=tip.x-pose.right.x,dy=tip.y-pose.right.y;close(dx*Math.cos(pose.facing)+dy*Math.sin(pose.facing),m.span*(u-gripPivot(key)));close(-dx*Math.sin(pose.facing)+dy*Math.cos(pose.facing),weaponOrientation(pose.facing).flip*(v-.5)*m.height*m.scale);}
   p.facing=0;const before=weaponEmissionPoint(g,p);p.motion={kind:'leap',elapsed:.5,minDuration:1,arcHeight:3,total:3,speed:3};close(before.y-weaponEmissionPoint(g,p).y,3);delete p.motion;
   if(key==='rudolph'){p.castSlot='r';p.channelUntil=2;assert.ok(weaponEmissionPoint(g,p).y<before.y-1);}
  }

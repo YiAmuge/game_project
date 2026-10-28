@@ -3,7 +3,7 @@ import { leapLift,levitationLift,feetOffset } from './projection-25d.js';
 import { drawGripHands,gripSourcePoint } from './weapon-grips.js';
 import { carried } from './attachments.js';
 import { rudolphWeaponProgress,RUDOLPH_WEAPON } from './rudolph-weapon.js';
-import{basicStance,bodyFacing}from'./champion-pose.js';
+import{basicStance,bodyFacing,restingStance,combatPoseActive}from'./champion-pose.js';
 
 // Shaft extensions are geometric slices of the latest source art. The metal
 // heads keep their source shape and size; only the handle interval gains length.
@@ -26,14 +26,14 @@ export const gripPivot=key=>key==='jamila'?.238:MIDDLE_GRIP.has(key)?.25:.12;
 // Aim stays in a 180-degree arc; crossing behind flips the local X axis.
 export function weaponOrientation(angle){const x=Math.cos(angle),y=Math.sin(angle);return {flip:x<-1e-10?-1:1,angle:Math.atan2(y,Math.abs(x))};}
 export function orientWeapon(c,angle){const pose=weaponOrientation(angle);c.scale(pose.flip,1);c.rotate(pose.angle);return pose;}
-export const SORA_CLAW_LENGTH=1.65*.8;
+export const SORA_CLAW_LENGTH=1.65*.8*.88;
 export const ISHMAEL_SHIELD_LENGTH=.38;
 export const EMISSION_ANCHORS={gubo:[.99,.32],rudolph:[.94,.48],myo:[.995,.50],jamila:[.99,.23]};
 // Anatomical hands in crown-to-sole world units, independent of hair/ornaments.
 export const HAND_ANCHORS={jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
 export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
- const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],stance=basicStance(g,e),facing=stance?.weaponFacing??e.facing??(e.team?Math.PI:0),flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[x,y]=HAND_ANCHORS[e.key]||[-.3,-.8];
+ const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],aim=e.facing??(e.team?Math.PI:0),stance=basicStance(g,e)||(!combatPoseActive(g,e)&&Math.abs(Math.sin(aim))<1e-6?restingStance(g,e,aim):null),facing=stance?.weaponFacing??aim,flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[baseX,y]=HAND_ANCHORS[e.key]||[-.3,-.8],x=baseX*(e.key==='sora'&&g.buff(e,'soraEgo')?1.1:1);
  const duration=e.key==='ryoshu'?.25:.3,age=g.time-(e.attackAt??-99),attacking=age>=0&&age<duration,style=g.attackStyle(e),slash=['slash','sweep'].includes(style),swing=age/duration,side=(e.attackSerial||0)%2?1:-1;
  let angle=attacking?(e.attackFacing??facing):facing;
  if(slash&&attacking)angle+=e.key==='honglu'?swingProgress(swing)*Math.PI*2:(swingProgress(swing)-.5)*2.25*side;
@@ -115,7 +115,7 @@ export function bodyOrbit(p,angle,radius=.65){
  return {x:p.origin.x+Math.cos(angle)*radius,y:p.origin.y-.8+Math.sin(angle)*radius};
 }
 export function soraOrbitPose(e,p){
- const facing=(p.attacking?e.attackFacing:undefined)??p.facing,angle=facing+swingProgress(p.swing)*Math.PI*2,radius=.9+.2*Math.sin(Math.max(0,Math.min(1,p.swing))*Math.PI);
+ const facing=(p.attacking?e.attackFacing:undefined)??p.facing,angle=facing+swingProgress(p.swing)*Math.PI*2,radius=(.9+.2*Math.sin(Math.max(0,Math.min(1,p.swing))*Math.PI))*1.1;
  return p.attacking?{left:{hand:bodyOrbit(p,angle+Math.PI,radius),angle:facing+Math.PI},right:{hand:bodyOrbit(p,angle,radius),angle:facing},active:true}:{left:{hand:p.left,angle:facing},right:{hand:p.right,angle:facing},active:false};
 }
 export function outisSpinPose(g,e,p){
@@ -247,7 +247,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm'))});c.restore();drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
- if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){c.save();c.translate(p.right.x,p.right.y);orientWeapon(c,p.facing);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
+ if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){const body=FRAMES.yanDistorted,height=2.1*body.heightScale,right=height*body.w/body.h*(1-body.foot[0]);c.save();c.translate(p.origin.x+right+1.72,p.origin.y-.6);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}
  const skill=skillWeaponPose(g,e,p,camera);
  if(skill){

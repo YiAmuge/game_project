@@ -5,7 +5,7 @@ import { dash,area } from './skills.js';
 import { RULES } from './data.js';
 
 // Unspecified distances/damage are prototype values, mirrored in the encyclopedia.
-export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,maxUnlock:5,ultimateRange:8,egoDuration:20,basicDamage:220,basicRange:1.33,basicRadius:1.15,egoDamage:260,egoRadius:2.7,qRange:7,egoQRange:6.5,qWidth:(.48+.08)*1.7*1.2,qDamage:210,qShield:250,egoQDamage:240,egoQCharges:2,egoQCooldown:5,egoQSpeed:RULES.dashSpeed*3,egoHitWidth:.8,trailDamage:45,trailWidth:.8*1.3,trailLengthScale:1.1,trailEvery:.2,trailDuration:1.2};
+export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,maxUnlock:5,ultimateRange:8,egoDuration:12,egoPower:.12,egoReload:.15,egoArmor:.9,basicDamage:220,basicRange:1.33,basicRadius:1.15,egoDamage:110,egoHits:2,egoHitDelay:.10,egoRadius:2.7,qRange:7,egoQRange:6.5,qWidth:(.48+.08)*1.7*1.2,qDamage:210,qShield:250,egoQDamage:120,egoQCharges:2,egoQCooldown:6,egoQSpeed:RULES.dashSpeed*3,egoHitWidth:.8,trailDamage:45,trailWidth:.8*1.3,trailLengthScale:1.1,trailEvery:.3,trailDuration:1.2};
 export const ego=(g,e)=>e.key==='sora'&&g.buff(e,'soraEgo');
 export const ready=(g,e)=>e.key==='sora'&&!ego(g,e)&&(e.state.unlock||0)>=SORA.maxUnlock;
 export function init(g,e){if(e.key==='sora'){e.state.unlock=0;e.state.orders={};e.state.orderAt=g.time+SORA.markEvery;}}
@@ -52,7 +52,7 @@ function shockwave(g,p,r,cracks=false,owner){
 }
 export function basic(g,e,p,d){
  if(e.key!=='sora')return false;
- if(ego(g,e)){g.addBuff(e,'soraScratch',.35,{copy:false});area(g,e,e,g.attackRange(e),0,t=>g.deal(e,t,SORA.egoDamage));g.effects.push({source:e.id,theme:'sora',type:'soraClaw',x:e.x,y:e.y,r:g.attackRange(e),angle:Math.atan2(d.y,d.x),circle:true,life:.3,maxLife:.3});}
+ if(ego(g,e)){g.addBuff(e,'soraScratch',.35,{copy:false});const strike=()=>{if(!ego(g,e))return;g.action(e,'basic',()=>area(g,e,e,g.attackRange(e),0,t=>g.deal(e,t,SORA.egoDamage)));};strike();g.schedule(e,SORA.egoHitDelay,strike);g.effects.push({source:e.id,theme:'sora',type:'soraClaw',x:e.x,y:e.y,r:g.attackRange(e),angle:Math.atan2(d.y,d.x),circle:true,life:.3,maxLife:.3});}
  else {const impact=basicImpact(g,e,d);if(g.clearLine(e,impact)){area(g,e,impact,impact.r,0,t=>{if(g.clearLine(e,t))g.deal(e,t,SORA.basicDamage);});shockwave(g,impact,impact.r,false,e);}}
  return true;
 }
@@ -63,7 +63,7 @@ function trail(g,e,origin){
  const extend=(p,sign)=>{let out={...p};for(let n=.05;n<extra+.05;n+=.05){const step=Math.min(n,extra),next={x:p.x+d.x*step*sign,y:p.y+d.y*step*sign};if(g.blocked(next.x,next.y,.01)||!g.clearLine(p,next)||g.units.some(t=>t.alive&&['tower','core'].includes(t.kind)&&distance(t,next)<t.radius))break;out=next;}return out;};
  const start=extend(origin,-1),finish=extend(end,1),halfLength=distance(start,finish)/2,center={x:(start.x+finish.x)/2,y:(start.y+finish.y)/2};
  g.effects.push({source:e.id,theme:'sora',type:'soraTrail',...start,to:finish,width:SORA.trailWidth,life:SORA.trailDuration,maxLife:SORA.trailDuration});
- for(let i=0;i<6;i++)g.schedule(e,i*SORA.trailEvery,()=>{
+ for(let i=0;i<Math.ceil(SORA.trailDuration/SORA.trailEvery);i++)g.schedule(e,i*SORA.trailEvery,()=>{
   for(const t of [...g.units])if(g.hostile(e,t)&&Math.hypot(Math.max(0,Math.abs((t.x-center.x)*d.x+(t.y-center.y)*d.y)-halfLength),Math.max(0,Math.abs((t.y-center.y)*d.x-(t.x-center.x)*d.y)-SORA.trailWidth))<=t.radius&&g.clearLine(origin,t)&&g.clearLine(end,t)){
    g.deal(e,t,SORA.trailDamage);g.status(t,'slow',.3,1,e);
   }

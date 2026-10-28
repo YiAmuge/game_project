@@ -35,7 +35,7 @@ test('Sora claws orbit simultaneously from opposite sides without spinning each 
  close(WEAPON_ART.sora[1],1.05*.8*.75);close(WEAPON_ART.yan[1],2.5*1.2);assert.equal(WEAPON_ART.ppui[0],'ppuiHand');assert.ok(WEAPON_ART.ppui[1]<.6);
 });
 test('Starbuck harpoon points down through descent and the landing impact',()=>{
- const {g,p}=arena('starbuck');p.motion={kind:'leap',elapsed:.6,minDuration:.7,total:3,speed:3};close(equipmentPose(g,p).angle,Math.PI/2);delete p.motion;p.state.starbuckLandedAt=g.time;close(equipmentPose(g,p).angle,Math.PI/2);g.time+=.23;close(equipmentPose(g,p).angle,p.facing||0);
+ const {g,p}=arena('starbuck');p.motion={kind:'leap',elapsed:.6,minDuration:.7,total:3,speed:3};close(equipmentPose(g,p).angle,Math.PI/2);delete p.motion;p.state.starbuckLandedAt=g.time;close(equipmentPose(g,p).angle,Math.PI/2);g.time+=.23;close(equipmentPose(g,p).angle,-Math.PI/2);
 });
 test('Myo eye glow uses two source pupil landmarks in the same local body coordinates',()=>{
  const f=FRAMES.myo,rect={left:-.8,top:-2.1,w:1.2,h:2.1},eyes=eyeGlowPoints(f,rect);assert.equal(eyes.length,2);for(const eye of eyes){assert.ok(eye.x>rect.left&&eye.x<rect.left+rect.w);assert.ok(eye.y>rect.top&&eye.y<rect.top+.8);}const raised=eyeGlowPoints(f,{...rect,top:rect.top-3});for(let i=0;i<2;i++)close(eyes[i].y-raised[i].y,3);

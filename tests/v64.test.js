@@ -21,10 +21,10 @@ function arena(key='jamila'){
 function hero(g,{team=1,key='faust',x=44,y=25,hp=10000,armor=0}={}){const e=g.makeChampion(key,team,g.nextId+20);Object.assign(e,{x,y,hp,maxHp:10000,armor,lastDamageAt:999,lastAttackAt:999});return e;}
 function context(){return new Proxy({createRadialGradient:()=>({addColorStop(){}}),measureText:()=>({width:.2})},{get:(o,k)=>k in o?o[k]:()=>{},set:(o,k,v)=>(o[k]=v,true)});}
 test('Jamila uses fifty damage, 55-percent power correction and an unconditional armor-mitigated bonus',()=>{
- for(const armor of[0,100]){const{g,p}=arena(),t=hero(g,{armor});g.attack(p,t);run(g,.2);const first=50*(1+(damageFormula(1,1,1)-1)*.55)*100/(100+armor);near(10000-t.hp,first+first*.15*100/(100+armor));near(g.shield(p),p.maxHp*.01);assert.equal(g.effects.some(f=>f.type==='number'&&f.fixed),false);}near(CHAMPIONS.jamila.damage,50);
+ for(const armor of[0,100]){const{g,p}=arena(),t=hero(g,{armor});g.attack(p,t);run(g,.2);const first=50*(1+(damageFormula(1,1,1)-1)*.55)*100/(100+armor);near(10000-t.hp,first+first*.15*100/(100+armor));near(g.shield(p),0);assert.equal(g.effects.some(f=>f.type==='number'&&f.fixed),false);}near(CHAMPIONS.jamila.damage,50);
 });
-test('Jamila passive shield caps at 7.5 percent, refreshes five seconds and never grants an extra shield for its own bonus',()=>{
- const{g,p}=arena(),t=hero(g);for(let i=0;i<20;i++)g.deal(p,t,1);near(g.shield(p),p.maxHp*.075);near(p.shields[0].until,5);run(g,5.01);near(g.shield(p),0);
+test('Jamila special-round shield caps at 7.5 percent and refreshes three seconds without requiring a hit',()=>{
+ const{g,p}=arena();for(let i=0;i<20;i++){p.attackCd=0;if(!p.ammo)p.ammo=16;g.attack(p,{x:30,y:25});}near(g.shield(p),p.maxHp*.075);near(p.shields[0].until,3);run(g,3.01);near(g.shield(p),0);
 });
 test('fixed damage is always purple, positive allied healing green, normal hits gold, and overheal uses actual healing',()=>{
  const{g,p}=arena('gubo'),t=hero(g),a=hero(g,{team:0,hp:9900});g.deal(p,t,10,{fixed:true});assert.equal(g.effects.find(f=>f.type==='number').color,DAMAGE_COLORS.fixed);g.heal(p,a,500,false);const heal=g.effects.find(f=>f.heal);assert.equal(heal.color,DAMAGE_COLORS.heal);assert.equal(heal.text,'+100');g.effects=[];g.heal(null,a,5,false,{natural:true});assert.equal(g.effects.length,0);g.deal(p,t,20);assert.equal(g.effects.find(f=>f.type==='number').color,DAMAGE_COLORS.normal);

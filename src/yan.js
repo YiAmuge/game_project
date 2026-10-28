@@ -4,7 +4,7 @@ import { RULES, WORLD } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
 
 // Unspecified tuning is documented in the codex: Q 9s, R radius 7.5, distorted Q 360 damage.
-export const YAN={maxPower:6,markDuration:3,reapply:3,weak:.15,duration:20,radius:7.5,chargeTime:1.5,basicRange:3,fullRange:6.5,width:1.8,basicDamage:50,fullDamage:200,qRange:5,qDuration:1.8,qEvery:.3,qDamage:30,distortedQRange:9,distortedQRadius:7.5,distortedQDamage:360,distortedQDelay:1.75,handDamage:55,handEvery:.5,handRadius:3.5,handLeash:10,handSpeed:18,lockDuration:1};
+export const YAN={maxPower:6,markDuration:3,reapply:3,weak:.15,markHeal:200,distortedHeal:.5,duration:20,radius:7.5,chargeTime:1.5,basicRange:3,fullRange:7,width:1.8,basicDamage:50,fullDamage:200,chargeArmor:.065,qSpeed:.12,qRange:5,qDuration:1.8,qEvery:.3,qDamage:30,distortedQRange:9,distortedQRadius:7.5,distortedQDamage:360,distortedQDelay:1.75,distortedQInner:3,distortedQBonus:75,distortedQStun:.85,handDamage:55,handEvery:.5,handRadius:3.5,handLeash:10,handSpeed:18,lockDuration:1};
 export const distorted=(g,e)=>e.key==='yan'&&g.buff(e,'yanDistorted');
 export const barraging=(g,e)=>e.key==='yan'&&e.state?.yanBarrage?.until>g.time;
 export const ready=(g,e)=>e.key==='yan'&&!distorted(g,e)&&(e.state.ominous||0)>=YAN.maxPower;
@@ -27,6 +27,7 @@ export function afterDamage(g,source,t,actual,proc,absorbed=0){
  // Consume existing marks before placing a new mark, so the applying hit cannot consume itself.
  for(const owner of g.champions(source.team).filter(e=>e.key==='yan'&&e.alive&&marked(g,e,t))){
   delete owner.state.falseOrders[t.id];owner.state.orderLocks[t.id]=g.time+YAN.reapply;
+  g.heal(owner,source,YAN.markHeal*(distorted(g,source)?YAN.distortedHeal:1),false);
   if(!distorted(g,owner)){owner.state.ominous=Math.min(YAN.maxPower,(owner.state.ominous||0)+1);if(ready(g,owner))owner.rCd=0;}
   // A lethal allied hit must retain its kill credit; no on-status proc is needed on a dead target.
   if(t.hp>0)g.status(t,'weak',YAN.weak,3,owner);
@@ -90,7 +91,7 @@ export function cast(g,e,slot,p){
  }else if(distorted(g,e)){
   const point={...p};g.effects.push({source:e.id,theme:'yan',slot:'q',type:'yanSwordWarning',...point,r:YAN.distortedQRadius,life:YAN.distortedQDelay,maxLife:YAN.distortedQDelay});
   g.schedule(e,YAN.distortedQDelay,()=>{
-   for(const t of [...g.units])if(g.hostile(e,t)&&distance(point,t)<=YAN.distortedQRadius+t.radius&&g.clearLine(point,t)){g.deal(e,t,YAN.distortedQDamage);g.status(t,'slow',.8,1.5,e);}
+   for(const t of [...g.units])if(g.hostile(e,t)&&distance(point,t)<=YAN.distortedQRadius+t.radius&&g.clearLine(point,t)){const inner=distance(point,t)<=YAN.distortedQInner+t.radius;g.deal(e,t,YAN.distortedQDamage+(inner?YAN.distortedQBonus:0));g.status(t,'slow',.8,1.5,e);if(inner)g.status(t,'stun',1,YAN.distortedQStun,e);}
    g.effects.push({source:e.id,theme:'yan',type:'yanGreatsword',...point,r:YAN.distortedQRadius,life:.7,maxLife:.7});
   });
  }else{

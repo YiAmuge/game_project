@@ -2,7 +2,7 @@ import test from'node:test';
 import assert from'node:assert/strict';
 import{Game}from'../src/game.js';
 import{CHAMPIONS}from'../src/data.js';
-import{basicStance,bodyFacing,captureMobileAim,followMobileAim}from'../src/champion-pose.js';
+import{basicStance,bodyFacing,captureMobileAim,followMobileAim,STANCE_ANGLES}from'../src/champion-pose.js';
 import{equipmentPose}from'../src/weapon-art.js';
 import{mobileAutoAim,mobileAttackTargets,attackCategory,autoAimReach}from'../src/mobile-aim.js';
 import{combatNumber,NUMBER_BATCH}from'../src/combat-text.js';
@@ -11,8 +11,8 @@ function arena(key='faust'){
  const g=new Game(key,'bottom',{mode:'training',seed:65}),p=g.player;g.units=[p];g.events=[];g.effects=[];g.pending=[];g.projectiles=[];g.zones=[];g.practice.lineStopped=true;g.map={bounds:{x:0,y:0,w:120,h:80},walls:[]};g.bounds=g.map.bounds;for(const k of['aiChampion','aiNeutral','aiStructure','aiMinion'])g[k]=()=>{};Object.assign(p,{x:40,y:25,lastAttackAt:999,lastDamageAt:999,attackAt:-99});g.input={x:0,y:0,aim:{x:47,y:28},fire:false};return{g,p};
 }
 function foe(g,{key='yi',x=44,y=25,hp=5000,kind='champion'}={}){const t=g.makeChampion(key,1,g.nextId+20);Object.assign(t,{x,y,hp,maxHp:10000,armor:0,kind,lastAttackAt:999,lastDamageAt:999});return t;}
-test('the codex default stance faces right with its weapon aiming at three oclock for every champion',()=>{
- for(const key of Object.keys(CHAMPIONS)){const{g,p}=arena(key);p.previewStance=true;near(bodyFacing(g,p),0);near(equipmentPose(g,p).facing,0);near(equipmentPose(g,p).angle,0);assert.ok(basicStance(g,p));}
+test('the codex default stance faces right with the specified champion weapon angle',()=>{
+ for(const key of Object.keys(CHAMPIONS)){const{g,p}=arena(key);p.previewStance=true;near(bodyFacing(g,p),0);near(equipmentPose(g,p).facing,STANCE_ANGLES[key]||0);near(equipmentPose(g,p).angle,STANCE_ANGLES[key]||0);assert.ok(basicStance(g,p));}
 });
 test('mobile travel uses mirrored horizontal weapons without changing the actual aim',()=>{
  const{g,p}=arena();g.mobileInput=true;p.facing=.63;for(const[x,body,weapon]of[[-1,Math.PI,Math.PI],[1,0,0]]){g.input.x=x;near(bodyFacing(g,p),body);near(equipmentPose(g,p).facing,weapon);near(p.facing,.63);}

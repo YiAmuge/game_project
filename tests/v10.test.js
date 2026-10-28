@@ -80,13 +80,13 @@ test('Rudolph whip radius and range shrink while ultimate scales with actual SP 
  const {g,p,t}=quiet('rudolph');close(g.attackRange(p),7.65);t.x=44;t.y=10.1;g.attack(p,{x:44,y:7});close(t.hp,100000);p.ammo=57;g.cast(p,'r',{x:43,y:7});close(g.pending[0].damage,57*8.5);close(p.ammo,0);
 });
 test('Dongrang level power converts to health and armor but never multiplies incoming healing',()=>{
- const {g,p,t}=quiet('dongrang');const hp=p.maxHp,armor=g.armor(p);g.award(p,250,0);assert.equal(p.level,2);const power=CHAMPIONS.dongrang.growth.power;close(g.desireEfficiency(p),1.13+power);assert.ok(p.maxHp>hp&&g.armor(p)>armor);p.hp-=1000;const before=p.hp;g.heal(t,p,100,false);close(p.hp-before,100);close(g.deal(p,t,100),100);
+ const {g,p,t}=quiet('dongrang');const hp=p.maxHp,armor=g.armor(p);g.award(p,250,0);assert.equal(p.level,2);const power=CHAMPIONS.dongrang.growth.power;close(g.desireEfficiency(p),1+power*.3);assert.ok(p.maxHp>hp&&g.armor(p)>armor);p.hp-=1000;const before=p.hp;g.heal(t,p,100,false);close(p.hp-before,100);close(g.deal(p,t,100),100);
 });
 test('Dongrang can place overlapping trees and golden trees with radius 3.8',()=>{
  const {g,p}=quiet('dongrang');g.cast(p,'q',{x:44,y:7});g.zones[0].golden=true;p.qCd=0;assert.ok(g.cast(p,'q',{x:44,y:7}));assert.equal(g.zones.length,2);assert.ok(g.zones.every(z=>z.r===3.8));close(p.qCd,10);
 });
-test('Dongrang ultimate scales damage every 1500 healing with fixed impact radius',()=>{
- const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1500*21;assert.deepEqual(ultGrowth(p),{radius:3.2,damage:600});g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
+test('Dongrang ultimate scales damage every 1000 healing with fixed impact radius',()=>{
+ const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1000*21;assert.deepEqual(ultGrowth(p),{radius:3.2,damage:600});g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
 });
 test('Dongbaek refills all three petals every ten seconds and pauses ammo recovery throughout disarm',()=>{
  const {g,p,t}=quiet('dongbaek');t.x=41.5;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;g.attack(p,t);}close(p.state.petals,0);run(g,2.8);close(p.reloadProgress,0);close(p.ammo,0);run(g,.1);assert.ok(p.reloadProgress>0);run(g,7.08);close(p.state.petals,0);run(g,.04);close(p.state.petals,3);assert.equal(p.state.petalReady,Infinity);

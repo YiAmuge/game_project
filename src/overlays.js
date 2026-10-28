@@ -4,7 +4,7 @@ import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
 import * as Don from './don.js';
-import {reloadFraction} from './jamila.js';
+import {reloadFraction,shieldRounds} from './jamila.js';
 import { endurance } from './v08-champions.js';
 import { trap } from './confinement.js';
 import { RULES,AHAB } from './data.js';
@@ -43,7 +43,7 @@ export function championHud(r,e,g){
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
  drawLevelBadge(r,e,x,y);
- if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1500)),sx,sy+.43,'#e8e9b6',.24);}
+ if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1000)),sx,sy+.43,'#e8e9b6',.24);}
  if(e.trainingDummy){c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);
  if(e.key==='hohenheim'){
@@ -55,7 +55,8 @@ export function championHud(r,e,g){
  }else if(e.key==='rudolph'){
   c.fillStyle='#322018';c.fillRect(x,resourceY,width,.24);c.fillStyle=e.state.exhaustedUntil>g.time?'#866347':'#f5a34e';c.fillRect(x,resourceY,width*(e.state.exhaustedUntil>g.time?Math.min(1,(g.time-e.state.exhaustedAt)/e.state.recoveryDuration):Math.min(1,Math.max(0,e.ammo/cap))),.24);if(!(e.state.exhaustedUntil>g.time))r.text(`SP ${Math.floor(e.ammo)} / ${cap}`,e.x,resourceY+.12,'#fff2da',.205);
  }else if(e.key==='jamila'){
-  c.fillStyle='#0d1822db';c.fillRect(x,resourceY,width,.27);r.text(`${Math.floor(e.ammo)} | ${cap}`,e.x,resourceY+.14,e.ammo>0?'#f2d89b':'#e39383',.25);
+  c.fillStyle='#0d1822db';c.fillRect(x,resourceY,width,.27);r.text(`${Math.floor(e.ammo)} | ${cap}`,x+.59,resourceY+.14,e.ammo>0?'#f2d89b':'#e39383',.25);
+  const count=Math.ceil(cap/4),ready=shieldRounds(e),gap=1.15/Math.max(1,count);for(let i=0;i<count;i++){const px=e.x+.15+i*gap;c.fillStyle=i<ready?'#63bcff':'#24415a';c.beginPath();c.moveTo(px,resourceY+.23);c.lineTo(px,resourceY+.085);c.quadraticCurveTo(px+.04,resourceY-.005,px+.08,resourceY+.085);c.lineTo(px+.08,resourceY+.23);c.closePath();c.fill();}
  }else{
   const gap=.075,w=(width-gap*(cap-1))/cap;
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
@@ -135,7 +136,7 @@ export function stackGauge(e,g){
  const info=stackInfo(e,g);let state=info;
  if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))state={label:'광폭한 칼날'};
  if(!state)return null;
- const timed={don:['donLifesteal',7],heathcliff:['heathUlt',11],sinclair:['marks',4],gregor:['mutant',5],sora:['soraEgo',20],yan:['yanDistorted',20],myo:['rabbitFrenzy',4.5]},entry=timed[e.key];
+ const timed={don:['donLifesteal',7],heathcliff:['heathUlt',11],sinclair:['marks',4],gregor:['mutant',5],sora:['soraEgo',SORA.egoDuration],yan:['yanDistorted',20],myo:['rabbitFrenzy',4.5]},entry=timed[e.key];
  let remaining,total;
  if(entry&&g.buff(e,entry[0])){remaining=e.buffs[entry[0]]-g.time;total=Math.max(entry[1],e.buffs[entry[0]]-(e.visuals[entry[0]]?.at??g.time));}
  if(e.key==='hohenheim'&&e.state.posthumous){remaining=e.state.posthumous.until-g.time;total=2.5;}

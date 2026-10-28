@@ -49,7 +49,7 @@ test('Dongbaek basic petals travel outward inside their real fan without a stati
 });
 test('normal Yan basic uses one pressure field with no slash, fragment or flash emitter',()=>{
  const {g,p}=arena('yan'),v=new SkillVFX();g.attack(p,{x:26,y:20});p.state.yanCharge.progress=1.5;Yan.release(g,p,{x:26,y:20});v.sync(g,camera);
- const range=v.emitters.filter(e=>!e.body);assert.equal(range.length,1);assert.equal(range[0].pressure,true);assert.equal(range[0].shape.range,6.5);assert.equal(range[0].shape.width,1.8);assert.equal(range[0].light,0);assert.equal(v.particles.filter(p=>!p.body).length,0);
+ const range=v.emitters.filter(e=>!e.body);assert.equal(range.length,1);assert.equal(range[0].pressure,true);assert.equal(range[0].shape.range,7);assert.equal(range[0].shape.width,1.8);assert.equal(range[0].light,0);assert.equal(v.particles.filter(p=>!p.body).length,0);
 });
 test('tree art has an upright screen-space size and projects only its rooted feet',()=>{
  let calls=0;const cam={width:1000,height:900,scale:32,worldToScreen:(p,h)=>{calls++;assert.equal(h,.075);return {x:p.x*32,y:p.y*18-h*32};}},z={x:15,y:20};const p=treeBillboard(cam,z);

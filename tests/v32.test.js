@@ -80,8 +80,8 @@ for(const contact of [true,false])test(`Outis R earns a nonstacking three-second
 test('Gahwan line hits near its rectangle corner and excludes targets outside width',()=>{
  const {g,p}=arena('gahwan'),edge=hero(g,26,21.22),outside=hero(g,26,21.24);g.attack(p,{x:30,y:20});run(g,.13);assert.ok(edge.hp<100000);close(outside.hp,100000);const rect=g.effects.filter(f=>f.type==='strikeRect');assert.ok(rect.length>=2);assert.ok(rect.every(f=>f.shape.width===1.5));
 });
-test('distorted Yan displays full warning before an 80 percent slow, without stun',()=>{
- const {g,p}=arena('yan');p.state.ominous=6;g.cast(p,'r',p);g.units=g.units.filter(e=>e.key!=='yanHand');const t=hero(g,27,20);g.cast(p,'q',t);const f=g.effects.find(f=>f.type==='yanSwordWarning');close(f.life,1.75);close(f.r,7.5);run(g,1.74);close(t.hp,100000);run(g,.02);assert.ok(t.hp<100000);close(g.stat(t,'slow'),.8);close(g.stat(t,'stun'),0);
+test('distorted Yan displays full warning before an 80 percent slow and central stun',()=>{
+ const {g,p}=arena('yan');p.state.ominous=6;g.cast(p,'r',p);g.units=g.units.filter(e=>e.key!=='yanHand');const t=hero(g,27,20);g.cast(p,'q',t);const f=g.effects.find(f=>f.type==='yanSwordWarning');close(f.life,1.75);close(f.r,7.5);run(g,1.74);close(t.hp,100000);run(g,.02);assert.ok(t.hp<100000);close(g.stat(t,'slow'),.8);close(g.stat(t,'stun'),1);
 });
 test('Don attacks stay yellow and use red throughout the seven-second lifesteal buff',()=>{
  const {g,p}=arena('don'),normal=combatStyle('don',g,p,{slot:'r'});assert.equal(normal.color,'#e5bd38');g.addBuff(p,'donLifesteal',7);for(const slot of [undefined,'q','r'])assert.equal(combatStyle('don',g,p,{slot}).color,'#a7323f');g.time+=7;assert.equal(combatStyle('don',g,p).color,normal.color);

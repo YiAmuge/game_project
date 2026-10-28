@@ -236,7 +236,7 @@ export function damageBonus(g,e,t){
  if(e.key==='sora'&&e.actionKind==='basic'&&!Sora.ego(g,e)&&Sora.marked(g,e,t))b*=1.1;
  if(e.key==='heathcliff'&&t.hp/t.maxHp>e.hp/e.maxHp)b*=1.15;
  if(g.buff(e,'mutant'))b*=1.2;
- if(g.buff(e,'power'))b*=1+g.buffValue(e,'power',.12);
+ if(e.key!=='dongrang'&&g.buff(e,'power'))b*=1+g.buffValue(e,'power',.12);
 
  return b;
 }
