@@ -30,7 +30,7 @@ for(const key of ['hohenheim','alisa','queequeg','sora','yan'])test(`enemy fount
 });
 test('fountain applies to enemy minions, neutral creeps and invulnerable summons, never allies',()=>{
  const {g,p}=arena();g.training=false;const a=FOUNTAIN_AREAS[0],point={x:a.x+1,y:a.y+1},creep=g.makeNeutral(point.x,point.y,'side');
- const minion=g.entity({kind:'minion',team:1,...point,maxHp:500}),summon=g.entity({kind:'summon',key:'yanHand',team:1,...point,maxHp:1,invulnerableUntil:Infinity});Object.assign(p,point);const hp=p.hp;
+ const minion=g.entity({kind:'minion',team:1,...point,maxHp:500}),summon=g.entity({kind:'summon',key:'otherSummon',team:1,...point,maxHp:1,invulnerableUntil:Infinity});Object.assign(p,point);const hp=p.hp;
  for(const e of [creep,minion,summon,p])F.tick(g,e,.5);assert.ok(!creep.alive&&!minion.alive&&!summon.alive);close(p.hp,hp);
 });
 test('battery begins at two seconds without taking damage even while attacking, caps and grants ten haste',()=>{

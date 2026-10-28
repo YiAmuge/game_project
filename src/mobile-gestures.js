@@ -10,6 +10,6 @@ export function gestureMode(s,now,continuous=false,steerable=false,slidePriority
  return 'auto';
 }
 export function targetButtonPositions(rect,kinds){
- const radius=78,cx=rect.x+rect.width/2,cy=rect.y+rect.height/2;
- return kinds.map((kind,i)=>{const angle=(kinds.length===1?270:235+90*i/(kinds.length-1))*Math.PI/180;return{kind,x:cx+Math.sin(angle)*radius,y:cy-Math.cos(angle)*radius};});
+ const radius=78,cx=rect.x+rect.width/2,cy=rect.y+rect.height/2,order=['champion','minion','structure','creep'];
+ return kinds.map(kind=>{const i=order.indexOf(kind),angle=(235+30*i)*Math.PI/180;return{kind,x:cx+Math.sin(angle)*radius,y:cy-Math.cos(angle)*radius};});
 }

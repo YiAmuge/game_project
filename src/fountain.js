@@ -1,7 +1,18 @@
 import { FOUNTAIN_AREAS,inWell } from './data.js';
+import{ejectHand}from'./yan.js';
 export const FOUNTAIN_RULES={interval:.5,damage:1000};
+export function returnHaste(g,e,key,seconds){g.addBuff(e,key,seconds);e.state.departureHaste={key,seconds};}
+export function tickReturnHaste(g,e){
+ const held=e.state?.departureHaste;if(!held)return;
+ const until=g.time+held.seconds;e.buffs[held.key]=until;
+ if(e.buffHistory[held.key])e.buffHistory[held.key].until=until;
+ if(e.visuals[held.key])e.visuals[held.key].until=until;
+ if(!g.inSpawn(e))delete e.state.departureHaste;
+}
 export function tick(g,e,dt){
- if(g.training||!e.alive)return;
+ if(!e.alive)return;
+ if(e.key==='yanHand'){ejectHand(g,e);e.fountainTick=0;return;}
+ if(g.training)return;
  const zone=FOUNTAIN_AREAS.find(z=>e.team!==z.team&&inWell(e,z.team));
  if(!zone){e.fountainTick=0;return;}
  e.fountainTick=(e.fountainTick||0)+dt;

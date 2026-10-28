@@ -3,7 +3,14 @@ export const BUFF_CREEPS={
  amplify:{name:'르루주 점원',health:1700,armor:15,damage:80,interval:.85},
  blessing:{name:'르누아르 점원',health:1600,armor:20,damage:100,interval:1.1},
 };
+import{CAMP_RULES}from'./data.js';
 export const CAMP_BUFFS={power:.10,pulseDamage:.06,pulseDrain:.06,period:3,shield:30,shieldCap:.20,heal:.005,focusedDrain:.12,focusedShield:70};
+export function deathBuffs(g,e){return ['amplify','blessing','bossBuff'].filter(key=>g.buff(e,key)).map(key=>({key,until:e.buffs[key],strength:e.buffPotency?.[key]??1}));}
+export function transfer(g,e,killer,buffs){
+ if(killer===e||killer?.kind!=='champion'||!killer.alive)return;
+ for(const b of buffs)if(b.key!=='bossBuff')g.addBuff(killer,b.key,CAMP_RULES.buffDuration,{strength:b.strength,copy:false});
+}
+export function restore(g,e,buffs){for(const b of buffs)if(b.until>g.time)g.addBuff(e,b.key,b.until-g.time,{strength:b.strength,copy:false});}
 export function onBuff(g,e,key,wasActive){
  if(key!=='blessing')return;
  if(!wasActive)e.state.preservationNext=g.time+CAMP_BUFFS.period;

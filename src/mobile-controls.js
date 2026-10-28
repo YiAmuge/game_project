@@ -4,28 +4,29 @@ import{installTouchScroll}from'./touch-scroll.js';
 import{targetIcon,pingIcon}from'./mobile-icons.js';
 import{MobileShell}from'./mobile-shell.js';
 import{MobileShop}from'./mobile-shop.js';
+import{MobileScore,mobileSkillHelp}from'./mobile-score.js';
 import{MobileStatus}from'./mobile-status.js';
 import{skillCharges,canRecast}from'./skills.js';
 import{distorted,command as commandHand}from'./yan.js';
 import*as Infiltration from'./infiltration.js';
-import{championDescription}from'./champion-reference.js';
 
 const $=id=>document.getElementById(id);
 const AUTO_HOLD=new Set(['jamila','ryoshu','heathcliff','rudolph']);
 export class MobileControls{
  constructor(api){
-  this.api=api;this.axes={x:0,y:0};this.gestures=new Map();this.lastTap=-Infinity;this.enabled=false;this.force=null;this.skillTab=0;
+  this.api=api;this.axes={x:0,y:0};this.gestures=new Map();this.lastTap=-Infinity;this.enabled=false;this.force=null;this.skillTab=0;this.descriptionMode='summary';
   this.scroll=installTouchScroll(()=>this.enabled);
   const root=document.createElement('div');root.id='mobile-controls';root.innerHTML='<div id="mobile-stick" role="group" aria-label="이동 조이스틱"><i></i></div><div id="mobile-cancel" aria-hidden="true">×</div><div id="mobile-status" aria-label="효과와 증강 상태"></div>';document.body.append(root);
   this.status=new MobileStatus($('mobile-status'));
   for(const[kind,label]of Object.entries(ATTACK_CATEGORIES)){const b=document.createElement('button');b.className='mobile-target-btn hidden';b.dataset.targetKind=kind;b.setAttribute('aria-label',label+' 우선 기본공격');b.title=label+' 우선 기본공격';b.innerHTML=targetIcon(kind);root.append(b);this.listen(b,'basic',kind);b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();},true);}
   for(const b of $('ping-controls').querySelectorAll('button')){b.setAttribute('aria-label',{attack:'공격 신호',defend:'도움 신호',danger:'후퇴 신호'}[b.dataset.ping]);b.insertAdjacentHTML('beforeend',pingIcon(b.dataset.ping));}
   const rotate=document.createElement('div');rotate.id='mobile-rotate';rotate.innerHTML='<b>↻</b><strong>휴대폰을 가로로 돌려 주세요.</strong>';document.body.append(rotate);
-  const skills=document.createElement('section');skills.id='mobile-score-skills';skills.innerHTML='<nav aria-label="내 챔피언 기술">'+['패시브','기본공격','전술기','궁극기'].map((s,i)=>`<button data-slot="${i}">${s}</button>`).join('')+'</nav><strong></strong><p></p>';$('scoreboard').append(skills);for(const b of skills.querySelectorAll('button'))b.onclick=()=>{this.skillTab=Number(b.dataset.slot);this.updateSkillHelp();};
+  const skills=document.createElement('section');skills.id='mobile-score-skills';skills.innerHTML='<nav aria-label="내 챔피언 기술">'+['패시브','기본공격','전술기','궁극기'].map((s,i)=>`<button data-slot="${i}">${s}</button>`).join('')+'</nav><div class="mobile-score-description-modes" role="group" aria-label="설명 길이"><button data-mode="summary">간단 설명</button><button data-mode="details">상세 설명</button></div><strong></strong><p></p>';$('scoreboard').append(skills);for(const b of skills.querySelectorAll('[data-slot]'))b.onclick=()=>{this.skillTab=Number(b.dataset.slot);this.updateSkillHelp();};for(const b of skills.querySelectorAll('[data-mode]'))b.onclick=()=>{this.descriptionMode=b.dataset.mode;this.updateSkillHelp();};
+  this.score=new MobileScore($('scoreboard'),skills,()=>this.api.game());
   this.listen($('mobile-stick'),'move');for(const[slot,id]of[['basic','basic-btn'],['q','q-btn'],['r','r-btn']]){
    const button=$(id);this.listen(button,slot);const charge=document.createElement('b');charge.className='mobile-charges';button.append(charge);button.addEventListener('click',e=>{if(this.enabled){e.preventDefault();e.stopImmediatePropagation();}},true);
   }
-  $('minimap').addEventListener('pointerdown',e=>{if(!this.enabled||e.pointerType!=='touch'||!this.api.playing())return;e.preventDefault();e.stopImmediatePropagation();$('minimap').setPointerCapture(e.pointerId);this.gestures.set(e.pointerId,{slot:'map'});this.api.score(true);this.fitMap();this.updateSkillHelp();},true);
+  $('minimap').addEventListener('pointerdown',e=>{if(!this.enabled||e.pointerType!=='touch'||!this.api.playing())return;e.preventDefault();e.stopImmediatePropagation();$('minimap').setPointerCapture(e.pointerId);this.gestures.set(e.pointerId,{slot:'map',x:e.clientX,y:e.clientY});},true);
   window.addEventListener('pointermove',e=>this.move(e),true);window.addEventListener('pointerup',e=>this.end(e),true);window.addEventListener('pointercancel',e=>this.end(e,true),true);window.addEventListener('blur',()=>this.cancel());window.addEventListener('resize',()=>this.refreshMode());
   this.refreshMode();
   this.shell=new MobileShell({enabled:()=>this.enabled,playing:()=>this.api.playing(),back:()=>this.api.back()});
@@ -41,7 +42,7 @@ export class MobileControls{
   if(Infiltration.selecting(p)&&slot==='q'){g.input.precision=true;gesture.precision=true;}
   else if(this.chargeGesture(gesture,p))this.aim(gesture);
  },true);}
- move(e){const s=this.gestures.get(e.pointerId);if(!s)return;e.preventDefault();if(s.slot==='map')return;s.x=e.clientX;s.y=e.clientY;
+ move(e){const s=this.gestures.get(e.pointerId);if(!s)return;e.preventDefault();if(s.slot==='map'){if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>12)s.cancel=true;return;}s.x=e.clientX;s.y=e.clientY;
   if(s.slot==='move'){const dx=s.x-s.cx,dy=s.y-s.cy,n=Math.hypot(dx,dy),scale=Math.min(1,n/44);this.axes={x:n>7?dx/(n||1)*scale:0,y:n>7?dy/(n||1)*scale:0};if(n>7)this.api.game().player.mobileMoveDirection={x:dx/n,y:dy/n};$('mobile-stick').style.setProperty('--stick-x',Math.max(-44,Math.min(44,dx))+'px');$('mobile-stick').style.setProperty('--stick-y',Math.max(-44,Math.min(44,dy))+'px');return;}
   if(s.precision)return;this.updateGesture(s);if(s.manual||s.autoLocked||this.chargeGesture(s,this.api.game().player))this.aim(s);
  }
@@ -59,7 +60,7 @@ export class MobileControls{
   if(s.slot==='basic'&&distorted(g,p)){g.attack(p,s.point);s.handMoved=true;}if(!s.autoHeld)g.input.fire=false;
  }
  end(e,canceled=false){const s=this.gestures.get(e.pointerId);if(!s){if(this.enabled&&this.api.playing()&&!canceled&&e.pointerType==='touch'&&!e.isPrimary){const b=e.target.closest?.('button');if(b&&!b.disabled&&!b.closest('#ping-controls')&&!b.classList.contains('ability')&&!this.scroll.isChoice(b)){e.preventDefault();b.click();}}return;}e.preventDefault();e.stopImmediatePropagation();this.gestures.delete(e.pointerId);const g=this.api.game(),p=g.player;
-  if(s.slot==='map'){this.api.score(false);return;}if(s.slot==='move'){this.axes={x:0,y:0};$('mobile-stick').style.setProperty('--stick-x','0px');$('mobile-stick').style.setProperty('--stick-y','0px');return;}
+  if(s.slot==='map'){if(!canceled&&!s.cancel){this.api.score(!this.api.scoreOpen());this.fitMap();this.updateSkillHelp();}return;}if(s.slot==='move'){this.axes={x:0,y:0};$('mobile-stick').style.setProperty('--stick-x','0px');$('mobile-stick').style.setProperty('--stick-y','0px');return;}
   g.input.fire=false;if(s.precision){g.input.precision=false;return;}
   if(canceled||s.cancel||!this.api.allowed()||s.owner!==p.id||s.game!==g){this.api.cancelCharge(p);this.finishAim(g);return;}
   if(Infiltration.selecting(p)&&s.slot==='basic'){this.api.confirm();this.finishAim(g);return;}
@@ -83,8 +84,8 @@ export class MobileControls{
  }
  chargeGesture(s,p){return s.slot==='basic'&&['yan','hohenheim'].includes(p.key)&&!distorted(this.api.game(),p)||s.slot==='q'&&this.api.chargeTactical(p);}
  tick(){this.refreshMode();if(!this.enabled||this.blocking)return;for(const s of this.gestures.values())if(!['map','move'].includes(s.slot)&&!s.precision){const mode=this.updateGesture(s);if(this.chargeGesture(s,this.api.game().player)){this.aim(s);continue;}if(mode==='tap')continue;if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&!s.manual){this.holdAttack(s);continue;}this.aim(s);}}
- fitMap(){const map=$('score-map'),g=this.api.game(),ratio=g.bounds.w/g.bounds.h,width=Math.max(1,Math.min($('scoreboard').clientWidth-28,innerHeight*.36*ratio)),height=width/ratio,dpr=Math.min(2,devicePixelRatio||1);map.style.width=width+'px';map.style.height=height+'px';for(const[k,n]of[['width',width],['height',height]])if(map[k]!==Math.round(n*dpr))map[k]=Math.round(n*dpr);}
- updateSkillHelp(){const g=this.api.game(),c=championDescription(g.player.key,distorted(g,g.player)||g.buff(g.player,'soraEgo')),fields=[['passive','passiveText'],['basic','basicText'],['tactical','qText'],['ultimate','rText']],slot=fields[this.skillTab];$('mobile-score-skills').querySelector('strong').textContent=c[slot[0]]||'';$('mobile-score-skills').querySelector('p').textContent=c[slot[1]]||'';for(const b of $('mobile-score-skills').querySelectorAll('button'))b.classList.toggle('selected',Number(b.dataset.slot)===this.skillTab);}
+ fitMap(){this.score.fit();}
+ updateSkillHelp(){const g=this.api.game(),help=mobileSkillHelp(g,g.player,this.skillTab,this.descriptionMode),root=$('mobile-score-skills');root.querySelector('strong').textContent=help.title;root.querySelector('p').textContent=help.text;for(const b of root.querySelectorAll('button')){const active=b.dataset.mode?b.dataset.mode===this.descriptionMode:Number(b.dataset.slot)===this.skillTab;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));}}
  hud(){if(!this.enabled)return;const g=this.api.game(),p=g.player;this.shop?.update(p);for(const id of['basic-btn','q-btn','r-btn'])$(id).setAttribute('aria-label',$(id).querySelector('span').textContent);const kinds=new Set(mobileAttackTargets(g,p).map(attackCategory)),visibleKinds=Object.keys(ATTACK_CATEGORIES).filter(kind=>kinds.has(kind)),positions=targetButtonPositions($('basic-btn').getBoundingClientRect(),visibleKinds);for(const b of document.querySelectorAll('.mobile-target-btn')){b.classList.toggle('hidden',!p.alive||Infiltration.absent(p)||!this.api.allowed()||!kinds.has(b.dataset.targetKind));const pos=positions.find(v=>v.kind===b.dataset.targetKind);if(pos){b.style.left=pos.x-18+'px';b.style.top=pos.y-18+'px';}}for(const slot of['q','r']){const b=$(slot+'-btn'),charges=skillCharges(g,p,slot),recast=p.alive&&!Infiltration.absent(p)&&Boolean(canRecast(g,p,slot));b.querySelector('.mobile-charges').textContent=charges?String(charges.current):'';b.dataset.skill=slot;b.classList.toggle('mobile-recast',recast);if(recast)b.setAttribute('aria-label',b.getAttribute('aria-label')+' · 재시전 가능');}
   this.status.update(g,p);
   if(this.api.scoreOpen()){this.fitMap();this.updateSkillHelp();}

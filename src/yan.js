@@ -1,6 +1,6 @@
 import{championDescription}from'./champion-reference.js';
 import { settleBody } from './collision.js';
-import { RULES, WORLD } from './data.js';
+import { RULES, WORLD, FOUNTAIN_AREAS } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
 
 // Unspecified tuning is documented in the codex: Q 9s, R radius 7.5, distorted Q 360 damage.
@@ -58,10 +58,25 @@ export function release(g,e,p){
  });
  g.effects.push({source:e.id,theme:'yan',type:'yanCleave',x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},width:shape.width,progress:shape.progress,life:.4,maxLife:.4});return true;
 }
+function enemyWell(g,e,p,r=.25){return !g.training&&FOUNTAIN_AREAS.find(z=>z.team!==e.team&&p.x+r>=z.x&&p.x-r<=z.x+z.w&&p.y+r>=z.y&&p.y-r<=z.y+z.h);}
+function handFits(g,e,p,{leash=true}={}){return (!leash||distance(e,p)<=YAN.handLeash)&&!enemyWell(g,e,p)&&!g.blocked(p.x,p.y,.25)&&!g.units.some(t=>t.alive&&['tower','core'].includes(t.kind)&&distance(t,p)<t.radius+.25);}
+function wellExit(g,e,p,{leash=true}={}){
+ const z=enemyWell(g,e,p);if(!z)return;
+ const margin=.26,candidates=[];
+ for(let n=0;n<=Math.ceil(z.w/.1);n++){const x=z.x+Math.min(z.w,n*.1);candidates.push({x,y:z.y-margin},{x,y:z.y+z.h+margin});}
+ for(let n=0;n<=Math.ceil(z.h/.1);n++){const y=z.y+Math.min(z.h,n*.1);candidates.push({x:z.x-margin,y},{x:z.x+z.w+margin,y});}
+ return candidates.filter(q=>handFits(g,e,q,{leash})).sort((a,b)=>distance(p,a)-distance(p,b))[0];
+}
+export function ejectHand(g,h){
+ if(h.key!=='yanHand'||!enemyWell(g,h,h,h.radius))return false;
+ const e=g.units.find(u=>u.id===h.owner)||h,p=wellExit(g,e,h,{leash:false});if(!p)return false;
+ Object.assign(h,p);h.path=[];delete h.pathGoal;delete h.targetId;h.goal={...p};h.attached=false;h.fountainTick=0;return true;
+}
 function safeHandPoint(g,e,point){
  const b=g.bounds||WORLD,d=direction(e,point),len=Math.min(YAN.handLeash-.05,distance(e,point)),p={x:clamp(e.x+d.x*len,b.x+.3,b.x+b.w-.3),y:clamp(e.y+d.y*len,b.y+.3,b.y+b.h-.3)};
- const fits=p=>distance(e,p)<=YAN.handLeash&&!g.blocked(p.x,p.y,.25)&&!g.units.some(t=>t.alive&&['tower','core'].includes(t.kind)&&distance(t,p)<t.radius+.25);
+ const fits=p=>handFits(g,e,p);
  if(fits(p))return p;
+ const exit=wellExit(g,e,p);if(exit)return exit;
  for(let r=.3;r<=3;r+=.3)for(let i=0;i<16;i++){const a=i*Math.PI/8,q={x:p.x+Math.cos(a)*r,y:p.y+Math.sin(a)*r};if(fits(q))return q;}
  return {x:e.x,y:e.y};
 }
@@ -70,7 +85,7 @@ export function command(g,e,p){
  const h=hand(g,e);if(!h)return false;
  if(distance(e,p)<=e.radius+.35){h.attached=true;delete h.targetId;delete h.goal;return true;}
  h.attached=false;h.goal=safeHandPoint(g,e,p);delete h.targetId;
- const target=g.units.filter(t=>g.hostile(e,t)&&g.visibleTo(e.team,t)&&distance(t,p)<=t.radius+.65&&distance(e,t)<=YAN.handLeash+t.radius).sort((a,b)=>distance(a,p)-distance(b,p))[0];
+ const target=g.units.filter(t=>g.hostile(e,t)&&!enemyWell(g,e,t,0)&&g.visibleTo(e.team,t)&&distance(t,p)<=t.radius+.65&&distance(e,t)<=YAN.handLeash+t.radius).sort((a,b)=>distance(a,p)-distance(b,p))[0];
  if(target)h.targetId=target.id;return true;
 }
 function transform(g,e){
@@ -101,7 +116,8 @@ export function cast(g,e,slot,p){
 }
 export function tickHand(g,h,dt){
  const e=g.units.find(u=>u.id===h.owner);if(!e?.alive||!distorted(g,e)){h.alive=false;return;}
- const d={x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)},target=g.units.find(t=>t.id===h.targetId&&g.hostile(e,t)&&g.visibleTo(e.team,t));
+ ejectHand(g,h);
+ const d={x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)},target=g.units.find(t=>t.id===h.targetId&&g.hostile(e,t)&&!enemyWell(g,e,t,0)&&g.visibleTo(e.team,t));
  if(h.targetId&&!target)delete h.targetId;
  let desired=h.attached?{x:e.x+d.x*1.6,y:e.y+d.y*1.6}:target||h.goal||h;
  desired=safeHandPoint(g,e,desired);if(distance(h,e)>YAN.handLeash){Object.assign(h,safeHandPoint(g,e,h));h.path=[];}
@@ -111,7 +127,7 @@ export function tickHand(g,h,dt){
   while(h.path?.length&&distance(h,h.path[0])<.3)h.path.shift();goal=h.path?.[0]||safeHandPoint(g,e,{x:e.x+d.x*1.6,y:e.y+d.y*1.6});
  }
  const move=direction(h,goal),step=Math.min(distance(h,goal),YAN.handSpeed*dt),next={x:h.x+move.x*step,y:h.y+move.y*step};
- if(distance(e,next)<=YAN.handLeash&&g.clearLine(h,next,h.radius))Object.assign(h,next);
+ if(distance(e,next)<=YAN.handLeash&&!enemyWell(g,e,next,h.radius)&&g.clearLine(h,next,h.radius))Object.assign(h,next);
  if(g.blocked(h.x,h.y,h.radius)||distance(h,e)>YAN.handLeash)Object.assign(h,safeHandPoint(g,e,desired));
  h.facing=target?Math.atan2(target.y-h.y,target.x-h.x):e.facing||0;
  if(g.time+1e-8>=h.nextStrike){

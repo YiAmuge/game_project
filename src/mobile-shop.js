@@ -1,4 +1,5 @@
 import{UPGRADES}from'./data.js';
+import{unlocked}from'./augments.js';
 export const defaultShopSection=p=>UPGRADES.every(u=>(p.upgrades[u.key]||0)>=u.max)?'augments':'upgrades';
 export class MobileShop{
  constructor(root){
@@ -8,5 +9,5 @@ export class MobileShop{
  }
  open(p){this.select(defaultShopSection(p));}
  select(section){this.root.dataset.mobileSection=section;const inventory=section==='inventory';(inventory?this.owned:this.root.querySelector('#detail-owned')).append(this.root.querySelector('#owned-list'));for(const b of this.root.querySelectorAll('#mobile-shop-tabs button')){const active=b.dataset.section===section;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));}}
- update(p){this.root.querySelector('#mobile-shop-gold').textContent='◈ '+Math.floor(p.gold);}
+ update(p){this.root.querySelector('#mobile-shop-gold').textContent='◈ '+Math.floor(p.gold);for(const b of this.root.querySelectorAll('#shop-tabs button'))b.classList.toggle('category-unlocked',b.dataset.group!=='all'&&unlocked(p,b.dataset.group));}
 }
