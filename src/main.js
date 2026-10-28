@@ -112,7 +112,7 @@ function recallAction(){
 }
 $('recall-btn').onclick=recallAction;
 function confirmOrAttack(){if(Infiltration.selecting(game.player)){if(!game.infiltrate(game.player))toast('이동 가능한 착지 지점을 선택하세요.');game.input.fire=false;return;}if(Infiltration.absent(game.player))return;if(game.targeting){const {slot,options}=game.targeting;const point=castPoint(game.player,game.input.aim,skillTargeting(game,game.player,slot),game.bounds);if(skill(slot,{...options,point,confirm:true}))delete game.targeting;game.input.fire=false;return;}game.attack(game.player,game.input.aim);}
-function toggleShop(){if(!$('shop').classList.contains('hidden')){$('shop').classList.add('hidden');return;}if(!active())return;clearInput();shopSelection=null;$('shop').classList.remove('hidden');updateHud();}
+function toggleShop(){if(!$('shop').classList.contains('hidden')){$('shop').classList.add('hidden');return;}if(!active())return;clearInput();shopSelection=null;shopGroup='all';if(mobile?.enabled)mobile.shop.open(game.player);$('shop').classList.remove('hidden');updateHud();}
 $('shop-toggle').onclick=toggleShop;$('shop-close').onclick=()=>$('shop').classList.add('hidden');
 let shopBusyUntil=0;
 function shopAction(action){
@@ -132,7 +132,7 @@ function chooseAugment(key){shopSelection={kind:'augment',key};updateShopInvento
 for(const item of AUGMENTS){
  const row=document.createElement('div');row.className='augment-item';row.id='augment-row-'+item.key;
  const info=document.createElement('button');info.id='select-augment-'+item.key;info.className='augment-tile';info.setAttribute('aria-label',item.name);info.append(AugmentArt.icon(item.key,item.group));const price=document.createElement('small');price.textContent='500 ◈';info.append(price);
- info.onpointerenter=()=>chooseAugment(item.key);info.onfocus=()=>chooseAugment(item.key);info.onclick=()=>chooseAugment(item.key);info.ondblclick=e=>{e.preventDefault();chooseAugment(item.key);purchaseSelected();};row.append(info);augmentGroups[item.group].append(row);
+ info.onpointerenter=e=>{if(e.pointerType!=='touch')chooseAugment(item.key);};info.onfocus=()=>{if(!mobile?.enabled)chooseAugment(item.key);};info.onclick=()=>chooseAugment(item.key);info.ondblclick=e=>{e.preventDefault();if(mobile?.enabled)return;chooseAugment(item.key);purchaseSelected();};row.append(info);augmentGroups[item.group].append(row);
 }
 for(const b of $('shop-tabs').querySelectorAll('button'))b.onclick=()=>{shopGroup=b.dataset.group;updateHud();b.blur();};
 function purchaseSelected(){return shopAction(()=>{if(!shopSelection)return false;const item=AUGMENTS.find(a=>a.key===shopSelection.key),ok=game.buyAugment(game.player,item.key);if(ok)toast(item.name+' 선택 완료');return ok;});}

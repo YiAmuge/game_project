@@ -71,8 +71,8 @@ test('Jamila selects for fifteen seconds, its codex effect states the duration, 
 test('an expired invalid infiltration point chooses a nearby valid location without extending the deadline',()=>{
  const{g,p}=arena('faust');p.augments=['highRisk'];g.recall(p);run(g,1.75);p.state.infiltration.point={x:45,y:25};g.map.walls=[{x:44.8,y:24.8,w:.4,h:.4}];run(g,10);assert.equal(p.state.infiltration.phase,'arriving');assert.ok(I.valid(g,p,p.state.infiltration.point));run(g,.51);assert.equal(I.absent(p),false);
 });
-test('mobile autoaim chooses the nearest visible hittable target and ignores walls and out-of-range foes',()=>{
- const{g,p}=arena('faust'),nearby=hero(g),behind=hero(g,{x:42,y:24}),far=hero(g,{x:60});g.map.walls=[{x:40.7,y:24.1,w:.4,h:.5}];assert.equal(mobileAutoAim(g,p).target,nearby);behind.alive=false;nearby.alive=false;assert.equal(mobileAutoAim(g,p).target,undefined);assert.ok(far.alive);
+test('mobile autoaim prefers hittable targets, then aims toward visible foes outside range',()=>{
+ const{g,p}=arena('faust'),nearby=hero(g),behind=hero(g,{x:42,y:24}),far=hero(g,{x:60});g.map.walls=[{x:40.7,y:24.1,w:.4,h:.5}];assert.equal(mobileAutoAim(g,p).target,nearby);behind.alive=false;nearby.alive=false;assert.equal(mobileAutoAim(g,p).target,far);far.alive=false;assert.equal(mobileAutoAim(g,p).target,undefined);
 });
 test('mobile Marton prioritizes a melee target, otherwise automatically uses a ranged target',()=>{
  const{g,p}=arena('marton'),far=hero(g,{x:44.5}),close=hero(g,{x:42});let aim=mobileAutoAim(g,p);assert.equal(aim.target,close);assert.equal(aim.mode,'melee');assert.ok(Math.hypot(aim.point.x-p.x,aim.point.y-p.y)<2.5);close.alive=false;aim=mobileAutoAim(g,p);assert.equal(aim.target,far);assert.ok(Math.hypot(aim.point.x-p.x,aim.point.y-p.y)>=2.5);
@@ -83,8 +83,8 @@ test('mobile Ppui basic prioritizes wounded ally healing over an enemy, then att
 test('mobile Queequeg tether and Hong Lu waterfall prioritize the lowest-health nearby ally',()=>{
  for(const[key,slot]of[['queequeg','q'],['honglu','r']]){const{g,p}=arena(key),a=hero(g,{team:0,x:42,hp:8000}),b=hero(g,{team:0,x:45,hp:500});hero(g,{x:41});assert.equal(mobileAutoAim(g,p,slot).target,b);assert.ok(a.alive);}
 });
-test('mobile Gubo basic and ultimate always prioritize an allied execution target inside their own range',()=>{
- const{g,p}=arena('gubo'),foe=hero(g,{x:42}),ally=hero(g,{team:0,x:44,hp:100});for(const slot of['basic','r'])assert.equal(mobileAutoAim(g,p,slot).target,ally);ally.x=60;assert.equal(mobileAutoAim(g,p).target,foe);
+test('mobile Gubo basic and ultimate prioritize a visible allied execution target even outside range',()=>{
+ const{g,p}=arena('gubo'),foe=hero(g,{x:42}),ally=hero(g,{team:0,x:44,hp:100});for(const slot of['basic','r'])assert.equal(mobileAutoAim(g,p,slot).target,ally);ally.x=60;assert.equal(mobileAutoAim(g,p).target,ally);ally.alive=false;assert.equal(mobileAutoAim(g,p).target,foe);
 });
 test('mobile manual drag uses camera projection and supports both close melee aim and full-range direction',()=>{
  const{g,p}=arena('marton'),camera=new Camera25D();camera.update(844,390,p);const close=mobileManualAim(g,p,'basic',18,0,camera),far=mobileManualAim(g,p,'basic',60,0,camera);near(Math.hypot(close.x-p.x,close.y-p.y),1.5);near(Math.hypot(far.x-p.x,far.y-p.y),5);assert.ok(far.x>p.x);

@@ -18,10 +18,11 @@ export const bodyFacing=(g,e)=>basicStance(g,e)?.bodyFacing??e.facing??(e.team?M
 export function captureMobileAim(g){
  if(!g.mobileInput||!g.player||!g.input.aim||g.player.state?.infiltration?.phase==='selecting')return null;
  if(Math.abs(g.input.x)>.05)g.player.mobileMoveFacing=g.input.x<0?Math.PI:0;
+ const length=Math.hypot(g.input.x,g.input.y);if(length>.01)g.player.mobileMoveDirection={x:g.input.x/length,y:g.input.y/length};
  return {point:g.input.aim,x:g.player.x,y:g.player.y};
 }
 export function followMobileAim(g,from){
  if(!from)return;
- if(from.point===g.input.aim){const target=g.units.find(t=>t.id===g.mobileAim?.autoTarget);if(target?.alive){g.input.aim.x=target.x;g.input.aim.y=target.y;}else{g.input.aim.x+=g.player.x-from.x;g.input.aim.y+=g.player.y-from.y;}}
+ if(from.point===g.input.aim){const target=g.units.find(t=>t.id===g.mobileAim?.autoTarget);if(target?.alive&&!g.hidden(target)&&g.visibleTo(g.player.team,target)){g.input.aim.x=target.x;g.input.aim.y=target.y;}else if(!g.mobileAim?.autoTarget){g.input.aim.x+=g.player.x-from.x;g.input.aim.y+=g.player.y-from.y;}}
  from.x=g.player.x;from.y=g.player.y;from.point=g.input.aim;
 }

@@ -45,7 +45,7 @@ test('champion priority also applies to aimed tactical and ultimate attacks',()=
  const{g,p}=arena('faust');foe(g,{x:41,kind:'minion',hp:1});const target=foe(g,{x:44,hp:200});assert.equal(mobileAutoAim(g,p,'q').target,target);assert.equal(mobileAutoAim(g,p,'r').target,target);
 });
 test('explicit category attacks choose only that category and report an unavailable target instead of falling back',()=>{
- const{g,p}=arena('gubo');const targets=Object.fromEntries([['champion','champion'],['minion','minion'],['structure','tower'],['creep','neutral']].map(([category,kind],i)=>[category,foe(g,{kind,x:42+i,hp:100+i})]));for(const[category,t]of Object.entries(targets)){assert.equal(attackCategory(t),category);assert.equal(mobileAutoAim(g,p,'basic',{category}).target,t);}targets.creep.x=100;const aim=mobileAutoAim(g,p,'basic',{category:'creep'});assert.equal(aim.target,undefined);assert.ok(aim.unavailable);
+ const{g,p}=arena('gubo');const targets=Object.fromEntries([['champion','champion'],['minion','minion'],['structure','tower'],['creep','neutral']].map(([category,kind],i)=>[category,foe(g,{kind,x:42+i,hp:100+i})]));for(const[category,t]of Object.entries(targets)){assert.equal(attackCategory(t),category);assert.equal(mobileAutoAim(g,p,'basic',{category}).target,t);}targets.creep.alive=false;const aim=mobileAutoAim(g,p,'basic',{category:'creep'});assert.equal(aim.target,undefined);assert.ok(aim.unavailable);
 });
 test('category availability excludes hidden, invulnerable, blocked and out-of-range targets',()=>{
  const{g,p}=arena('gubo'),t=foe(g);assert.ok(mobileAttackTargets(g,p).includes(t));t.invulnerableUntil=1;assert.equal(mobileAttackTargets(g,p).length,0);t.invulnerableUntil=0;g.map.walls=[{x:41,y:24,w:.5,h:2}];assert.equal(mobileAttackTargets(g,p).length,0);g.map.walls=[];t.x=100;assert.equal(mobileAttackTargets(g,p).length,0);
@@ -54,7 +54,7 @@ test('the existing Gubo allied execution and Ppui ally healing priorities still 
  for(const key of['gubo','ppui']){const{g,p}=arena(key);foe(g,{hp:1});const ally=g.makeChampion('yi',0,50);Object.assign(ally,{x:43,y:25,hp:1});assert.equal(mobileAutoAim(g,p).target,ally);assert.notEqual(mobileAutoAim(g,p,'basic',{category:'champion'}).target,ally);}
 });
 test('circle autoaim hits targets at the far blast edge while keeping the center inside cast range',()=>{
- const{g,p}=arena('yi'),t=foe(g,{x:50});const aim=mobileAutoAim(g,p,'q');assert.equal(aim.target,t);near(aim.point.x,47);assert.ok(Math.abs(aim.point.x-t.x)<=3.2+t.radius);t.x=51;assert.equal(mobileAutoAim(g,p,'q').target,undefined);
+ const{g,p}=arena('yi'),t=foe(g,{x:50});const aim=mobileAutoAim(g,p,'q');assert.equal(aim.target,t);near(aim.point.x,47);assert.ok(Math.abs(aim.point.x-t.x)<=3.2+t.radius);t.x=51;const outside=mobileAutoAim(g,p,'q');assert.equal(outside.target,t);near(outside.point.x,47);
 });
 test('self areas and line impact radii extend autoaim reach, while cone angles and targeted skills do not',()=>{
  near(autoAimReach({kind:'self',range:0,radius:5}),5);near(autoAimReach({kind:'line',range:8,radius:.3,impact:4}),12);near(autoAimReach({kind:'cone',range:5,radius:Math.PI}),5);near(autoAimReach({kind:'target',range:7,radius:1.2}),7);

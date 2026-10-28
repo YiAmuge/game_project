@@ -374,11 +374,20 @@ body.mobile-ui.in-game #ping-controls [data-ping=attack]{color:#ffb77b}body.mobi
 .mobile-target-btn{position:absolute;width:36px;height:36px;padding:6px;display:grid;place-items:center;border:1.5px solid #c6d9e7a8;border-radius:50%;background:#1a344bc7;color:#dbeaff;pointer-events:auto;touch-action:none;box-shadow:0 2px 8px #02091466}
 .mobile-target-btn svg{width:100%;height:100%;pointer-events:none}
 body.mobile-ui.in-game .hud .ability>span{display:none}
-.mobile-target-btn[data-target-kind=champion]{right:max(8px,env(safe-area-inset-right));bottom:13px;border-color:#ef9aa4;color:#ffc0c6}
-.mobile-target-btn[data-target-kind=minion]{right:max(8px,env(safe-area-inset-right));bottom:63px;color:#bce3f4}
-.mobile-target-btn[data-target-kind=structure]{right:max(8px,env(safe-area-inset-right));bottom:113px;color:#ffe5a4}
-.mobile-target-btn[data-target-kind=creep]{right:164px;bottom:17px;color:#c8dba0}
+.mobile-target-btn[data-target-kind=champion]{border-color:#ef9aa4;color:#ffc0c6}
+.mobile-target-btn[data-target-kind=minion]{color:#bce3f4}
+.mobile-target-btn[data-target-kind=structure]{color:#ffe5a4}
+.mobile-target-btn[data-target-kind=creep]{color:#c8dba0}
 body.mobile-ui.match-intro .mobile-target-btn{visibility:hidden}
+/* Keep the inner left arc clear for one to four contextual attack targets. */
+body.mobile-ui.in-game .hud #q-btn{right:max(8px,env(safe-area-inset-right));bottom:80px}
+body.mobile-ui.in-game .hud #r-btn{bottom:150px}
+body.mobile-ui.in-game .hud .ability.mobile-recast{border-color:#f3fcff;box-shadow:0 0 9px #d8f5ffa8,inset 0 0 10px #d4f2ff70}
+body.mobile-ui.in-game .hud .ability.mobile-recast:after{content:'';position:absolute;inset:-4px;border:2px solid #d7f4ff;border-radius:50%;pointer-events:none;animation:mobile-recast-glow .9s ease-in-out infinite alternate}
+@keyframes mobile-recast-glow{from{opacity:.55;box-shadow:0 0 4px #aee4ff80}to{opacity:1;box-shadow:0 0 13px #d2f3ff}}
+@media(prefers-reduced-motion:reduce){body.mobile-ui.in-game .hud .ability.mobile-recast:after{animation:none}}
+/* Icon canvases participate in their list's native scroll gesture. */
+body.mobile-ui :is(.champion-select,.archive-grid,.training-pick-grid,.monster-list,.augment-guide-list,.shop-catalog) :is(button,canvas),body.mobile-ui #owned-list :is(button,canvas){touch-action:pan-y;user-select:none;-webkit-user-select:none}
 
 /* Supply has three touch tabs, independently scrolling details and fixed actions. */
 body.mobile-ui.in-game .shop{inset:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));padding:9px 12px;overflow:hidden;border-radius:8px}
