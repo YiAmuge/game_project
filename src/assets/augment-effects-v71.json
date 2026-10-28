@@ -1,0 +1,40 @@
+{
+  "frames": {
+    "butterflyWhite": {
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    },
+    "butterflyBlack": {
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    },
+    "resentment": {
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    }
+  },
+  "sources": [
+    {
+      "file": "exec-b92365d1-fcbf-4457-8521-890991894a23.png",
+      "sha256": "5439a94767278471b16c7a947d4ecc5a4cbb933aa068d6a301461b3ee834e3e1",
+      "purpose": "single butterfly; both guns removed from mourning reference"
+    },
+    {
+      "file": "augments-survival.png",
+      "sha256": "dce191d756684b76957e348e2e0f2e53b847601f54db5b13dbf332830f881f68",
+      "rect": [
+        10,
+        20,
+        370,
+        395
+      ],
+      "purpose": "original resentment purple motif"
+    }
+  ]
+}

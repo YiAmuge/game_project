@@ -13,6 +13,7 @@ import { paintHealth } from './health-display.js';
 import { combatStyle } from './combat-style.js';
 import { championPresentation } from './champion-vfx.js';
 import { drawEyeGlow } from './sprite-eyes.js';
+import{drawResentmentBody}from'./augment-effects.js';
 import { leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
 import { MotionTrails,ribbonSections,drawRibbon,captureBlade,projectBlade } from './weapon-trails.js';
 import * as CombatVisuals from './combat-visuals.js';
@@ -161,7 +162,7 @@ export class Renderer {
     const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
     c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
-      c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);
+      c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);drawResentmentBody(c,game,e,f,atlas,{left,top,w,h});
       if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),left,top,w,h);c.restore();}
       if(game.buff(e,'queequegUlt')&&this.skillVfx){c.save();c.globalAlpha*=.22;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#c44034'),left,top,w,h);c.restore();}
       if(e.visuals?.ampule?.until>game.time&&this.skillVfx){c.save();c.globalCompositeOperation='multiply';c.globalAlpha*=.65*Math.min(1,(e.visuals.ampule.until-game.time)/.35);c.drawImage(this.skillVfx.tintFrame(atlas,f,'#22c65e'),left,top,w,h);c.restore();}

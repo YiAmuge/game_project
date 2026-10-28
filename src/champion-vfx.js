@@ -1,4 +1,5 @@
 import{drawAugmentEffects,drawAugmentGround}from'./v60-effects.js';
+import{drawPassiveAugmentFront,drawPassiveAugmentGround}from'./augment-effects.js';
 import{drawMartonFairy,FAIRY_COLORS}from'./fairy-art.js';
 import{v58Ground,v58Front}from'./v58-effects.js';
 import { combatStyle,clipShape } from './combat-style.js';
@@ -216,7 +217,7 @@ export class ChampionVFX {
   else if(f.type==='shout'){c.save();c.translate(.2,-1.7);c.strokeStyle='#b2c8c2';c.lineWidth=.025;c.globalAlpha=(1-t)*.45;for(let i=0;i<3;i++){const size=.15+age*(1+i*.3);c.beginPath();c.arc(0,0,size,-.65,.65);c.stroke();}c.restore();}
  }
  events(c,camera,g){
-  v58Front(c,camera,g);drawAugmentEffects(c,camera,g);
+  v58Front(c,camera,g);drawAugmentEffects(c,camera,g);drawPassiveAugmentFront(c,camera,g);
   c.save();
   for(const f of this.effects){
    if(f.type==='formulaField'){this.formulaArea(c,camera,f,g.time-f.at,1-(g.time-f.at)/f.life);continue;}
@@ -238,7 +239,7 @@ export class ChampionVFX {
   c.restore();
  }
  ground(c,camera,g){
-  v58Ground(c,camera,g);drawAugmentGround(c,camera,g);
+  v58Ground(c,camera,g);drawAugmentGround(c,camera,g);drawPassiveAugmentGround(c,camera,g);
   const world=(p,h=0)=>camera.worldToScreen(p,h),sprite=(form,color,p,h,size,alpha=.5,angle=0)=>{const at=world(p,h);this.mote(c,form,color,at.x,at.y,size*camera.scale,angle,alpha);};
   for(const f of g.effects)if(f.type==='yiBuffRange'&&f.life>0)this.vfx.groundDisc(c,camera,f,f.r,()=>{
    c.globalAlpha=Math.min(1,f.life/.15);c.fillStyle='#d6c78b14';c.strokeStyle='#e2d29bd9';c.lineWidth=.018;c.beginPath();c.arc(0,0,1,0,Math.PI*2);c.fill();c.stroke();

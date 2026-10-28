@@ -151,7 +151,7 @@ export const AUGMENT_RULES={cost:500,refund:.7,slots:6,categorySlots:2};
 export const AUGMENTS=[
  {key:'finalBullet',group:'combat',name:'마탄',text:'7초마다 적 챔피언 적중 시 최종 체력 피해의 7% 고정 피해'},
  {key:'power15',group:'combat',name:'신검합일',text:'전투력 +10% · 방어관통 +20%'},
- {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 돌진형 기본 공격은 공격 사거리와 돌진거리 각각 +1'},
+ {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 관통 또는 범위 공격이 가능한 기본 공격은 사거리 +1.3을 적용'},
  {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소. 최대 중첩 중 공격 중에도 장전이 15% 속도로 진행'},
  {key:'glaive',group:'survival',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
  {key:'wisdom',group:'combat',name:'지혜성도',text:'전투력 +5% · 공격 중에도 장전이 30% 속도로 진행'},

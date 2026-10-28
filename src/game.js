@@ -183,7 +183,7 @@ export class Game {
   addBuff(e,key,seconds,{copy=true,strength=1}={}){
     const wasActive=this.buff(e,key);if(wasActive&&(e.buffPotency?.[key]??1)>strength)return;e.buffPotency??={};e.buffPotency[key]=strength;
     e.buffs[key]=this.time+seconds;e.buffHistory[key]={order:++this.buffSequence,until:e.buffs[key]};
-    e.visuals[key]={until:this.time+seconds,theme:e.key,at:this.time};CampBuffs.onBuff(this,e,key,wasActive);this.syncDesire(e);
+    e.visuals[key]={until:this.time+seconds,theme:e.key,at:this.time};CampBuffs.onBuff(this,e,key,wasActive);this.syncDesire(e);if(key==='yanDistorted')Augments.absorbOrder(this,e);
   }
   activeBuffs(e){
     for(const [key,until] of Object.entries(e.buffs))if(until>this.time&&e.buffHistory[key]?.until!==until)e.buffHistory[key]={order:++this.buffSequence,until};
@@ -211,7 +211,7 @@ export class Game {
   attackInterval(e){const c=CHAMPIONS[e.key];return c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier);}
   reloadPaused(e){if(e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(e.key==='dongbaek'&&e.state.usedPetal&&e.attackCd>0)return false;if(Sora.ego(this,e)||e.key==='alisa'&&this.buff(e,'alisaReload'))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||Boolean(e.state.donCharge)||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
   ammoCap(e){return Skills.ammoCap(this,e);}
-  attackRange(e){if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)+(Augments.has(e,'range7')?(Skills.dashBasic(this,e)?1:2.5):0);}
+  attackRange(e){if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)+Augments.rangeBonus(e);}
   bonusStats(e){
     const power=this.powerScale(e)*Skills.damageBonus(this,e,{hp:e.hp,maxHp:e.maxHp})*(e.key!=='dongrang'&&this.buff(e,'marks')?1.12:1)*(1-this.powerWeak(e));
     return {power:Math.round((power-1)*100),health:Math.round((e.maxHp/RULES.health[CHAMPIONS[e.key].health]-1)*100+1e-8),speed:Math.round((this.speed(e)/RULES.speed[CHAMPIONS[e.key].speed]-1)*100),haste:Math.round(this.haste(e)*100),reload:Math.round((e.key==='jamila'?this.reloadMultiplier(e)-1:RULES.reload[Skills.reloadGrade(e)]/this.reloadInterval(e)-1)*100)};
@@ -570,8 +570,8 @@ export class Game {
   inSpawn(e) {return this.training?distance(e,Training.spawn(this))<=2.5:inWell(e);}
   canShop(e) {return e.alive&&!e.state.posthumous&&this.inSpawn(e)&&this.time-e.lastCombat>=3&&this.winner===null;}
   canUpgrade(e){return e.kind==='champion'&&this.winner===null&&(this.training||!e.alive||this.canShop(e));}
-  buyAugment(e,key){const item=Augments.AUGMENTS.find(a=>a.key===key);if(!item||!this.canUpgrade(e)||!Augments.unlockedItem(e,key)||!Augments.fits(e,key)||!Augments.categoryFits(e,key)||Augments.has(e,key)||!this.training&&e.gold<Augments.AUGMENT_RULES.cost)return false;if(!this.training)e.gold-=Augments.AUGMENT_RULES.cost;e.augments.push(key);if(e.key==='kim'&&key==='power15')e.state.unityNext=this.time+2;this.refreshEquipment(e);this.emitSound('shop',e);return true;}
-  sellAugment(e,key){if(!this.canUpgrade(e)||!Augments.has(e,key)||!Augments.sellable(this,key))return false;e.augments=e.augments.filter(k=>k!==key);if(!this.training)e.gold+=Augments.AUGMENT_RULES.cost*Augments.AUGMENT_RULES.refund;this.refreshEquipment(e);if(key==='maskDeLu'){delete e.state.maskStacks;delete e.buffs.maskBoost;}if(key==='writtenOrder'){delete e.state.orderStacks;delete e.buffs.writtenOrder;}if(key==='antimatter')delete e.state.antimatterNext;if(key==='reloadStacks'){delete e.state.augReloadStacks;delete e.buffs.augReload;}if(key==='battleHaste')delete e.buffs.augBattleHaste;if(key==='forceBattery')e.shields=e.shields.filter(s=>s.source!==`battery-${e.id}`);return true;}
+  buyAugment(e,key){const item=Augments.AUGMENTS.find(a=>a.key===key),price=Augments.cost(e,key);if(!item||!this.canUpgrade(e)||!Augments.unlockedItem(e,key)||!Augments.fits(e,key)||!Augments.categoryFits(e,key)||Augments.has(e,key)||!this.training&&e.gold<price)return false;if(!this.training)e.gold-=price;e.augments.push(key);if(e.key==='kim'&&key==='power15')e.state.unityNext=this.time+2;Augments.absorbOrder(this,e);this.refreshEquipment(e);this.emitSound('shop',e);return true;}
+  sellAugment(e,key){if(!this.canUpgrade(e)||!e.augments.includes(key)||!Augments.sellable(this,key,e))return false;e.augments=e.augments.filter(k=>k!==key);if(!this.training)e.gold+=Augments.saleValue(e,key);this.refreshEquipment(e);if(key==='maskDeLu'){delete e.state.maskStacks;delete e.buffs.maskBoost;}if(key==='writtenOrder'){delete e.state.orderStacks;delete e.buffs.writtenOrder;}if(key==='antimatter')delete e.state.antimatterNext;if(key==='reloadStacks'){delete e.state.augReloadStacks;delete e.buffs.augReload;}if(key==='battleHaste')delete e.buffs.augBattleHaste;if(key==='forceBattery')e.shields=e.shields.filter(s=>s.source!==`battery-${e.id}`);return true;}
   refreshEquipment(e,{clampAmmo=true}={}){const old=e.maxHp;e.maxHp=this.maxHp(e);if(e.alive)e.hp=Math.min(e.maxHp,e.hp+Math.max(0,e.maxHp-old));if(clampAmmo)e.ammo=Math.min(e.ammo,this.ammoCap(e));}
   buy(e,key) {
     if(!this.canUpgrade(e))return false;

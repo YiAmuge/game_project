@@ -1,6 +1,6 @@
 import { RULES } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
-import { has } from './augments.js';
+import { rangeBonus } from './augments.js';
 
 export const HOHENHEIM={chargeTime:1.5,minDamage:100,maxDamage:100,minRange:6,maxRange:9,interval:.65,width:.2,burstGap:.12,duration:2.1,every:.25,damage:15,radius:7.5,castRange:8,followSpeed:6};
 export const isChampion=e=>e.key==='hohenheim';
@@ -8,7 +8,7 @@ export function cancelCharge(e){if(isChampion(e))delete e.state.hohenCharge;}
 export const reloadRate=(g,e)=>(RULES.reload[3]/RULES.reloadEfficiency)/g.reloadInterval(e);
 export function chargeShape(g,e,p){
  const progress=e.state.posthumous?1:clamp((e.state.hohenCharge?.progress||0)/HOHENHEIM.chargeTime,0,1),extra=g.ammoCap(e);
- return {progress,d:g.aim(e,p),range:(HOHENHEIM.minRange+(HOHENHEIM.maxRange-HOHENHEIM.minRange)*progress+extra*.75)+(has(e,'range7')?2.5:0),damage:(HOHENHEIM.minDamage+(HOHENHEIM.maxDamage-HOHENHEIM.minDamage)*progress)*(1+.05*extra),hits:Math.min(3,1+Math.floor((progress+1e-8)/.3)),width:HOHENHEIM.width};
+ return {progress,d:g.aim(e,p),range:(HOHENHEIM.minRange+(HOHENHEIM.maxRange-HOHENHEIM.minRange)*progress+extra*.75)+rangeBonus(e),damage:(HOHENHEIM.minDamage+(HOHENHEIM.maxDamage-HOHENHEIM.minDamage)*progress)*(1+.05*extra),hits:Math.min(3,1+Math.floor((progress+1e-8)/.3)),width:HOHENHEIM.width};
 }
 export function attackRange(g,e){return chargeShape(g,e,{x:e.x+1,y:e.y}).range;}
 function fire(g,e,point){

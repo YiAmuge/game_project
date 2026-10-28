@@ -1,17 +1,26 @@
 import { distance } from './geometry.js';
 import { AUGMENTS,AUGMENT_RULES } from './data.js';
 export { AUGMENTS,AUGMENT_RULES };
-export const has=(e,key)=>e.augments?.includes(key)||false;
+export const absorbedOrder=e=>e.key==='yan'&&Boolean(e.absorbedOrder);
+export const has=(e,key)=>Boolean(e.augments?.includes(key)||key==='writtenOrder'&&absorbedOrder(e));
+export const cost=(e,key)=>AUGMENT_RULES.cost*(e.key==='yan'&&key==='writtenOrder'?.5:1);
+export const saleValue=(e,key)=>cost(e,key)*AUGMENT_RULES.refund;
+// A rifle/single projectile keeps the ordinary range bonus; fans, rectangles,
+// radial attacks, piercing projectiles and damaging dashes use the area bonus.
+export const broadBasic=e=>!['jamila','outis','ppui'].includes(e.key)&&(e.key!=='faust'||e.level>=10);
+export const rangeBonus=e=>has(e,'range7')?(broadBasic(e)?1.3:2.5):0;
+export function absorbOrder(g,e){if(e.key!=='yan'||absorbedOrder(e)||!g.buff(e,'yanDistorted')||!e.augments.includes('writtenOrder'))return false;e.augments=e.augments.filter(k=>k!=='writtenOrder');e.absorbedOrder=true;return true;}
 export function unlocked(e,group){return group==='combat'?e.upgrades.power>=3:group==='survival'?e.upgrades.health>=3:e.upgrades.speed+e.upgrades.reload+e.upgrades.haste>=3;}
-export const exclusive=(e,key)=>e.key==='kim'&&key==='power15'||e.key==='jamila'&&key==='highRisk';
+export const exclusive=(e,key)=>e.key==='kim'&&key==='power15'||e.key==='jamila'&&key==='highRisk'||e.key==='yan'&&key==='writtenOrder';
 export const unlockedItem=(e,key)=>exclusive(e,key)||unlocked(e,AUGMENTS.find(a=>a.key===key)?.group);
 export const unlockedGroup=(e,group)=>unlocked(e,group)||AUGMENTS.some(a=>a.group===group&&exclusive(e,a.key));
 export const EXCLUSIVE_AUGMENTS={
  kim:[{key:'power15',name:'신검합일',text:'강화시술 구매 조건 없이 구매 가능. 2초마다 최대 체력의 1% 보호막을 얻으며 최대 12%까지 누적되고 5초간 유지된다. 이 보호막은 본국검술 보호막으로 취급되어 보유 중 장전 속도와 스킬 가속이 12% 증가한다.'}],
  jamila:[{key:'highRisk',name:'고위험 작전용 장비',text:'강화시술 구매 조건 없이 구매 가능. 침투 사거리 +10, 위치 선택시간 15초. 전장에서 사라진 동안 궁극기를 사용하면 선택 위치에 전투원 2명과 함께 즉시 나타나며 전투원의 지속시간이 15초가 된다.'}],
+ yan:[{key:'writtenOrder',name:'쪽지로 전해진 지령',text:'강화시술 구매 조건 없이 50% 할인된 250 재화로 구매할 수 있다. 구매 후 뒤틀림 상태가 되면 증강을 흡수해 보유 칸을 비우고 동일한 효과를 상시 패시브로 얻는다. 뒤틀림 상태에서 구매하면 즉시 흡수한다. 흡수한 효과는 변신 종료·사망·부활 후에도 유지되며 다시 구매하거나 판매할 수 없다.'}],
 };
 export const exclusiveAugments=key=>EXCLUSIVE_AUGMENTS[key]||[];
-export function augmentText(e,item){if(!item)return '';const effect=exclusiveAugments(e.key).find(a=>a.key===item.key);return item.text+(effect?'\n'+(e.key==='kim'?'김삿갓':'자밀라')+' 전용: '+effect.text:'');}
+export function augmentText(e,item){if(!item)return '';const effect=exclusiveAugments(e.key).find(a=>a.key===item.key);return item.text+(effect?'\n'+({kim:'김삿갓',jamila:'자밀라',yan:'얀'}[e.key])+' 전용: '+effect.text:'');}
 export const categoryCount=(e,group)=>e.augments.filter(key=>AUGMENTS.find(a=>a.key===key)?.group===group).length;
 export const resentment=e=>has(e,'resentment')?Math.min(8,Math.floor((1-e.hp/e.maxHp+1e-8)*10))*.05:0;
 export function tick(g,e,dt=0){
@@ -51,7 +60,7 @@ export const slots=e=>AUGMENT_RULES.slots;
 export const usedSlots=e=>e.augments.length;
 export const categoryFits=(e,key)=>has(e,'carrier')||key==='carrier'||categoryCount(e,AUGMENTS.find(a=>a.key===key)?.group)<AUGMENT_RULES.categorySlots;
 export const fits=(e,key)=>usedSlots(e)<slots(e);
-export const sellable=(g,key)=>true;
+export const sellable=(g,key,e=g.player)=>!(key==='writtenOrder'&&absorbedOrder(e));
 export const liveStacks=(g,e,key)=>(e.state[key]||[]).filter(at=>at>g.time+1e-8);
 function stack(g,e,key,max){const list=liveStacks(g,e,key);if(list.length>=max)list.shift();list.push(g.time+5);e.state[key]=list;}
 export function powerRate(g,e){return (has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.05:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?Math.max(0,g.speed(e)/g.baseSpeed(e)-1):0);}

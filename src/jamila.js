@@ -3,7 +3,7 @@ import {distance,direction} from './geometry.js';
 import {canOccupy} from './collision.js';
 import * as Infiltration from './infiltration.js';
 
-export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,idlePerRound:.12,idleReductionCap:1.2,reload:1.5,powerRatio:.55,shield:.015,shieldEvery:4,shieldCap:.075,shieldTime:3,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
+export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,idlePerRound:.12,idleReductionCap:1.2,reload:1.5,powerRatio:.55,shield:.015,shieldEvery:4,shieldRoundBonus:10,shieldCap:.075,shieldTime:3,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
 export const isTrooper=e=>Boolean(e.lcaTrooper);
 export const army=(g,e)=>g.units.filter(t=>t.lcaTrooper&&t.owner===e.id&&t.alive&&t.until>g.time);
 export const commander=(g,e)=>e.lcaTrooper?g.units.find(t=>t.id===e.owner):e;
@@ -34,8 +34,8 @@ export function basic(g,e,p,d){
  // Carry at most one simulation frame of timing debt instead of slowing sustained fire.
  const due=e.state.lcaNextShot,at=due!==undefined&&due<=g.time+1e-8&&g.time-due<=1/30+1e-8?due:g.time;e.state.lcaNextShot=at+JAMILA.interval;e.attackCd=Math.max(0,e.state.lcaNextShot-g.time);
  const special=!e.lcaTrooper&&e.ammo%JAMILA.shieldEvery===0;
- g.bullet(e,d,e.lcaTrooper?JAMILA.trooperDamage:JAMILA.damage,g.attackRange(e),{speed:28,width:.11,color:special?'#59b8ff':'#e6cd77',theme:'jamila',lca:true,lcaShieldRound:special});
- if(special){const id=`udjat-${e.id}`,old=e.shields.find(s=>s.source===id&&s.until>g.time)?.value||0;g.addShield(e,Math.min(e.maxHp*JAMILA.shieldCap,old+e.maxHp*JAMILA.shield),id,JAMILA.shieldTime);}
+ g.bullet(e,d,e.lcaTrooper?JAMILA.trooperDamage:JAMILA.damage+(special?JAMILA.shieldRoundBonus:0),g.attackRange(e),{speed:28,width:.11,color:special?'#59b8ff':'#e6cd77',theme:'jamila',lca:true,lcaShieldRound:special});
+ if(special){const id=`udjat-${e.id}`,old=e.shields.find(s=>s.source===id&&s.until>g.time)?.value||0,increment=e.maxHp*JAMILA.shield,cap=e.maxHp*JAMILA.shieldCap,full=old>=cap-1e-8||g.shield(e)>=e.maxHp*.35-1e-8;g.addShield(e,Math.min(cap,old+increment),id,JAMILA.shieldTime);if(full)shareShield(g,e,increment,JAMILA.shieldTime,id);}
  if(e.ammo<1)beginReload(g,e);return true;
 }
 export function afterDamage(g,e,t,actual,proc,damageKind,absorbed){

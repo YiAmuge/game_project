@@ -6,7 +6,7 @@ import * as Jamila from '../src/jamila.js';
 import * as Yan from '../src/yan.js';
 import * as Sora from '../src/sora.js';
 import {ultGrowth} from '../src/v06-champions.js';
-import {healthTicks,paintHealth} from '../src/health-display.js';
+import {healthTrail,paintHealth} from '../src/health-display.js';
 import {restingStance,STANCE_ANGLES} from '../src/champion-pose.js';
 import {equipmentPose,SORA_CLAW_LENGTH} from '../src/weapon-art.js';
 import {skillReference,championReferenceStats,skillTextHTML} from '../src/skill-reference.js';
@@ -66,9 +66,9 @@ test('Dongrang nutrients require actual own healing and increase only ultimate d
  const{g,p}=arena('dongrang'),t=hero(g,'faust',1,42);t.armor=100;p.hp-=2000;g.heal(null,p,500,false);g.heal(t,p,500,false);g.heal(p,p,500,false,{natural:true});near(p.totalHealingReceived,0);g.heal(p,p,500,false);near(p.totalHealingReceived,500);p.hp-=1000;g.heal(p,p,500,false);near(p.totalHealingReceived,1000);assert.deepEqual(ultGrowth(p),{radius:3.2,damage:200});near(g.deal(p,t,260),130);near(g.deal(p,t,35,{fixed:true}),35);
  const old=t.hp;g.cast(p,'r',p);near(old-t.hp,100);assert.ok(g.stat(t,'root'));p.totalHealingReceived=0;near(ultGrowth(p).damage,180);
 });
-test('health ticks remain separated in screen pixels and draw major marks every five units',()=>{
- for(const hp of [500,1700,3400,10000,100000])for(const w of [25,80,200]){const ticks=healthTicks(hp,w);for(const t of ticks){assert.ok(t.ratio>0&&t.ratio<1);near(t.ratio,t.value/hp);}for(let n=1;n<ticks.length;n++)assert.ok((ticks[n].ratio-ticks[n-1].ratio)*w>=3-1e-8);}
- assert.equal(healthTicks(3400,200).find(t=>t.value===500).major,true);let strokes=0;const c={fillRect(){},save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},stroke(){strokes++;}};paintHealth(c,{hp:1700,maxHp:3400,alive:true},{time:0,shield:()=>500},0,0,100,7,'green');assert.ok(strokes>5);
+test('health draws one thin black damage boundary rather than repeated tick marks',()=>{
+ const e={hp:3400,maxHp:3400,alive:true},g={time:0,shield:()=>0},lines=[],c={fillRect(){},save(){},restore(){},beginPath(){},moveTo(x,y){lines.push([x,y]);},lineTo(x,y){lines.push([x,y]);},stroke(){}};
+ paintHealth(c,e,g,0,0,100,7,'green');assert.equal(lines.length,0);e.hp=1700;g.time=.1;paintHealth(c,e,g,0,0,100,7,'green');assert.deepEqual(lines,[[50,0],[50,7]]);assert.equal(c.strokeStyle,'#000');near(c.lineWidth,1);
 });
 test('rest angles mirror in both directions while manual aim and active attacks retain their target',()=>{
  for(const[key,angle]of Object.entries(STANCE_ANGLES)){const{g,p}=arena(key==='soraEgo'?'sora':key);if(key==='soraEgo')p.buffs.soraEgo=Infinity;p.previewStance=true;near(equipmentPose(g,p).facing,angle);near(restingStance(g,p,Math.PI).weaponFacing,Math.PI-angle);delete p.previewStance;p.facing=.7;near(equipmentPose(g,p).facing,.7);p.attackAt=g.time;p.attackFacing=.6;near(equipmentPose(g,p).facing,.7);}

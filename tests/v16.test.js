@@ -26,9 +26,9 @@ test('the small head-smash circle follows diagonal aim and cannot hit through te
  const {g,p}=quiet(),c={x:40+1.33/Math.SQRT2,y:7+1.33/Math.SQRT2},t=target(g,c.x,c.y),miss=target(g,42.5,7);g.attack(p,{x:45,y:12});assert.ok(t.hp<10000);close(miss.hp,10000);
  const f=quiet(),wallTarget=target(f.g,41.5);f.g.map={bounds:WORLD,walls:[{x:41,y:6,w:.2,h:2}]};f.g.attack(f.p,wallTarget);close(wallTarget.hp,10000);
 });
-test('range augment adds 2.5 to the normal impact offset and transformed circular range',()=>{
- const {g,p}=quiet();p.augments=['range7'];g.attack(p,{x:50,y:7});close(g.effects.find(e=>e.type==='soraShockwave').x,40+1.33+2.5);
- ego(g,p);p.attackCd=0;p.ammo=2;const front=target(g,42),back=target(g,38);g.attack(p,front);assert.ok(front.hp<10000&&back.hp<10000);close(g.attackRange(p),5.2);assert.equal(g.effects.at(-1).type,'soraClaw');
+test('range augment adds 1.3 to the normal impact offset and transformed circular range',()=>{
+ const {g,p}=quiet();p.augments=['range7'];g.attack(p,{x:50,y:7});close(g.effects.find(e=>e.type==='soraShockwave').x,40+1.33+1.3);
+ ego(g,p);p.attackCd=0;p.ammo=2;const front=target(g,42),back=target(g,38);g.attack(p,front);assert.ok(front.hp<10000&&back.hp<10000);close(g.attackRange(p),4);assert.equal(g.effects.at(-1).type,'soraClaw');
 });
 test('normal tactical keeps first-target-only damage and produces matching shockwave and temporary cracks',()=>{
  const {g,p}=quiet(),first=target(g,42),next=target(g,44);Sora.mark(g,p,first,'ultimate');p.ammo=0;g.cast(p,'q',{x:47,y:7});run(g,.3);

@@ -13,7 +13,7 @@ import * as V08 from './v08-champions.js';
 import * as V10 from './v10-champions.js';
 import * as V06 from './v06-champions.js';
 import * as New from './new-champions.js';
-import { has } from './augments.js';
+import { has,rangeBonus } from './augments.js';
 import { RULES, RUNTIME_CHAMPIONS as CHAMPIONS, WORLD, terrainContains } from './data.js';
 import { distance,direction,segmentDistance,clamp } from './geometry.js';
 import { startRudolphWeapon,tickRudolphWeapon } from './rudolph-weapon.js';
@@ -42,7 +42,7 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
  return hits;
 }
 export const dashBasic=(g,e)=>['don','myo','starbuck'].includes(e.key)||e.key==='gregor'&&g.buff(e,'mutant')||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0));
-export const dashLength=(e,n)=>n+(has(e,'range7')?1:0);
+export const dashLength=(e,n)=>n+(e.key==='don'?rangeBonus(e):0);
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set();
  return g.startMotion(e,d,len,{phaseEnemies:typeof damage==='function'||damage>0||Boolean(options.offensive),...options,onComplete:result=>options.onComplete?.({...result,hitIds}),onStep:(from,to)=>{
