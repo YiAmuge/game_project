@@ -8,7 +8,8 @@ export function sceneryPixelRatio(width,height,dpr=1){return Math.min(dpr,1,Math
 export function feetOffset(e){
  if(e.trainingDummy)return .37;
  if(e.kind==='champion'||e.lcaTrooper)return .325;
- if(e.kind==='neutral')return ['boss','amplify','blessing','needle','sewingKing'].includes(e.camp)?0:.65;
+ if(e.kind==='neutral')return ['side','central','boss','amplify','blessing','needle','sewingKing'].includes(e.camp)?0:.65;
+ if(e.kind==='tower'||e.kind==='core')return 0;
  if(e.kind==='minion')return 0;
  if(e.kind==='bait')return .67;
  if(e.kind==='summon')return 1.1;
@@ -35,6 +36,8 @@ export function renderAnchor(e){const m=e.motion;if(e.key==='starbuck'&&m?.kind=
 export function leapLift(e){const m=e.motion;if(m?.kind!=='leap')return 0;if(e.key==='starbuck'){const t=Math.min(1,m.elapsed/Math.max(.01,m.minDuration||.7));return t<.38?t/.38*14:t>.53?(1-t)/.47*14:14;}const duration=Math.max(.01,m.minDuration||m.total/m.speed);return Math.sin(Math.PI*Math.min(1,m.elapsed/duration))*(m.arcHeight||1.1);}
 export const levitationLift=(g,e)=>e.key==='rudolph'&&e.castSlot==='r'&&e.channelUntil>g.time?.16+.04*Math.sin(g.time*5):0;
 
-export const airborneShadow=e=>!(e.key==='starbuck'&&e.motion?.kind==='leap');
+// Building art already includes its grounded plinth. A circular unit shadow
+// protruding below that front edge makes the upright building appear lifted.
+export const airborneShadow=e=>!['tower','core'].includes(e.kind)&&!(e.key==='starbuck'&&e.motion?.kind==='leap');
 
 export function leapOpacity(e){if(e.key!=='starbuck'||e.motion?.kind!=='leap')return 1;return Math.max(0,Math.min(1,1-(leapLift(e)-4)/7));}

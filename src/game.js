@@ -78,12 +78,12 @@ export class Game {
   makeCamps() {
     for(const [camp,points] of Object.entries({central:[[30.5,16.5],[33.5,16.5],[30.5,19.5],[33.5,19.5]],blessing:[[22,13],[42,13]],amplify:[[22,23],[42,23]]}))for(const [x,y] of points){const p=worldPoint(x,y);this.makeNeutral(p.x,p.y,camp);}
     for(const [id,center] of [['west',worldPoint(17,18)],['east',worldPoint(47,18)]]){
-      for(const dx of [-.85,.85]){const n=this.makeNeutral(center.x+dx,center.y,'side');n.campId=`side-${id}`;n.campCenter={...center};n.name=['north','south'].includes(id)?'외곽 중립 크립':'본진 앞 중립 크립';}
+      for(const dx of [-.85,.85]){const n=this.makeNeutral(center.x+dx,center.y,'side');n.campId=`side-${id}`;n.campCenter={...center};}
     }
   }
   makeNeutral(x,y,camp) {
     const clerk=CampBuffs.BUFF_CREEPS[camp],stats=clerk?[clerk.health,clerk.armor,clerk.damage,clerk.interval,CAMP_RULES.buffRespawn]:{central:[700,10,80,1.3,CAMP_RULES.neutralRespawn],side:[850,15,100,1.2,CAMP_RULES.neutralRespawn],needle:[Sewing.NEEDLE.health,0,Sewing.NEEDLE.damage,Sewing.NEEDLE.interval,Sewing.NEEDLE.respawn],sewingKing:[Sewing.SEWING.health,Sewing.SEWING.armor,Sewing.SEWING.damage,Sewing.SEWING.interval,Infinity],boss:[BossPatterns.BOSS_RULES.health,60,BossPatterns.BOSS_RULES.attack,1.5,BossBuff.BOSS_BUFF.respawn]}[camp];
-    return this.entity({kind:'neutral',team:2,camp,x,y,home:{x,y},campId:camp==='central'?'central':`${camp}-${x}`,campCenter:camp==='central'?MAP_CENTER:{x,y},campRadius:['central','boss'].includes(camp)?4.7:CAMP_RULES.radius,maxHp:stats[0],armor:stats[1],damage:stats[2],interval:stats[3],respawnDelay:stats[4],range:camp==='boss'?2.8:camp==='sewingKing'?1.6:1.4,radius:camp==='boss'?1.2:camp==='sewingKing'?.9:camp==='needle'?.35:clerk?.5*1.15:.5,name:{central:'중앙 크립',side:'측면 크립',needle:'바늘이',sewingKing:'바느질의 왕',blessing:CampBuffs.BUFF_CREEPS.blessing.name,amplify:CampBuffs.BUFF_CREEPS.amplify.name,boss:'쌓인 것'}[camp],sweep:2.5});
+    return this.entity({kind:'neutral',team:2,camp,x,y,home:{x,y},campId:camp==='central'?'central':`${camp}-${x}`,campCenter:camp==='central'?MAP_CENTER:{x,y},campRadius:['central','boss'].includes(camp)?4.7:CAMP_RULES.radius,maxHp:stats[0],armor:stats[1],damage:stats[2],interval:stats[3],respawnDelay:stats[4],range:camp==='boss'?2.8:camp==='sewingKing'?1.6:1.4,radius:camp==='boss'?1.2:camp==='sewingKing'?.9:camp==='needle'?.35:clerk?.5*1.15:.5,creepVariant:camp==='side'?this.units.filter(e=>e.kind==='neutral'&&e.camp==='side').length%2:undefined,name:{central:'시지프의 잔재',side:'굶주린 르카키',needle:'바늘이',sewingKing:'바느질의 왕',blessing:CampBuffs.BUFF_CREEPS.blessing.name,amplify:CampBuffs.BUFF_CREEPS.amplify.name,boss:'쌓인 것'}[camp],sweep:2.5});
   }
   makeChampion(key,team,index,position=POSITION_ORDER[index%4]) {
     const c=CHAMPIONS[key];
@@ -636,7 +636,7 @@ export class Game {
     if(e.camp==='sewingKing'){Sewing.basic(this,e,t);return;}
     if(e.camp==='needle'){Sewing.swing(this,e);this.effects.push({type:'slash',x:e.x,y:e.y,r:e.range,angle:Math.atan2(t.y-e.y,t.x-e.x),spread:1.5,color:'#a4b6a4',life:.3,maxLife:.3});}
     if(e.kind==='minion'){e.facing=Math.atan2(t.y-e.y,t.x-e.x);e.attackAt=this.time;e.attackUntil=this.time+.28;}
-    if(e.kind==='neutral'){e.facing=Math.atan2(t.y-e.y,t.x-e.x);CampBuffs.swing(this,e,t);}
+    if(e.kind==='neutral'){if(['side','central'].includes(e.camp)){e.swingAt=this.time;e.swingUntil=this.time+.28;}e.facing=Math.atan2(t.y-e.y,t.x-e.x);CampBuffs.swing(this,e,t);}
     if(e.kind==='tower'||e.kind==='core'||e.kind==='minion'&&(e.ranged||e.siege)){this.projectiles.push({source:e,target:t,homing:true,x:e.x,y:e.y,damage:e.kind==='tower'?Towers.shotDamage(this,e,t):e.damage,visualHeight:e.kind==='minion'?(e.siege?1.05:.95):undefined,speed:e.kind==='minion'?12:14,remaining:4,width:e.kind==='minion'?.12:.24,color:e.team===0?'#83e5f4':'#ee9b84'});return;}
     this.effects.push({type:'line',x:e.x,y:e.y,to:{x:t.x,y:t.y},color:e.team===0?'#6fb8c7':e.team===1?'#d18178':'#bd9e64',life:.16,maxLife:.16});
     this.deal(e,t,e.damage);

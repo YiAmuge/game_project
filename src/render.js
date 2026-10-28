@@ -1,4 +1,5 @@
 import * as Infiltration from './infiltration.js';
+import{drawCampCreep,isCampCreep,campVisualHeight,drawStructure,structureVisualHeight}from'./world-art.js';
 import{cinematicCamera,endingCore}from'./match-presentation.js';
 import{drawMartonFairy}from'./fairy-art.js';
 import{drawBoss,bossVisualHeight}from'./boss-art.js';
@@ -33,7 +34,7 @@ import { targetingPreview } from './targeting.js';
 import { championHud, championEffects, championGroundEffects, chargePreview, orderMark, threatRanges } from './overlays.js';
 
 export class Renderer {
-  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.needleAtlas=loadAtlas(13);this.bossAtlas=loadAtlas(14);this.scale=1;this.ox=0;this.oy=0;this.resize();}
+  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.needleAtlas=loadAtlas(13);this.bossAtlas=loadAtlas(14);this.worldAtlas=loadAtlas(16);this.scale=1;this.ox=0;this.oy=0;this.resize();}
   resize() {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
@@ -114,6 +115,7 @@ export class Renderer {
     const color=e.team===0?'#8bb8c2':'#c4897e',dark=e.team===0?'#3b6169':'#704941';
     if(!e.alive){this.circle(e.x,e.y,e.radius,'#151f22','#536058');this.line([{x:e.x-.5,y:e.y-.5},{x:e.x+.5,y:e.y+.5}],'#64705a',.12);return;}
     const locked=game.locked(e);
+    if(drawStructure(this,e,game))return;
     this.circle(e.x,e.y+.15,e.radius+.3,'#101b1f');
     if(e.kind==='core') {
       this.circle(e.x,e.y,1.9,`${dark}55`,`${color}66`);this.circle(e.x,e.y,1.45,dark,color,.1);this.circle(e.x,e.y,1.1,'#192b2c',color,.06);
@@ -134,7 +136,9 @@ export class Renderer {
     if(!this.billboardPass)this.circle(e.x+.1,e.y+.3,e.radius+.14,'#07161a77');
     if(e.kind==='minion'){drawMinion(this,e,game);return;}
     if(e.kind==='neutral') {
-      if(drawNeedle(this,e,game)) {
+      if(drawCampCreep(this,e,game)) {
+        // Latest hood/slime poses use explicit boot/puddle ground anchors.
+      } else if(drawNeedle(this,e,game)) {
         // Front-facing idle/weapon-swing poses stay grounded at their feet.
       } else if(drawClerk(this,e,game)) {
         // Clerk body and independent held weapon are drawn together.
@@ -231,7 +235,7 @@ export class Renderer {
       return;
     }
     // Nameplates render after bushes and effects; the player's is always last.
-    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.lcaTrooper)this.bar(e,2.1,e.y-2.3,game,{height:.26});else if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-2.2,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-1.4,game);}
+    for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion')){if(e.kind==='neutral')orderMark(this,e,game);if(e.lcaTrooper)this.bar(e,2.1,e.y-2.3,game,{height:.26});else if(e.kind==='minion')this.bar(e,.95,e.y-minionHeight(e)-.18,game);else if(e.kind==='neutral')this.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:isCampCreep(e)?campVisualHeight(e)+.18:.95),game);else if(e.kind==='bait')this.bar(e,1.5,e.y-1.8,game);else if(e.kind==='core')this.bar(e,3.3,e.y-structureVisualHeight(game,e)-.18,game);else if(e.kind==='tower')this.bar(e,2.3,e.y-structureVisualHeight(game,e)-.18,game);}
     for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)).sort((a,b)=>Number(a.player)-Number(b.player))){championEffects(this,e,game);CombatVisuals.front(this,e,game);championHud(this,e,game);CombatVisuals.meter(this,e,game);}
     for(const e of game.champions().filter(e=>e.easterText?.until>game.time))this.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   }

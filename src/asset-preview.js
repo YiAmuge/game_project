@@ -1,3 +1,4 @@
+import{campPresentation,structurePresentation}from'./world-art.js';
 import{FRAMES,loadAtlas,portrait,spriteHeight}from'./art.js';
 import{Renderer}from'./render.js';
 import{bossPresentation}from'./boss-art.js';
@@ -25,7 +26,7 @@ export function preview(canvas,spec){
   if(spec.stance){const base=spec.key==='soraEgo'?'sora':spec.key==='yanDistorted'?'yan':spec.key,weapon=WEAPON_ART[base];if(weapon&&!retry(FRAMES[weapon[0]].sheet))return;const image=championStance(spec.key),scale=Math.min(canvas.width*.92/image.width,canvas.height*.92/image.height);c.drawImage(image,(canvas.width-image.width*scale)/2,(canvas.height-image.height*scale)/2,image.width*scale,image.height*scale);canvas.dataset.pose='basic';return;}
   const scale=Math.min(canvas.width*.86/f.w,canvas.height*.92/f.h);c.drawImage(a,f.x,f.y,f.w,f.h,(canvas.width-f.w*scale)/2,(canvas.height-f.h*scale)/2,f.w*scale,f.h*scale);return;}
  const e={alive:true,team:2,x:0,y:0,radius:.5,hp:100,maxHp:100,status:{},state:{},buffs:{},facing:0,...spec},g={time:0,minionFactions:['uniform','suit'],visibleTo:()=>true,hidden:()=>false,locked:()=>false,shield:()=>0};let p;
- if(e.kind==='minion')p=minionPresentation(g,e);else if(e.camp==='boss')p=bossPresentation(g,e);else if(['needle','sewingKing'].includes(e.camp))p=needlePresentation(g,e);else if(['amplify','blessing'].includes(e.camp))p=clerkPresentation(g,e);
- if(p){if(!retry(p.f.sheet))return;const scale=Math.min(canvas.width*.85/p.w,canvas.height*.88/p.h);c.save();c.translate((canvas.width-p.w*scale)/2-p.left*scale,canvas.height*.94);c.scale(scale,scale);}else{const scale=Math.min(canvas.width,canvas.height)*(['core','tower'].includes(e.kind)?.22:.38);c.save();c.translate(canvas.width/2,canvas.height/2);c.scale(scale,scale);}
+ if(['tower','core'].includes(e.kind))p=structurePresentation(g,e);else if(['side','central'].includes(e.camp))p=campPresentation(g,e);else if(e.kind==='minion')p=minionPresentation(g,e);else if(e.camp==='boss')p=bossPresentation(g,e);else if(['needle','sewingKing'].includes(e.camp))p=needlePresentation(g,e);else if(['amplify','blessing'].includes(e.camp))p=clerkPresentation(g,e);
+ if(p){if(!retry(p.f.sheet))return;const scale=Math.min(canvas.width*.85/p.w,canvas.height*.88/p.h);c.save();c.translate((canvas.width-p.w*scale)/2-p.left*scale,canvas.height*.94-(p.top+p.h)*scale);c.scale(scale,scale);}else{const scale=Math.min(canvas.width,canvas.height)*(['core','tower'].includes(e.kind)?.22:.38);c.save();c.translate(canvas.width/2,canvas.height/2);c.scale(scale,scale);}
  const painter=Object.create(Renderer.prototype);painter.ctx=c;painter.billboardPass=true;painter.text=()=>{};if(['tower','core'].includes(e.kind))painter.structure(e,g);else painter.unit(e,g);c.restore();
 }

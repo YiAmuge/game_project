@@ -1,3 +1,4 @@
+import{WORLD_FRAMES}from'./world-sprites.js';
 import{JAMILA_FRAMES}from'./jamila-sprites.js';
 import{BOSS_FRAMES}from'./boss-sprites.js';
 import { MINION_FRAMES } from './minion-sprites.js';
@@ -30,9 +31,9 @@ export const FRAMES = {
   outis:{"x": 768, "y": 532, "w": 384, "h": 492, "sheet": 1},
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
-Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES,BOSS_FRAMES,JAMILA_FRAMES);
-export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62'];
-const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62'];
+Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES,BOSS_FRAMES,JAMILA_FRAMES,WORLD_FRAMES);
+export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62','world-v69'];
+const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62','world-data-v69'];
 const atlasImages=new Map();
 export function visualForm(g,e){
  if(e.lcaTrooper)return 'jamilaTrooper';

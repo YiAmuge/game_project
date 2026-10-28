@@ -1,3 +1,4 @@
+import{isCampCreep,campVisualHeight,structureVisualHeight}from'./world-art.js';
 import{drawCombatNumbers}from'./combat-text.js';
 import{endingCore}from'./match-presentation.js';
 import{bossVisualHeight}from'./boss-art.js';
@@ -22,7 +23,7 @@ import { SkillVFX } from './skill-vfx.js';
 import { THEMES } from './art.js';
 import { projectFeet,leapLift,airborneShadow,sceneryPixelRatio,sceneryOutline,sceneryPan } from './projection-25d.js';
 
-const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17','atlasV36','weaponAtlas','clerkAtlas','minionAtlas','needleAtlas','bossAtlas'];
+const ATLAS_KEYS=['atlas','atlasExtra','atlasV05','atlasV06','atlasV08','atlasV10','atlasV12','atlasV13','atlasV17','atlasV36','weaponAtlas','clerkAtlas','minionAtlas','needleAtlas','bossAtlas','worldAtlas'];
 const material=(color,extra={})=>new THREE.MeshLambertMaterial({color,...extra});
 function painter(base,canvas){
  const p=Object.create(Object.getPrototypeOf(base));p.canvas=canvas;p.ctx=canvas.getContext('2d');
@@ -187,10 +188,10 @@ export class Renderer25D {
    this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>['tower','core'].includes(e.kind)?r.structure(e,game):r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
-   if(e.kind==='neutral'){orderMark(r,e,game);const y=e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:.95);r.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,y,game);}
+   if(e.kind==='neutral'){orderMark(r,e,game);const y=e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:isCampCreep(e)?campVisualHeight(e)+.18:.95);r.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,y,game);}
    else if(e.lcaTrooper)r.bar(e,2.1,e.y-2.3,game,{height:.26});
    else if(e.kind==='minion')r.bar(e,.95,e.y-minionHeight(e)-.18,game);
-   else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-(e.kind==='core'?1.45:1.1),game);towerMark(r,e,game);
+   else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-structureVisualHeight(game,e)-.18,game);towerMark(r,e,game);
   });
   for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&(!game.hidden(e)||e.motion?.kind==='leap')).sort((a,b)=>Number(a.player)-Number(b.player)))at(e,()=>{
    championEffects(r,e,game);CombatVisuals.front(r,e,game);championHud(r,e,game);CombatVisuals.meter(r,e,game);
