@@ -1,7 +1,11 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { readFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const lockHash=()=>createHash('sha256').update(readFileSync(new URL('../package-lock.json',import.meta.url))).digest('hex');
+const beforeLock=lockHash();
 const branch = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' });
 const name = branch.stdout?.trim();
 if (branch.status !== 0 || !name) {
@@ -13,7 +17,12 @@ if (branch.status !== 0 || !name) {
     console.error('업데이트가 완료되지 않았습니다. 변경 내용을 덮어쓰거나 자동 병합하지 않았습니다. 기존 파일로 실행을 확인합니다.');
     process.exitCode = 1;
   }
+  let dependenciesReady=true;
+  if(beforeLock!==lockHash()||!existsSync(new URL('../node_modules/ws/package.json',import.meta.url))){
+    console.log('온라인 연결에 필요한 의존성을 설치합니다.');
+    const install=spawnSync(process.platform==='win32'?'npm.cmd':'npm',['ci'],{cwd:root,stdio:'inherit',shell:process.platform==='win32'});
+    dependenciesReady=install.status===0;if(!dependenciesReady){console.error('의존성 설치가 완료되지 않았습니다. npm ci 후 다시 실행해 주세요.');process.exitCode=1;}
+  }
   // Use the updated startup code, even when Pull changed this script.
-  const start = spawnSync(process.execPath, ['scripts/codespaces-start.mjs'], { cwd: root, stdio: 'inherit' });
-  if (start.status !== 0) process.exitCode = 1;
+  if(dependenciesReady){const start = spawnSync(process.execPath, ['scripts/codespaces-start.mjs'], { cwd: root, stdio: 'inherit' });if (start.status !== 0) process.exitCode = 1;}
 }

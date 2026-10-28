@@ -39,10 +39,10 @@ export const overheadY=(e,g)=>championHealthY(e,g)-.42;
 export function championHud(r,e,g){
  const c=r.ctx,gauge=stackGauge(e,g),guboGauge=e.key==='gubo'&&g.buff(e,'guboReload'),width=2.65,x=e.x-width/2,y=championHealthY(e,g);
  c.save();c.fillStyle='#081317';c.fillRect(x-.06,y-.06,width+.12,.46);
- paintHealth(c,e,g,x,y,width,.34,e.player?'#7bd387':e.team===0?'#79bbc9':'#d7877e');
+ paintHealth(c,e,g,x,y,width,.34,e.player?'#7bd387':e.team===g.player.team?'#79bbc9':'#d7877e');
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
- drawLevelBadge(r,e,x,y);
+ drawLevelBadge(r,e,x,y,g);
  if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1000)),sx,sy+.43,'#e8e9b6',.24);}
  if(e.trainingDummy){c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);

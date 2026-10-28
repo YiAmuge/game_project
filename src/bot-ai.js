@@ -10,17 +10,21 @@ export function canSiege(g,e,tower){
  let count=0;for(const t of g.units)if(t.alive&&t.kind==='minion'&&t.team===e.team&&t.hp/t.maxHp>.3&&distance(t,tower)<=tower.range-.4){count+=t.siege?2:1;if(count>=2)break;}
  const covered=count>=2;e.aiTowerCover?.set(tower.id,covered);return covered;
 }
-export function safeTowerPoint(g,e,p){return enemyTowers(g,e).every(t=>distance(t,p)>t.range+e.radius+.4||canSiege(g,e,t));}
+export function safeTowerPoint(g,e,p){return enemyTowers(g,e).every(t=>distance(t,p)>t.range+e.radius+.9||canSiege(g,e,t));}
 export function safeTowerTarget(g,e,t){
  if(t.team===e.team)return true;
  if(t.kind==='tower')return canSiege(g,e,t);
  return enemyTowers(g,e).every(tower=>distance(tower,t)>tower.range+t.radius+.4||t.kind!=='champion'&&canSiege(g,e,tower));
 }
-export function safeTowerStep(g,e,next){return enemyTowers(g,e).every(t=>canSiege(g,e,t)||distance(t,next)>t.range+e.radius+.4||distance(t,next)>distance(t,e)+1e-6);}
+export function safeTowerStep(g,e,next){return enemyTowers(g,e).every(t=>canSiege(g,e,t)||distance(t,next)>t.range+e.radius+.9||distance(t,next)>distance(t,e)+1e-6);}
 export function leaveTower(g,e,dt){
- const threat=enemyTowers(g,e).filter(t=>distance(e,t)<t.range+e.radius+.6&&!canSiege(g,e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];if(!threat)return false;
- let d=direction(threat,e);if(Math.hypot(d.x,d.y)<.01)d=direction(threat,g.spawnPoint(e));
- e.objective='tower-safety';g.moveToward(e,{x:threat.x+d.x*(threat.range+e.radius+1.2),y:threat.y+d.y*(threat.range+e.radius+1.2)},dt);return true;
+ const towers=enemyTowers(g,e);let retreat=e.aiTowerRetreat,threat=retreat&&towers.find(t=>t.id===retreat.towerId);
+ if(retreat&&(!threat||distance(e,threat)>=threat.range+e.radius+1.15&&g.time>=retreat.until)){delete e.aiTowerRetreat;retreat=null;}
+ if(!retreat){threat=towers.filter(t=>distance(e,t)<t.range+e.radius+.6&&!canSiege(g,e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];if(!threat)return false;
+  let d=direction(threat,e);if(Math.hypot(d.x,d.y)<.01)d=direction(threat,g.spawnPoint(e));
+  retreat=e.aiTowerRetreat={towerId:threat.id,until:g.time+1,point:{x:threat.x+d.x*(threat.range+e.radius+1.35),y:threat.y+d.y*(threat.range+e.radius+1.35)}};e.path=[];e.pathAt=0;
+ }
+ e.objective='tower-safety';if(distance(e,threat)<threat.range+e.radius+1.2)g.moveToward(e,retreat.point,dt);return true;
 }
 export function combatTarget(g,e,range=9){
  const attackRange=g.attackRange(e);let best,bestScore=Infinity,bestDistance=Infinity;

@@ -104,7 +104,7 @@ export class Renderer25D {
   if(game.training)for(const a of this.layout.areas){c.fillStyle=a.color+'12';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.color+'66';c.lineWidth=.06;c.strokeRect(a.x,a.y,a.w,a.h);r.text(`${String(a.id).padStart(2,'0')} / ${a.name}`,a.x+a.w/2,a.y+1.2,a.color,.52);}
 
   const f=this.layout.spawn;r.circle(f.x,f.y,2.45,'#a8f2e91c','#bbf7e1aa',.08);r.circle(f.x,f.y,1.65,null,'#dcffef66',.055);
-  if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);}for(let lane=0;lane<2;lane++)r.line(lanePath(0,lane),'#a6a09220',3.2);for(const bush of BUSHES)r.bush(bush);c.restore();return;}
+  if(!game.training){for(const a of FOUNTAIN_AREAS){c.fillStyle=a.team!==game.player.team?'#a84e3940':'#4096a347';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle=a.team!==game.player.team?'#f0a58b':'#a1ebe2';c.lineWidth=.14;c.strokeRect(a.x+.07,a.y+.07,a.w-.14,a.h-.14);}for(let lane=0;lane<2;lane++)r.line(lanePath(0,lane),'#a6a09220',3.2);for(const bush of BUSHES)r.bush(bush);c.restore();return;}
   for(const bush of this.layout.bushes||[])r.bush(bush);
   r.text('부활소',f.x,f.y+3.1,'#c3e9dc',.42);
   const h=this.layout.hazard;c.fillStyle='#b3574d70';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle='#f1b18d';c.lineWidth=.07;c.strokeRect(h.x,h.y,h.w,h.h);
@@ -115,7 +115,7 @@ export class Renderer25D {
   c.restore();
  }
  staticFloor(game){
-  const stamp=game.training?game.practice.lineStopped:'match';if(this.floorStamp===stamp)return;this.floorStamp=stamp;
+  const stamp=game.training?game.practice.lineStopped:'match-'+game.player.team;if(this.floorStamp===stamp)return;this.floorStamp=stamp;
   const r=this.floorPainter,c=r.ctx,b=this.layout.bounds;c.setTransform(this.floorCanvas.width/b.w,0,0,this.floorCanvas.height/b.h,-b.x*this.floorCanvas.width/b.w,-b.y*this.floorCanvas.height/b.h);
   this.floorMarks(game,r,b);this.floorTexture.needsUpdate=true;this.sceneryDirty=true;
  }
@@ -129,7 +129,7 @@ export class Renderer25D {
   const baseCtx=b.ctx;baseCtx.save();baseCtx.setTransform(b.dpr,0,0,b.dpr,0,0);this.championVfx.ground(baseCtx,camera,game);baseCtx.restore();
   for(const {entity:e} of this.units.values()){
    if(airborneShadow(e)){const c=p.ctx;c.beginPath();c.ellipse(e.x,e.y,e.radius+.12,(e.radius+.12)*.65,0,0,Math.PI*2);c.fillStyle='#07161a77';c.fill();}
-   if(e.kind==='champion'&&!e.trainingDummy)p.circle(e.x,e.y,.67,null,e.player?'#f2d98e':e.team?'#d99588':'#92cad3',.06);
+   if(e.kind==='champion'&&!e.trainingDummy)p.circle(e.x,e.y,.67,null,e.player?'#f2d98e':e.team!==game.player.team?'#d99588':'#92cad3',.06);
   }
   const c=b.ctx;c.save();c.setTransform(b.dpr,0,0,b.dpr,0,0);this.vfx.drawGround(c,camera);c.restore();
   this.maskScenery(game);
@@ -145,7 +145,7 @@ export class Renderer25D {
   this.units.clear();
   for(const e of game.units){
 
-   const s=this.camera.worldToScreen(e),visible=(e.alive||endingCore(game,e)&&game.presentation.elapsed<1)&&(!game.hidden(e)||e.motion?.kind==='leap')&&game.visibleTo(0,e)&&s.x>-220&&s.x<this.base.width+220&&s.y>-220&&s.y<this.base.height+220;
+   const s=this.camera.worldToScreen(e),visible=(e.alive||endingCore(game,e)&&game.presentation.elapsed<1)&&(!game.hidden(e)||e.motion?.kind==='leap')&&game.visibleTo(game.player.team,e)&&s.x>-220&&s.x<this.base.width+220&&s.y>-220&&s.y<this.base.height+220;
    if(visible)this.units.set(e.id,{entity:e,feet:projectFeet(this.camera,e)});
   }
  }
@@ -154,7 +154,7 @@ export class Renderer25D {
   if(this.structures.size){for(const group of this.structures.values())dispose(group);this.structures.clear();this.sceneryDirty=true;}
  }
  occlusion(game){
-  const champions=game.champions().filter(e=>e.alive&&!game.hidden(e)&&game.visibleTo(0,e));
+  const champions=game.champions().filter(e=>e.alive&&!game.hidden(e)&&game.visibleTo(game.player.team,e));
   const stamp=[this.camera.x,this.camera.y,this.sizeStamp,...champions.flatMap(e=>[e.id,e.x,e.y]),...Array.from(this.structures,([id,g])=>`${id}:${g.scale.y}`)].join('/');
   if(stamp===this.occlusionStamp)return;this.occlusionStamp=stamp;
   const groups=[...this.walls.map(w=>w.mesh),...this.structures.values()],faded=new Set();
@@ -187,13 +187,13 @@ export class Renderer25D {
   try{for(const {e,tree} of actors.sort((a,b)=>a.e.y-b.e.y||(a.e.id||0)-(b.e.id||0))){
    this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>['tower','core'].includes(e.kind)?r.structure(e,game):r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
-  for(const e of game.units.filter(e=>e.alive&&game.visibleTo(0,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
+  for(const e of game.units.filter(e=>e.alive&&game.visibleTo(game.player.team,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);const y=e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:isCampCreep(e)?campVisualHeight(e)+.18:.95);r.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,y,game);}
    else if(e.lcaTrooper)r.bar(e,2.1,e.y-2.3,game,{height:.26});
    else if(e.kind==='minion')r.bar(e,.95,e.y-minionHeight(e)-.18,game);
    else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-structureVisualHeight(game,e)-.18,game);towerMark(r,e,game);
   });
-  for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(0,e)&&(!game.hidden(e)||e.motion?.kind==='leap')).sort((a,b)=>Number(a.player)-Number(b.player)))at(e,()=>{
+  for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(game.player.team,e)&&(!game.hidden(e)||e.motion?.kind==='leap')).sort((a,b)=>Number(a.player)-Number(b.player)))at(e,()=>{
    championEffects(r,e,game);CombatVisuals.front(r,e,game);championHud(r,e,game);CombatVisuals.meter(r,e,game);
    if(e.easterText?.until>game.time)r.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
   },true);

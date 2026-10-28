@@ -29,6 +29,6 @@ export class GameAudio{
   for(const z of live){const s=this.spatial(z,listener);let field=this.fields.get(z);if(!field){const route=this.output(this.ambience,0,s.pan,.02),source=this.synth.field(route.out);field={...route,source};this.fields.set(z,field);}field.out.gain.setTargetAtTime(s.gain*.95,this.context.currentTime,.12);const pan=field.nodes.find(n=>n.pan);if(pan)pan.pan.setTargetAtTime(s.pan,this.context.currentTime,.12);}
  }
  sync(g,{paused=false,playing=false}={}){if(this.context)this.master.gain.setTargetAtTime(this.enabled&&!paused?.36:0,this.context.currentTime,.05);if(this.game!==g){this.stopFields();this.game=g;this.gates.clear();}this.syncFields(g,g.player,playing);if(!playing)return;
-  const previous=this.seen.get(g)||0,events=(g.soundEvents||[]).filter(e=>e.id>previous);this.seen.set(g,g.soundSerial||0);for(const e of mixSoundEvents(events,g.player))if(!paused)this.play(e,g.player);
+  const previous=this.seen.get(g)||0,events=(g.soundEvents||[]).filter(e=>e.id>previous);this.seen.set(g,g.soundSerial||0);for(const e of mixSoundEvents(events,g.player))if(!paused&&(e.kind!=='ping'||e.team===undefined||e.team===g.player.team))this.play(e,g.player);
  }
 }

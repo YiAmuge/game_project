@@ -19,7 +19,7 @@ export function campPresentation(g,e){
 export const campVisualHeight=e=>e.camp==='side'?WORLD_ART.sideHeight:WORLD_ART.centralHeight;
 export function structurePresentation(g,e){
  if(!['tower','core'].includes(e.kind))return null;
- const family=factionFor(g,e),color=e.team===1?'red':'blue',key=`${family}_${color}_${e.kind}`;
+ const family=factionFor(g,e),color=e.team===(g.player?.team??0)?'blue':'red',key=`${family}_${color}_${e.kind}`;
  return{...placement(key,e.kind==='tower'?WORLD_ART.towerHeight:WORLD_ART.coreHeight,e.kind==='tower'&&e.team===1),family,color};
 }
 export const structureVisualHeight=(g,e)=>-structurePresentation(g,e).top;

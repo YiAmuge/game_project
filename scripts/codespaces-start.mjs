@@ -1,5 +1,5 @@
-import { spawn } from 'node:child_process';
-import { openSync, closeSync } from 'node:fs';
+import { spawn,spawnSync } from 'node:child_process';
+import { openSync, closeSync,existsSync } from 'node:fs';
 import { readFile, readdir, readlink, writeFile, rename } from 'node:fs/promises';
 import { createHash, randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -102,6 +102,12 @@ async function main() {
     return;
   }
   if (!expected.ready) throw new Error(`게임 파일이 완전하지 않습니다.\n${expected.problems.join('\n')}`);
+  // The previous version's updater starts this newly pulled file before it knows about ws.
+  if(!existsSync(resolve(root,'node_modules/ws/package.json'))){
+    console.log('온라인 연결 의존성을 설치합니다.');
+    const install=spawnSync(process.platform==='win32'?'npm.cmd':'npm',['ci'],{cwd:root,stdio:'inherit',shell:process.platform==='win32'});
+    if(install.status!==0)throw new Error('의존성 설치에 실패했습니다. npm ci 후 다시 실행해 주세요.');
+  }
   if (state.reachable && (restart || !current())) {
     const pid = await recordedOwner(state.health) || await ownedListener();
     if (!pid) throw new Error(`포트 ${port}가 다른 서버에서 사용 중이거나 소유권을 확인할 수 없습니다. 임의 종료하지 않았습니다.\nPORT=5174 npm start로 다른 포트를 사용하거나 해당 프로세스를 직접 확인하세요.`);

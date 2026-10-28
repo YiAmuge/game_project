@@ -4,8 +4,8 @@ export function levelProgress(e){
  const start=RULES.xp[e.level-1]||0,end=RULES.xp[e.level]||start+1;
  return Math.max(0,Math.min(1,((e.xp||0)-start)/(end-start)));
 }
-export function drawLevelBadge(r,e,barX,barY){
- const c=r.ctx,x=barX-.61,y=barY-.06,w=.49,h=.46,cx=x+w/2,cy=y+h/2,progress=levelProgress(e),color=e.player?'#efd39a':e.team===0?'#79bbc9':'#d7877e';
+export function drawLevelBadge(r,e,barX,barY,g){
+ const c=r.ctx,x=barX-.61,y=barY-.06,w=.49,h=.46,cx=x+w/2,cy=y+h/2,progress=levelProgress(e),color=e.player?'#efd39a':e.team===(g?.player?.team??0)?'#79bbc9':'#d7877e';
  c.save();c.fillStyle='#12242b';c.fillRect(x,y,w,h);c.strokeStyle='#46565c';c.lineWidth=.035;c.strokeRect(x,y,w,h);
  const points=[[cx,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y],[cx,y]];let length=progress*2*(w+h);c.beginPath();c.moveTo(cx,y);
  for(let i=1;i<points.length&&length>0;i++){const a=points[i-1],b=points[i],distance=Math.hypot(b[0]-a[0],b[1]-a[1]),fraction=Math.min(1,length/distance);c.lineTo(a[0]+(b[0]-a[0])*fraction,a[1]+(b[1]-a[1])*fraction);length-=distance;}

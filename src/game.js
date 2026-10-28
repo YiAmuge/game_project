@@ -98,7 +98,7 @@ export class Game {
   }
   emitSound(kind,source={},extra={}){if(source.kind==='minion')return;const damageKind=extra.damageKind||source.actionKind||(['swing','shot'].includes(kind)?'basic':undefined),slot=extra.slot||((damageKind==='skill'||['cast','ultimate'].includes(kind))?source.castSlot:undefined);this.soundEvents.push({id:++this.soundSerial,kind,key:source.key,sourceId:source.id,sourceKind:source.kind,camp:source.camp,damageKind,slot,form:source.key==='sora'&&this.buff(source,'soraEgo')?'ego':source.key==='yan'&&this.buff(source,'yanDistorted')?'distorted':'base',stance:source.state?.weapon,transforming:source.key==='sora'&&source.state?.unlock>=5||source.key==='yan'&&source.state?.ominous>=6,x:source.x,y:source.y,at:this.time,...extra});if(this.soundEvents.length>64)this.soundEvents.shift();}
 
-  log(text,kind='system') { this.logs.unshift({text,kind,time:this.time}); this.logs=this.logs.slice(0,10); }
+  log(text,kind='system',team=null) { this.logs.unshift({text,kind,time:this.time,team}); this.logs=this.logs.slice(0,10); }
   announce(...args){return Combat.announce(this,...args);}
   currentAnnouncement(){return Combat.currentAnnouncement(this);}
   bounty(e){return Combat.bounty(e);}
@@ -121,7 +121,14 @@ export class Game {
   baseSpeed(e){return RULES.speed[CHAMPIONS[e.key].speed];}
   buff(e,key) { return key==='sewingStitches'?e.kind==='champion'&&Boolean(this.sewingTeams[e.team]):e.buffs?.[key]>this.time; }
   random(){this.randomState=(Math.imul(this.randomState,1664525)+1013904223)>>>0;return this.randomState/4294967296;}
-  action(e,kind,fn){const old=e.actionKind,previous=this.actionSource;e.actionKind=kind;this.actionSource=e;try{return fn();}finally{e.actionKind=old;this.actionSource=previous;}}
+  enterController(e){
+    const control=this.controllers?.get(e.id);if(!control?.connected||e===this.player)return null;
+    const previous={player:this.player,input:this.input,mobileInput:this.mobileInput,mobileAim:this.mobileAim,flag:e.player};
+    this.player=e;this.input=control.input;this.mobileInput=control.mobileInput;this.mobileAim=control.mobileAim;e.player=true;
+    return ()=>{control.input=this.input;control.mobileAim=this.mobileAim;e.player=previous.flag;this.player=previous.player;this.input=previous.input;this.mobileInput=previous.mobileInput;this.mobileAim=previous.mobileAim;};
+  }
+  withController(e,fn){const restore=this.enterController(e);try{return fn();}finally{restore?.();}}
+  action(e,kind,fn){const restore=this.controllers?this.enterController(e):null,old=e.actionKind,previous=this.actionSource;e.actionKind=kind;this.actionSource=e;try{return fn();}finally{e.actionKind=old;this.actionSource=previous;restore?.();}}
   schedule(source,delay,fn,{autonomous=false}={}){const kind=source.actionKind||'skill';this.events.push({source,autonomous,at:this.time+delay,fn:()=>this.action(source,kind,fn)});}
   startMotion(e,d,len,{speed=RULES.dashSpeed,maxSpeed=RULES.dashSpeed,kind='dash',onStep,onComplete,onCollision,ignoreWalls=false,minDuration=0,follow=null,stopDistance=0,arcHeight=1.1,phaseEnemies=false,source,actionTag,forcedMaxSpeed=RULES.knockSpeed}={}){
     if(!e.alive||['boss','sewingKing'].includes(e.camp)||!['champion','minion','neutral','trooper'].includes(e.kind)||e.returning)return false;
@@ -766,6 +773,7 @@ export class Game {
     if(!this.training&&this.time+1e-8>=RULES.firstWaveAt+RULES.waveEvery*this.wave)this.spawnWave();this.flushMinions();
     for(const e of this.units)e.bodyOrigin={x:e.x,y:e.y};
     for(const e of this.units) {
+      const restore=this.controllers?this.enterController(e):null;const controlledAim=restore?captureMobileAim(this):null;try{
       Infestation.tick(this,e);if(e.alive)Skills.tickBurn(this,e);e.attackCd=Math.max(0,e.attackCd-dt);
       if(e.trainingDummy){Training.tickDummy(this,e,dt);if(e.alive)CampBuffs.tick(this,e);continue;}
       if(e.kind==='champion') {
@@ -797,13 +805,14 @@ export class Game {
         if(V08.controlTaunt(this,e,dt))continue;
         if(e.player) {
           if(!e.state.posthumous&&!e.state.ahabUlt&&!moving&&!e.motion&&!e.recall&&!this.stat(e,'root')&&!this.stat(e,'stun')&&!this.hidden(e)&&(!(e.channelUntil>this.time)||e.state.alisaUltimateChannel)) {const len=Math.max(1,Math.hypot(this.input.x,this.input.y));moveBody(this,e,this.input.x/len*this.speed(e)*dt,this.input.y/len*this.speed(e)*dt);}
-          followMobileAim(this,mobileAim);
+          followMobileAim(this,controlledAim||mobileAim);
           if(this.input.fire)this.attack(e,this.input.aim);
           e.facing=Math.atan2(this.input.aim.y-e.y,this.input.aim.x-e.x);
         } else if(!e.state.posthumous&&!e.state.ahabUlt&&!moving&&!e.motion&&!e.recall){if(e.trainingSummoned)Training.aiChampion(this,e,dt);else this.aiChampion(e,dt);}
       } else if(e.kind==='minion'){if(V08.controlTaunt(this,e,dt))continue;if(!moving&&!e.motion)this.aiMinion(e,dt);}
       else if(e.kind==='neutral')this.aiNeutral(e,dt);
       else if(e.kind!=='bait')this.aiStructure(e);
+      }finally{if(controlledAim)followMobileAim(this,controlledAim);restore?.();}
     }
     const due=this.events.filter(ev=>ev.at<=this.time+1e-8);this.events=this.events.filter(ev=>ev.at>this.time+1e-8);
     for(const ev of due)if(ev.autonomous||ev.source.alive&&!this.stat(ev.source,'stun'))ev.fn();

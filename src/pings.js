@@ -22,13 +22,14 @@ export function text(kind,t,team=0){
 }
 // Only the held-key menu specifies a target. Tapping sends the basic signal at the cursor.
 export function send(g,kind,point,choiceId){
- if(!PING_COLORS[kind]||g.winner!==null||g.time<(g.pingReady||0))return false;
+ if(g.sendPing)return g.sendPing(kind,point,choiceId);
+ if(!PING_COLORS[kind]||g.winner!==null||g.time<(g.online?g.player.pingReady||0:g.pingReady||0))return false;
  const choice=choiceId?choices(g,kind).find(t=>t.id===(typeof choiceId==='string'?choiceId:choiceId.id)):null;
  if(choiceId&&(!choice||choice.disabled))return false;
  point=choice||point;const b=g.bounds;
  if(!Number.isFinite(point?.x)||!Number.isFinite(point?.y)||point.x<b.x||point.x>b.x+b.w||point.y<b.y||point.y>b.y+b.h)return false;
  const p={kind,x:point.x,y:point.y,targetId:choice?.targetId,icon:choice?{...choice}:null,at:g.time,until:g.time+8,team:g.player.team,label:text(kind,choice,g.player.team)};
- g.pings??=[];g.pings.push(p);g.pings=g.pings.slice(-8);g.pingReady=g.time+.65;g.emitSound?.('ping',g.player,{ping:kind});g.log(p.label,kind==='danger'?'enemy':'ally');return p;
+ g.pings??=[];g.pings.push(p);g.pings=g.pings.slice(-16);if(g.online)g.player.pingReady=g.time+.65;else g.pingReady=g.time+.65;g.emitSound?.('ping',g.player,{ping:kind,team:p.team});g.log(p.label,kind==='danger'?'enemy':'ally',p.team);return p;
 }
 export function live(g){return (g.pings||[]).filter(p=>p.until>g.time);}
 // A champion target is a local instruction, not a reason for distant lanes to abandon combat.
@@ -59,7 +60,7 @@ export function respond(g,e,dt){
  if(d>2.8){g.moveToward(e,point,dt);return true;}
  return false;
 }
-export function drawWorld(c,camera,g){for(const p of live(g)){
+export function drawWorld(c,camera,g){for(const p of live(g).filter(p=>p.team===g.player.team)){
  const age=g.time-p.at,phase=age%1,base=camera.worldToScreen(p,.08),top=camera.worldToScreen(p,1.8+.25*Math.sin(age*5)),color=PING_COLORS[p.kind];
  c.save();c.strokeStyle=color;c.lineWidth=2;c.globalAlpha=.7*(1-phase)+.2;c.beginPath();c.ellipse(base.x,base.y,14+phase*24,7+phase*12,0,0,Math.PI*2);c.stroke();
  c.globalAlpha=.85;c.setLineDash([3,4]);c.beginPath();c.moveTo(top.x,top.y+15);c.lineTo(base.x,base.y);c.stroke();c.setLineDash([]);drawPingIcon(c,p.icon||{type:p.kind},top.x-17,top.y-17,34,g.player.team);c.restore();

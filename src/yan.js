@@ -82,6 +82,7 @@ function safeHandPoint(g,e,point){
 }
 export function hand(g,e){return g.units.find(t=>t.kind==='summon'&&t.owner===e.id&&t.alive);}
 export function command(g,e,p){
+ if(g.netCommand&&p===e)return g.netCommand({action:'handReturn'});
  const h=hand(g,e);if(!h)return false;
  if(distance(e,p)<=e.radius+.35){h.attached=true;delete h.targetId;delete h.goal;return true;}
  h.attached=false;h.goal=safeHandPoint(g,e,p);delete h.targetId;

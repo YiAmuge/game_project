@@ -6,7 +6,7 @@ export const SERVICE = 'city-border';
 export const PROTOCOL = 1;
 export const projectId = root => createHash('sha256').update(resolve(root)).digest('hex').slice(0, 16);
 export async function serverFingerprint(root) {
-  const files = await Promise.all(['serve.mjs', 'runtime-health.mjs'].map(name => readFile(resolve(root, 'scripts', name))));
+  const files = await Promise.all(['serve.mjs', 'runtime-health.mjs', 'online-server.mjs'].map(name => readFile(resolve(root, 'scripts', name))));
   return createHash('sha256').update(Buffer.concat(files)).digest('hex');
 }
 

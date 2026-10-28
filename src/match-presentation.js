@@ -21,7 +21,7 @@ export class MatchPresentation{
    if(s.elapsed+1e-8>=MATCH_INTRO.duration){this.state=null;delete g.presentation;g.entryFlare={at:g.time,until:g.time+.5};g.emitSound('spawn',g.player);}
   }else if(s.type==='outro'){
    if(before<MATCH_OUTRO.charge&&s.elapsed>=MATCH_OUTRO.charge)g.emitSound('explosion',s.core||{},{global:true,phase:'core-break',element:'stone'});
-   if(s.elapsed>=(s.core?MATCH_OUTRO.duration:.3)){this.finished=true;this.state=null;g.emitSound(g.winner===0?'victory':'defeat');}
+   if(s.elapsed>=(s.core?MATCH_OUTRO.duration:.3)){this.finished=true;this.state=null;g.emitSound(g.winner===g.player.team?'victory':'defeat');}
   }
  }
  draw(c,camera,g){const s=g.presentation;drawRain(c,camera,g,s?.type==='intro'?s.elapsed:g.time+MATCH_INTRO.duration+(s?.type==='outro'?s.elapsed:0));
