@@ -61,10 +61,10 @@ with sync_playwright() as pw:
  print('held lock / out-of-range / reentry PASS',flush=True)
  # Long presses whose drag begins immediately can still deliberately manual aim.
  p.evaluate('fixture66("jamila");enemy66()');x,y=down('#basic-btn',29);touch('touchMove',29,x-45,y-20);p.wait_for_timeout(220);assert p.evaluate('[...__moba.mobile.gestures.values()][0].manual&&!__moba.game.input.fire');up(29)
- # Charge targeting also follows an enemy outside range, ignores late steering and
+ # Charge targeting also follows an enemy outside range, permits late manual steering and
  # reacquires it on reentry. It never follows a target after that target loses vision.
- p.evaluate('fixture66("hohenheim");window.target66=enemy66(44,25);window.other66=enemy66(43,27,20000)');x,y=down('#basic-btn',30);p.wait_for_timeout(230);touch('touchMove',30,x-50,y-60);p.evaluate('target66.x=65;target66.y=29');p.wait_for_timeout(75);assert p.evaluate('!!__moba.game.player.state.hohenCharge&&__moba.game.mobileAim.autoTarget===target66.id&&__moba.game.input.aim.x===65&&![...__moba.mobile.gestures.values()][0].manual')
- p.evaluate('target66.x=44;target66.y=26');p.wait_for_timeout(65);assert p.evaluate('__moba.game.input.aim.x===44&&__moba.game.input.aim.y===26');p.evaluate('advance66(.4)');up(30);assert p.evaluate('__moba.game.player.attackSerial===1')
+ p.evaluate('fixture66("hohenheim");window.target66=enemy66(44,25);window.other66=enemy66(43,27,20000)');x,y=down('#basic-btn',30);p.wait_for_timeout(230);p.evaluate('target66.x=65;target66.y=29');p.wait_for_timeout(75);assert p.evaluate('!!__moba.game.player.state.hohenCharge&&__moba.game.mobileAim.autoTarget===target66.id&&__moba.game.input.aim.x===65&&![...__moba.mobile.gestures.values()][0].manual')
+ p.evaluate('target66.x=44;target66.y=26');p.wait_for_timeout(65);assert p.evaluate('__moba.game.input.aim.x===44&&__moba.game.input.aim.y===26');touch('touchMove',30,x-50,y);p.wait_for_timeout(50);assert p.evaluate('[...__moba.mobile.gestures.values()][0].manual&&!__moba.game.mobileAim.autoTarget');p.evaluate('advance66(.4)');up(30);assert p.evaluate('__moba.game.player.attackSerial===1')
  p.evaluate('fixture66("don");window.target66=enemy66(44,25)');x,y=down('#q-btn',31);touch('touchMove',31,x-30,y+25);p.wait_for_timeout(50);assert p.evaluate('!!__moba.game.player.state.donCharge&&!__moba.mobile.gestures.values().next().value.manual&&__moba.game.input.aim.x===44');up(31)
  # Holding through Don's automatic discharge queues the next charge across its
  # entire cooldown, and releasing during cooldown does not attempt another cast.

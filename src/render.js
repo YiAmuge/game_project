@@ -26,6 +26,7 @@ import { Renderer25D } from './render-25d.js';
 import { FRAMES, THEMES, loadAtlas,visualForm,spriteHeight } from './art.js';
 import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin,orientWeapon } from './weapon-art.js';
 import{bodyFacing}from'./champion-pose.js';
+import{attackGuideOpacity}from'./attack-guide.js';
 import { draw as bossPattern } from './boss-patterns.js';
 import { draw as creepPattern } from './creep-patterns.js';
 import { targetingPreview } from './targeting.js';
@@ -198,7 +199,9 @@ export class Renderer {
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo(0,e))chargePreview(this,e,game);
     for(const e of game.units.filter(e=>e.kind==='core'||e.kind==='tower'))this.structure(e,game);threatRanges(this,game);
-    if(playing&&game.player.alive&&!game.hidden(game.player)) {
+    this.attackGuideAlpha=attackGuideOpacity(game);
+    if(playing&&game.player.alive&&!game.hidden(game.player)&&this.attackGuideAlpha>0) {
+      c.save();c.globalAlpha*=this.attackGuideAlpha;
       const p=game.player,aim=game.input.aim,theta=Math.atan2(aim.y-p.y,aim.x-p.x);
       if(p.key==='yan'){
         if(Yan.distorted(game,p))this.circle(p.x,p.y,Yan.YAN.handLeash,null,'#b3dfff44',.04);
@@ -210,6 +213,7 @@ export class Renderer {
         this.line([{x:p.x+Math.cos(theta),y:p.y+Math.sin(theta)},{x:p.x+Math.cos(theta)*game.attackRange(p),y:p.y+Math.sin(theta)*game.attackRange(p)}],'#dfcfaa50',.04,[.18,.2]);
       }
       CombatVisuals.preview(this,p,game);this.circle(aim.x,aim.y,.22,null,'#d8c9a177',.04);
+      c.restore();
     }
     if(playing&&game.player.alive&&game.player.key==='hohenheim'&&(game.player.state.hohenCharge||game.player.state.posthumous))this.hohenheimChargePreview(game.player,game);
     targetingPreview(this,game);

@@ -280,6 +280,7 @@ export class Game {
     if(this.buff(e,'tetherResistance'))seconds*=1-Math.min(.2,(e.state.tetherResistance||0)*.05);
     if(e.status[key]?.until>this.time&&e.status[key].amount>amount){return;}
     e.status[key]={amount,until:this.time+seconds,theme:source?.key};
+    (e.statusHistory??={})[key]={order:++this.buffSequence,until:e.status[key].until};
     if(amount>0&&seconds>0)this.triggerDisrupt(source,e);
   }
   award(e,xp,gold,{passive=false,assist=false,sharedMinion=false}={}) {

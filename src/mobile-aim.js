@@ -16,6 +16,9 @@ export function nearestMovementAim(g,e,slot){
  return Boolean(moves[e.key]?.includes(slot));
 }
 export const movementAim=(g,e,slot)=>nearestMovementAim(g,e,slot)||e.key==='yi'&&slot==='r';
+export function rememberManualAim(e,slot,point){
+ const x=point.x-e.x,y=point.y-e.y;if(Math.hypot(x,y)>.001)(e.mobileManualAim??={})[slot]={x,y};
+}
 export function mobileAutoAim(g,e,slot='basic',{category,targetId,movement}={}){
  const spec=slot==='basic'?{range:distorted(g,e)?YAN.handLeash:g.attackRange(e),radius:0,kind:'basic'}:skillTargeting(g,e,slot);
  const range=spec.range||0,visible=t=>t.alive&&!g.hidden(t)&&g.visibleTo(e.team,t)&&g.clearLine(e,t),inRange=(t,r=range)=>distance(e,t)<=r+(t.radius||0)+1e-8;
@@ -40,8 +43,8 @@ export function mobileAutoAim(g,e,slot='basic',{category,targetId,movement}={}){
  }
  const move=movement||g.input||{},length=Math.hypot(move.x||0,move.y||0),travel=length>.01?{x:move.x/length,y:move.y/length}:e.mobileMoveDirection;
  const d=movementAim(g,e,slot)&&travel?travel:{x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)};
- const fallback={x:e.x+d.x*Math.max(1,range),y:e.y+d.y*Math.max(1,range)},point=target?{x:target.x,y:target.y}:fallback;
- return{point:slot==='basic'||nearest&&spec.kind==='self'?point:castPoint(e,point,spec,g.bounds),target,mode:'auto',unavailable:Boolean(category&&!target)};
+ const memory=!movementAim(g,e,slot)&&e.mobileManualAim?.[slot],fallback=memory?{x:e.x+memory.x,y:e.y+memory.y}:{x:e.x+d.x*Math.max(1,range),y:e.y+d.y*Math.max(1,range)},point=target?{x:target.x,y:target.y}:fallback;
+ return{point:slot==='basic'||nearest&&spec.kind==='self'?point:castPoint(e,point,spec,g.bounds),target,manualFallback:Boolean(!target&&memory&&!category),mode:'auto',unavailable:Boolean(category&&!target)};
 }
 export function mobileManualAim(g,e,slot,dx,dy,camera){
  const a=camera.screenToWorld(0,0),b=camera.screenToWorld(dx,dy),vx=b.x-a.x,vy=b.y-a.y,n=Math.hypot(vx,vy)||1;

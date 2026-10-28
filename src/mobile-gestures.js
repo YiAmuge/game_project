@@ -1,11 +1,11 @@
 export const HOLD=180;
 // A short touch always autoaims, even if the finger slides across the button.
-// Once a continuous auto gesture is chosen, later finger motion cannot steer it.
-export function gestureMode(s,now,continuous=false){
- if(s.autoLocked||s.autoHeld)return 'auto';
+// Continuous auto gestures lock their target; charged skills remain steerable.
+export function gestureMode(s,now,continuous=false,steerable=false){
+ if(!steerable&&(s.autoLocked||s.autoHeld))return 'auto';
  if(now-s.at<HOLD)return 'tap';
  if(s.manual||Math.hypot(s.x-s.startX,s.y-s.startY)>12)return 'manual';
- if(continuous)s.autoLocked=true;
+ if(continuous&&!steerable)s.autoLocked=true;
  return 'auto';
 }
 export function targetButtonPositions(rect,kinds){

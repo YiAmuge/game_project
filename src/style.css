@@ -538,3 +538,9 @@ body.mobile-ui.match-intro #mobile-fullscreen{visibility:hidden;pointer-events:n
  body.mobile-ui.menu-screen .menu-action{min-height:42px;padding:8px 12px}
  body.mobile-ui.menu-screen .menu-card{padding-top:0;padding-bottom:0}
 }
+
+/* At most ten current effects, with room for two rows on narrow landscape phones. */
+body.mobile-ui #mobile-status{--status-size:clamp(18px,calc((100vw - 480px)/5),25px);gap:3px;max-height:60px}
+body.mobile-ui #mobile-status .mobile-status-icon{flex:none;width:var(--status-size);height:calc(var(--status-size) + 3px)}
+body.mobile-ui #mobile-status .mobile-status-icon canvas{width:calc(var(--status-size) - 2px);height:calc(var(--status-size) - 2px)}
+@media(max-height:360px){body.mobile-ui.in-game .hud #q-btn{right:62px;bottom:108px}body.mobile-ui.in-game .hud #r-btn{right:126px;bottom:166px}}
