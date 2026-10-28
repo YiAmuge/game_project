@@ -477,7 +477,7 @@ export class Game {
       while(e.path?.length&&distance(e,e.path[0])<.3)e.path.shift();
       target=e.path?.[0]||goal;
     }
-    const step=Math.min(distance(e,target),(speed??this.speed(e))*dt),d=steer(this,e,target,step),from={x:e.x,y:e.y};moveBody(this,e,d.x*step,d.y*step);if(e.kind==='minion'&&Math.abs(e.x-from.x)>1e-6)e.facing=Math.atan2(e.y-from.y,e.x-from.x);
+    const step=Math.min(distance(e,target),(speed??this.speed(e))*dt),d=steer(this,e,target,step),from={x:e.x,y:e.y};if(e.aiThinking&&!BotAI.safeTowerStep(this,e,{x:e.x+d.x*step,y:e.y+d.y*step}))return;moveBody(this,e,d.x*step,d.y*step);if(e.kind==='minion'&&Math.abs(e.x-from.x)>1e-6)e.facing=Math.atan2(e.y-from.y,e.x-from.x);
   }
   aim(e,point) {const d=direction(e,point);return Math.hypot(d.x,d.y)>.01?d:{x:e.team===0?1:-1,y:0};}
   bullet(e,dir,damage,range,options={}) {
@@ -499,6 +499,7 @@ export class Game {
   }
   attack(e,point,options={}) {return this.action(e,'basic',()=>this.attackAction(e,point,options));}
   attackAction(e,point,options={}) {
+    if(e.aiThinking&&point?.kind&&!BotAI.safeTowerTarget(this,e,point))return false;
     if(!e.alive||this.winner!==null)return false;
     if(this.stat(e,'taunt')&&!options.taunted)return false;
     if(this.training&&e===this.player)Training.refreshOptions(this);
@@ -530,6 +531,7 @@ export class Game {
   cast(e,slot,point,options={}) {return this.action(e,'skill',()=>this.castAction(e,slot,point,options));}
   castAction(e,slot,point,options={}) {
     if(!['q','r'].includes(slot)||!point)return false;
+    if(e.aiThinking&&V08.movementSkill(e,slot)&&!BotAI.safeTowerPoint(this,e,point))return false;
     if(Jamila.infiltrationUltimate(this,e,slot))return Jamila.deployFromInfiltration(this,e,slot);
     point=castPoint(e,point,skillTargeting(this,e,slot),this.bounds);if(V08.movementSkill(e,slot))point=trapPoint(this,e,point);
     if(this.training&&e===this.player)Training.refreshOptions(this);
@@ -585,12 +587,16 @@ export class Game {
   }
   clearTarget(e,t,range){return distance(e,t)<=range+t.radius&&this.clearLine(e,t);}
   aiChampion(e,dt) {
+    e.aiThinking=true;e.aiTowerCover=new Map();try{return this.aiChampionAction(e,dt);}finally{delete e.aiThinking;delete e.aiTowerCover;}
+  }
+  aiChampionAction(e,dt) {
     if(e.hp/e.maxHp<.24)e.retreat=true;if(e.hp/e.maxHp>.88)e.retreat=false;
     if(e.retreat){this.moveToward(e,FOUNTAINS[e.team],dt);if(e.key==='meursault')this.cast(e,'q',e);return;}
+    if(BotAI.leaveTower(this,e,dt))return;
     if(Pings.respond(this,e,dt)){const t=this.nearest(e,8);if(t&&e.objective!=='ping-danger')BotAI.combatSkills(this,e,t);return;}
     if(BotAI.bossObjective(this,e,dt))return;delete e.objective;
     if(e.position==='jungle')return this.aiJungle(e,dt);
-    const near=this.nearest(e,9,false);
+    const near=BotAI.combatTarget(this,e,9);
     if(near) {
       const d=distance(e,near);
       const anchor=e.position==='support'?BotAI.supportAnchor(this,e):null;
@@ -610,7 +616,7 @@ export class Game {
     this.moveToward(e,anchor&&distance(e,anchor)<12?BotAI.formation(this,e,anchor,goal):e.position==='support'?{x:goal.x,y:goal.y-2.1}:goal,dt);
   }
   aiJungle(e,dt){
-    const enemies=this.champions(1-e.team).filter(t=>t.alive&&this.visibleTo(e.team,t)&&distance(e,t)<=7&&this.clearLine(e,t));
+    const enemies=this.champions(1-e.team).filter(t=>t.alive&&this.visibleTo(e.team,t)&&distance(e,t)<=7&&this.clearLine(e,t)&&BotAI.safeTowerTarget(this,e,t));
     let target=enemies.sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
     if(!target){
       const camps=this.units.filter(t=>t.kind==='neutral'&&t.alive&&!t.returning&&t.camp!=='boss'&&(e.team===0?t.x<=MAP_CENTER.x+3:t.x>=MAP_CENTER.x-3));

@@ -4,7 +4,7 @@ export const PING_HOLD_MS=250;
 const choiceStamp=items=>items.map(i=>i.id+':'+Boolean(i.disabled)).join('|');
 // A held gesture always cancels unless the cursor actually drags onto an icon.
 export class PingMenu {
- constructor(root,{getGame,allowed,point,onSend}){this.root=root;this.getGame=getGame;this.allowed=allowed;this.point=point;this.onSend=onSend;this.press=null;}
+ constructor(root,{getGame,allowed,point,quickPoint,onSend}){this.root=root;this.getGame=getGame;this.allowed=allowed;this.point=point;this.quickPoint=quickPoint;this.onSend=onSend;this.press=null;}
  begin(kind,x,y,source,now=performance.now()){
   if(!this.allowed()||this.press)return false;
   this.press={kind,x,y,source,at:now,world:this.point(x,y),game:this.getGame(),owner:this.getGame().player.id,choice:null,open:false,moved:false};return true;
@@ -41,7 +41,7 @@ export class PingMenu {
   const p=this.press;if(!p||p.source!==source)return false;
   this.tick(now);if(this.press!==p)return true;
   if(this.allowed()&&p.game===this.getGame()){
-   let result;if(now-p.at<PING_HOLD_MS)result=send(p.game,p.kind,p.world);else if(p.choice)result=send(p.game,p.kind,p.world,p.choice);
+   let result;if(now-p.at<PING_HOLD_MS)result=send(p.game,p.kind,this.quickPoint?.()||p.world);else if(p.choice)result=send(p.game,p.kind,p.world,p.choice);
    if(result)this.onSend?.(result);
   }
   this.cancel();return true;
