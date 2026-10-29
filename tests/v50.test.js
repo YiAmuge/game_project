@@ -24,7 +24,7 @@ test('Core centers are exactly halfway between fountain edges and near wall face
  for(const team of [0,1]){const area=FOUNTAIN_AREAS[team],wall=BASE_DIVIDERS[team];near(CORE_POSITIONS[team].x,((team?area.x:area.x+area.w)+(team?wall.x+wall.w:wall.x))/2);assert.ok(findPath(FOUNTAINS[team],MAP_CENTER,.48).length);}
  assert.equal(WALLS.filter(w=>w.approach).length,0);for(const wall of WALLS.filter(w=>w.approach))assert.ok(blocked(wall.x+wall.w/2,wall.y+wall.h/2,.1));assert.ok(blocked(1,1));assert.ok(!blocked(16,7.15));assert.ok(!blocked(16,39.65));assert.ok(BUSHES.length===32);assert.equal(CAMP_RANGE_COLOR,'#142342');
 });
-test('Clerks have fifteen-percent larger collision and sprite sizes, fifteen-percent lower movement and feet on the ground',()=>{const{g}=arena();for(const camp of ['amplify','blessing']){const e=g.makeNeutral(32,20,camp);near(e.radius,.5*1.15);near(g.speed(e),2.7*.85);near(CLERK_HEIGHT,2.4*1.15);near(feetOffset(e),0);const p=clerkPresentation(g,e);near(p.top+p.h*p.f.foot[1],0);}});
+test('Clerks have fifteen-percent larger collision and sprite sizes, reduced creep movement and feet on the ground',()=>{const{g}=arena();for(const camp of ['amplify','blessing']){const e=g.makeNeutral(32,20,camp);near(e.radius,.5*1.15);near(g.speed(e),1.9);near(CLERK_HEIGHT,2.4*1.15);near(feetOffset(e),0);const p=clerkPresentation(g,e);near(p.top+p.h*p.f.foot[1],0);}});
 test('Negative stacks do not use the ammo gauge',()=>{const{g,p}=arena();p.state.gaze={1:{n:3,until:5}};assert.equal(stackGauge(p,g),null);});
 
 test('Diagonal walls and their footing stay outside both fountain rectangles; every fountain corner is walkable',()=>{

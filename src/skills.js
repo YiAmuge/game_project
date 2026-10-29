@@ -41,7 +41,7 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
  }
  return hits;
 }
-export const dashBasic=(g,e)=>['don','myo','starbuck'].includes(e.key)||e.key==='gregor'&&g.buff(e,'mutant')||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0));
+export const dashBasic=(g,e)=>['don','myo','starbuck'].includes(e.key)||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0));
 export const dashLength=(e,n)=>n+(e.key==='don'?rangeBonus(e):0);
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set();
@@ -131,7 +131,7 @@ export function basic(g,e,p,d,options={}){
  case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive&&!(t.invulnerableUntil>g.time)&&!(t.ccImmuneUntil>g.time)&&!g.debuffImmune(t)&&!(g.training&&t===g.player&&g.practice.invincible)){t.state.ishmaelWeak??={};const prior=t.state.ishmaelWeak[e.id],old=prior?.until>g.time?prior.stacks:0;t.state.ishmaelWeak[e.id]={stacks:Math.min(2,old+1),until:g.time+1.5};if(old<2)g.triggerDisrupt(e,t);}});return true;
  case 'rodya':g.bullet(e,d,220,g.attackRange(e),{swordWave:true,pierce:Infinity,speed:13,width:.75,onHit:t=>{g.status(t,'slow',.03,2.2,e);g.status(t,'weak',.035,2.2,e);}});return true;
  case 'outis':g.bullet(e,d,215,g.attackRange(e),{width:.16});return true;
- case 'gregor':if(g.buff(e,'mutant'))dash(g,e,d,dashLength(e,2.5),210,()=>{},{hitWidth:1.08,onComplete:({hitIds})=>g.cone(e,d,g.attackRange(e),1.8*1.3*1.2,210,()=>{},{exclude:hitIds})});else cone(g.attackRange(e),1.8,210);return true;
+ case 'gregor':cone(g.attackRange(e),1.8*(g.buff(e,'mutant')?1.3*1.2:1),210);return true;
  case 'gubo':{
   const base=240*(g.buff(e,'guboReload')?1.2:1);let count=0;g.bullet(e,d,base,g.attackRange(e),{guboEmpowered:g.buff(e,'guboReload'),pierce:Infinity,ignoreTerrain:true,allowFriendly:true,beforeHit:(t,b)=>b.damage=base*(t.team===e.team?1:1-Math.min(.65,count*.15)),onHit:t=>{if(t.team!==e.team)count++;}});
   return true;
@@ -262,7 +262,6 @@ export function gregorStack(g,e,n=1){
 }
 export function takedown(g,e,victim,direct){
  if(!e||e.kind!=='champion')return;
- if(e.key==='starbuck'&&victim.kind==='neutral'&&direct)g.heal(e,e,150,false);
  V06.takedown(g,e,victim,direct);
 
  if(e.key==='gubo'&&victim.kind==='champion')e.qCd=0;
@@ -321,7 +320,7 @@ export function tick(g,e,dt){
 export function applyBurn(g,source,target,explosion=false){
  if(!target.alive||target.hp<=0||target.returning||g.debuffImmune?.(target))return;
  if(target.burn?.explosion&&!explosion&&target.burn.until>g.time)return;
- const interval=explosion?.3:.5;target.burn={source,explosion,until:g.time+(explosion?3:2),next:g.time+interval,interval,damage:explosion?15+Math.max(0,source.hp)*.02:12+Math.max(0,source.hp)*.015};g.triggerDisrupt(source,target);
+ const interval=explosion?.3:.5;target.burn={source,explosion,until:g.time+(explosion?3:2),next:g.time+interval,interval,damage:explosion?15+g.bonusHealth(source)*.02:12+g.bonusHealth(source)*.015};g.triggerDisrupt(source,target);
 }
 export function tickBurn(g,e){
  const b=e.burn;if(!b)return;if(!e.alive||e.returning){delete e.burn;return;}

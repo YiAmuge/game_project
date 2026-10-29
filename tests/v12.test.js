@@ -17,11 +17,11 @@ function ally(g,key='meursault',x=41,y=9){const a=g.makeChampion(key,0,9);Object
 test('automatic XP is three per second except Faust nine, alive or dead',()=>{
  for(const key of ['faust','ppui','starbuck']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,key==='faust'?9:3);g.kill(p,t);run(g,1);close(p.xp,key==='faust'?18:6);}
 });
-test('Starbuck jungle damage +12% and flat kill healing preserve +10% creep XP',()=>{
- const {g,p}=quiet();g.units=[p];p.hp-=500;const n=g.makeNeutral(43,7,'side');const hp=n.hp;g.deal(p,n,100,{fixed:true});close(hp-n.hp,112);const before=p.hp;g.kill(n,p);close(p.hp-before,150);close(p.xp,56.25*1.1);
+test('Starbuck jungle damage +12% preserves +10% creep XP',()=>{
+ const {g,p}=quiet();g.units=[p];p.hp-=500;const n=g.makeNeutral(43,7,'side');const hp=n.hp;g.deal(p,n,100,{fixed:true});close(hp-n.hp,112);const before=p.hp;g.kill(n,p);close(p.hp-before,0);close(p.xp,55*1.1);
 });
-test('Starbuck partial-ammo basics dash, use wider cone and 15% stronger damage',()=>{
- const {g,p,t}=quiet();p.ammo=1;Object.assign(t,{x:43,y:8.4});const hp=t.hp;assert.ok(g.attack(p,{x:48,y:7}));assert.ok(p.motion);close(hp-t.hp,218.5*.9);run(g,.5);assert.ok(p.x>42.8);
+test('Starbuck partial-ammo basics dash, use wider cone and 200 base damage',()=>{
+ const {g,p,t}=quiet();p.ammo=1;Object.assign(t,{x:43,y:8.4});const hp=t.hp;assert.ok(g.attack(p,{x:48,y:7}));assert.ok(p.motion);close(hp-t.hp,200*.9);run(g,.5);assert.ok(p.x>42.7);
 });
 test('Starbuck third tactical hit roots for .35 seconds, damage and cadence increase correctly',()=>{
  const {g,p,t}=quiet();g.cast(p,'q',t);run(g,.59);assert.equal(g.stat(t,'root'),0);run(g,.03);assert.equal(g.stat(t,'root'),1);close(t.status.root.until,.95,.02);assert.ok(p.state.starbuckStab.until>g.time);

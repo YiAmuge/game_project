@@ -1,14 +1,15 @@
 import {MAP_CENTER} from './data.js';
 import {distance,direction} from './geometry.js';
 
-export const SEWING={spawnAt:210,health:4000,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:6,windup:.25,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
-export const NEEDLE={spawnAt:90,health:350,armor:0,damage:55,interval:.65,respawn:Infinity,xp:45,gold:35};
+export const SEWING={spawnAt:210,health:3600,armor:20,damage:195,interval:1.3,cleave:.65,needleEvery:2,windup:.25,range:6.5,needleDamage:50,dotDamage:50,dotSeconds:5,rewardXp:125,rewardGold:200,structureBonus:.06};
+export const NEEDLE={spawnAt:90,health:350,armor:0,damage:55,interval:.65,respawn:20,maxRespawns:4,xp:25,gold:10};
 export const NORTH_CAMP={x:MAP_CENTER.x,y:-3.8};
 export const isSewing=e=>e.kind==='neutral'&&['needle','sewingKing'].includes(e.camp);
 export function makeNeedle(g,x,y,index=0,{summoned=false}={}){
  const e=g.makeNeutral(x,y,'needle');e.needleColor=index%2?'red':'green';e.campId=summoned?'sewing-king':'needle-north';e.campCenter=g.training?{x,y}:{...NORTH_CAMP};e.summonedNeedle=summoned;if(summoned){e.respawnDelay=Infinity;e.invulnerableUntil=g.time+1.5;e.hostile=true;summonedAI(g,e,0);}return e;
 }
-export function makeCamp(g){if(g.needleCampSpawned)return;g.needleCampSpawned=true;for(const [i,[dx,dy]]of [[-2,-1.35],[2,-1.35],[-2,1.35],[2,1.35]].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y+dy,i);}
+export function makeCamp(g){if(g.needleCampSpawned)return;g.needleCampSpawned=true;g.needleRespawnsScheduled=0;for(const [i,dx]of [-2.4,2.4].entries())makeNeedle(g,NORTH_CAMP.x+dx,NORTH_CAMP.y,i);}
+export function scheduleRespawn(g,e){if(e.summonedNeedle||e.retired||!g.training&&g.sewingKingSpawned||(g.needleRespawnsScheduled||0)>=NEEDLE.maxRespawns){e.respawnAt=Infinity;return;}g.needleRespawnsScheduled=(g.needleRespawnsScheduled||0)+1;e.respawnAt=g.time+NEEDLE.respawn;}
 export function spawnKing(g){
  if(g.sewingKingSpawned)return;g.sewingKingSpawned=true;
  for(const n of g.units.filter(e=>e.camp==='needle'&&!e.summonedNeedle)){n.alive=false;n.hp=0;n.retired=true;n.respawnAt=Infinity;cancel(n);}
@@ -32,12 +33,12 @@ export function update(g,e){
  if(e.camp!=='sewingKing')return false;
  if(e.needleCast){
   if(g.stat(e,'stun')||g.stat(e,'silence')||e.motion?.forced){cancel(e);return true;}
-  if(g.time+1e-8>=e.needleCast.at){const p=e.needleCast;cancel(e);swing(g,e);g.bullet(e,{x:p.dx,y:p.dy},SEWING.needleDamage,SEWING.range,{pierce:Infinity,speed:16,width:.14,theme:'sewingNeedle',color:'#d8cfc0',beforeHit(t,p){p.beforeNeedleHp=t.hp;p.beforeNeedleShield=g.shield(t);},onHit(t,p){if(p.beforeNeedleHp-t.hp+p.beforeNeedleShield-g.shield(t)>0)wound(g,e,t);}});}
+  if(g.time+1e-8>=e.needleCast.at){const p=e.needleCast;cancel(e);swing(g,e);for(const d of p.directions||[p])g.bullet(e,{x:d.dx,y:d.dy},SEWING.needleDamage,SEWING.range,{pierce:Infinity,speed:16,width:.14,theme:'sewingNeedle',color:'#d8cfc0',beforeHit(t,p){p.beforeNeedleHp=t.hp;p.beforeNeedleShield=g.shield(t);},onHit(t,p){if(p.beforeNeedleHp-t.hp+p.beforeNeedleShield-g.shield(t)>0)wound(g,e,t);}});}
   return true;
  }
- const target=g.champions().filter(t=>t.alive&&!g.hidden(t)&&distance(e,t)<=9&&g.clearLine(e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];
- if(e.hostile&&target&&g.time+1e-8>=(e.needleReady??Infinity)&&!g.stat(e,'stun')&&!g.stat(e,'silence')){
-  const d=direction(e,target);e.needleCast={x:e.x,y:e.y,dx:d.x,dy:d.y,startedAt:g.time,at:g.time+SEWING.windup};e.needleReady=g.time+SEWING.needleEvery;e.channelUntil=e.needleCast.at;e.facing=Math.atan2(d.y,d.x);return true;
+ const targets=g.champions().filter(t=>t.alive&&!g.hidden(t)&&distance(e,t)<=SEWING.range+t.radius&&g.clearLine(e,t));
+ if(e.hostile&&targets.length&&g.time+1e-8>=(e.needleReady??Infinity)&&!g.stat(e,'stun')&&!g.stat(e,'silence')){
+  const directions=targets.map(t=>{const d=direction(e,t);return{dx:d.x,dy:d.y,targetId:t.id};}),first=directions[0];e.needleCast={x:e.x,y:e.y,...first,directions,startedAt:g.time,at:g.time+SEWING.windup};e.needleReady=g.time+SEWING.needleEvery;e.channelUntil=e.needleCast.at;e.facing=Math.atan2(first.dy,first.dx);return true;
  }return false;
 }
 export function stationaryAI(g,e,dt){
@@ -48,7 +49,7 @@ export function stationaryAI(g,e,dt){
  else if(e.hostile){e.sewingIdleSince??=g.time;if(g.time-e.sewingIdleSince>3){e.hostile=false;e.aggro=null;cancel(e);}}
  if(update(g,e))return;
  if(e.hostile&&target&&distance(e,target)<=e.range+target.radius&&e.attackCd<=0&&!g.stat(e,'stun')&&!g.stat(e,'disarm')){basic(g,e,target);e.attackCd=e.interval;}
- if(!e.hostile&&g.time-e.lastCombat>5)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.15*dt);
+ if(!e.hostile&&g.time-e.lastCombat>5){e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.15*dt);if(e.hp>=e.maxHp){e.sewingEnrage=0;e.armor=SEWING.armor;e.interval=SEWING.interval;delete e.sewingGuardUntil;}}
 }
 export function summonedAI(g,e,dt){
  // Summons engage immediately and reacquire the closest target without a camp leash.
@@ -69,6 +70,7 @@ export function tick(g){
 }
 export function afterDamage(g,source,target,dealt,{hpBefore,campBonus}={}){
  if(target.camp==='sewingKing'&&target.alive&&target.hp>0){
+  const enrage=Math.min(3,Math.floor((1-target.hp/target.maxHp+1e-8)/.3));if(enrage>(target.sewingEnrage||0)){target.sewingEnrage=enrage;target.armor=SEWING.armor+12*enrage;target.interval=SEWING.interval-.15*enrage;target.sewingGuardUntil=g.time+1;}
   const waves=Math.min(2,Math.floor((1-target.hp/target.maxHp+1e-8)/.3));
   while((target.needleWaves||0)<waves){const wave=target.needleWaves=(target.needleWaves||0)+1;
    const points=[[-1.3,.8+(wave-1)*.7],[1.3,.8+(wave-1)*.7]];for(const [i,[dx,dy]]of points.entries())makeNeedle(g,target.x+dx,target.y+dy,i,{summoned:true});g.effects.push({type:'ring',x:target.x,y:target.y,r:2,color:'#aabf77',life:.7,maxLife:.7});
@@ -82,6 +84,7 @@ export function reward(g,team){
  g.log(`${team===0?'아군':'적군'} 바느질의 왕 처치 · 땀수!`,'boss');g.announce('boss-kill','바느질의 왕 처치','팀 전원 125 XP · 200 재화 · 영구 버프 땀수!',{team});
 }
 export function draw(r,e,g){
- const p=e.needleCast;if(!p||!e.alive||e.returning)return;const end={x:p.x+p.dx*SEWING.range,y:p.y+p.dy*SEWING.range},nx=-p.dy*.18,ny=p.dx*.18;
+ const p=e.needleCast;if(!p||!e.alive||e.returning)return;for(const d of p.directions||[p]){const end={x:p.x+d.dx*SEWING.range,y:p.y+d.dy*SEWING.range},nx=-d.dy*.18,ny=d.dx*.18;
  r.polygon([[p.x+nx,p.y+ny],[end.x+nx,end.y+ny],[end.x-nx,end.y-ny],[p.x-nx,p.y-ny]],'#c7a7a438','#ead6b6');r.line([p,end],'#ead6b6',.045,[.15,.15]);
+ }
 }

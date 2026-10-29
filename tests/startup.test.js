@@ -14,7 +14,7 @@ async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'city-start-'));
   await mkdir(join(root, 'scripts'));await mkdir(join(root, 'src'));
   for (const name of ['serve.mjs','runtime-health.mjs','codespaces-start.mjs','update.mjs','online-server.mjs']) await copyFile(join(scripts,name), join(root,'scripts',name));
-  for(const name of ['data.js','champion-text.js','extra-data.js','new-data.js','jamila-data.js','online-protocol.js'])await copyFile(resolve('src',name),join(root,'src',name));
+  for(const name of ['data.js','champion-text.js','extra-data.js','new-data.js','jamila-data.js','online-protocol.js','chat-wire.js'])await copyFile(resolve('src',name),join(root,'src',name));
   await mkdir(join(root,'node_modules'));await symlink(resolve('node_modules/ws'),join(root,'node_modules/ws'),'dir');
   await copyFile(resolve('package-lock.json'),join(root,'package-lock.json'));await writeFile(join(root,'.gitignore'),'node_modules/\n');
   await writeFile(join(root,'package.json'), JSON.stringify({version:'1.2.3',type:'module'}));

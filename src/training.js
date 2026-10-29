@@ -47,7 +47,7 @@ function makeCreeps(g){
  const king=g.makeNeutral(63,42,'sewingKing');king.campId='training-sewing-king';king.respawnDelay=Infinity;
  for(const [i,[x,y]]of [[50,41.5],[53,41.5],[50,44],[53,44]].entries()){const n=Sewing.makeNeedle(g,x,y,i);n.campId='training-needles';n.campCenter={x:51.5,y:42.75};}
 }
-export function resetCreeps(g){
+export function resetCreeps(g){g.needleRespawnsScheduled=0;
  if(!g.training)return false;
  const ids=new Set(g.units.filter(e=>e.kind==='neutral').map(e=>e.id));
  g.units=g.units.filter(e=>!ids.has(e.id));g.events=g.events.filter(e=>!ids.has(e.source.id));g.pending=g.pending.filter(e=>!ids.has(e.source.id));g.zones=g.zones.filter(e=>!ids.has(e.source.id));g.projectiles=g.projectiles.filter(e=>!ids.has(e.source.id)&&!ids.has(e.target?.id));g.corpses=g.corpses.filter(e=>!ids.has(e.unitId));

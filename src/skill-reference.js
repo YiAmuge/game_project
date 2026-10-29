@@ -30,7 +30,7 @@ function basicRanges(key,g,e,transformed){
  if(key==='sora')return transformed?[row('공격 범위','자신 중심 반경 '+SORA.egoRadius)]:[row('공격 범위','중심점 사거리 '+SORA.basicRange+' · 반경 '+SORA.basicRadius)];
  if(key==='marton')return[row('근접 조준: 거리 2.5 미만','사거리 2.5 · 반원'),row('원거리 조준: 거리 2.5 이상','중심점 사거리 '+r+' · 반경 2.2')];
  if(key==='kim')return[row('발검','사거리 '+r+' · 부채꼴 '+degrees(1.56)),row('후속 베기','사거리 '+number(range*1.2*1.08)+' · 부채꼴 '+degrees(1.9*1.3*1.2*1.08))];
- if(key==='gregor')return[row('기본','사거리 '+r+' · 부채꼴 '+degrees(1.8)),row('변이','돌진 2.5 · 사거리 '+number(range*1.3)+' · 부채꼴 '+degrees(1.8*1.3*1.2))];
+ if(key==='gregor')return[row('기본','사거리 '+r+' · 부채꼴 '+degrees(1.8)),row('변이','사거리 '+number(range*1.3)+' · 부채꼴 '+degrees(1.8*1.3*1.2))];
  if(key==='yi')return[row('기본','사거리 '+r+' · 관통 파편 3개'),row('오감도','사거리 '+number(range+1)+' · 관통 파편 7개')];
  if(key==='gahwan')return[row('전체 공격','사거리 '+r+' · 직선 폭 1.5'),row('근접 추가 공격','같은 직선 안 거리 3.25 이내')];
  if(key==='rudolph')return[row('공격 범위','중심점 사거리 '+r+' · 반경 2.1675')];
@@ -110,7 +110,7 @@ export function skillReference(key,index,transformed=false,variant){
  const summaryKey=transformed?(key==='sora'?'soraEgo':'yanDistorted'):key;
  let summary=SKILL_SUMMARIES[summaryKey]?.[index]||c[field]?.split(/[.!?]/u)[0]||'';
  if(alternate){summary=key==='sora'?(variant===0?'새 지령을 부여하고 기존 지령을 갱신합니다.':'대행 5중첩으로 12초간 개화 E.G.O 상태가 됩니다.'):(variant===0?'주변의 적 챔피언에게 가짜 지령을 부여하고 갱신합니다.':'불길한 힘 6중첩으로 20초간 뒤틀림 상태가 됩니다.');}
- return{title:alternate?.name||c[title],cooldown:cooldownLabel(key,index,g,e,transformed,variant),ranges:skillRanges(key,index,g,e,transformed,variant),summary,details:alternate?cleanSkillDetails(alternate.description):SKILL_DETAILS[summaryKey]?.[index]??cleanSkillDetails(c[field]||'')};
+ const details=alternate?cleanSkillDetails(alternate.description):SKILL_DETAILS[summaryKey]?.[index]??cleanSkillDetails(c[field]||''),labels=key==='gubo'&&index===0?['아군 처형','처형 파급']:key==='jamila'&&index===3?['전투원 소환','LCA 우제트 전투원']:null;return{title:alternate?.name||c[title],cooldown:cooldownLabel(key,index,g,e,transformed,variant),ranges:skillRanges(key,index,g,e,transformed,variant),summary,details,summarySections:labels?summary.split(/\n\s*\n/).map((text,i)=>({title:labels[i],text})):null,sections:labels?details.split(/\n\s*\n/).map((text,i)=>({title:labels[i],text})):null};
 }
 
 // Escape first; only numeric spans selected by local Korean effect labels may

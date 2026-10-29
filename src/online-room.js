@@ -2,16 +2,21 @@ import{ONLINE_VERSION,ROOM_POSITIONS,roomCode}from'./online-protocol.js';
 import{PacketReader,sendPacket}from'./online-state.js';
 import{CHAMPIONS,POSITIONS}from'./data.js';
 import{preview}from'./asset-preview.js';
+import{championRoles,renderChampionGrid}from'./champion-grid.js';
+import{cleanChat,renderChatLines}from'./chat.js';
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export class OnlineRoom{
- constructor({onStart,onPacket,onDisconnect,onClosed,onLobby,toast}){
-  Object.assign(this,{onStart,onPacket,onDisconnect,onClosed,onLobby,toast});this.peers=new Map();this.config=null;this.room=null;this.id=null;this.generation=0;this.visible=false;this.connected=false;this.intentional=false;
+ constructor({onStart,onPacket,onDisconnect,onClosed,onLobby,onChat,onChatHistory,toast}){
+  Object.assign(this,{onStart,onPacket,onDisconnect,onClosed,onLobby,onChat,onChatHistory,toast});this.peers=new Map();this.config=null;this.room=null;this.id=null;this.generation=0;this.visible=false;this.role='all';this.pickSlot=null;this.connected=false;this.intentional=false;
   this.root=document.createElement('section');this.root.id='online-room';this.root.className='hidden';document.body.append(this.root);
-  this.root.innerHTML=`<header class="online-heading"><div><small>USER HOSTED · ${ONLINE_VERSION}</small><h1>방 만들기 / 방 참여</h1></div><button id="online-back">← 메인 메뉴</button></header>
+  this.root.innerHTML=`<header class="online-heading pick-heading"><div><small>USER HOSTED · ${ONLINE_VERSION}</small><h1>방 만들기 / 방 참여</h1></div><button id="online-back">← 메인 메뉴</button></header>
   <div id="online-entry"><label>닉네임<input id="online-name" maxlength="16" autocomplete="nickname" placeholder="플레이어"></label><div class="online-entry-actions"><button id="online-create" class="primary">방 만들기</button><label>방 코드<input id="online-code" maxlength="6" autocapitalize="characters" placeholder="ABC123"></label><button id="online-join">방 참여</button></div><p>브라우저에서 바로 연결됩니다. 방장이 경기 진행을 담당합니다.</p></div>
-  <p id="online-status" role="status" aria-live="polite"></p><div id="online-lobby" class="hidden"><div class="online-invite"><strong id="online-room-code"></strong><button id="online-copy">초대 링크 복사</button><input id="online-link" aria-label="초대 링크" readonly></div><div class="online-layout"><aside id="online-team-0" class="online-team"></aside><section class="online-choices"><h2 id="online-choice-title">내 챔피언</h2><input id="online-search" aria-label="온라인 챔피언 검색" placeholder="챔피언 검색"><div id="online-champions" class="champion-select"></div></section><aside id="online-team-1" class="online-team enemy"></aside></div><footer class="online-footer"><p id="online-hint"></p><button id="online-ready">준비</button><button id="online-start" class="primary">경기 시작</button></footer></div>`;
+  <p id="online-status" role="status" aria-live="polite"></p><div id="online-lobby" class="hidden"><div class="online-invite"><strong id="online-room-code"></strong><button id="online-copy">초대 링크 복사</button><input id="online-link" aria-label="초대 링크" readonly></div><div class="online-layout pick-layout"><aside id="online-team-0" class="online-team pick-team"></aside><section class="online-choices pick-center"><div class="online-pick-controls"><h2 id="online-choice-title">내 챔피언</h2><div id="online-bot-choices" class="hidden"><button data-bot="random">무작위</button><button data-bot="none">없음</button></div></div><div class="pick-filter"><input id="online-search" aria-label="온라인 챔피언 검색" placeholder="챔피언 검색"><nav id="online-roles" aria-label="역할군 필터"></nav></div><div id="online-champions" class="champion-select"></div></section><aside id="online-team-1" class="online-team pick-team enemy"></aside></div><footer class="online-footer"><p id="online-hint"></p><button id="online-ready">준비</button><button id="online-start" class="primary">경기 시작</button></footer><section class="online-chat" aria-label="대기실 채팅"><div id="online-chat-lines" role="log" aria-live="polite"></div><form id="online-chat-form"><input id="online-chat-input" maxlength="200" autocomplete="off" enterkeyhint="send" aria-label="대기실 채팅 내용" placeholder="대기실 채팅"><button type="submit">전송</button></form></section></div>`;
   this.$=id=>this.root.querySelector('#'+id);try{this.$('online-name').value=localStorage.getItem('city-border-online-name')||'';}catch{}
   this.$('online-back').onclick=()=>{this.leave();this.onClosed?.(null);};this.$('online-create').onclick=()=>this.enter('create');this.$('online-join').onclick=()=>this.enter('join');this.$('online-code').oninput=e=>e.target.value=roomCode(e.target.value);this.$('online-code').onkeydown=e=>{if(e.key==='Enter')this.enter('join');};
+  for(const [key,label]of [['all','전체'],...championRoles().map(r=>[r,r])]){const b=document.createElement('button');b.textContent=label;b.dataset.role=key;b.onclick=()=>{this.role=key;this.renderChampions();};this.$('online-roles').append(b);}
+  for(const b of this.$('online-bot-choices').querySelectorAll('button'))b.onclick=()=>this.send({type:'bot',slot:this.pickSlot,champion:b.dataset.bot==='none'?null:'random'});
+  this.$('online-chat-form').onsubmit=e=>{e.preventDefault();const input=this.$('online-chat-input'),text=cleanChat(input.value);if(text&&this.send({type:'chat',text}))input.value='';};this.$('online-chat-input').onkeydown=e=>{if(e.code==='Escape'){e.preventDefault();e.stopPropagation();e.target.blur();}};
   this.$('online-ready').onclick=()=>{const m=this.room.members.find(m=>m.id===this.id);this.send({type:'ready',ready:!m.ready});};
   this.$('online-start').onclick=()=>this.send({type:'start'});this.$('online-search').oninput=()=>this.renderChampions();
   this.$('online-copy').onclick=async()=>{const field=this.$('online-link');try{await navigator.clipboard.writeText(field.value);this.toast('초대 링크를 복사했습니다.');}catch{field.select();this.status('초대 링크를 선택했습니다. 복사해 공유해 주세요.');}};
@@ -44,11 +49,12 @@ export class OnlineRoom{
   if(p.type==='welcome'){this.resumePending=false;this.helloSent=false;this.id=p.id;this.token=p.token;this.ice=p.iceServers;this.connected=true;try{sessionStorage.setItem('city-border-online-session',p.token);}catch{}return;}
   if(p.type==='error'){this.status(p.message);this.toast(p.message);if(this.resumePending){this.resumePending=false;this.clearSession();}return;}
   if(p.type==='closed'){this.closed(p.message);return;}
+  if(p.type==='chat'){if(this.room){this.room.chat??=[];if(!this.room.chat.some(m=>m.id===p.message.id))this.room.chat.push(p.message);this.room.chat=this.room.chat.slice(-60);this.renderChat();}this.onChat?.(p.message);return;}
   if(p.type==='disconnected'){this.dropPeer(p.id);this.onDisconnect(p.id);return;}
   if(p.type==='signal'){this.signal(p.from,p.data).catch(()=>this.status('직접 연결을 만들지 못했습니다. 네트워크를 확인해 주세요.'));return;}
   if(p.type==='relay'){const peer=this.peers.get(p.from);if(!peer)return;const value=peer.reader.read(p.data);if(value)this.onPacket(p.from,value);return;}
   if(p.type==='room'){
-   const previous=this.room;this.room=p.room;
+   const previous=this.room;this.room=p.room;if(!previous)this.status('');this.onChatHistory?.(this.room.chat||[]);this.renderChat();
    if(this.isHost){const ids=new Set(this.room.members.filter(m=>m.id!==this.id&&m.connected).map(m=>m.id));for(const id of this.peers.keys())if(!ids.has(id))this.dropPeer(id);}
    else if(!this.helloSent&&(!previous||!this.peers.has(this.room.hostId))){this.helloSent=true;this.send({type:'signal',to:this.room.hostId,data:{hello:true}});}
    this.render();if(this.room.phase==='playing'&&previous?.match?.id!==this.room.match.id){this.hide();this.onStart(this.room.match,this.id);}
@@ -78,19 +84,23 @@ export class OnlineRoom{
   this.$('online-room-code').textContent='방 '+r.code;const link=new URL(location.pathname,location.origin);link.searchParams.set('room',r.code);this.$('online-link').value=link.href;
   const own=r.members.find(m=>m.id===this.id);if(!own)return;
   for(let team=0;team<2;team++){const root=this.$('online-team-'+team);root.innerHTML=`<h2>${team?'RED':'BLUE'} TEAM</h2>`;for(let i=team*4;i<team*4+4;i++){
-   const slot=r.slots[i],m=r.members.find(m=>m.id===slot.memberId),pos=ROOM_POSITIONS[i%4],row=document.createElement('div');row.className='online-slot'+(m?.id===this.id?' is-player':'');
+   const slot=r.slots[i],m=r.members.find(m=>m.id===slot.memberId),pos=ROOM_POSITIONS[i%4],row=document.createElement('div');row.className='online-slot pick-slot'+(m?.id===this.id?' is-player':'');
    if(m){const linked=m.id===this.id||this.peers.get(m.id)?.channel?.readyState==='open'||!this.isHost&&this.peers.get(r.hostId)?.channel?.readyState==='open';row.innerHTML=`<canvas width="80" height="80"></canvas><div><small>${POSITIONS[pos].name}${m.id===r.hostId?' · 방장':''}</small><strong>${escape(m.name)}${m.id===this.id?' · 나':''}</strong><span>${escape(CHAMPIONS[m.champion]?.name||'')} · ${!m.connected?'재접속 대기':!linked?'연결 중':m.ready?'준비 완료':'대기'}</span></div>`;}
    else{row.innerHTML=`<div><small>${POSITIONS[pos].name}</small><select aria-label="${team?'빨강':'파랑'} ${POSITIONS[pos].name} AI"><option value="random">무작위 AI</option><option value="none">없음</option>${Object.entries(CHAMPIONS).map(([key,c])=>`<option value="${key}">${escape(c.name)} AI</option>`).join('')}</select></div><button>이 자리로</button>`;const select=row.querySelector('select');select.value=slot.bot??'none';select.disabled=!this.isHost||r.phase!=='lobby';select.onchange=()=>this.send({type:'bot',slot:i,champion:select.value==='none'?null:select.value});row.querySelector('button').onclick=()=>this.send({type:'choose',slot:i});}
-   root.append(row);if(m)preview(row.querySelector('canvas'),{key:m.champion,portrait:true});
+   if(m?.id===this.id)row.onclick=()=>{this.pickSlot=null;this.render();};if(!m&&this.isHost){const edit=document.createElement('button');edit.className='online-pick-bot';edit.textContent='챔피언 선택';edit.onclick=()=>{this.pickSlot=i;this.render();};row.append(edit);row.classList.toggle('active',this.pickSlot===i);}root.append(row);if(m)preview(row.querySelector('canvas'),{key:m.champion,portrait:true});
   }}
   this.$('online-ready').classList.toggle('hidden',this.isHost);this.$('online-ready').textContent=own.ready?'준비 취소':'준비';this.$('online-ready').setAttribute('aria-pressed',String(own.ready));this.$('online-start').classList.toggle('hidden',!this.isHost);
   this.$('online-start').disabled=!r.members.every(m=>m.id===this.id||m.ready&&this.peers.get(m.id)?.channel?.readyState==='open');
   this.$('online-hint').textContent=this.isHost?'빈자리는 AI 또는 없음으로 설정하세요. 모두 준비하면 시작할 수 있습니다.':'빈자리를 눌러 팀·포지션을 바꾸고 챔피언 선택 후 준비하세요.';
   this.renderChampions();
  }
- renderChampions(){if(!this.room)return;const own=this.room.members.find(m=>m.id===this.id);if(!own)return;const root=this.$('online-champions'),query=this.$('online-search').value.trim().toLowerCase();root.replaceChildren();for(const [key,c]of Object.entries(CHAMPIONS)){if(query&&!`${key} ${c.name}`.toLowerCase().includes(query))continue;const b=document.createElement('button');b.className='champion-option'+(own.champion===key?' selected':'');b.dataset.key=key;b.setAttribute('aria-pressed',String(own.champion===key));b.innerHTML=`<canvas width="100" height="100"></canvas><span>${escape(c.name)}</span>`;b.onclick=()=>this.send({type:'choose',champion:key});root.append(b);preview(b.querySelector('canvas'),{key,portrait:true});}}
+ renderChampions(){if(!this.room)return;const own=this.room.members.find(m=>m.id===this.id);if(!own)return;const slot=this.pickSlot!=null&&this.isHost&&!this.room.slots[this.pickSlot]?.memberId?this.pickSlot:own.slot,bot=slot!==own.slot,selected=bot?this.room.slots[slot].bot:own.champion,position=ROOM_POSITIONS[slot%4];
+  this.$('online-choice-title').textContent=bot?`${slot<4?'파랑':'빨강'} ${POSITIONS[position].name} AI 챔피언`:`내 챔피언 · ${POSITIONS[position].name}`;this.$('online-bot-choices').classList.toggle('hidden',!bot);
+  renderChampionGrid(this.$('online-champions'),{role:this.role,query:this.$('online-search').value,selected,position,onSelect:key=>this.send(bot?{type:'bot',slot,champion:key}:{type:'choose',champion:key})});for(const b of this.$('online-roles').children)b.classList.toggle('active',b.dataset.role===this.role);
+ }
+ renderChat(){if(this.room)renderChatLines(this.$('online-chat-lines'),(this.room.chat||[]).map(m=>({...m,type:'chat'})),innerWidth<900?2:3);}
  clearSession(){try{sessionStorage.removeItem('city-border-online-session');}catch{}}
  resume(){try{const token=sessionStorage.getItem('city-border-online-session');if(!token)return;this.resumePending=true;this.show();this.status('이전 경기에 재접속 중…');this.connect().then(()=>this.send({type:'resume',token})).catch(e=>this.status(e.message));}catch{}}
- leave(){this.intentional=true;this.send({type:'leave'});this.socket?.close();for(const id of [...this.peers.keys()])this.dropPeer(id);this.room=null;this.id=null;this.clearSession();this.hide();}
+ leave(){this.intentional=true;this.send({type:'leave'});this.socket?.close();for(const id of [...this.peers.keys()])this.dropPeer(id);this.room=null;this.id=null;this.pickSlot=null;this.clearSession();this.hide();}
  closed(message){this.leave();this.onClosed?.(message);}
 }

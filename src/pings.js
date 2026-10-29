@@ -10,7 +10,7 @@ export function choices(g,kind){
  if(kind!=='danger')for(const [lane,name,y]of [['top','상단 라인',7.15],['bottom','하단 라인',39.65]])items.push({id:lane,type:'lane',lane,name,x:MAP_CENTER.x,y});
  if(kind!=='danger'){const t=g.units.find(t=>t.kind==='core'&&t.team===(kind==='attack'?1-team:team));if(t)items.push({id:'core-'+t.team,type:'core',name:kind==='attack'?'적 본진':'아군 본진',targetId:t.id,team:t.team,x:t.x,y:t.y,disabled:!t.alive});}
  for(const t of g.champions().filter(t=>!t.trainingDummy&&(kind==='danger'||t.team===(kind==='attack'?1-team:team))))items.push({id:'champion-'+t.id,type:'champion',key:t.key,name:t.name,targetId:t.id,team:t.team,x:t.x,y:t.y,disabled:!t.alive||g.hidden(t)||t.team!==team&&!g.visibleTo(team,t)});
- if(kind!=='defend')for(const camp of ['sewingKing','boss']){const t=g.units.find(t=>t.kind==='neutral'&&t.camp===camp&&!t.retired&&t.alive);if(!t)continue;items.push({id:camp,type:'boss',camp,name:camp==='boss'?'쌓인 것':'바느질의 왕',targetId:t?.id,team:2,x:t?.x??MAP_CENTER.x,y:t?.y??(camp==='boss'?MAP_CENTER.y:-3.8),disabled:!t?.alive});}
+ if(kind!=='defend')for(const camp of ['sewingKing','boss']){const t=g.units.find(t=>t.kind==='neutral'&&t.camp===camp&&!t.retired&&t.alive);if(!t)continue;items.push({id:camp,type:'boss',camp,name:camp==='boss'?'다시 쌓인 것':'바느질의 왕',targetId:t?.id,team:2,x:t?.x??MAP_CENTER.x,y:t?.y??(camp==='boss'?MAP_CENTER.y:-3.8),disabled:!t?.alive});}
  return items;
 }
 export function text(kind,t,team=0){
@@ -29,7 +29,7 @@ export function send(g,kind,point,choiceId){
  point=choice||point;const b=g.bounds;
  if(!Number.isFinite(point?.x)||!Number.isFinite(point?.y)||point.x<b.x||point.x>b.x+b.w||point.y<b.y||point.y>b.y+b.h)return false;
  const p={kind,x:point.x,y:point.y,targetId:choice?.targetId,icon:choice?{...choice}:null,at:g.time,until:g.time+8,team:g.player.team,label:text(kind,choice,g.player.team)};
- g.pings??=[];g.pings.push(p);g.pings=g.pings.slice(-16);if(g.online)g.player.pingReady=g.time+.65;else g.pingReady=g.time+.65;g.emitSound?.('ping',g.player,{ping:kind,team:p.team});g.log(p.label,kind==='danger'?'enemy':'ally',p.team);return p;
+ g.pings??=[];g.pings.push(p);g.pings=g.pings.slice(-16);if(g.online)g.player.pingReady=g.time+.65;else g.pingReady=g.time+.65;g.emitSound?.('ping',g.player,{ping:kind,team:p.team});g.log(p.label,kind==='danger'?'enemy':'ally',p.team,{sourceId:g.player.id,category:'ping'});return p;
 }
 export function live(g){return (g.pings||[]).filter(p=>p.until>g.time);}
 // A champion target is a local instruction, not a reason for distant lanes to abandon combat.

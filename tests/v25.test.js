@@ -48,7 +48,7 @@ test('category limits allow two combat and two survival augments',()=>{
  assert.ok(A.AUGMENTS.every(a=>!['armorHealth','emergencyHeal','health15','reloadRetaliation'].includes(a.key)));
 });
 test('range augment distinguishes single-projectile and area attacks without a separate movement bonus',()=>{
- for(const key of ['faust','don','rodya','myo','starbuck','gregor']){const {g,p,t}=arena(key);if(key==='gregor')g.addBuff(p,'mutant',10);const range=g.attackRange(p);p.augments=['range7'];close(g.attackRange(p)-range,key==='faust'?2.5:1.3);if(S.dashBasic(g,p)){g.attack(p,t);assert.ok(p.motion);const baseline={don:2.5,rodya:2.4,myo:2.4,starbuck:2.875,gregor:2.5}[key];close(p.motion.total,baseline+(['don','myo'].includes(key)?1.3:0));}}
+ for(const key of ['faust','don','rodya','myo','starbuck','gregor']){const {g,p,t}=arena(key);if(key==='gregor')g.addBuff(p,'mutant',10);const range=g.attackRange(p);p.augments=['range7'];close(g.attackRange(p)-range,key==='faust'?2.5:1.3);if(S.dashBasic(g,p)){g.attack(p,t);assert.ok(p.motion);const baseline={don:2.5,rodya:2.4,myo:2.4,starbuck:2.75,gregor:2.5}[key];close(p.motion.total,baseline+(['don','myo'].includes(key)?1.3:0));}}
 });
 test('resentment changes power, armor and reload in real time with current health',()=>{
  const {g,p}=arena();const power=g.powerScale(p),reload=g.reloadInterval(p);p.augments=['resentment'];p.hp=p.maxHp*.51;close(A.resentment(p),.2);close(g.powerScale(p),power*1.2);close(g.armor(p),44);close(g.reloadInterval(p),reload/1.2);p.hp=1;close(A.resentment(p),.4);p.hp=p.maxHp;close(g.powerScale(p),power);
@@ -79,13 +79,13 @@ test('Dongrang crosses terrain with healing-scaled leap damage and stable durati
  const {g,p,t}=arena('dongrang');g.map.walls=[{x:22,y:17,w:1,h:6}];Object.assign(t,{x:28.5,y:21});p.totalHealingReceived=4500;g.cast(p,'r',{x:28.5,y:20});assert.equal(p.motion.kind,'leap');close(p.motion.total,8.5);close(p.motion.minDuration,8.5/8);run(g,1.1);assert.ok(p.x>23);assert.ok(t.hp<100000);close(g.stat(t,'root'),1);
 });
 test('Alisa has 2400 base HP, 100 basic damage and mutually exclusive fixed burns',()=>{
- const {g,p,t}=arena('alisa');close(p.maxHp,2400);const hp=t.hp;g.attack(p,t);close(hp-t.hp,100*1.1*RULES.power[CHAMPIONS.alisa.power]*.9);let before=t.hp;const basicBurn=t.burn.damage;run(g,2.1);close(before-t.hp,4*basicBurn);const explosionBurn=15+p.hp*.02;S.applyBurn(g,p,t,true);S.applyBurn(g,p,t);assert.ok(t.burn.explosion);before=t.hp;run(g,3);close(before-t.hp,10*explosionBurn);assert.equal(t.burn,undefined);
+ const {g,p,t}=arena('alisa');close(p.maxHp,2400);const hp=t.hp;g.attack(p,t);close(hp-t.hp,100*1.1*RULES.power[CHAMPIONS.alisa.power]*.9);let before=t.hp;const basicBurn=t.burn.damage;run(g,2.1);close(before-t.hp,4*basicBurn);const explosionBurn=15+g.bonusHealth(p)*.02;S.applyBurn(g,p,t,true);S.applyBurn(g,p,t);assert.ok(t.burn.explosion);before=t.hp;run(g,3);close(before-t.hp,10*explosionBurn);assert.equal(t.burn,undefined);
 });
 test('Alisa Q permits attacking while reloading and R channels at half movement then dashes',()=>{
  const {g,p}=arena('alisa');g.addBuff(p,'alisaReload',5);p.state.alisaReloadActive=true;p.attackCd=1;assert.equal(g.reloadPaused(p),false);delete p.buffs.alisaReload;p.state.alisaReloadActive=false;p.state.heat=5;p.attackCd=0;const speed=g.speed(p);g.input.x=1;g.input.aim={x:30,y:20};assert.ok(g.cast(p,'r',p));close(g.speed(p),speed*.5);assert.equal(g.attack(p,{x:30,y:20}),false);run(g,.4);assert.ok(p.x>20);run(g,.42);assert.equal(p.motion?.kind,'dash');run(g,.4);assert.ok(p.state.detonating);run(g,2.1);assert.equal(p.alive,false);
 });
 test('Gregor transforms with ammo and Q reset and gains at most fifteen extra plague seconds',()=>{
- const {g,p,t}=arena('gregor');p.ammo=0;p.qCd=8;S.gregorStack(g,p,12);close(p.ammo,2);close(p.qCd,0);close(skillTargeting(g,p,'q').range,8.5);p.lastAttackAt=100;run(g,8);assert.ok(g.buff(p,'mutant'));assert.equal(p.state.mutantExtension,15);assert.ok(p.buffs.mutant<=20+1e-6);p.attackCd=0;g.attack(p,{x:30,y:20});close(p.motion.total,2.5);assert.equal(g.buff(p,'mutantStride'),false);
+ const {g,p,t}=arena('gregor');p.ammo=0;p.qCd=8;S.gregorStack(g,p,12);close(p.ammo,2);close(p.qCd,0);close(skillTargeting(g,p,'q').range,8.5);p.lastAttackAt=100;run(g,8);assert.ok(g.buff(p,'mutant'));assert.equal(p.state.mutantExtension,15);assert.ok(p.buffs.mutant<=20+1e-6);p.attackCd=0;g.attack(p,{x:30,y:20});assert.equal(p.motion,undefined);assert.equal(g.buff(p,'mutantStride'),false);
 });
 test('Rudolph ultimate requires half SP, clamps to 10.5 and uses fast recovery',()=>{
  const {g,p,t}=arena('rudolph');p.ammo=49;assert.equal(g.cast(p,'r',t),false);p.ammo=50;assert.ok(g.cast(p,'r',{x:50,y:20}));close(g.pending[0].x,30.5);close(g.pending[0].damage,425);run(g,.6);close(p.state.exhaustedUntil-p.state.exhaustedAt,1.25);run(g,.7);close(p.ammo,100);p.rCd=0;p.ammo=0;delete p.state.exhaustedUntil;g.step(.01);close(p.state.recoveryDuration,2.5);

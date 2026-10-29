@@ -62,7 +62,7 @@ test('Meursault basic summary omits root and Yan codex exposes his exclusive abs
 });
 test('Jamila has complete purpose-written summaries and the requested shield wording in both description modes',()=>{
  const passive=skillReference('jamila',0);for(const text of [passive.summary,passive.details]){assert.match(text,/보호막 보유 중엔/);assert.doesNotMatch(text,/보유량과 관계없이/);}
- assert.match(skillReference('jamila',1).summary,/50 피해.*네 번째 탄환.*보호막.*재장전/);assert.match(skillReference('jamila',2).summary,/225 피해.*탄환 6개/);assert.match(skillReference('jamila',3).summary,/두 명.*10초.*전투력.*이동속도.*보호막/);for(let i=0;i<4;i++)assert.ok(skillReference('jamila',i).summary.length>30);
+ assert.match(skillReference('jamila',1).summary,/50 피해.*네 번째 탄환.*보호막.*재장전/);assert.match(skillReference('jamila',2).summary,/225 피해.*탄환 6개/);const squad=skillReference('jamila',3);assert.match(squad.summarySections[0].text,/두 명.*전투력.*이동속도/);assert.match(squad.summarySections[1].text,/10초.*보호막/);for(let i=0;i<4;i++)assert.ok(skillReference('jamila',i).summary.length>30);
 });
 test('Jamila shield rounds alone gain ten base damage and actually hit for the increased amount',()=>{
  const{g,p}=arena('jamila'),t=foe(g,45);for(let shot=1;shot<=4;shot++){p.attackCd=0;g.attack(p,t);const projectile=g.projectiles.find(b=>b.source===p);assert.equal(projectile.damage,shot===4?60:50);const hp=t.hp;run(g,.2);near(hp-t.hp,(shot===4?60:50)*(1+(damageFormula(1,1,1)-1)*.55)*1.15);}

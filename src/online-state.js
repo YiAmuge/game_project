@@ -1,5 +1,5 @@
 // Snapshots contain data only. Functions/timers remain exclusively in the host simulation.
-const fields=['time','nextId','wave','bossSpawned','sewingKingSpawned','needleCampSpawned','sewingWinner','sewingTeams','winner','reason','minionFactions','kills','firstBlood','announcements','announcementSequence','logs','soundEvents','soundSerial','buffSequence','projectiles','effects','zones','pending','corpses','pings','entryFlare'];
+const fields=['time','nextId','wave','bossSpawned','sewingKingSpawned','needleCampSpawned','needleRespawnsScheduled','sewingWinner','sewingTeams','winner','reason','minionFactions','kills','firstBlood','announcements','announcementSequence','logs','soundEvents','soundSerial','buffSequence','projectiles','effects','zones','pending','corpses','pings','entryFlare'];
 const skip=new Set(['path','pathGoal','pathAt','aiTowerCover','bodyOrigin','contributors','supporters']);
 const special='$net';
 function encode(value,entities,seen=new Set(),root=false){

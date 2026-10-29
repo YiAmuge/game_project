@@ -15,7 +15,7 @@ export function makeOnlineGame(match,memberId){
  for(const s of match.slots){if(s.champion===null)continue;let key=s.champion;if(key==='random'){// Reuse the normal roster's deterministic draft selection.
    key=draft(g,s.position,[...g.champions(s.team).map(e=>e.key),...match.slots.filter(other=>other.team===s.team&&other.champion!=='random').map(other=>other.champion)]);
   }
-  const e=g.makeChampion(key,s.team,ROOM_POSITIONS.indexOf(s.position),s.position);e.player=s.memberId===memberId;e.memberId=s.memberId;
+  const e=g.makeChampion(key,s.team,ROOM_POSITIONS.indexOf(s.position),s.position);e.player=s.memberId===memberId;e.memberId=s.memberId;e.nickname=s.nickname||(s.memberId?'플레이어':`AI ${e.index+1}`);
   if(s.memberId){e.human=true;g.controllers.set(e.id,{input:idleInput(e),receivedAt:0,connected:true,mobileInput:false});}
  }
  g.player=g.units.find(e=>e.memberId===memberId);g.input=idleInput(g.player);g.controllers.get(g.player.id).input=g.input;

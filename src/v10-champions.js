@@ -3,11 +3,11 @@ import { dash,area,dashLength } from './skills.js';
 import { canOccupy,settleBody } from './collision.js';
 import { trapPoint } from './confinement.js';
 
-export const STARBUCK={basicRange:3.38,basicDash:2.875,qDamage:150,qRange:2.782,qAngle:1.6478,qInterval:.3,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320,trapDuration:2.5};
+export const STARBUCK={basicRange:3.38,basicDash:2.75,qDamage:150,qRange:2.782,qAngle:1.6478,qInterval:.3,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320,trapDuration:2.5};
 export function validate(g,e,slot,p){return e.key!=='starbuck'||slot!=='r'||!g.blocked(p.x,p.y,e.radius)&&canOccupy(g,e,trapPoint(g,e,p),{phaseEnemies:true});}
 export function basic(g,e,p,d){
  if(e.key!=='starbuck')return false;
- g.cone(e,d,g.attackRange(e),.975*1.2,218.5);dash(g,e,d,dashLength(e,STARBUCK.basicDash),0,()=>{},{offensive:true});return true;
+ g.cone(e,d,g.attackRange(e),.975*1.2,200);dash(g,e,d,dashLength(e,STARBUCK.basicDash),0,()=>{},{offensive:true});return true;
 }
 export function cast(g,e,slot,p,d){
  if(e.key!=='starbuck')return false;
@@ -17,7 +17,7 @@ export function cast(g,e,slot,p,d){
    if(!e.alive||g.stat(e,'silence')||g.stat(e,'stun')){delete e.state.starbuckStab;return;}
    e.lastAttackAt=g.time;e.attackAt=g.time;e.attackFacing=Math.atan2(d.y,d.x);
    let hit=false;g.cone(e,d,STARBUCK.qRange,STARBUCK.qAngle,STARBUCK.qDamage*1.045**index,t=>{
-    hit=true;g.status(t,'slow',.2,STARBUCK.qSlow,e);const count=(hits.get(t.id)||0)+1;hits.set(t.id,count);
+    hit=true;g.status(t,'slow',.13,STARBUCK.qSlow,e);const count=(hits.get(t.id)||0)+1;hits.set(t.id,count);
     if(count>=3&&t.kind==='champion')g.status(t,'root',1,.35,e);
    });
    g.effects.push({type:'slash',x:e.x,y:e.y,r:STARBUCK.qRange,angle:Math.atan2(d.y,d.x),spread:STARBUCK.qAngle,theme:e.key,life:.2,maxLife:.2});

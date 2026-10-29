@@ -221,7 +221,7 @@ export const NEW_DATA = {
     "ammo": 2,
     "reload": 3,
     "range": 3.38,
-    "damage": 218.5,
+    "damage": 200,
     "attackTime": 0.55,
     "q": 7,
     "r": 25,

@@ -12,12 +12,12 @@ export function mobileAttackTargets(g,e,range=basicAimReach(g,e),{ignoreWalls=fa
  return g.units.filter(t=>t.alive&&g.hostile(e,t)&&!g.hidden(t)&&g.visibleTo(e.team,t)&&(ignoreWalls||g.clearLine(e,t))&&!g.locked(t)&&!t.returning&&!t.state?.posthumous&&!(t.invulnerableUntil>g.time)&&distance(e,t)<=range+(t.radius||0)+1e-8).sort((a,b)=>(b.kind==='champion')-(a.kind==='champion')||(a.kind==='champion'&&b.kind==='champion'?a.hp-b.hp:0)||distance(e,a)-distance(e,b)||a.id-b.id);
 }
 export function nearestMovementAim(g,e,slot){
- const moves={don:['basic','r'],myo:['basic'],starbuck:['basic','r'],gregor:g.buff(e,'mutant')?['basic']:[],jamila:['q'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q','r'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],kim:['q'],sora:['q']};
+ const moves={don:['basic','r'],myo:['basic'],starbuck:['basic','r'],jamila:['q'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q','r'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],kim:['q'],sora:['q']};
  return Boolean(moves[e.key]?.includes(slot));
 }
 export const movementAim=(g,e,slot)=>nearestMovementAim(g,e,slot)||e.key==='yi'&&slot==='r';
 export function dashSlidePriority(g,e,slot){
- if(slot==='basic')return ['don','myo','starbuck'].includes(e.key)||e.key==='gregor'&&g.buff(e,'mutant');
+ if(slot==='basic')return ['don','myo','starbuck'].includes(e.key);
  return slot==='q'&&['sinclair','ryoshu','outis','jamila','heathcliff','hohenheim','kim','sora','alisa'].includes(e.key)||slot==='r'&&['don','outis','alisa'].includes(e.key);
 }
 export function rememberManualAim(e,slot,point){
