@@ -8,7 +8,7 @@ async def main():
   pc=await b.new_context(viewport={'width':1440,'height':900});phone=await b.new_context(viewport={'width':844,'height':390},has_touch=True,is_mobile=True);h=await pc.new_page();c=await phone.new_page();errors=[]
   for page in [h,c]:page.on('pageerror',lambda e:errors.append(str(e)))
   await c.add_init_script("Element.prototype.requestFullscreen=()=>Promise.reject(new Error('Fixed test viewport'))")
-  await h.goto(URL+'/?debug');await h.wait_for_function('window.__moba');assert await h.locator('#menu-version').is_visible();assert await h.inner_text('#menu-version')=='v1.1.0'
+  await h.goto(URL+'/?debug');await h.wait_for_function('window.__moba');assert await h.locator('#menu-version').is_visible();assert await h.inner_text('#menu-version')=='v1.0.1'
   await h.click('#practice-open');await h.click('#position-select [data-position="top"]')
   assert await h.locator('#champion-select .champion-recommend').count()>0
   await h.click('#pick-roles [data-role="암살"]');assert await h.locator('#champion-select .pick-role-heading').all_text_contents()==['주 역할군','부 역할군']
@@ -21,6 +21,8 @@ async def main():
   await c.screenshot(path=str(ART/'v110-mobile-lobby-chat.png'));assert await c.locator('#online-champions .champion-recommend').count()>0
   await h.wait_for_function("[...__moba.online.peers.values()].some(p=>p.channel?.readyState==='open')");await c.locator('#online-ready').tap();await h.click('#online-start');await c.wait_for_function("__moba.mode==='playing'&&__moba.game.time>.3",timeout=15000)
   print('Shared pick recommendations, primary/secondary role grouping and lobby chat passed.',flush=True)
+  await h.wait_for_function("!document.querySelector('#match-chat').classList.contains('hidden')");box=await h.locator('#match-chat').bounding_box();await h.mouse.click(box['x']+box['width']/2,box['y']+box['height']/2);assert not await h.evaluate('__moba.chat.opened');assert await h.locator('#match-chat-lines').get_attribute('role')=='log';assert await h.locator('#match-chat').evaluate("e=>getComputedStyle(e).pointerEvents")=='none'
+  await h.locator('#match-chat').dispatch_event('click');assert not await h.evaluate('__moba.chat.opened')
   await h.keyboard.press('Enter');assert await h.evaluate('__moba.chat.opened');time=await h.evaluate('__moba.game.time');at=await h.evaluate('[__moba.game.player.x,__moba.game.player.y]');await h.keyboard.type('wasd hello');await asyncio.sleep(.25);assert await h.evaluate('[__moba.game.player.x,__moba.game.player.y]')==at;assert await h.evaluate('__moba.game.time')>time
   await h.keyboard.press('Enter');assert not await h.evaluate('__moba.chat.opened');await c.wait_for_function("document.querySelector('#match-chat-lines').textContent.includes('방장(파우스트): wasd hello')")
   await h.keyboard.press('Enter');await h.keyboard.press('Escape');assert not await h.evaluate('__moba.chat.opened');assert not await h.evaluate('__moba.paused')
