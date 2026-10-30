@@ -58,7 +58,7 @@ function skillRanges(key,index,g,e,transformed,variant){
  if(index===3&&key==='sora')return[row('지령 대상','사거리 '+SORA.ultimateRange)];
  if(key==='kromer')return index===2?[row('투척','사거리 '+KROMER.qRange),row('표식 추적','3.5초 내 재사용 · 지형·적 충돌 무시')]:[row('돌진','거리 3'),row('던지기','거리 3.5')];
  if(index===2&&key==='don')return[row('미충전','사거리 '+DON_CHARGE.minRange+' · 폭 '+DON_CHARGE.width),row('최대 충전','사거리 '+DON_CHARGE.maxRange+' · 폭 '+DON_CHARGE.width),row('충전 변화','사거리 최소 '+DON_CHARGE.minRange+' ~ 최대 '+DON_CHARGE.maxRange)];
- if(index===2&&key==='heathcliff')return[row('미충전','도약 거리 0.5 · 착지 반경 1.8'),row('최대 충전','도약 거리 7 · 착지 반경 1.8'),row('충전 변화','사거리 최소 0.5 ~ 최대 7')];
+ if(index===2&&key==='heathcliff')return[row('미충전','도약 거리 0.5 · 착지 반경 1.8'),row('최대 충전','도약 거리 7 · 착지 반경 1.8'),row('충전 변화','사거리 최소 0.5 ~ 최대 7'),row('시체자루 중','순간이동 거리 7 · 착지 반경 1.8 · 최대 충전')];
  if(index===2&&key==='gregor')return[row('기본','사거리 6 · 직선 폭 2.4'),row('변이','사거리 8.5 · 직선 폭 2.4')];
  if(index===2&&key==='jamila')return[row('돌진','거리 '+JAMILA.qRange),row('베기','사거리 '+JAMILA.qRange+' · 반원'),row('후퇴','거리 '+JAMILA.qRetreat)];
  if(index===2&&key==='myo')return[row('공격 범위','투사체 사거리 7 · 탄환 4발')];

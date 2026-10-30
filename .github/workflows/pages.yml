@@ -1,7 +1,7 @@
-name: Publish browser game
+name: Publish free offline game
 on:
   push:
-    branches: [main]
+    branches: [codex/city-border-v0.2]
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: codex/city-border-v0.2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -34,6 +36,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/configure-pages@v5
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

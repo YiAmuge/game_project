@@ -1,3 +1,4 @@
+import { HEATH } from './heathcliff.js';
 import{drawAugmentEffects,drawAugmentGround}from'./v60-effects.js';
 import{drawPassiveAugmentFront,drawPassiveAugmentGround}from'./augment-effects.js';
 import{drawMartonFairy,FAIRY_COLORS}from'./fairy-art.js';
@@ -319,8 +320,8 @@ export class ChampionVFX {
   for(const e of g.champions().filter(e=>e.alive)){
    if(g.buff(e,'mutant')){this.rangeField(c,camera,e,5.5,'#805735',.32,'#bb946b');for(let i=0;i<36;i++){const a=i*2.4+g.time*1.8,r=5.3*Math.sqrt(noise(i,1,3)),p=world({x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r},.2+Math.sin(i+g.time*8)*.12);this.insect(c,p,camera.scale*.095,a+g.time*2,g.time);}}
    if(g.buff(e,'heathUlt')){
-    this.areaMaterial(c,camera,e,5.5,'#63455f','#b780a6',.6);c.save();clipShape(c,camera,{...e,shape:{kind:'circle',range:5.5}});
-    for(let i=0;i<18;i++){const shifted=g.time*4+i*.137,tick=Math.floor(shifted),phase=shifted%1;if(phase>.75)continue;const a=i*2.4+tick,r=5.5*Math.sqrt(noise(i,tick,5)),p={x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r},at=world(p,.2),alpha=1-phase/.75;this.smallImpact(c,camera,p,.6+phase*2,a,i%3?'#b97ba5':'#dfa4aa',alpha);this.mote(c,'glow','#cb92b4',at.x,at.y,camera.scale*.4,a,alpha*.2);for(let j=0;j<3;j++)this.mote(c,'chip','#dfc7dc',at.x+Math.cos(j*2.4)*phase*camera.scale,at.y-Math.sin(j*2.4)*phase*camera.scale,camera.scale*.07,j,alpha);}c.restore();
+    this.areaMaterial(c,camera,e,HEATH.radius,'#63455f','#b780a6',.6);c.save();clipShape(c,camera,{...e,shape:{kind:'circle',range:HEATH.radius}});
+    for(let i=0;i<18;i++){const shifted=g.time*4+i*.137,tick=Math.floor(shifted),phase=shifted%1;if(phase>.75)continue;const a=i*2.4+tick,r=HEATH.radius*Math.sqrt(noise(i,tick,5)),p={x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r},at=world(p,.2),alpha=1-phase/.75;this.smallImpact(c,camera,p,.6+phase*2,a,i%3?'#b97ba5':'#dfa4aa',alpha);this.mote(c,'glow','#cb92b4',at.x,at.y,camera.scale*.4,a,alpha*.2);for(let j=0;j<3;j++)this.mote(c,'chip','#dfc7dc',at.x+Math.cos(j*2.4)*phase*camera.scale,at.y-Math.sin(j*2.4)*phase*camera.scale,camera.scale*.07,j,alpha);}c.restore();
    }
    if(e.state.tether){const target=g.units.find(t=>t.id===e.state.tether.target&&t.alive);if(target)this.rope(c,camera,e,target);}
    if(e.state.swordGrab?.target?.alive)this.sword(c,camera,e,e.state.swordGrab.target);

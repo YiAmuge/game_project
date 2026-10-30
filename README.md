@@ -8,6 +8,12 @@ Project Moon 작품을 모티브로 한 비공식 팬 게임입니다. 초대 �
 
 참가자는 설치 없이 웹 링크로 접속합니다. 방장이 방을 만들고 초대 링크를 공유하면 됩니다. 직접 연결이 어려운 환경에서는 자동 중계로 연결하며 전투 계산은 방장 브라우저에서 수행합니다. 공개 주소 발급은 운영자가 한 번 배포해야 합니다. [온라인 배포·운영 안내](docs/ONLINE.md)에 Render 원클릭 배포와 Docker 설정을 제공합니다. 기존 단일 HTML과 GitHub Pages는 AI 대전·연습장에 사용할 수 있습니다.
 
+## 서버와 독립된 무료 오프라인 페이지
+
+GitHub Pages용 빌드는 AI 대전·연습장·도감을 지원하며 방 서버에 연결하지 않습니다. 메뉴의 **오프라인 파일 저장**으로 `city-border.html`을 내려받으면 인터넷이 끊겨도 파일을 열어 플레이할 수 있습니다. 온라인 서버의 메뉴에서도 **오프라인 버전** 링크로 이동할 수 있습니다.
+
+배포 주소: `https://yiamuge.github.io/game_project/` (GitHub Pages 활성화 및 배포 성공 후 사용 가능). 저장소 **Settings → Pages → Build and deployment → Source → GitHub Actions**를 한 번 설정하면 `codex/city-border-v0.2` 브랜치의 푸시마다 **Publish free offline game**이 최신 파일을 자동 배포합니다. 서버 실행이나 유료 웹 서비스가 필요하지 않습니다. 자세한 설정은 [오프라인 페이지 안내](docs/OFFLINE.md)를 참고하세요.
+
 ## ZIP 없이 실행·저장
 
 [개발 브랜치](https://github.com/YiAmuge/game_project/tree/codex/city-border-v0.2)의 Code → Codespaces에서 환경을 엽니다. 초기 설치·서버 시작은 자동 처리합니다. `npm run update`는 현재 브랜치의 코드를 받고 게임 파일과 서버를 확인합니다. 소스 파일은 자동 저장되고 게임 페이지가 새로고침됩니다. 진행 중인 경기는 새로고침 시 초기화됩니다. GitHub 저장은 Commit → Push로 수행합니다.

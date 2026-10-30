@@ -3,6 +3,7 @@ import * as Ppui from './ppui.js';
 import * as Jamila from './jamila.js';
 import * as Reworks from './reworks.js';
 import * as Don from './don.js';
+import { HEATH,instantTactical } from './heathcliff.js';
 import * as Infestation from './infestation.js';
 import * as Gregor from './gregor.js';
 import * as Sora from './sora.js';
@@ -185,7 +186,7 @@ export function cast(g,e,slot,p,d,options={}){
  switch(e.key){
  case 'don':
   if(slot==='q')Don.start(g,e,p);
-  else{e.qCd=0;g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false));}
+  else{e.qCd=0;g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false),{actionTag:'donR'});}
   return true;
  case 'ryoshu':
   if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;const len=3.8;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
@@ -197,7 +198,14 @@ export function cast(g,e,slot,p,d,options={}){
   }return true;
  case 'honglu':return Reworks.honglu(g,e,slot,p,d);
  case 'heathcliff':
-  if(slot==='q'){if(state.chargeAt!==undefined)return false;state.chargeAt=g.time;state.chargeAim={...p};e.qCd=0;}else{state.heathExtensions=0;g.addBuff(e,'heathUlt',5);state.auraTick=g.time+.3;}return true;
+  if(slot==='q'){
+   if(state.chargeAt!==undefined)return false;state.chargeAt=g.time;state.chargeAim={...p};
+   if(instantTactical(g,e))return Reworks.releaseHeath(g,e,p);e.qCd=0;
+  }else{
+   state.heathExtensions=0;state.heathUltAt=g.time;state.heathSweepSerial=0;state.heathSweepFacing=e.facing;
+   g.addBuff(e,'heathUlt',HEATH.duration);state.auraTick=g.time+HEATH.interval;
+   if(state.chargeAt!==undefined)Reworks.releaseHeath(g,e,state.chargeAim);
+  }return true;
  case 'ishmael':
   if(slot==='q'){if(g.buff(e,'ishmaelShield'))shockIshmael(g,e);else {g.addShield(e,e.maxHp*.12,`wreck-${e.id}`,2.5);g.addBuff(e,'ishmaelShield',2.5);state.shockAt=g.time+2.5;}}
   else{
@@ -256,7 +264,7 @@ export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
  if(!proc)return;
  if(e.kind==='champion'){
   if(g.buff(e,'donLifesteal'))g.heal(e,e,g.buffValue(e,'donLifesteal',actual*.25),false);
-  if(g.buff(e,'heathUlt'))g.heal(e,e,actual*.2,false);
+  if(g.buff(e,'heathUlt'))g.heal(e,e,actual*HEATH.lifesteal,false);
   if(e.key==='gregor')gregorStack(g,e);
  }
  if(t.kind==='champion'){
@@ -310,7 +318,10 @@ export function tick(g,e,dt){
  if(e.key==='don'&&(s.villainAt||0)<=g.time){s.villainAt=g.time+6;const enemies=g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=7);enemies.sort((a,b)=>(b.lastChampionKill||-99)-(a.lastChampionKill||-99)||distance(e,a)-distance(e,b));s.villain=enemies[0]?.id;}
  if(e.key==='heathcliff'){
 
-  while(g.buff(e,'heathUlt')&&s.auraTick<=g.time+1e-8){s.auraTick+=.3;area(g,e,e,5.5,65);}
+  while(g.buff(e,'heathUlt')&&s.auraTick<=g.time+1e-8){
+   s.auraTick+=HEATH.interval;s.heathSweepSerial=(s.heathSweepSerial||0)+1;
+   g.emitSound?.('swing',e,{slot:'r',phase:'heath-sweep',family:'club',weight:1.3});area(g,e,e,HEATH.radius,HEATH.damage);
+  }
  }
  if(e.key==='ishmael'&&s.shockAt>0&&s.shockAt<=g.time)shockIshmael(g,e);
  if(e.key==='gregor'){

@@ -4,6 +4,7 @@ import { drawGripHands,gripSourcePoint } from './weapon-grips.js';
 import { carried } from './attachments.js';
 import { rudolphWeaponProgress,RUDOLPH_WEAPON } from './rudolph-weapon.js';
 import{basicStance,bodyFacing,restingStance,combatPoseActive}from'./champion-pose.js';
+import { HEATH } from './heathcliff.js';
 
 // Shaft extensions are geometric slices of the latest source art. The metal
 // heads keep their source shape and size; only the handle interval gains length.
@@ -26,7 +27,7 @@ export const MIDDLE_GRIP=new Set(['starbuck','don','sinclair','honglu','dongrang
 export const gripPivot=key=>key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
 export function equippedWeapon(g,e){
  const base=WEAPON_ART[e.key];if(!base)return null;
- if(e.alive&&e.key==='don'&&g.buff(e,'donLifesteal'))return ['donBloodLance',weaponGeometry(base[0],base[1]).span,.12];
+ if(e.alive&&e.key==='don'&&(g.buff(e,'donLifesteal')||e.motion?.actionTag==='donR'))return ['donBloodLance',weaponGeometry(base[0],base[1]).span,.12];
  if(e.alive&&e.key==='heathcliff'&&g.buff(e,'heathUlt'))return ['heathBloodSack',2.6,.045];
  return [...base,gripPivot(e.key)];
 }
@@ -152,6 +153,46 @@ export function heathSlamPose(g,e,p){
  const [,length,pivot]=equippedWeapon(g,e),hand={x:p.right.x,y:p.right.y+(p.origin.y+.06-length*(1-pivot)-p.right.y)*swing**2};
  return {hand:{x:hand.x,y:hand.y+(p.right.y-hand.y)*recover},angle:angle+(p.facing-angle)*recover,progress:swing};
 }
+export function heathSweepPose(g,e,p=equipmentPose(g,e)){
+ if(e.key!=='heathcliff'||!e.alive||!g.buff(e,'heathUlt'))return null;
+ const serial=e.state.heathSweepSerial||0,start=(e.state.auraTick??g.time+HEATH.interval)-HEATH.interval;
+ const progress=Math.max(0,Math.min(1,(g.time-start)/HEATH.interval)),direction=serial%2?-1:1;
+ return {center:{x:p.origin.x,y:p.origin.y-.8},progress,direction,serial,angle:(e.state.heathSweepFacing??p.facing)+direction*Math.PI*2*progress,bend:direction*1.25*Math.sin(progress*Math.PI),radius:HEATH.radius};
+}
+export function heathSackPoint(pose,u){
+ const angle=pose.angle-pose.bend*Math.max(0,u)**1.4,r=.38+(pose.radius-.38)*u;
+ return {x:Math.cos(angle)*r,y:Math.sin(angle)*r};
+}
+function drawHeathSweep(r,e,g,lift,layer){
+ const c=r.ctx,pose=heathSweepPose(g,e,equipmentPose(g,e,lift));if(!pose)return;
+ const key='heathBloodSack',pivot=.045,length=HEATH.radius/(1-pivot),m=weaponGeometry(key,length),f=m.frame,image=loadAtlas(f.sheet);
+ if(!image.complete||!image.naturalWidth)return;
+ const camera=r.camera,origin=camera?.worldToScreen(e,.075),project=v=>{
+  if(!camera)return {x:pose.center.x+v.x,y:pose.center.y+v.y};
+  const p=camera.worldToScreen({x:e.x+v.x,y:e.y+v.y},.075);
+  return {x:pose.center.x+(p.x-origin.x)/camera.scale,y:pose.center.y+(p.y-origin.y)/camera.scale};
+ },point=u=>project(heathSackPoint(pose,u)),hand=point(0),ahead=point(.001),angle=Math.atan2(ahead.y-hand.y,ahead.x-hand.x),handLayer=Math.sin(pose.angle)<0?'back':'front',disabled=Boolean(g.stat(e,'disarm'));
+ const grip=which=>{if(layer!==handLayer)return;c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);drawGripHands(c,e.key,key,m,pivot,which);c.restore();};
+ grip('back');c.save();c.imageSmoothingEnabled=false;if(disabled)c.filter='grayscale(1) brightness(.7)';
+ // Follow the original cloth texture along a curved centerline; the knot stays
+ // at the hand and the sack tip follows the actual five-unit ground circle.
+ const slices=36,h=f.h*m.scale;
+ for(let i=0;i<slices;i++){
+  const x0=i/slices,x1=(i+1)/slices,u0=(x0-pivot)/(1-pivot),u1=(x1-pivot)/(1-pivot),mid=heathSackPoint(pose,(u0+u1)/2);
+  if((mid.y<0?'back':'front')!==layer)continue;
+  const a=point(u0),b=point(u1),w=Math.hypot(b.x-a.x,b.y-a.y);
+  c.save();c.translate(a.x,a.y);c.rotate(Math.atan2(b.y-a.y,b.x-a.x));c.drawImage(image,f.x+f.w*x0,f.y,f.w/slices,f.h,-.012,-h/2,w+.024,h);c.restore();
+ }
+ c.restore();
+ if(disabled){
+  for(let i=0;i<26;i++){
+   const u=i/25,local=heathSackPoint(pose,u);if((local.y<0?'back':'front')!==layer)continue;
+   const a=point(u),b=point(u+.005);c.save();c.translate(a.x,a.y);c.rotate(Math.atan2(b.y-a.y,b.x-a.x));c.beginPath();c.ellipse(0,0,.13,.055,i%2?.65:-.65,0,Math.PI*2);c.strokeStyle='#242b35';c.lineWidth=.055;c.stroke();c.strokeStyle='#aeb8c4';c.lineWidth=.025;c.stroke();c.restore();
+  }
+ }
+ grip('front');
+ if(layer==='front')r.weaponTrail(e,g,'heath-sweep',point(.22),point(1),true);
+}
 export function gregorThrust(g,e){
  const cast=e.visualCast,age=g.time-(cast?.at??-99);if(cast?.slot!=='q'||age<0||age>=.4)return null;
  const extend=age<.08?1-(1-age/.08)**3:age<.2?1:Math.max(0,1-(age-.2)/.2),range=6+(g.buff(e,'mutant')?2.5:0);
@@ -200,6 +241,7 @@ export function gregorCenterline(u){
 }
 export const myoFiring=(g,e)=>e.key==='myo'&&e.castSlot==='q'&&g.time-(e.castAt??-99)>=0&&g.time-e.castAt<.5;
 export function drawBackEquipment(r,e,g,{lift=0}={}){
+ if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'back');return;}
  if(e.key==='jamila'){if(e.lcaTrooper)return;const p=equipmentPose(g,e,lift),c=r.ctx,q=Boolean(e.state.jamilaQ&&e.state.jamilaQ.phase!=='retreat');c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,q?'jamilaRifle':'jamilaKopis',q?2.1:1.75,{x:q?.06:.32,rotation:q?.95:1.05,pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();return;}
  if(e.key!=='myo'||myoFiring(g,e))return;
  const p=equipmentPose(g,e,lift),c=r.ctx;c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,'myoRifle',2.1,{x:.06,rotation:.95,pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
@@ -247,6 +289,7 @@ export function jamilaWeaponPose(g,e,p=equipmentPose(g,e)){
 }
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
+ if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'front');return true;}
  if(e.key==='yan'&&g.buff(e,'yanDistorted')&&!e.previewStance||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0}={})=>{

@@ -1,4 +1,5 @@
-// Head-only crops in normalized atlas pixels; body/weapon art is unchanged.
+// Head crops in normalized atlas pixels. Kim and Dongrang include the upper torso.
+// Body/weapon art and all other portrait crops are unchanged.
 export const PORTRAIT_CROPS={
  kromer:[50,0,185,156],
  jamila:[34,0,176,158],
@@ -21,13 +22,13 @@ export const PORTRAIT_CROPS={
  rudolph:[8,102,200,157],
  myo:[0,3,187,166],
  dongbaek:[90,61,191,168],
- dongrang:[34,21,235,150],
+ dongrang:[34,21,235,205],
  hohenheim:[29,8,189,166],
  alisa:[58,48,194,171],
  marton:[74,50,198,174],
  queequeg:[44,10,198,174],
  starbuck:[0,6,202,181],
- kim:[52,7,259,170],
+ kim:[52,7,259,225],
  ppui:[58,70,208,180],
  sora:[54,11,214,188],
  yan:[69,51,214,188],

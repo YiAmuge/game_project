@@ -2,6 +2,7 @@ import { RULES, WORLD } from './data.js';
 import { clamp,distance,direction,segmentDistance } from './geometry.js';
 import { settleBody } from './collision.js';
 import { area } from './skills.js';
+import { instantTactical } from './heathcliff.js';
 
 // Shared rectangles use full width; circle/body intersection includes the target radius.
 export function rectangle(g,e,d,range,width,damage,hit=()=>{}){
@@ -14,7 +15,7 @@ export function rectangle(g,e,d,range,width,damage,hit=()=>{}){
  return hits;
 }
 export function heathCharge(g,e,point){
- const elapsed=Math.max(0,g.time-(e.state.chargeAt??g.time)),progress=clamp(elapsed/1.5,0,1),range=.5+6.5*progress,d=g.aim(e,point),len=Math.min(range,Math.max(.5,distance(e,point)));
+ const elapsed=Math.max(0,g.time-(e.state.chargeAt??g.time)),progress=instantTactical(g,e)?1:clamp(elapsed/1.5,0,1),range=.5+6.5*progress,d=g.aim(e,point),len=Math.min(range,Math.max(.5,distance(e,point)));
  const landing=g.safeLanding(e,{x:e.x+d.x*len,y:e.y+d.y*len},len);
  return {elapsed,progress,range,ready:true,radius:1.8,damage:80+170*progress,stun:progress<.5?0:progress,landing};
 }
@@ -23,10 +24,12 @@ export function releaseHeath(g,e,p){
  if(e.key!=='heathcliff'||e.state.chargeAt===undefined)return false;
  if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.stat(e,'root')||g.stat(e,'captured')||e.motion||g.hidden(e)){cancelHeath(e);return false;}
  const shape=heathCharge(g,e,p||e.state.chargeAim),d=direction(e,shape.landing);cancelHeath(e);e.qCd=g.cooldown(e,'q');e.lastAttackAt=g.time;
- return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{kind:'leap',actionTag:'heathQ',ignoreWalls:true,arcHeight:3,minDuration:distance(e,shape.landing)/RULES.dashSpeed,phaseEnemies:true,onComplete:()=>{
+ const land=()=>{
   g.emitSound?.('slam',e,{phase:'heath-landing',family:'club'});e.state.heathSlamAt=g.time;e.state.heathSlamFacing=Math.atan2(d.y,d.x);
   area(g,e,e,shape.radius,shape.damage,t=>{if(shape.stun)g.status(t,'stun',1,shape.stun,e);});g.effects.push({type:'burst',x:e.x,y:e.y,r:shape.radius,theme:'heathcliff',life:.5,maxLife:.5});
- }}));
+ };
+ if(instantTactical(g,e)){Object.assign(e,shape.landing);land();return true;}
+ return g.action(e,'skill',()=>g.startMotion(e,d,distance(e,shape.landing),{kind:'leap',actionTag:'heathQ',ignoreWalls:true,arcHeight:3,minDuration:distance(e,shape.landing)/RULES.dashSpeed,phaseEnemies:true,onComplete:land}));
 }
 export function faust(g,e,slot,p,d){
  if(slot==='q'){

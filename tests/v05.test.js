@@ -52,7 +52,7 @@ test('Rodion sword wave travels before damage while its caster remains in place'
  const {g,p,t}=quiet('rodya');t.x=42;g.attack(p,t);close(t.hp,100000);assert.equal(p.motion,undefined);close(p.x,40);run(g,.3);assert.ok(t.hp<100000);assert.equal(CHAMPIONS.rodya.q,12);
 });
 test('Heath ultimate radius preview matches damage, Ishmael targets the first champion at range 16 and Outis uses a contact dash',()=>{
- const a=quiet('heathcliff');a.t.x=45;a.g.cast(a.p,'r',a.p);run(a.g,.6);assert.ok(a.t.hp<100000);close(skillTargeting(a.g,a.p,'r').radius,5.5);
+ const a=quiet('heathcliff');a.t.x=45;a.g.cast(a.p,'r',a.p);run(a.g,.6);assert.ok(a.t.hp<100000);close(skillTargeting(a.g,a.p,'r').radius,5);
  const {g,p,t}=quiet('ishmael');t.x=46;const t2=g.makeChampion('yi',1,5);t2.x=50;t2.y=7;g.cast(p,'r',t);assert.equal(g.projectiles.length,0);run(g,.25);assert.ok(g.projectiles[0].remaining<=16);run(g,.6);assert.ok(t.hp<100000);close(t2.hp,t2.maxHp);
  const o=quiet('outis');o.g.cast(o.p,'r',o.t);assert.ok(o.p.motion);close(o.p.motion.total,4.5);run(o.g,.8);assert.ok(o.t.hp<100000);assert.equal(o.g.projectiles.length,0);
 });
