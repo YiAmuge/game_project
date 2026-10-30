@@ -22,6 +22,7 @@ export function gripAppearance(key){
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
 export const GRIP_PATHS={
+ donBloodLance:[[.055,.5],[.18,.5]],heathBloodSack:[[.03,.5],[.065,.5]],
  kromerNail:[[.065,.5],[.16,.5]],
  jamilaKopis:[[.055,.48],[.22,.48]],jamilaRifle:[[.238,.80],[.238,.80]],
  yiDagger:[[.075,.49],[.33,.49]],faustSword:[[.035,.49],[.175,.49]],sinclairHalberd:[[.16,.39],[.62,.37]],

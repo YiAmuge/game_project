@@ -26,7 +26,7 @@ import { distance } from './geometry.js';
 import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
 import { FRAMES, THEMES, loadAtlas,visualForm,spriteHeight } from './art.js';
-import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin,orientWeapon } from './weapon-art.js';
+import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin,orientWeapon,equippedWeapon } from './weapon-art.js';
 import{bodyFacing}from'./champion-pose.js';
 import{attackGuideOpacity}from'./attack-guide.js';
 import { draw as bossPattern } from './boss-patterns.js';
@@ -35,7 +35,7 @@ import { targetingPreview } from './targeting.js';
 import { championHud, championEffects, championGroundEffects, chargePreview, orderMark, threatRanges } from './overlays.js';
 
 export class Renderer {
-  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.needleAtlas=loadAtlas(13);this.bossAtlas=loadAtlas(14);this.worldAtlas=loadAtlas(16);this.scale=1;this.ox=0;this.oy=0;this.resize();}
+  constructor(canvas) {this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=new Camera();this.atlas=loadAtlas();this.atlasExtra=loadAtlas(1);this.atlasV05=loadAtlas(2);this.atlasV06=loadAtlas(3);this.atlasV08=loadAtlas(4);this.atlasV10=loadAtlas(5);this.atlasV12=loadAtlas(6);this.atlasV13=loadAtlas(7);this.atlasV17=loadAtlas(8);this.atlasV36=loadAtlas(9);this.weaponAtlas=loadAtlas(10);this.clerkAtlas=loadAtlas(11);this.minionAtlas=loadAtlas(12);this.needleAtlas=loadAtlas(13);this.bossAtlas=loadAtlas(14);this.worldAtlas=loadAtlas(16);this.ultimateWeaponAtlas=loadAtlas(18);this.scale=1;this.ox=0;this.oy=0;this.resize();}
   resize() {
     const r=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
     this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);
@@ -251,7 +251,7 @@ export class Renderer {
     this.weaponTrails??=new MotionTrails();
     const c=this.ctx,project=p=>this.camera.worldToScreen(p,this.billboardPass?.075:0),origin=project(e);
     const blade=active?captureBlade(c.getTransform(),this.dpr,this.scale,origin,inner,outer):{};
-    const key=[e.key,e.attackSerial,e.attackAt,soraEgo(game,e),game.buff(e,'mutant'),e.state.weapon].join('/');
+    const key=[e.key,e.attackSerial,e.attackAt,soraEgo(game,e),game.buff(e,'mutant'),e.state.weapon,equippedWeapon(game,e)?.[0]].join('/');
     const samples=this.weaponTrails.sample(e,part,{time:game.time,key,active,anchor:{x:e.x,y:e.y},...blade});
     const sections=ribbonSections(samples,game.time,s=>projectBlade(s,project,this.scale));
     c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);drawRibbon(c,sections,combatStyle(e.key,game,e,{kind:'basic'}).color);c.restore();

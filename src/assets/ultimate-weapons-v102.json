@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "sources": {
+    "lance": {
+      "file": "source/don-ultimate-v102.png",
+      "sha256": "8f767614cbee95ce04b83e86308e379e4a4434fa58e62ed97a4881a2869786f2"
+    },
+    "sack": {
+      "file": "source/ultimate-weapons-v102.png",
+      "sha256": "c02d1dc58dcd1c244f75bb1d211abde9817a0dfbff3d1ccc0505f6e1a7462f1b"
+    }
+  },
+  "frames": {
+    "donBloodLance": {
+      "x": 8,
+      "y": 8,
+      "w": 900,
+      "h": 100,
+      "sheet": 18,
+      "rotation": 0,
+      "source": "source/don-ultimate-v102.png",
+      "sourceRect": [
+        22,
+        240,
+        2138,
+        235
+      ],
+      "sourceGripY": 358,
+      "grip": [
+        0.12,
+        0.5
+      ]
+    },
+    "heathBloodSack": {
+      "x": 8,
+      "y": 116,
+      "w": 900,
+      "h": 251,
+      "sheet": 18,
+      "rotation": 0,
+      "source": "source/ultimate-weapons-v102.png",
+      "sourceRect": [
+        293,
+        276,
+        1589,
+        427
+      ],
+      "sourceGripY": 497.5,
+      "grip": [
+        0.045,
+        0.5
+      ]
+    }
+  }
+}

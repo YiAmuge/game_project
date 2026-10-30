@@ -24,6 +24,12 @@ export const WEAPON_ART={
 };
 export const MIDDLE_GRIP=new Set(['starbuck','don','sinclair','honglu','dongrang','hohenheim','marton','rudolph']);
 export const gripPivot=key=>key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
+export function equippedWeapon(g,e){
+ const base=WEAPON_ART[e.key];if(!base)return null;
+ if(e.alive&&e.key==='don'&&g.buff(e,'donLifesteal'))return ['donBloodLance',weaponGeometry(base[0],base[1]).span,.12];
+ if(e.alive&&e.key==='heathcliff'&&g.buff(e,'heathUlt'))return ['heathBloodSack',2.6,.045];
+ return [...base,gripPivot(e.key)];
+}
 // Aim stays in a 180-degree arc; crossing behind flips the local X axis.
 export function weaponOrientation(angle){const x=Math.cos(angle),y=Math.sin(angle);return {flip:x<-1e-10?-1:1,angle:Math.atan2(y,Math.abs(x))};}
 export function orientWeapon(c,angle){const pose=weaponOrientation(angle);c.scale(pose.flip,1);c.rotate(pose.angle);return pose;}
@@ -143,7 +149,7 @@ export function heathSlamPose(g,e,p){
  if(!charging&&!air&&(after<0||after>=.18))return null;
  const duration=air?Math.max(.01,m.minDuration||0,m.total/m.speed):0,window=Math.min(.14,duration*.6),swing=air?Math.max(0,Math.min(1,1-(duration-m.elapsed)/window)):charging?0:1;
  const recover=!air&&!charging?Math.max(0,Math.min(1,(after-.04)/.14)):0,side=weaponOrientation(air?Math.atan2(m.dy,m.dx):e.state.heathSlamFacing??p.facing).flip,angle=-Math.PI/2+side*Math.PI*swingProgress(swing);
- const hand={x:p.right.x,y:p.right.y+(p.origin.y+.06-WEAPON_ART.heathcliff[1]*.88-p.right.y)*swing**2};
+ const [,length,pivot]=equippedWeapon(g,e),hand={x:p.right.x,y:p.right.y+(p.origin.y+.06-length*(1-pivot)-p.right.y)*swing**2};
  return {hand:{x:hand.x,y:hand.y+(p.right.y-hand.y)*recover},angle:angle+(p.facing-angle)*recover,progress:swing};
 }
 export function gregorThrust(g,e){
@@ -240,10 +246,10 @@ export function jamilaWeaponPose(g,e,p=equipmentPose(g,e)){
  const age=g.time-(e.attackAt??-99),active=age>=0&&age<.14,pulse=active?1-age/.14:0,shake=Math.sin(age*155)*.018*pulse;return {asset:'jamilaRifle',length:2.25,hand:{x:p.right.x+shake,y:p.right.y+Math.cos(age*133)*.012*pulse},angle:(active?e.attackFacing:p.facing)??p.facing,mode:null,thrust:(.09-Math.sin(age*90)*.045)*pulse,trail:false,dim:e.state.lcaReload?.5:1,gripY:.3};
 }
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
- const c=r.ctx,entry=WEAPON_ART[e.key];if(!entry)return false;
+ const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
  if(e.key==='yan'&&g.buff(e,'yanDistorted')&&!e.previewStance||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
- const held=(key,length,hand=p.right,angle=p.angle,pivot=gripPivot(e.key),{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0}={})=>{
+ const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
   c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm'))});c.restore();drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
