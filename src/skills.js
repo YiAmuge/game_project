@@ -3,7 +3,7 @@ import * as Ppui from './ppui.js';
 import * as Jamila from './jamila.js';
 import * as Reworks from './reworks.js';
 import * as Don from './don.js';
-import { HEATH,instantTactical } from './heathcliff.js';
+import { HEATH,instantCharge } from './heathcliff.js';
 import * as Infestation from './infestation.js';
 import * as Gregor from './gregor.js';
 import * as Sora from './sora.js';
@@ -200,7 +200,7 @@ export function cast(g,e,slot,p,d,options={}){
  case 'heathcliff':
   if(slot==='q'){
    if(state.chargeAt!==undefined)return false;state.chargeAt=g.time;state.chargeAim={...p};
-   if(instantTactical(g,e))return Reworks.releaseHeath(g,e,p);e.qCd=0;
+   if(instantCharge(g,e))return Reworks.releaseHeath(g,e,p);e.qCd=0;
   }else{
    state.heathExtensions=0;state.heathUltAt=g.time;state.heathSweepSerial=0;state.heathSweepFacing=e.facing;
    g.addBuff(e,'heathUlt',HEATH.duration);state.auraTick=g.time+HEATH.interval;

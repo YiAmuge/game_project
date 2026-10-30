@@ -11,7 +11,7 @@ async def main():
    ctx=await browser.new_context(viewport={'width':844 if mobile else 1440,'height':390 if mobile else 900},is_mobile=mobile,has_touch=mobile);p=await ctx.new_page();p.on('pageerror',lambda e:errors.append(str(e)))
    await p.add_init_script("Element.prototype.requestFullscreen=()=>Promise.reject(new Error('fixed viewport'))")
    await p.goto(URL+'/?debug');await p.wait_for_function('window.__moba');await p.click('#training-open');await p.click('[data-key=heathcliff]');await p.click('#start');await p.wait_for_function('__moba.game.training')
-   await p.evaluate('''()=>{const g=__moba.game,p=g.player;g.step=()=>{};g.time=0;g.units=[p];g.practice.noCooldown=false;g.map={bounds:{x:0,y:0,w:100,h:100},walls:[]};g.bounds=g.map.bounds;Object.assign(p,{x:40,y:20,rCd:0,qCd:0,facing:0});g.input.aim={x:45,y:20};window.sackDraws=0;const r=__moba.renderer,c=r.ctx,draw=c.drawImage.bind(c);c.drawImage=(image,...a)=>{if(image===r.ultimateWeaponAtlas&&a[1]===116&&a[3]===251&&a[2]<=25.01)window.sackDraws++;return draw(image,...a);};}''')
+   await p.evaluate('''()=>{const g=__moba.game,p=g.player,step=g.step.bind(g);window.advanceHeath=s=>{for(let i=0;i<Math.round(s*120);i++)step(1/120);};g.step=()=>{};g.time=0;g.units=[p];g.practice.lineStopped=true;g.practice.noCooldown=false;g.map={bounds:{x:0,y:0,w:100,h:100},walls:[]};g.bounds=g.map.bounds;Object.assign(p,{x:40,y:20,rCd:0,qCd:0,facing:0});g.input.aim={x:45,y:20};window.sackDraws=0;window.otherSackDraws=0;const r=__moba.renderer,c=r.ctx,draw=c.drawImage.bind(c);c.drawImage=(image,...a)=>{if(image===r.ultimateWeaponAtlas&&a[1]===116&&a[3]===251){if(a[2]<=25.01)window.sackDraws++;else window.otherSackDraws++;}return draw(image,...a);};}''')
    if mobile:await p.locator('#r-btn').tap()
    else:await p.locator('#r-btn').click()
    await p.wait_for_function('__moba.game.buff(__moba.game.player,"heathUlt")&&sackDraws>=36');await p.wait_for_function('document.getElementById("basic-btn").disabled')
@@ -19,11 +19,13 @@ async def main():
    before=await p.evaluate('({x:__moba.game.player.x,y:__moba.game.player.y})')
    if mobile:await p.locator('#q-btn').tap()
    else:await p.locator('#q-btn').click()
-   result=await p.evaluate('''()=>{const g=__moba.game,p=g.player;return{x:p.x,y:p.y,charge:p.state.chargeAt??null,motion:p.motion??null,cd:p.qCd};}''')
-   assert result['charge']is None and result['motion']is None and result['cd']>0,result
-   assert abs(result['x']-before['x'])+abs(result['y']-before['y'])>1,result
-   await p.evaluate('''()=>{const g=__moba.game,p=g.player;g.time=.45;p.state.heathSweepSerial=1;p.state.auraTick=.6;}''');await p.wait_for_timeout(100);await p.screenshot(path=str(ART/f'heath-reverse-{ "mobile"if mobile else "pc"}.png'))
-   print(f'{"Mobile"if mobile else "PC"}: R blocks basic, cloth mesh rendered, Q input teleports immediately.',flush=True);await ctx.close()
+   result=await p.evaluate('''()=>{const g=__moba.game,p=g.player;return{x:p.x,y:p.y,charge:p.state.chargeAt??null,motion:p.motion?.kind,cd:p.qCd};}''')
+   assert result['charge']is None and result['motion']=='leap' and result['cd']>0,result
+   assert abs(result['x']-before['x'])+abs(result['y']-before['y'])<1e-6,result
+   await p.evaluate('advanceHeath(.3);sackDraws=0');await p.wait_for_function('sackDraws>=36');assert await p.evaluate('__moba.game.player.motion?.kind==="leap"')
+   await p.screenshot(path=str(ART/f'heath-leap-sweep-{ "mobile"if mobile else "pc"}.png'))
+   await p.evaluate('''()=>{const g=__moba.game,p=g.player;for(let i=0;i<200&&p.motion;i++)advanceHeath(1/120);sackDraws=0;}''');await p.wait_for_function('sackDraws>=36');assert await p.evaluate('!__moba.game.player.motion');assert await p.evaluate('otherSackDraws===0')
+   print(f'{"Mobile"if mobile else "PC"}: Q begins a full-charge leap immediately; the sack sweep renders continuously in flight and on landing.',flush=True);await ctx.close()
   # The published file must remain self-contained, including a stale online
   # reconnect token and invite link; neither may attempt to reach the room API.
   ctx=await browser.new_context(viewport={'width':1280,'height':800});p=await ctx.new_page();external=[];p.on('pageerror',lambda e:errors.append(str(e)))
@@ -35,6 +37,8 @@ async def main():
   await p.route('**/*',route);await p.goto(site,wait_until='networkidle',timeout=90000);await p.wait_for_function('window.__moba')
   assert await p.locator('#online').is_hidden();assert await p.locator('#offline-download').is_visible();assert await p.locator('#offline-download').get_attribute('download')=='city-border.html'
   await p.click('#training-open');await p.click('[data-key=heathcliff]');await p.click('#start');await p.wait_for_function('__moba.game.training');await p.wait_for_timeout(100)
-  assert not external,external;assert not errors,errors;print('Offline page: actual training runs with zero external requests, no room API/reconnect and a single-file download.',flush=True)
+  result=await p.evaluate('''()=>{const g=__moba.game,p=g.player;g.step=()=>{};g.units=[p];g.practice.noCooldown=false;g.map={bounds:{x:0,y:0,w:100,h:100},walls:[]};g.bounds=g.map.bounds;Object.assign(p,{x:40,y:20,rCd:0,qCd:0});g.cast(p,'r',p);g.cast(p,'q',{x:47,y:20});return{x:p.x,motion:p.motion?.kind,charge:p.state.chargeAt??null};}''')
+  assert result=={'x':40,'motion':'leap','charge':None},result
+  assert not external,external;assert not errors,errors;print('Offline page: full-charge Q begins the original leap, zero external requests and no room reconnect.',flush=True)
   await ctx.close();await browser.close()
 asyncio.run(main())

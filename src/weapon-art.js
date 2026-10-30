@@ -146,6 +146,8 @@ export function ryoshuResting(g,e,p=equipmentPose(g,e)){
  const castAge=g.time-(e.visualCast?.at??-99);return e.key==='ryoshu'&&!p.attacking&&!(e.motion?.actionKind==='skill')&&!(castAge>=0&&castAge<.4);
 }
 export function heathSlamPose(g,e,p){
+ // The ultimate's continuous sweep owns the weapon throughout Q's leap/landing.
+ if(g.buff(e,'heathUlt'))return null;
  const m=e.motion,air=m?.kind==='leap'&&m.actionKind==='skill',after=g.time-(e.state.heathSlamAt??-99),charging=e.state.chargeAt!==undefined;
  if(!charging&&!air&&(after<0||after>=.18))return null;
  const duration=air?Math.max(.01,m.minDuration||0,m.total/m.speed):0,window=Math.min(.14,duration*.6),swing=air?Math.max(0,Math.min(1,1-(duration-m.elapsed)/window)):charging?0:1;
