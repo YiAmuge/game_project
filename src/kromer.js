@@ -1,7 +1,7 @@
 import{distance,direction,segmentDistance}from'./geometry.js';
 import{canOccupy,settleBody}from'./collision.js';
 import{carried}from'./attachments.js';
-export const KROMER={basicWidth:2,basicDamage:185,basicPen:.1,nailDuration:4.5,nailRatio:.025,qRange:7.2,qDamage:170,qDashDamage:210,qPen:.15,qMarkDuration:3.5,qStun:1.17,rRange:3,rDamage:120,rPen:.2,rEvery:.3,rHits:6,throwRange:3.5,turnSpeed:Math.PI,moveMultiplier:.75};
+export const KROMER={basicWidth:2,basicDamage:185,basicPen:.1,nailDuration:4.5,nailRatio:.025,qRange:9,qDamage:170,qDashDamage:210,qPen:.15,qMarkDuration:3.5,qStun:1.17,rRange:3,rDamage:120,rPen:.2,rEvery:.3,rHits:6,throwRange:3.5,turnSpeed:Math.PI,moveMultiplier:.75};
 export const qTarget=(g,e)=>e.state.kromerQMark?.until>g.time?g.units.find(t=>t.id===e.state.kromerQMark.targetId&&t.alive):null;
 export const recast=(g,e,slot)=>e.key==='kromer'&&slot==='q'&&Boolean(qTarget(g,e));
 export function validate(g,e,slot){if(e.state.kromerGrab)return false;return !(slot==='r'||slot==='q'&&recast(g,e,slot))||!g.stat(e,'root')&&!g.stat(e,'captured');}
@@ -34,7 +34,7 @@ export function cast(g,e,slot,p,d){
  if(slot==='q'){
   const target=qTarget(g,e);
   if(target){delete e.state.kromerQMark;g.startMotion(e,direction(e,target),distance(e,target),{speed:30,maxSpeed:30,ignoreWalls:true,phaseEnemies:true,follow:target,stopDistance:e.radius+target.radius+.05,actionTag:'kromerQDash',onComplete:()=>{if(target.alive&&distance(e,target)<=e.radius+target.radius+.6){e.state.kromerQStrikeAt=g.time;e.state.kromerQStrikeFacing=Math.atan2(target.y-e.y,target.x-e.x);g.deal(e,target,KROMER.qDashDamage,{armorPen:KROMER.qPen});g.status(target,'stun',1,KROMER.qStun,e);}}});}
-  else{e.state.kromerThrownUntil=g.time+KROMER.qRange/24;g.bullet(e,d,KROMER.qDamage,KROMER.qRange,{speed:24,width:.22,championsOnly:true,theme:'kromerNail',beforeHit:(t,p)=>{p.beforeHp=t.hp;p.beforeShield=g.shield(t);},onHit:(t,p)=>{if(t.alive&&(p.beforeHp-t.hp+p.beforeShield-g.shield(t))>0){e.state.kromerQMark={targetId:t.id,until:g.time+KROMER.qMarkDuration};t.revealedUntil=Math.max(t.revealedUntil||0,g.time+KROMER.qMarkDuration);}e.state.kromerThrownUntil=g.time;},onEnd:()=>{e.state.kromerThrownUntil=g.time;}});}
+  else{e.state.kromerThrownUntil=g.time+KROMER.qRange/24;g.bullet(e,d,KROMER.qDamage,KROMER.qRange,{speed:24,width:.22,championsOnly:true,theme:'kromerNail',beforeHit:(t,p)=>{p.beforeShield=g.shield(t);},onHit:(t,p,actual)=>{if(t.alive&&(actual>0||p.beforeShield>g.shield(t))){e.state.kromerQMark={targetId:t.id,until:g.time+KROMER.qMarkDuration};t.revealedUntil=Math.max(t.revealedUntil||0,g.time+KROMER.qMarkDuration);}e.state.kromerThrownUntil=g.time;},onEnd:()=>{e.state.kromerThrownUntil=g.time;}});}
  }else{g.startMotion(e,d,KROMER.rRange,{speed:30,maxSpeed:30,phaseEnemies:true,actionTag:'kromerRDash',onStep:(from,to)=>{for(const t of g.champions(1-e.team).filter(t=>t.alive&&!g.hidden(t)&&segmentDistance(t,from,to)<=t.radius+e.radius+.08&&g.clearLine(e,t))){if(startGrab(g,e,t,d))break;}}});}
 }
 export function tick(g,e,dt){

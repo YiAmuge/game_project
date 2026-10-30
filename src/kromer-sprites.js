@@ -23,10 +23,10 @@ export const KROMER_FRAMES={
       1
     ],
     "face": [
-      18,
+      50,
       0,
-      224,
-      224
+      185,
+      156
     ]
   },
   "kromerNail": {

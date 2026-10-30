@@ -12,7 +12,7 @@ import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js
 export function skillTargeting(g,e,slot){
  if(slot==='r'&&['nelly','sinclair'].includes(e.key))return{kind:'circle',range:e.key==='nelly'?7:6,radius:e.key==='nelly'?1.2:3.8,impact:0,ignoreWalls:true,confirm:true};
  if(e.key==='ppui'&&slot==='q')return{kind:'self',range:0,radius:7,impact:0,confirm:false};
- if(e.key==='kromer')return slot==='q'?(Kromer.recast(g,e,slot)?{kind:'self',range:0,radius:1,impact:0,confirm:false}:{kind:'line',range:7.2,radius:.22,impact:0,confirm:false}):{kind:'quick',range:3,radius:1,impact:0,confirm:false};
+ if(e.key==='kromer')return slot==='q'?(Kromer.recast(g,e,slot)?{kind:'self',range:0,radius:1,impact:0,confirm:false}:{kind:'line',range:Kromer.KROMER.qRange,radius:.22,impact:0,confirm:false}):{kind:'quick',range:3,radius:1,impact:0,confirm:false};
  if(e.key==='dongrang'&&slot==='r')return{kind:'circle',range:8.5,radius:ultGrowth(e).radius,impact:0,confirm:true};
  if(e.key==='jamila')return slot==='q'?{kind:'quick',range:3.5,radius:Math.PI,impact:0,confirm:false}:{kind:'self',range:0,radius:2,impact:0,confirm:false};
  if(e.key==='don'&&slot==='q')return {kind:'quick',range:6.5,radius:1.05,impact:0,confirm:false};

@@ -23,10 +23,10 @@ export const JAMILA_FRAMES={
       1
     ],
     "face": [
-      12,
-      6,
-      196,
-      196
+      34,
+      0,
+      176,
+      158
     ]
   },
   "jamilaTrooper": {

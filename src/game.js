@@ -706,7 +706,7 @@ export class Game {
   updateProjectiles(dt) {
     for(const p of this.projectiles) {
       if(p.guboUltimate){GuboUltimate.flight(this,p,dt);continue;}
-      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius+projectileHitWidth(p)){this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});p.onHit?.(t,p);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
+      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius+projectileHitWidth(p)){const actual=this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});p.onHit?.(t,p,actual);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
       const travel=Math.min(p.remaining,p.speed*dt),n=Math.max(1,Math.ceil(travel/.18));
       for(let i=0;i<n&&p.remaining>0;i++) {
         p.x+=p.dx*travel/n;p.y+=p.dy*travel/n;p.remaining-=travel/n;
@@ -714,8 +714,8 @@ export class Game {
         const t=this.units.find(t=>(this.hostile(p.source,t)||p.allowFriendly&&this.canGuboHitAlly(p.source,t))&&!p.hitIds.has(t.id)&&(!p.championsOnly||t.kind==='champion')&&distance(p,t)<=t.radius+projectileHitWidth(p));
         if(t) {
           p.hitIds.add(t.id);p.lastHpRatio=t.hp/t.maxHp;
-          p.beforeHit?.(t,p);this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});
-          p.onHit?.(t,p);
+          p.beforeHit?.(t,p);const actual=this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});
+          p.onHit?.(t,p,actual);
           if(p.knock)this.startMotion(t,{x:p.dx,y:p.dy},p.knock,{kind:'knock',source:p.source});
           if(p.pierce>0){p.pierce--;p.damage*=p.decay??1;}else {p.remaining=0;p.hit=true;}
         }

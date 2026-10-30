@@ -1,3 +1,4 @@
+import{PORTRAIT_CROPS}from'./portrait-framing.js';
 import{KROMER_FRAMES}from'./kromer-sprites.js';
 import{WORLD_FRAMES}from'./world-sprites.js';
 import{JAMILA_FRAMES}from'./jamila-sprites.js';
@@ -33,6 +34,7 @@ export const FRAMES = {
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
 Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES,BOSS_FRAMES,JAMILA_FRAMES,WORLD_FRAMES,KROMER_FRAMES);
+for(const [key,face]of Object.entries(PORTRAIT_CROPS))if(FRAMES[key])FRAMES[key].face=face;
 export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62','world-v69','kromer-v102'];
 const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62','world-data-v69','kromer-data-v102'];
 const atlasImages=new Map();
@@ -92,4 +94,4 @@ export function portrait(canvas,key,image,extraImage,v05Image,v06Image,v08Image,
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}
   drawFace(c,key,image,0,0,canvas.width,canvas.height);
 }
-export function drawFace(c,key,image,x,y,w,h=w){const f=FRAMES[key];if(!f||!image?.complete||!image.naturalWidth)return;const side=Math.min(f.w,f.h*.48),face=f.face||[(f.w-side)/2,f.h*.025,side,side];c.save();c.imageSmoothingEnabled=false;if(f.mirror){c.translate(x+w,y);c.scale(-1,1);x=0;y=0;}c.drawImage(image,f.x+face[0],f.y+face[1],face[2],face[3],x,y,w,h);c.restore();}
+export function drawFace(c,key,image,x,y,w,h=w){const f=FRAMES[key];if(!f||!image?.complete||!image.naturalWidth)return;const side=Math.min(f.w,f.h*.48),face=f.face||[(f.w-side)/2,f.h*.025,side,side],scale=Math.min(w/face[2],h/face[3]),dw=face[2]*scale,dh=face[3]*scale;c.save();c.imageSmoothingEnabled=false;if(f.mirror){c.translate(x+w,y);c.scale(-1,1);x=0;y=0;}c.drawImage(image,f.x+face[0],f.y+face[1],face[2],face[3],x+(w-dw)/2,y+(h-dh)/2,dw,dh);c.restore();}

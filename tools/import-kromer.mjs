@@ -15,7 +15,7 @@ function extract([key,[rx,ry,rw,rh],height]){
  let x0=rw,y0=rh,x1=0,y1=0;for(let y=0;y<rh;y++)for(let x=0;x<rw;x++)if(mask[y*rw+x]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
  const cropW=x1-x0+1,cropH=y1-y0+1,scale=height?height/cropH:Math.min(1,720/cropW),w=Math.round(cropW*scale),h=height||Math.round(cropH*scale),data=new Uint8Array(w*h*4);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const sx=x0+Math.min(cropW-1,Math.floor(x/scale)),sy=y0+Math.min(cropH-1,Math.floor(y/scale));if(!mask[sy*rw+sx])continue;const from=((ry+sy)*input.width+rx+sx)*4,to=(y*w+x)*4;data.set(input.data.subarray(from,from+4),to);if(data[to+3]>=224)data[to+3]=255;}
- return {key,w,h,data,meta:{sheet,rotation:0,source:'source/kromer-v102.png',sourceRect:[rx+x0,ry+y0,cropW,cropH],...(height?{referenceHeight:height,crownOffset:0,heightScale:1,heightBasis:'crown',foot:[.60,1],face:[18,0,w-36,w-36]}:{})}};
+ return {key,w,h,data,meta:{sheet,rotation:0,source:'source/kromer-v102.png',sourceRect:[rx+x0,ry+y0,cropW,cropH],...(height?{referenceHeight:height,crownOffset:0,heightScale:1,heightBasis:'crown',foot:[.60,1],face:[50,0,185,156]}:{})}};
 }
 const sprites=specs.map(extract);let x=pad,y=pad,row=0;for(const s of sprites){if(x+s.w+pad>width){x=pad;y+=row+pad;row=0;}Object.assign(s,{x,y});x+=s.w+pad;row=Math.max(row,s.h);}
 const height=y+row+pad,data=new Uint8Array(width*height*4),frames={};

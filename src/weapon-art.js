@@ -319,10 +319,11 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  return true;
 }
 
+export const KROMER_WEAPON_MOTION={impaleDuration:.12,torsoDrop:1.05*.3};
 export function kromerWeaponPose(g,e,p=equipmentPose(g,e),camera){
  if(e.state.kromerThrownUntil>g.time)return{hidden:true};
  const grab=e.state.kromerGrab;
- if(grab){const age=g.time-(e.state.kromerStrikeAt??-99),progress=Math.max(0,Math.min(1,age/.24)),pulse=age>=0&&age<.24?Math.sin(progress*Math.PI):0,side=Math.cos(grab.angle)<0?-1:1,angle=side>0?Math.PI/4:Math.PI*3/4,target=targetTorsoPoint(g,e,grab.target,camera),reach=WEAPON_ART.kromer[1]*(1+.2*pulse)*.5+.15;return{hand:{x:target.x-Math.cos(angle)*reach,y:target.y-Math.sin(angle)*reach},angle,pivot:.5,mode:'thrust',progress,thrust:.5*pulse,centerGrip:true};}
+ if(grab){const age=g.time-(e.state.kromerStrikeAt??-99),progress=Math.max(0,Math.min(1,age/KROMER_WEAPON_MOTION.impaleDuration)),pulse=age>=0&&age<KROMER_WEAPON_MOTION.impaleDuration?Math.sin(progress*Math.PI):0,side=Math.cos(grab.angle)<0?-1:1,angle=side>0?Math.PI/4:Math.PI*3/4,target=targetTorsoPoint(g,e,grab.target,camera),reach=WEAPON_ART.kromer[1]*(1+.2*pulse)*.5+.15;target.y+=KROMER_WEAPON_MOTION.torsoDrop;return{hand:{x:target.x-Math.cos(angle)*reach,y:target.y-Math.sin(angle)*reach},angle,pivot:.5,mode:'thrust',progress,thrust:.5*pulse,centerGrip:true};}
  const qAge=g.time-(e.state.kromerQStrikeAt??-99),q=qAge>=0&&qAge<.25;
  return{hand:p.right,angle:q?e.state.kromerQStrikeFacing:p.angle,pivot:.11,mode:q?'thrust':undefined,progress:q?qAge/.25:undefined,thrust:q?.45*Math.sin(qAge/.25*Math.PI):p.attacking?.38*Math.sin(p.swing*Math.PI):0};
 }

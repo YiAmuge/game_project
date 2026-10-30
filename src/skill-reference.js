@@ -6,6 +6,7 @@ import {SORA} from './sora.js';
 import {YAN} from './yan.js';
 import {HOHENHEIM} from './hohenheim.js';
 import {DON_CHARGE} from './don.js';
+import {KROMER} from './kromer.js';
 import {JAMILA} from './jamila.js';
 import {SKILL_SUMMARIES} from './skill-summaries.js';
 import {SKILL_DETAILS} from './skill-details.js';
@@ -55,7 +56,7 @@ function skillRanges(key,index,g,e,transformed,variant){
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return[row('변신 범위','자신')];
  if(index===3&&key==='sora')return[row('지령 대상','사거리 '+SORA.ultimateRange)];
- if(key==='kromer')return index===2?[row('투척','사거리 7.2'),row('표식 추적','3.5초 내 재사용 · 지형·적 충돌 무시')]:[row('돌진','거리 3'),row('던지기','거리 3.5')];
+ if(key==='kromer')return index===2?[row('투척','사거리 '+KROMER.qRange),row('표식 추적','3.5초 내 재사용 · 지형·적 충돌 무시')]:[row('돌진','거리 3'),row('던지기','거리 3.5')];
  if(index===2&&key==='don')return[row('미충전','사거리 '+DON_CHARGE.minRange+' · 폭 '+DON_CHARGE.width),row('최대 충전','사거리 '+DON_CHARGE.maxRange+' · 폭 '+DON_CHARGE.width),row('충전 변화','사거리 최소 '+DON_CHARGE.minRange+' ~ 최대 '+DON_CHARGE.maxRange)];
  if(index===2&&key==='heathcliff')return[row('미충전','도약 거리 0.5 · 착지 반경 1.8'),row('최대 충전','도약 거리 7 · 착지 반경 1.8'),row('충전 변화','사거리 최소 0.5 ~ 최대 7')];
  if(index===2&&key==='gregor')return[row('기본','사거리 6 · 직선 폭 2.4'),row('변이','사거리 8.5 · 직선 폭 2.4')];

@@ -103,7 +103,7 @@ test('Sinclair marks proc after twelve basic hits and fully refill ammo',()=>{
   assert.ok(g.buff(p,'marks'));assert.equal(p.marks,0);assert.equal(p.ammo,2);
 });
 test('Meursault converts root to silence and can use Q while silenced',()=>{
-  const g=isolated('meursault'),p=g.player;g.status(p,'root',1,2);
+  const g=isolated('meursault'),p=g.player;g.units=[p];g.status(p,'root',1,2);
   assert.equal(g.stat(p,'root'),0);assert.equal(g.stat(p,'silence'),1);assert.ok(g.cast(p,'q',p));
   assert.equal(g.stat(p,'silence'),0);g.status(p,'slow',.3,2);assert.equal(g.stat(p,'slow'),0);
 });
