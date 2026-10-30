@@ -30,8 +30,8 @@ test('Sora becomes ready at exactly five unlocks and HUD exposes five slots',()=
  const {g,p}=quiet('sora');p.state.unlock=4;assert.equal(Sora.ready(g,p),false);const t=champ(g);t.hp=t.maxHp=1000;Sora.mark(g,p,t,'ultimate');g.deal(p,t,200,{fixed:true});
  assert.equal(Sora.ready(g,p),true);assert.equal(stackInfo(p,g).max,5);assert.match(stackInfo(p,g).label,/준비/);g.cast(p,'r',p);close(p.buffs.soraEgo-g.time,12);
 });
-test('Sora coordinate previews and actual dash lengths distinguish normal seven and EGO six point five',()=>{
- for(const ego of [false,true]){const {g,p}=quiet('sora');if(ego){p.state.unlock=5;g.cast(p,'r',p);}const range=ego?6.5:7;close(skillTargeting(g,p,'q').range,range);g.cast(p,'q',{x:52,y:7});run(g,1);close(p.x,40+range);assert.equal(p.motion,undefined);}
+test('Sora coordinate previews and actual dash lengths distinguish normal seven and EGO five point six',()=>{
+ for(const ego of [false,true]){const {g,p}=quiet('sora');if(ego){p.state.unlock=5;g.cast(p,'r',p);}const range=ego?5.6:7;close(skillTargeting(g,p,'q').range,range);g.cast(p,'q',{x:52,y:7});run(g,1);close(p.x,40+range);assert.equal(p.motion,undefined);}
 });
 test('Sora normal dash hits enemies in its seventy percent wider contact area',()=>{
  const {g,p}=quiet('sora'),t=champ(g,1,43,8.3);g.cast(p,'q',{x:47,y:7});run(g,.5);assert.ok(t.hp<10000);assert.equal(g.stat(t,'stun'),1);close(t.y,8.3);

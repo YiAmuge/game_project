@@ -18,8 +18,8 @@ test('normal Sora tactical has a wider contact zone and grants a flat two-second
 });
 test('EGO tactical stores two independent uses and recharges one every six seconds',()=>{
  const {g,p}=quiet('sora');p.state.unlock=5;g.cast(p,'r',p);p.buffs.soraEgo=Infinity;assert.equal(p.state.egoQCharges,2);close(g.cooldown(p,'q'),6);
- g.cast(p,'q',{x:41,y:7});run(g,.2);close(p.state.egoQCharges,1);close(p.qCd,0);g.cast(p,'q',{x:42,y:7});run(g,.2);close(p.state.egoQCharges,0);assert.equal(g.cast(p,'q',{x:43,y:7}),false);assert.match(stackInfo(p,g).label,/0\/2/);
- run(g,5.61);close(p.state.egoQCharges,1);close(p.qCd,0);run(g,6);close(p.state.egoQCharges,2);assert.equal(p.state.egoQReady,Infinity);
+ g.cast(p,'q',{x:41,y:7});run(g,.25);close(p.state.egoQCharges,1);close(p.qCd,0);g.cast(p,'q',{x:42,y:7});run(g,.25);close(p.state.egoQCharges,0);assert.equal(g.cast(p,'q',{x:43,y:7}),false);assert.match(stackInfo(p,g).label,/0\/2/);
+ run(g,5.51);close(p.state.egoQCharges,1);close(p.qCd,0);run(g,6);close(p.state.egoQCharges,2);assert.equal(p.state.egoQReady,Infinity);
 });
 test('Kim cannot basic while carrying, moves ten percent slower, and releases immediately on ultimate',()=>{
  const {g,p}=quiet('kim'),t=target(g),speed=g.speed(p);g.cast(p,'q',t);run(g,.2);assert.equal(carried(g,p),t);close(g.speed(p),speed*.9);p.attackCd=0;p.ammo=2;assert.equal(g.attack(p,t),false);close(p.ammo,2);

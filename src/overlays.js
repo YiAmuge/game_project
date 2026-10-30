@@ -1,3 +1,5 @@
+import{HEATH}from'./heathcliff.js';
+import{drawDebuffBadges}from'./champion-update-effects.js';
 import{drawKromerEffects}from'./kromer-vfx.js';
 import{drawLevelBadge}from'./level-badge.js';
 import { paintHealth } from './health-display.js';
@@ -49,7 +51,7 @@ export function championHud(r,e,g){
  const resourceY=y+.51,cap=g.ammoCap(e);
  if(e.key==='hohenheim'){
   const shape=Hohenheim.chargeShape(g,e,e.player?g.input.aim:e.state.hohenCharge?.aim||{x:e.x+1,y:e.y});
-  const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}
+  const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}if(shape.progress>=1-1e-8){c.save();c.strokeStyle='#439cff';c.shadowColor='#238dff';c.shadowBlur=9+Math.sin(g.time*16)*4;c.lineWidth=.055;c.strokeRect(x-.035,resourceY-.035,width+.07,.31);c.restore();}
  }else if(e.key==='yan'){
   const progress=Yan.chargeShape(g,e,e.player?g.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}).progress;
   c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);
@@ -91,13 +93,12 @@ function directiveFlower(r,e,g,remaining,muted,offset){const c=r.ctx;
  c.beginPath();c.arc(0,0,.62,-Math.PI/2,-Math.PI/2+Math.min(1,remaining/SORA.markDuration)*Math.PI*2);c.strokeStyle=muted?'#b7c4cebb':'#62d9ffbb';c.lineWidth=.03;c.stroke();c.restore();
 }
 export function championEffects(r,e,g){
- const c=r.ctx,head=overheadY(e,g);c.save();orderMark(r,e,g);towerMark(r,e,g);drawKromerEffects(r,e,g);
+ const c=r.ctx,head=overheadY(e,g);c.save();orderMark(r,e,g);towerMark(r,e,g);drawDebuffBadges(r,e,g,head);drawKromerEffects(r,e,g);
  if(g.stat(e,'silence')){const x=e.x-.9,y=head-.1;r.circle(x,y,.25,'#242938','#c6c0df',.04);r.line([{x:x-.12,y:y-.06},{x:x+.12,y:y-.06},{x:x+.12,y:y+.07},{x:x+.03,y:y+.07},{x:x-.04,y:y+.14},{x:x-.04,y:y+.07},{x:x-.12,y:y+.07},{x:x-.12,y:y-.06}],'#e8def4',.035);r.line([{x:x-.18,y:y+.19},{x:x+.18,y:y-.19}],'#dfa8b8',.055);}
  const villain=g.champions(1-e.team).some(a=>a.alive&&a.key==='don'&&a.state.villain===e.id);
  if(villain){const y=head-.1;for(const color of ['#ffe258','#d82b39'])for(const side of [-1,1])r.line([{x:e.x-.25,y:y-side*.25},{x:e.x+.25,y:y+side*.25}],color,color==='#ffe258'?.2:.1);}
 
- if(e.visuals.nellyMark?.until>g.time){const y=head-.2;r.polygon([[e.x-.1,y+.45],[e.x+.05,y+.45],[e.x+.05,y],[e.x+.17,y-.2],[e.x+.1,y-.65],[e.x-.08,y-.5]],'#cbd0d4',e.visuals.nellyMark.forced?'#ac3f4c':'#777f88');}
- if(e.visuals.contempt?.until>g.time)r.text('경멸',e.x+.8,head-.15,'#c9b16f',.23);
+ if(e.visuals.nellyMark?.until>g.time){c.save();c.translate(e.x+.45,e.y-1.3);c.rotate(Math.PI/4);const y=0;r.polygon([[0-.1,y+.45],[0+.05,y+.45],[0+.05,y],[0+.17,y-.2],[0+.1,y-.65],[0-.08,y-.5]],'#cbd0d4',e.visuals.nellyMark.forced?'#ac3f4c':'#777f88');c.restore();}
  if(e.recall)r.text(`${e.recall.infiltration?'침투':'귀환'} ${Math.max(0,e.recall.until-g.time).toFixed(1)}s`,e.x,e.y+1.1,'#bed6de',.3);
  if(e.state.detonatesAt>g.time)r.text(`자폭 ${(e.state.detonatesAt-g.time).toFixed(1)}s`,e.x,head-.65,'#dba57a',.33);
  if(e.state.jackpot&&g.time-(e.state.coinAt??-99)<1.5)r.text('JACKPOT!',e.x,head-.65,'#ddc788',.38);
@@ -122,10 +123,10 @@ export function chargePreview(r,e,g){
 
 export function championGroundEffects(r,e,g){
  const color='#c5d0d33b',outline=(radius)=>r.circle(e.x,e.y,radius,null,color,.025);
- if(e.key==='ahab'&&e.player)outline(AHAB.orderRadius);
+ if(e.key==='ahab'&&e.alive)r.circle(e.x,e.y,AHAB.orderRadius,null,e.state.order==='guard'?'#354eab':'#f19c40',.075);
  if(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))outline(4.5);
  if(g.buff(e,'martonDrain'))r.circle(e.x,e.y,5.5,null,'#02ebf770',.035);
- if(g.buff(e,'heathUlt'))outline(5.5);
+ if(g.buff(e,'heathUlt'))outline(HEATH.radius);
  if(e.state.detonatesAt>g.time)r.circle(e.x,e.y,4,'#d94e262e','#ff7957',.085);
  if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,2.5,null,'#d1dcb799',.035);
  if(e.key==='honglu'&&e.player&&e.alive&&g.buff(e,'insight'))r.circle(e.x,e.y,5,null,'#87d8c999',.045);
@@ -140,7 +141,7 @@ export function stackGauge(e,g){
  const timed={don:['donLifesteal',7],heathcliff:['heathUlt',11],sinclair:['marks',4],gregor:['mutant',5],sora:['soraEgo',SORA.egoDuration],yan:['yanDistorted',20],myo:['rabbitFrenzy',4.5]},entry=timed[e.key];
  let remaining,total;
  if(entry&&g.buff(e,entry[0])){remaining=e.buffs[entry[0]]-g.time;total=Math.max(entry[1],e.buffs[entry[0]]-(e.visuals[entry[0]]?.at??g.time));}
- if(e.key==='hohenheim'&&e.state.posthumous){remaining=e.state.posthumous.until-g.time;total=2.5;}
+ if(e.key==='hohenheim'&&e.state.posthumous){remaining=e.state.posthumous.until-g.time;total=Hohenheim.HOHENHEIM.posthumousDuration;}
  if(e.key==='honglu'&&g.buff(e,'insight')){remaining=e.state.insightUntil-g.time;total=1.2;}
  const color=THEMES[e.key]?.light||state.color||'#bdd1db';
  if(total)return {color,ratio:Math.max(0,Math.min(1,remaining/total)),label:`${entry?{don:'피갈망',heathcliff:'시체자루',sinclair:'표지 각성',gregor:'변이',sora:'대행',yan:'뒤틀림',myo:'광폭한 칼날'}[e.key]:state.label.split(' ')[0]} ${remaining.toFixed(1)}s`,timer:true};

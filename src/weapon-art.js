@@ -1,3 +1,4 @@
+import{RULES}from'./data.js';
 import { FRAMES,loadAtlas,visualForm } from './art.js';
 import { leapLift,levitationLift,feetOffset } from './projection-25d.js';
 import { drawGripHands,gripSourcePoint } from './weapon-grips.js';
@@ -107,7 +108,7 @@ export function guboWeaponPose(g,e,camera,p=equipmentPose(g,e)){
 }
 export function weaponEmissionPoint(g,e,camera){
  if(!['gubo','rudolph','myo','jamila'].includes(e.key)||e.key==='myo'&&!myoFiring(g,e))return null;
- const p=equipmentPose(g,e),forward=rudolphForwardPose(g,e,p),chant=rudolphChantPose(g,e,p),shot=e.key==='gubo'?guboWeaponPose(g,e,camera,p):e.key==='jamila'?jamilaWeaponPose(g,e,p):{hand:chant?.hand??p.right,angle:chant?.angle??forward?.angle??p.facing,thrust:forward?.thrust||0},[key,length]=e.key==='myo'?['myoRifle',2.15]:WEAPON_ART[e.key],accent=['myo','jamila'].includes(e.key)?{scale:1,outward:0}:basicWeaponAccent(g,e,p),m=weaponGeometry(key,length*accent.scale),[u,v]=EMISSION_ANCHORS[e.key],thrust=(shot.thrust||0)+accent.outward,pivot=e.key==='jamila'?.238:key==='kromer'?.11:e.key==='myo'?.32:gripPivot(e.key);
+ const p=equipmentPose(g,e),forward=rudolphForwardPose(g,e,p),chant=rudolphChantPose(g,e,p),shot=e.key==='myo'&&myoFiring(g,e)?myoRiflePose(g,e,p):e.key==='gubo'?guboWeaponPose(g,e,camera,p):e.key==='jamila'?jamilaWeaponPose(g,e,p):{hand:chant?.hand??p.right,angle:chant?.angle??forward?.angle??p.facing,thrust:forward?.thrust||0},[key,length]=e.key==='myo'?['myoRifle',2.15]:WEAPON_ART[e.key],accent=['myo','jamila'].includes(e.key)?{scale:1,outward:0}:basicWeaponAccent(g,e,p),m=weaponGeometry(key,length*accent.scale),[u,v]=EMISSION_ANCHORS[e.key],thrust=(shot.thrust||0)+accent.outward,pivot=e.key==='jamila'?.238:key==='kromer'?.11:e.key==='myo'?.32:gripPivot(e.key);
  const x=m.span*(u-pivot)+thrust,y=(v-.5-(shot.gripY||0))*m.height*m.scale,pose=weaponOrientation(shot.angle),c=Math.cos(pose.angle),s=Math.sin(pose.angle);
  return {x:shot.hand.x+pose.flip*(x*c-y*s),y:shot.hand.y+x*s+y*c};
 }
@@ -243,6 +244,7 @@ export function gregorCenterline(u){
 }
 export const myoFiring=(g,e)=>e.key==='myo'&&e.castSlot==='q'&&g.time-(e.castAt??-99)>=0&&g.time-e.castAt<.5;
 export function drawBackEquipment(r,e,g,{lift=0}={}){
+ if(e.state.kromerHeldBy)return;
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'back');return;}
  if(e.key==='jamila'){if(e.lcaTrooper)return;const p=equipmentPose(g,e,lift),c=r.ctx,q=Boolean(e.state.jamilaQ&&e.state.jamilaQ.phase!=='retreat');c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,q?'jamilaRifle':'jamilaKopis',q?2.1:1.75,{x:q?.06:.32,rotation:q?.95:1.05,pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();return;}
  if(e.key!=='myo'||myoFiring(g,e))return;
@@ -271,8 +273,9 @@ export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0
  }else c.drawImage(image,f.x,f.y,f.w,f.h,dx,-f.h/2,f.w,f.h);
  c.restore();if(disabled){c.save();c.translate(x,y);c.rotate(rotation);drawDisarmChains(c,m,pivot);c.restore();}return true;
 }
-export function hohenheimWeaponCharge(g,e){return e.key==='hohenheim'?e.state.posthumous?1:Math.max(0,Math.min(1,(e.state.hohenCharge?.progress||0)/1.5)):0;}
+export function hohenheimWeaponCharge(g,e){return e.key==='hohenheim'?Math.max(0,Math.min(1,(e.state.hohenCharge?.progress||0)/1.5)):0;}
 export function drawWeaponCharge(c,r,g,e,m,pivot){
+ if(e.key==='faust'&&e.level>=RULES.maxLevel&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#ffffff');c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.16+.05*Math.sin(g.time*4);c.shadowColor='#e3f4ff';c.shadowBlur=9;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
  const progress=hohenheimWeaponCharge(g,e);if(!progress||!r.skillVfx)return;
  const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#4dafff');
  c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);const w=m.width*m.scale,h=m.height*m.scale,alpha=c.globalAlpha;
@@ -285,12 +288,17 @@ export function drawWeaponCharge(c,r,g,e,m,pivot){
  }
  c.restore();
 }
+export function myoRiflePose(g,e,p=equipmentPose(g,e)){
+ const age=g.time-(e.state.myoShotAt??-99),pulse=age>=0&&age<.075?1-age/.075:0,angle=e.state.myoShotFacing??p.facing;
+ return {hand:{x:p.right.x+Math.sin(age*155)*.018*pulse,y:p.right.y+Math.cos(age*133)*.012*pulse},angle:angle-Math.sin(age*95)*.025*pulse,thrust:-.13*pulse};
+}
 export function jamilaWeaponPose(g,e,p=equipmentPose(g,e)){
  const q=e.state.jamilaQ;if(q&&q.phase!=='retreat'){const progress=q.phase==='slash'?Math.max(0,Math.min(1,(g.time-q.slashAt)/.2)):0;return {asset:'jamilaKopis',length:1.75,hand:p.right,angle:q.angle+(q.phase==='slash'?(swingProgress(progress)-.5)*Math.PI:0),mode:q.phase==='slash'?'swing':null,progress,thrust:0,trail:q.phase==='slash',dim:1,gripY:-.02};}
  const age=g.time-(e.attackAt??-99),active=age>=0&&age<.14,pulse=active?1-age/.14:0,shake=Math.sin(age*155)*.018*pulse;return {asset:'jamilaRifle',length:2.25,hand:{x:p.right.x+shake,y:p.right.y+Math.cos(age*133)*.012*pulse},angle:(active?e.attackFacing:p.facing)??p.facing,mode:null,thrust:(.09-Math.sin(age*90)*.045)*pulse,trail:false,dim:e.state.lcaReload?.5:1,gripY:.3};
 }
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
+ if(e.state.kromerHeldBy)return true;
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'front');return true;}
  if(e.key==='yan'&&g.buff(e,'yanDistorted')&&!e.previewStance||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
@@ -339,7 +347,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='meursault'){
   for(const [hand,start,part] of [[p.right,0,'fist-right'],[p.left,.1,'fist-left']]){const t=(age-start)/.1,active=t>=0&&t<1;held('meursaultFist',.8,hand,(attacking?e.attackFacing:undefined)??p.facing,.12,{thrust:active?Math.sin(t*Math.PI)*.65:0,trail:active,part});}
  }else if(e.key==='myo'){
-  if(myoFiring(g,e))held('myoRifle',2.15,p.right,p.facing,.32,{mode:null,trail:false});
+  if(myoFiring(g,e)){const shot=myoRiflePose(g,e,p);held('myoRifle',2.15,shot.hand,shot.angle,.32,{mode:null,thrust:shot.thrust,trail:false});}
   else if(g.buff(e,'rabbitFrenzy')){const grip=attacking?0:Math.PI;held('myoDagger',1.45,p.right,p.angle+grip+.25,.12,{part:'dagger-right'});held('myoDagger',1.45,p.left,p.angle+grip-.25,.12,{part:'dagger-left'});}
   else held('myoDagger',1.45,p.right,p.angle,.12);
  }else if(e.key==='ishmael'){

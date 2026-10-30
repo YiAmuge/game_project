@@ -1,3 +1,4 @@
+import{initRivalries}from'./rivalries.js';
 import{Game}from'./game.js';
 import{ROOM_POSITIONS,cleanInput,idleInput,validPoint}from'./online-protocol.js';
 import{SnapshotWriter,applySnapshot,sendPacket}from'./online-state.js';
@@ -18,7 +19,7 @@ export function makeOnlineGame(match,memberId){
   const e=g.makeChampion(key,s.team,ROOM_POSITIONS.indexOf(s.position),s.position);e.player=s.memberId===memberId;e.memberId=s.memberId;e.nickname=s.nickname||(s.memberId?'플레이어':`AI ${e.index+1}`);
   if(s.memberId){e.human=true;g.controllers.set(e.id,{input:idleInput(e),receivedAt:0,connected:true,mobileInput:false});}
  }
- g.player=g.units.find(e=>e.memberId===memberId);g.input=idleInput(g.player);g.controllers.get(g.player.id).input=g.input;
+ initRivalries(g);g.player=g.units.find(e=>e.memberId===memberId);g.input=idleInput(g.player);g.controllers.get(g.player.id).input=g.input;
  return g;
 }
 export function cancelCharge(g,e){Yan.cancelCharge(e);Hohenheim.cancelCharge(e);cancelHeath(e);Don.cancel(g,e);}

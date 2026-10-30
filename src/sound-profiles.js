@@ -40,6 +40,8 @@ export function soundVoice(e){
  if(e.transforming&&e.slot==='r'){family='phase';element='shadow';}
  family=e.family||family;element=e.element||element;weight=e.weight||weight;
  let cue=e.cue||({hit:e.periodic?'tick':'impact',swing:'weapon',shot:'weapon',cast:'cast',ultimate:'cast',charge:'charge',slam:'slam',detonation:'burst',explosion:'explosion',water:'water',waterfall:'waterfall',death:'death',intro:'arrival',spawn:'arrival',reload:'reload',shop:'shop',ping:'ping',victory:'victory',defeat:'defeat'})[e.kind]||'cast';
+ if(e.phase==='kromer-impale'){cue='impale';family='spear';element='blood';weight=1.7;}
+ if(e.phase==='kromer-nail-break'){cue='nailBreak';family='nail';element='blood';weight=1.5;}
  if(e.kind==='explosion'&&e.phase==='outis-shotgun'){cue='shotgun';family='shotgun';element='fire';}
  if(e.shielded&&cue==='impact'){family='shield';weight*=.7;}
  return{cue,family,element,weight,variant:e.variant||0,priority:e.kind==='ping'?5:['explosion','waterfall','victory','defeat'].includes(e.kind)?4:['cast','ultimate','slam','detonation'].includes(e.kind)?3:e.kind==='hit'?1:2};

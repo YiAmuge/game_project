@@ -2,38 +2,37 @@ import { RULES } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
 import { rangeBonus } from './augments.js';
 
-export const HOHENHEIM={chargeTime:1.5,minDamage:100,maxDamage:100,minRange:6,maxRange:9,interval:.65,width:.2,burstGap:.12,duration:2.1,every:.25,damage:15,radius:7.5,castRange:8,followSpeed:6};
+export const HOHENHEIM={chargeTime:1.5,minDamage:90,maxDamage:90,fullBonus:30,posthumousDuration:4.5,minRange:6,maxRange:9,interval:.65,width:.2,burstGap:.12,duration:2.1,every:.25,damage:15,radius:7.5,castRange:8,followSpeed:6};
 export const isChampion=e=>e.key==='hohenheim';
 export function cancelCharge(e){if(isChampion(e))delete e.state.hohenCharge;}
 export const reloadRate=(g,e)=>(RULES.reload[3]/RULES.reloadEfficiency)/g.reloadInterval(e);
 export function chargeShape(g,e,p){
- const progress=e.state.posthumous?1:clamp((e.state.hohenCharge?.progress||0)/HOHENHEIM.chargeTime,0,1),extra=g.ammoCap(e);
- return {progress,d:g.aim(e,p),range:(HOHENHEIM.minRange+(HOHENHEIM.maxRange-HOHENHEIM.minRange)*progress+extra*.75)+rangeBonus(e),damage:(HOHENHEIM.minDamage+(HOHENHEIM.maxDamage-HOHENHEIM.minDamage)*progress)*(1+.05*extra),hits:Math.min(3,1+Math.floor((progress+1e-8)/.3)),width:HOHENHEIM.width};
+ const progress=clamp((e.state.hohenCharge?.progress||0)/HOHENHEIM.chargeTime,0,1),extra=g.ammoCap(e);
+ return {progress,d:g.aim(e,p),range:(HOHENHEIM.minRange+(HOHENHEIM.maxRange-HOHENHEIM.minRange)*progress+extra*.75)+rangeBonus(e),damage:(HOHENHEIM.minDamage+(HOHENHEIM.maxDamage-HOHENHEIM.minDamage)*progress)*(1+.05*extra),bonusDamage:progress>=1-1e-8?HOHENHEIM.fullBonus*(1+.05*extra):0,hits:Math.min(3,1+Math.floor((progress+1e-8)/.3)),width:HOHENHEIM.width};
 }
 export function attackRange(g,e){return chargeShape(g,e,{x:e.x+1,y:e.y}).range;}
 function fire(g,e,point){
  const shape=chargeShape(g,e,point);cancelCharge(e);g.cancelRecall(e);
  e.attackCd=HOHENHEIM.interval;e.lastAttackAt=g.time;e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.attackFacing=e.facing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;
- g.action(e,'basic',()=>{const beam=()=>{g.emitSound?.('shot',e,{charge:shape.progress,phase:'electric-beam'});
+ g.action(e,'basic',()=>{const beam=(index)=>{g.emitSound?.('shot',e,{charge:shape.progress,phase:'electric-beam'});
   const targets=g.units.filter(t=>g.hostile(e,t)&&g.clearLine(e,t)&&distance(e,t)<=shape.range+t.radius).filter(t=>{const dx=t.x-e.x,dy=t.y-e.y;return dx*shape.d.x+dy*shape.d.y>=0&&Math.abs(dx*shape.d.y-dy*shape.d.x)<=shape.width+t.radius;}).sort((a,b)=>distance(e,a)-distance(e,b));
-  targets.forEach((t,j)=>g.deal(e,t,shape.damage*(j?.8:1)));
+  targets.forEach((t,j)=>g.deal(e,t,(shape.damage+(index===shape.hits-1?shape.bonusDamage:0))*(j?.8:1)));
   g.effects.push({type:'line',source:e.id,x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},color:'#84edee',theme:'hohenheim',charge:shape.progress,life:.19,maxLife:.19});
- };beam();for(let i=1;i<shape.hits;i++)g.schedule(e,i*HOHENHEIM.burstGap,beam);});return true;
+ };beam(0);for(let i=1;i<shape.hits;i++)g.schedule(e,i*HOHENHEIM.burstGap,()=>beam(i));});return true;
 }
 export function attack(g,e,p){
  g.cancelRecall(e);e.lastAttackAt=g.time;
- if(e.state.posthumous){if((e.state.posthumous.attacks||0)>=2)return false;e.state.posthumous.attacks=(e.state.posthumous.attacks||0)+1;return fire(g,e,p);}
  if(e.state.hohenCharge){e.state.hohenCharge.aim={...p};return false;}
  e.state.hohenCharge={progress:0,aim:{...p}};return true;
 }
 export function release(g,e,p){
  if(!isChampion(e)||!e.state.hohenCharge)return false;
- if(!e.alive||e.state.posthumous||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall){cancelCharge(e);return false;}
+ if(!e.alive||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall){cancelCharge(e);return false;}
  return fire(g,e,p||e.state.hohenCharge.aim);
 }
 export function tick(g,e,dt){
  const charge=e.state.hohenCharge;if(!isChampion(e)||!charge)return;
- if(!e.alive||e.state.posthumous||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall){cancelCharge(e);return;}
+ if(!e.alive||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall){cancelCharge(e);return;}
  e.lastAttackAt=g.time;charge.progress=Math.min(HOHENHEIM.chargeTime,charge.progress+dt*reloadRate(g,e));
  if(e.player)charge.aim={...g.input.aim};else if(charge.progress>=HOHENHEIM.chargeTime)release(g,e,charge.aim);
 }

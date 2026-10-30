@@ -37,8 +37,8 @@ test('Dongrang non-charge trees can coexist and only damage grows every 1000 hea
  const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);p.hp-=3000;g.heal(p,p,1500,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1500);close(ultGrowth(p).damage,205);p.hp-=1500;g.heal(p,p,1500,false);close(ultGrowth(p).damage,255);
 });
 
-test('Hohenheim death state lasts 2.5 seconds, cannot move, heal or ult, and only awards one kill',()=>{
- const {g,p,t}=quiet('hohenheim');g.deal(t,p,100000,{fixed:true});assert.ok(p.alive&&p.state.posthumous);close(p.hp,0);p.ammo=0;const x=p.x;g.input.x=1;assert.ok(g.cast(p,'q',t));assert.equal(g.cast(p,'r',t),false);g.heal(null,p,1000,false);close(p.hp,0);run(g,1);close(p.x,x);assert.ok(g.attack(p,t));assert.equal(t.kills,0);run(g,1.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.state.posthumous,undefined);close(p.ccImmuneUntil,0);
+test('Hohenheim death state lasts 4.5 seconds, can move but cannot heal or ult, and only awards one kill',()=>{
+ const {g,p,t}=quiet('hohenheim');g.deal(t,p,100000,{fixed:true});assert.ok(p.alive&&p.state.posthumous);close(p.hp,0);p.ammo=0;const x=p.x;g.input.x=1;assert.ok(g.cast(p,'q',t));assert.equal(g.cast(p,'r',t),false);g.heal(null,p,1000,false);close(p.hp,0);run(g,1);assert.ok(p.x>x);assert.ok(g.attack(p,t));assert.equal(t.kills,0);run(g,3.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.state.posthumous,undefined);close(p.ccImmuneUntil,0);
 });
 test('Hohenheim beam strikes three times and second and later targets each take exactly twenty percent less',()=>{
  const {g,p,t}=quiet('hohenheim');t.x=43;const b=g.makeChampion('faust',1,6),c=g.makeChampion('faust',1,7);Object.assign(b,{armor:0,x:45,y:7,hp:100000,maxHp:100000});Object.assign(c,{armor:0,x:47,y:7,hp:100000,maxHp:100000});g.attack(p,t);run(g,1.5);Hohenheim.release(g,p,t);run(g,.3);close((100000-b.hp)/(100000-t.hp),.8);close(100000-b.hp,100000-c.hp);
@@ -64,8 +64,8 @@ test('Ahab is invulnerable and immune until a visible return dash reaches the or
 test('collision separates coincident champions and keeps them outside structures and walls',()=>{
  const {g,p,t}=quiet();t.x=p.x;t.y=p.y;separate(g);assert.ok(distance(p,t)>=p.radius+t.radius-.001);const tower=g.entity({kind:'tower',team:1,x:41,y:7,maxHp:1000,radius:.9});p.x=tower.x;p.y=tower.y;separate(g);assert.ok(distance(p,tower)>=p.radius+tower.radius-.001);
 });
-test('Hohenheim bots still fire in the stationary posthumous state and recall is unavailable',()=>{
- const {g,p,t}=quiet('hohenheim');p.player=false;g.deal(t,p,999999,{fixed:true});assert.equal(g.recall(p),false);const x=p.x,hp=t.hp;run(g,.5);close(p.x,x);assert.ok(t.hp<hp);assert.equal(p.naturalHealing,false);
+test('Hohenheim bots charge and fire normally in the mobile posthumous state and recall is unavailable',()=>{
+ const {g,p,t}=quiet('hohenheim');p.player=false;g.deal(t,p,999999,{fixed:true});assert.equal(g.recall(p),false);const hp=t.hp;g.aiChampion=Game.prototype.aiChampion;run(g,2);assert.ok(t.hp<hp);assert.equal(p.naturalHealing,false);
 });
 test('Queequeg recomputes endurance stacks when maximum health increases with level',()=>{
  const {g,p,t}=quiet('queequeg');g.deal(t,p,p.maxHp*.2,{fixed:true});assert.equal(p.state.endurance,2);g.award(p,6900,0);g.deal(t,p,1,{fixed:true});assert.equal(p.state.endurance,1);

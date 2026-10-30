@@ -41,7 +41,8 @@ export class SoundSynth{
  }
  explosion(out,v,{shotgun=false}={}){this.noise(out,{d:shotgun?.42:.85,v:.65,color:'brown',freq:shotgun?2300:1500,end:160});this.noise(out,{d:.07,v:.6,filter:'highpass',freq:2100,attack:.001});this.tone(out,{freq:shotgun?110:86,end:shotgun?38:26,d:shotgun?.3:.65,v:.42,type:'sine'});this.noise(out,{d:.35,v:.23,color:'pink',filter:'bandpass',freq:800,end:240,delay:.07});if(v.element==='stone')for(let i=0;i<4;i++)this.noise(out,{d:.065,v:.15,filter:'bandpass',freq:350+i*330,q:3,delay:.08+i*.06});else this.element(out,'fire',.35,v.variant);}
  render(out,v,event={}){
-  if(v.cue==='weapon'||v.cue==='impact'){this.weapon(out,v,v.cue==='impact');if(!['metal','mirror'].includes(v.element)||v.family!=='glass')this.element(out,v.element,v.cue==='impact'?.5:.65,v.variant);}
+  if(v.cue==='impale'||v.cue==='nailBreak'){const impale=v.cue==='impale';this.noise(out,{d:.055,v:.44,filter:'highpass',freq:4100,end:1700});this.noise(out,{d:impale?.16:.11,v:.35,color:'pink',filter:'bandpass',freq:1300,end:220,q:1.5});this.thud(out,impale?1.7:1.4,.75,1.1);this.metal(out,impale?760:2100,.045,.23,.018);this.tone(out,{freq:impale?142:205,end:42,d:.16,v:.13,type:'triangle'});this.element(out,'blood',.9,v.variant);}
+  else if(v.cue==='weapon'||v.cue==='impact'){this.weapon(out,v,v.cue==='impact');if(!['metal','mirror'].includes(v.element)||v.family!=='glass')this.element(out,v.element,v.cue==='impact'?.5:.65,v.variant);}
   else if(v.cue==='tick'){this.element(out,v.element,.2,v.variant);}
   else if(v.cue==='slam'){this.thud(out,1.6,1,1.4);this.noise(out,{d:.4,v:.38,color:'brown',freq:900,end:110});this.element(out,v.element,.7,v.variant);}
   else if(v.cue==='explosion'||v.cue==='shotgun')this.explosion(out,v,{shotgun:v.cue==='shotgun'});

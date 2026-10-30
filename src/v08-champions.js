@@ -22,7 +22,7 @@ export function basic(g,e,p,d){
   g.effects.push({source:e.id,damageKind:'basic',type:len<2.5?'slash':'burst',shape:len<2.5?{kind:'cone',range:2.5,spread:Math.PI,angle:Math.atan2(d.y,d.x)}:{kind:'circle',range:2.2},x:len<2.5?e.x:point.x,y:len<2.5?e.y:point.y,r:len<2.5?2.5:2.2,angle:Math.atan2(d.y,d.x),...(len<2.5?{spread:Math.PI}:{}),theme:e.key,life:.4,maxLife:.4});return true;
  }
  if(e.key==='queequeg'){
-  g.addBuff(e,'queegAttack',.42,{copy:false});for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>rectangle(g,e,d,g.attackRange(e),1.8,28,t=>{
+  g.addBuff(e,'queegAttack',.42,{copy:false});for(let i=0;i<6;i++)g.schedule(e,i*.07,()=>rectangle(g,e,d,g.attackRange(e),1.8,30,t=>{
    if(t.kind==='champion'&&t.alive){e.state.captureHits??={};e.state.captureHits[t.id]=(e.state.captureHits[t.id]||0)+1;if(e.state.captureHits[t.id]%4===0)g.status(t,'captured',1,1.15,e);}
   }));return true;
  }
@@ -32,7 +32,7 @@ export function cast(g,e,slot,p,d){
  if(e.key==='hohenheim'){
   Hohenheim.cancelCharge(e);
   if(slot==='q'){
-   g.addBuff(e,'hohenheimStride',1);if(!e.state.posthumous){let hit=false;g.startMotion(e,d,2.5,{phaseEnemies:true,onStep:(from,to)=>{
+   g.addBuff(e,'hohenheimStride',1);{let hit=false;g.startMotion(e,d,2.5,{phaseEnemies:true,onStep:(from,to)=>{
     if(hit)return;const t=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=t.radius+.6&&g.clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];if(!t)return;
     hit=true;g.deal(e,t,180);if(t.kind==='champion'){g.status(t,'stun',1,.6,e);g.addBuff(e,'hohenheimHitStride',1);}delete e.motion;g.startMotion(e,{x:-d.x,y:-d.y},2,{phaseEnemies:true});
    }});}
@@ -43,7 +43,7 @@ export function cast(g,e,slot,p,d){
   else{
    e.channelUntil=g.time+2.5;e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+2.5);e.state.fairy={at:g.time,until:g.time+2.5,received:0,nextTaunt:g.time};
    for(const t of g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=6.8))taunt(g,t,e,.5);
-   g.schedule(e,2.5,()=>{const received=e.state.fairy?.received||0;delete e.state.fairy;area(g,e,e,6.8,Math.min(900,received*.3));g.effects.push({type:'martonExplosion',x:e.x,y:e.y,r:6.8,theme:e.key,life:.6,maxLife:.6});});
+   g.schedule(e,2.5,()=>{const received=e.state.fairy?.received||0;delete e.state.fairy;area(g,e,e,6.8,100+received*.35);g.effects.push({type:'martonExplosion',x:e.x,y:e.y,r:6.8,theme:e.key,life:.6,maxLife:.6});});
   }return true;
  }
  if(e.key==='queequeg'){
@@ -81,7 +81,7 @@ export function afterDamage(g,source,target,actual){
 }
 export function interceptDeath(g,e,killer){
  if(e.key!=='hohenheim'||e.state.posthumous)return false;
- Hohenheim.cancelCharge(e);e.hp=0;e.state.posthumous={until:g.time+2.5,killer};e.qCd=0;e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.status={};delete e.motion;delete e.recall;e.channelUntil=0;return true;
+ Hohenheim.cancelCharge(e);e.hp=0;e.state.posthumous={until:g.time+Hohenheim.HOHENHEIM.posthumousDuration,killer};e.qCd=0;e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.status={};delete e.motion;delete e.recall;e.channelUntil=0;return true;
 }
 export function onDeath(g,e){
  if(e.kind!=='champion')return;
@@ -91,7 +91,7 @@ export function onDeath(g,e){
 }
 export function tick(g,e){
  const s=e.state;
- if(s.posthumous){e.hp=0;e.ammo=g.ammoCap(e);if(g.time+1e-8>=s.posthumous.until){g.kill(e,s.posthumous.killer);return;}if(!e.player&&(!e.trainingSummoned||g.practice.championAI)){const t=g.nearest(e,g.attackRange(e),false);if(t)g.attack(e,t);}}
+ if(s.posthumous){e.hp=0;e.ammo=g.ammoCap(e);if(g.time+1e-8>=s.posthumous.until){g.kill(e,s.posthumous.killer);return;}}
  if(e.key==='marton'&&g.buff(e,'martonDrain')&&g.time+1e-8>=(s.drainTick||0)){s.drainTick=g.time+.25;area(g,e,e,5.5,27.5,t=>g.status(t,'slow',.2,.4,e));}
  if(s.queegHealAt&&g.time+1e-8>=s.queegHealAt){delete s.queegHealAt;g.heal(e,e,(e.maxHp-e.hp)*.25,false);}
  if(s.fairy&&g.time<s.fairy.until&&g.time+1e-8>=s.fairy.nextTaunt){s.fairy.nextTaunt=g.time+.25;for(const t of g.champions(1-e.team).filter(t=>t.alive&&distance(e,t)<=6.8))taunt(g,t,e,.5);}

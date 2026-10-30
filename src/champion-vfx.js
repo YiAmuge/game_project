@@ -1,3 +1,5 @@
+import{drawBodyAdditions}from'./champion-update-effects.js';
+import{RULES}from'./data.js';
 import { HEATH } from './heathcliff.js';
 import{drawAugmentEffects,drawAugmentGround}from'./v60-effects.js';
 import{drawPassiveAugmentFront,drawPassiveAugmentGround}from'./augment-effects.js';
@@ -146,15 +148,16 @@ export class ChampionVFX {
  body(c,camera,e,g,front=false){
   const p=camera.worldToScreen(renderAnchor(e),.075),scale=camera.scale,presentation=championPresentation(g,e),time=g.time,s=e.state||{};
   c.save();c.globalAlpha*=leapOpacity(e);c.translate(p.x,p.y-(leapLift(e)+presentation.lift)*scale);c.scale(scale,scale);
+  drawBodyAdditions(c,e,g,front);
   if(!front){
    if(presentation.aura)this.aura(c,presentation.aura,time);
    if(e.key==='dongbaek'&&g.buff(e,'flowerStride')&&g.shield(e)>0){c.save();c.globalAlpha=.85;c.drawImage(this.rimTexture('#d7edf5','shield'),-1.28,-2.82,2.56,3.04);c.restore();}
    if(g.buff(e,'chainArmor')){c.save();c.globalAlpha=.2;const light=c.createLinearGradient(0,-7,0,0);light.addColorStop(0,'#e9ece100');light.addColorStop(1,'#e9ece1');c.fillStyle=light;for(let i=0;i<4;i++)c.fillRect((i-1.5)*.4,-7,.23,7);c.restore();}
-   if(e.visuals?.hongluShare?.until>time){this.aura(c,{color:'#5caba4',form:'mist',strength:.7},time);this.motes(c,'petal','#d3aeb8',time,8,1.15,.85);}
+   if(g.buff(e,'hongluCare')){this.aura(c,{color:'#5caba4',form:'mist',strength:.7},time);this.motes(c,'petal','#d3aeb8',time,8,1.15,.85);}
    if(e.key==='alisa'&&s.detonatesAt>time)for(const side of [-1,1])for(let i=0;i<7;i++){const a=i/7*Math.PI*1.1-.6,x=side*(.5+Math.sin(a)*.75),y=-1.25-Math.cos(a)*.8;c.save();c.scale(1,1.3);this.mote(c,'flame','#9e3036',x,y,.38,a*side,.45,i%4);c.restore();}
-   if(e.key==='faust'&&g.buff(e,'faustUlt'))this.formulas(c,time);
+   if(e.key==='faust'){if(g.buff(e,'faustUlt'))this.formulas(c,time);else if(e.level>=RULES.maxLevel)this.formulas(c,time,.42,.35);}
    if(e.key==='yi'&&g.buff(e,'ogamdo'))for(const side of [-1,1])for(let i=0;i<6;i++)this.mote(c,'crystal','#dce7e8',side*(.55+i*.15),-1-i*.18+Math.sin(time)*.04,.19+i*.025,side*(.4+i*.15),.6,i%4);
-   if(e.key==='marton'&&s.fairy){c.save();c.translate(0,-3.1);this.fairy(c,time,.65);c.restore();}
+   if(e.key==='marton'&&s.fairy){c.save();c.translate(0,-4);this.fairy(c,time,.65);c.restore();}
   }else{
    if(e.burn?.until>time||e.key==='alisa'&&(s.heat||0)>0)this.motes(c,'flame','#cf8a4a',time*2,8,.65,.9);
    if(e.key==='ryoshu'&&time-e.lastCombat>=2){c.save();c.translate(0,-1.7);this.mote(c,'smoke','#d4d2cf',.12,-.08,.3+Math.sin(time)*.025,0,.55,Math.floor(time)%4);c.restore();}
@@ -162,8 +165,7 @@ export class ChampionVFX {
    if(e.key==='rudolph'&&e.castSlot==='r'&&e.channelUntil>time)this.electric(c,time,'#d2944e',1,12);
    if(g.buff(e,'queequegUlt'))this.motes(c,'spark','#df5f40',time*1.5,7,.7,.65);
    if(e.bossEmpowered)this.aura(c,{color:'#a797d8',form:'smoke',strength:.45},time);
-   if(e.visuals?.hongluShare?.until>time)this.motes(c,'petal','#e8b9c7',time,8,1.15,.85);
-   if(s.swordHeldBy)this.motes(c,'spark','#e4dfd5',time*8,7,.3,.8);
+   if(g.buff(e,'hongluCare'))this.motes(c,'petal','#e8b9c7',time,8,1.15,.85);
    if(g.shield(e)>0&&!(e.key==='dongbaek'&&g.buff(e,'flowerStride'))){c.save();c.globalAlpha=.85;c.drawImage(this.rimTexture('#d7edf5','shield'),-1.28,-2.82,2.56,3.04);c.restore();}
    if(e.rodyaSlowUntil>time)this.motes(c,'frost','#d3d8dc',time,6,.8,.65);
    const harpoon=ahabMarkPresentation(g,e);
@@ -215,7 +217,7 @@ export class ChampionVFX {
   }else if(f.type==='embers'){this.motes(c,'spark','#b67a45',age*3,18,age*2+.2,(1-t)*.7);
   }else if(f.type==='purplePetals')this.motes(c,'petal','#796080',age*2,14,.4+age,.5*(1-t));
   else if(f.type==='coins'){for(let i=0;i<15;i++){const a=i*2.4,x=Math.cos(a)*age*2,y=-1-age*4+age*age*4;this.mote(c,'chip','#d0b575',x,y,.1,age*8+i,(1-t)*.7,i%4);}}
-  else if(f.type==='shout'){c.save();c.translate(.2,-1.7);c.strokeStyle='#b2c8c2';c.lineWidth=.025;c.globalAlpha=(1-t)*.45;for(let i=0;i<3;i++){const size=.15+age*(1+i*.3);c.beginPath();c.arc(0,0,size,-.65,.65);c.stroke();}c.restore();}
+  else if(f.type==='shout'){c.save();c.translate(.2,-1.7);c.strokeStyle='#f3ddae';c.shadowColor='#ffba65';c.shadowBlur=11;c.lineWidth=.085;c.globalAlpha=(1-t)*.95;for(let i=0;i<4;i++){const size=.3+age*2.7*(1+i*.35);c.beginPath();c.arc(0,0,size,-.65,.65);c.stroke();}c.restore();}
  }
  events(c,camera,g){
   v58Front(c,camera,g);drawAugmentEffects(c,camera,g);drawPassiveAugmentFront(c,camera,g);
@@ -257,8 +259,8 @@ export class ChampionVFX {
   }
   for(const f of g.pending)if(f.source.key==='faust'&&f.type==='burst'&&f.at>g.time)this.field(c,camera,f,f.r,'#eef4f5',.16);
   for(const f of g.effects)if(f.type==='hongluRipple'){
-   const at=world(f,.08),x=world({x:f.x+1,y:f.y},.08),y=world({x:f.x,y:f.y+1},.08);c.save();c.translate(at.x,at.y);c.transform(x.x-at.x,x.y-at.y,y.x-at.x,y.y-at.y,0,0);
-   for(const wave of healingRipples(f,f.maxLife-f.life)){c.globalAlpha=wave.alpha;c.strokeStyle='#9cf1e5';c.lineWidth=.07;c.beginPath();c.arc(0,0,wave.r,0,Math.PI*2);c.stroke();c.strokeStyle='#417d79';c.lineWidth=.035;c.beginPath();c.arc(0,0,Math.max(0,wave.r-.12),0,Math.PI*2);c.stroke();}c.restore();
+   const center=g.units.find(e=>e.id===f.source)||f,at=world(center,.08),x=world({x:center.x+1,y:center.y},.08),y=world({x:center.x,y:center.y+1},.08);c.save();c.translate(at.x,at.y);c.transform(x.x-at.x,x.y-at.y,y.x-at.x,y.y-at.y,0,0);
+   for(const wave of healingRipples(f,f.maxLife-f.life)){c.globalAlpha=wave.alpha;c.strokeStyle='#c2fff4';c.shadowColor='#74d5d5';c.shadowBlur=7;c.lineWidth=.11;c.beginPath();c.arc(0,0,wave.r,0,Math.PI*2);c.stroke();c.strokeStyle='#417d79';c.lineWidth=.035;c.beginPath();c.arc(0,0,Math.max(0,wave.r-.12),0,Math.PI*2);c.stroke();}c.restore();
   }
   for(const f of g.effects)if(f.type==='yanSwordWarning'){
    const progress=clamp(1-f.life/f.maxLife);this.rangeField(c,camera,f,f.r,'#384759',.5,'#b2c7d6');

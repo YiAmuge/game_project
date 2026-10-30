@@ -15,7 +15,7 @@ function arena(key='meursault'){
  Object.assign(p,{x:20,y:20});const t=g.makeChampion('faust',1,10);Object.assign(t,{x:23,y:20,hp:100000,maxHp:100000});return {g,p,t};
 }
 test('ordinary physical hits are achromatic solid fragments, with explicitly typed exceptions',()=>{
- const {g,p}=arena();for(const key of ['faust','sinclair','meursault','gubo','nelly','outis','heathcliff','ryoshu','rodya','ppui'])assert.deepEqual(combatStyle(key,g,null,{kind:'basic'}),NEUTRAL,key);
+ const {g,p}=arena();for(const key of ['faust','sinclair','meursault','gubo','nelly','outis','heathcliff','rodya'])assert.deepEqual(combatStyle(key,g,null,{kind:'basic'}),NEUTRAL,key);
  assert.equal(combatStyle('honglu',g,null).element,'water');assert.equal(combatStyle('marton',g,null).element,'wood');assert.equal(combatStyle('yi',g,null).element,'mirror');
  p.key='sora';g.addBuff(p,'soraEgo',20);assert.equal(combatStyle('sora',g,p).element,'metal');p.key='yan';g.addBuff(p,'yanDistorted',20);assert.equal(combatStyle('yan',g,p).element,'liquid');
  assert.equal(hitStyle(g,{key:'nelly'},{type:'nellyProc'}).shape,'slash');assert.equal(hitStyle(g,{key:'ryoshu'},{slot:'q'}).shape,'slash');

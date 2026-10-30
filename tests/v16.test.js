@@ -37,11 +37,11 @@ test('normal tactical keeps first-target-only damage and produces matching shock
 });
 test('only transformed tactical quick-casts at triple dash speed and releases immunity on arrival',()=>{
  const normal=quiet();assert.equal(skillTargeting(normal.g,normal.p,'q').confirm,true);normal.g.cast(normal.p,'q',{x:46.5,y:7});close(normal.p.motion.speed,RULES.dashSpeed);
- const {g,p}=quiet();ego(g,p);assert.equal(skillTargeting(g,p,'q').confirm,false);g.cast(p,'q',{x:46.5,y:7});close(p.motion.speed,24);run(g,.25);assert.ok(p.motion);run(g,.03);assert.equal(p.motion,undefined);close(p.x,46.5);assert.ok(p.invulnerableUntil<=g.time);close(p.state.egoQCharges,1);
+ const {g,p}=quiet();ego(g,p);assert.equal(skillTargeting(g,p,'q').confirm,false);g.cast(p,'q',{x:46.5,y:7});close(p.motion.speed,24);run(g,.21);assert.ok(p.motion);run(g,.03);assert.equal(p.motion,undefined);close(p.x,45.6);assert.ok(p.invulnerableUntil<=g.time);close(p.state.egoQCharges,1);
 });
 test('follow-up cuts expand lateral width thirty percent and longitudinal length ten percent',()=>{
- const {g,p}=quiet();ego(g,p);const wide=target(g,43,8.51),out=target(g,43,8.53),behind=target(g,39.23),beyond=target(g,39.21),cutIds=new Set(),deal=g.deal.bind(g);g.deal=(a,t,n,o)=>{if(a===p&&n===45)cutIds.add(t.id);return deal(a,t,n,o);};g.cast(p,'q',{x:46,y:7});run(g,.28);
- const fx=g.effects.find(f=>f.type==='soraTrail');assert.ok(fx);close(fx.width,1.04);close(distance(fx,fx.to),6.6);close(fx.x,39.7);close(fx.to.x,46.3);
+ const {g,p}=quiet();ego(g,p);const wide=target(g,43,8.51),out=target(g,43,8.53),behind=target(g,39.25),beyond=target(g,39.23),cutIds=new Set(),deal=g.deal.bind(g);g.deal=(a,t,n,o)=>{if(a===p&&n===45)cutIds.add(t.id);return deal(a,t,n,o);};g.cast(p,'q',{x:46,y:7});run(g,.28);
+ const fx=g.effects.find(f=>f.type==='soraTrail');assert.ok(fx);close(fx.width,1.04);close(distance(fx,fx.to),6.16);close(fx.x,39.72);close(fx.to.x,45.88);
  assert.ok(cutIds.has(wide.id)&&cutIds.has(behind.id));assert.equal(cutIds.has(out.id),false);assert.equal(cutIds.has(beyond.id),false);close(out.hp,10000);close(g.stat(wide,'slow'),.3);
 });
 test('triple-speed dash still stops at a thin wall and a building with no lasting invulnerability',()=>{

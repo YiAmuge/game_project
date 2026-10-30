@@ -46,7 +46,7 @@ export function cast(g,e,slot,p,d){
     const fallback=e.motion?.lastClear;delete e.motion;settleBody(g,e,fallback);
     if(t.state.swordHeldBy){const owner=g.units.find(a=>a.id===t.state.swordHeldBy);if(owner)releaseGrab(g,owner);}
     if(t.state.swordGrab)releaseGrab(g,t);
-    delete t.motion;t.status.stun.grabOwner=e.id;t.state.swordHeldBy=e.id;e.state.swordGrab={target:t,until:t.status.stun.until,at:g.time};
+    delete t.motion;t.status.stun.grabOwner=e.id;t.state.swordHeldBy=e.id;e.state.swordGrab={target:t,until:t.status.stun.until,at:g.time,nextEmber:g.time};
    });
   }else{releaseGrab(g,e);e.state.counter={until:g.time+.5,angle:Math.atan2(d.y,d.x),immune:e.ccImmuneUntil||0};e.channelUntil=g.time+.5;e.ccImmuneUntil=g.time+.5;const counter=e.state.counter;g.schedule(e,.5,()=>{if(e.state.counter===counter)counterWave(g,e,false);});}
   return true;
@@ -73,6 +73,7 @@ export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
 
 export function tick(g,e,dt){
  if(e.key==='kim'&&e.state.swordGrab&&(!carried(g,e)||g.stat(e,'stun')))releaseGrab(g,e);
+ if(e.key==='kim'&&e.state.swordGrab){const s=e.state.swordGrab;s.nextEmber??=g.time;while(s.nextEmber<=Math.min(g.time,s.until)+1e-8){g.effects.push({type:'kimEmbers',source:e.id,target:s.target.id,at:s.nextEmber,life:.28,maxLife:.28});s.nextEmber+=.15;}}
  if(e.key!=='ppui')return;
  if(e.state.nailStorm?.until<=g.time)delete e.state.nailStorm;
 }

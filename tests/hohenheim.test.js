@@ -13,18 +13,18 @@ function quiet(key='hohenheim'){
  const p=g.player;Object.assign(p,{x:40,y:7,lastAttackAt:100,lastDamageAt:100});g.units=[p];g.minionQueue=[];g.wave=100;g.map={bounds:WORLD,walls:[]};g.input.aim={x:49,y:7};return {g,p};
 }
 function target(g,x=44,y=7,team=1){const t=g.makeChampion('faust',team,9);Object.assign(t,{armor:0,x,y,hp:100000,maxHp:100000,lastAttackAt:100,lastDamageAt:100});return t;}
-test('Hohenheim taps fire one 100-damage beam with zero ammo and a hard .65-second interval',()=>{
- const {g,p}=quiet(),t=target(g);assert.equal(CHAMPIONS.hohenheim.ammo,0);assert.ok(g.attack(p,t));close(t.hp,100000);assert.ok(H.release(g,p,t));close(p.attackCd,.65);run(g,.1);close(100000-t.hp,damageFormula(100,5,1));close(p.ammo,0);
+test('Hohenheim taps fire one 90-damage beam with zero ammo and a hard .65-second interval',()=>{
+ const {g,p}=quiet(),t=target(g);assert.equal(CHAMPIONS.hohenheim.ammo,0);assert.ok(g.attack(p,t));close(t.hp,100000);assert.ok(H.release(g,p,t));close(p.attackCd,.65);run(g,.1);close(100000-t.hp,damageFormula(90,5,1));close(p.ammo,0);
  assert.equal(g.attack(p,t),false);run(g,.54);assert.equal(g.attack(p,t),false);run(g,.02);assert.ok(g.attack(p,t));
 });
 for(const [seconds,hits] of [[0,1],[.44,1],[.45,2],[.89,2],[.9,3],[1.35,3],[1.5,3]])test(`charge held ${seconds}s fires exactly ${hits} beam(s), capped at three`,()=>{
- const {g,p}=quiet(),t=target(g),beams=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)beams.push(n);return deal(a,b,n,o);};g.attack(p,t);run(g,seconds);close(t.hp,100000);H.release(g,p,t);run(g,.3);assert.equal(beams.length,hits);beams.forEach(n=>close(n,100));
+ const {g,p}=quiet(),t=target(g),beams=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)beams.push(n);return deal(a,b,n,o);};g.attack(p,t);run(g,seconds);close(t.hp,100000);H.release(g,p,t);run(g,.3);assert.equal(beams.length,hits);beams.forEach((n,i)=>close(n,90+(seconds>=1.5&&i===hits-1?30:0)));
 });
-test('full charge reaches nine, deals 100 three times, and reduces movement twenty percent while held',()=>{
+test('full charge reaches nine, deals 90, 90 and 120, and reduces movement twenty percent while held',()=>{
  const {g,p}=quiet(),t=target(g,49),speed=g.speed(p);g.attack(p,t);close(g.speed(p),speed*.8);run(g,1.6);close(H.chargeShape(g,p,t).range,9);close(t.hp,100000);H.release(g,p,t);close(g.speed(p),speed);run(g,.3);assert.ok(t.hp<100000);close(100000-t.hp,damageFormula(100,5,1)*3);
 });
 test('reload upgrades accelerate charge and extra ammo converts to damage and range without ammo consumption',()=>{
- const {g,p}=quiet(),t=target(g);p.upgrades.reload=3;p.augments=['magazine2'];g.attack(p,t);run(g,1.31);const s=H.chargeShape(g,p,t);close(s.progress,1);close(s.damage,110);close(s.range,10.5);H.release(g,p,t);close(p.ammo,0);
+ const {g,p}=quiet(),t=target(g);p.upgrades.reload=3;p.augments=['magazine2'];g.attack(p,t);run(g,1.31);const s=H.chargeShape(g,p,t);close(s.progress,1);close(s.damage,99);close(s.range,10.5);H.release(g,p,t);close(p.ammo,0);
 });
 test('stun, recall, tactical movement and the death transition discard a partial charge',()=>{
  for(const kind of ['stun','recall','q','death']){const {g,p}=quiet(),t=target(g);g.attack(p,t);run(g,.3);
@@ -32,9 +32,10 @@ test('stun, recall, tactical movement and the death transition discard a partial
   assert.equal(p.state.hohenCharge,undefined,kind);assert.equal(H.release(g,p,t),false);close(t.hp,100000);
  }
 });
-test('posthumous attacks always fire maximum charge and holding attack cannot exceed one burst per .65 seconds',()=>{
- const {g,p}=quiet(),t=target(g),beams=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)beams.push({n,at:g.time,serial:p.attackSerial});return deal(a,b,n,o);};g.deal(t,p,999999,{fixed:true});g.input.fire=true;g.input.aim=t;run(g,2.4);
- assert.equal(p.attackSerial,2);assert.equal(beams.length,6);beams.forEach(b=>close(b.n,100));const starts=[1,2].map(i=>beams.find(b=>b.serial===i).at);for(let i=1;i<starts.length;i++)assert.ok(starts[i]-starts[i-1]>=.65-1e-6);close(p.hp,0);assert.equal(p.state.hohenCharge,undefined);
+test('posthumous attacks use normal manual charging and permit more than two attacks',()=>{
+ const {g,p}=quiet(),t=target(g),beams=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)beams.push(n);return deal(a,b,n,o);};g.deal(t,p,999999,{fixed:true});
+ for(let i=0;i<3;i++){assert.ok(g.attack(p,t));close(t.hp,100000-damageFormula(90,5,1)*i);assert.ok(H.release(g,p,t));run(g,.66);}
+ assert.equal(p.attackSerial,3);assert.deepEqual(beams,[90,90,90]);assert.ok(g.attack(p,t));run(g,1.5);assert.ok(H.release(g,p,t));run(g,.3);assert.deepEqual(beams,[90,90,90,90,90,120]);assert.ok(p.alive);close(p.hp,0);
 });
 test('normal Hohenheim bots finish charges instead of repeatedly canceling them with combat skills',()=>{
  const {g,p}=quiet(),t=target(g);p.player=false;g.aiChampion=Game.prototype.aiChampion;run(g,2);assert.ok(t.hp<100000);assert.ok(p.attackSerial>=1);

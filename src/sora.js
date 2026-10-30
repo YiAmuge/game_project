@@ -5,7 +5,7 @@ import { dash,area } from './skills.js';
 import { RULES } from './data.js';
 
 // Unspecified distances/damage are prototype values, mirrored in the encyclopedia.
-export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,maxUnlock:5,ultimateRange:8,egoDuration:12,egoPower:.12,egoReload:.15,egoArmor:.9,basicDamage:220,basicRange:1.33,basicRadius:1.15,egoDamage:110,egoHits:2,egoHitDelay:.10,egoRadius:2.7,qRange:7,egoQRange:6.5,qWidth:(.48+.08)*1.7*1.2,qDamage:210,qShield:250,egoQDamage:120,egoQCharges:2,egoQCooldown:6,egoQSpeed:RULES.dashSpeed*3,egoHitWidth:.8,trailDamage:45,trailWidth:.8*1.3,trailLengthScale:1.1,trailEvery:.3,trailDuration:1.2};
+export const SORA={markEvery:3,markDuration:6,passiveRange:5,passiveCap:2,maxUnlock:5,ultimateRange:8,egoDuration:12,egoPower:.12,egoReload:.15,egoArmor:.9,basicDamage:220,basicRange:1.33,basicRadius:1.15,egoDamage:110,egoHits:2,egoHitDelay:.10,egoRadius:2.7,qRange:7,egoQRange:5.6,qWidth:(.48+.08)*1.7*1.2,qDamage:210,qShield:250,egoQDamage:120,egoQCharges:2,egoQCooldown:6,egoQSpeed:RULES.dashSpeed*3,egoHitWidth:.8,trailDamage:45,trailWidth:.8*1.3,trailLengthScale:1.1,trailEvery:.3,trailDuration:1.2};
 export const ego=(g,e)=>e.key==='sora'&&g.buff(e,'soraEgo');
 export const ready=(g,e)=>e.key==='sora'&&!ego(g,e)&&(e.state.unlock||0)>=SORA.maxUnlock;
 export function init(g,e){if(e.key==='sora'){e.state.unlock=0;e.state.orders={};e.state.orderAt=g.time+SORA.markEvery;}}
@@ -77,7 +77,7 @@ export function cast(g,e,slot,p,d){
   else{for(const m of orders(g,e))m.until=g.time+SORA.markDuration;mark(g,e,ultimateTarget(g,e),'ultimate');}
   return true;
  }
- const origin={x:e.x,y:e.y};let length=Math.min(ego(g,e)?SORA.egoQRange:SORA.qRange,distance(e,p));
+ const origin={x:e.x,y:e.y};let length=ego(g,e)?SORA.egoQRange:Math.min(SORA.qRange,distance(e,p));
  if(!ego(g,e)){const landing=g.safeLanding(e,p,SORA.qRange);d=direction(e,landing);length=distance(e,landing);}
  if(ego(g,e)){
   e.state.egoQCharges--;if(!Number.isFinite(e.state.egoQReady))e.state.egoQReady=g.time+g.cooldown(e,'q');

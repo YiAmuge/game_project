@@ -12,7 +12,7 @@ export function basic(g,e,d){const to={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.at
 export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
  if(!proc||actual+absorbed<=0||e.key!=='kromer'||t.kind!=='champion'||e.team===t.team||!t.alive||t.hp<=0)return;
  const marks=t.state.kromerNails??={},old=marks[e.id],n=old?.until>g.time?old.n:0;
- if(n>=2){delete marks[e.id];g.effects.push({type:'kromerNailBreak',source:e.id,target:t.id,x:t.x,y:t.y,life:.32,maxLife:.32});const dealt=g.deal(e,t,t.maxHp*KROMER.nailRatio,{proc:false,rawPower:true,damageKind:kind});g.heal(e,e,dealt,false);}
+ if(n>=2){delete marks[e.id];g.effects.push({type:'kromerNailBreak',source:e.id,target:t.id,x:t.x,y:t.y,life:.32,maxLife:.32});g.emitSound?.('hit',e,{phase:'kromer-nail-break',element:'blood'});const dealt=g.deal(e,t,t.maxHp*KROMER.nailRatio,{proc:false,rawPower:true,damageKind:kind});g.heal(e,e,dealt,false);}
  else if(!g.debuffImmune(t)){marks[e.id]={n:n+1,until:g.time+KROMER.nailDuration};g.triggerDisrupt(e,t);}
 }
 function startGrab(g,e,t,d){
@@ -46,7 +46,7 @@ export function tick(g,e,dt){
  const t=grab.target,aim=e.player?g.input.aim:null;
  if(aim&&distance(aim,e)>.1){const desired=Math.atan2(aim.y-e.y,aim.x-e.x),delta=Math.atan2(Math.sin(desired-grab.angle),Math.cos(desired-grab.angle)),turn=Math.sign(delta)*Math.min(Math.abs(delta),KROMER.turnSpeed*dt),angle=grab.angle+turn,point={x:e.x+Math.cos(angle)*grab.distance,y:e.y+Math.sin(angle)*grab.distance};if(canOccupy(g,t,point,{includeCarry:false})&&g.clearLine(t,point,t.radius)){Object.assign(t,point);t.bodyMoved=true;grab.angle=angle;}}
  const hold={x:e.x+Math.cos(grab.angle)*grab.distance,y:e.y+Math.sin(grab.angle)*grab.distance};if(canOccupy(g,t,hold,{includeCarry:false})&&g.clearLine(t,hold,t.radius)){Object.assign(t,hold);t.bodyMoved=true;}
- while(e.state.kromerGrab===grab&&t.alive&&grab.hits<KROMER.rHits&&grab.next<=g.time+1e-8){grab.next+=KROMER.rEvery;grab.hits++;e.state.kromerStrikeAt=g.time;e.state.kromerStrikeFacing=grab.angle;g.emitSound('swing',e,{slot:'r',phase:'kromer-impale'});g.deal(e,t,KROMER.rDamage,{armorPen:KROMER.rPen,damageKind:'skill'});g.effects.push({type:'kromerImpale',source:e.id,target:t.id,x:t.x,y:t.y,angle:grab.angle,life:.18,maxLife:.18});}
+ while(e.state.kromerGrab===grab&&t.alive&&grab.hits<KROMER.rHits&&grab.next<=g.time+1e-8){grab.next+=KROMER.rEvery;grab.hits++;e.state.kromerStrikeAt=g.time;e.state.kromerStrikeFacing=grab.angle;g.emitSound('swing',e,{slot:'r',phase:'kromer-impale',element:'blood',weight:1.7});g.deal(e,t,KROMER.rDamage,{armorPen:KROMER.rPen,damageKind:'skill'});g.effects.push({type:'kromerImpale',source:e.id,target:t.id,x:t.x,y:t.y,angle:grab.angle,life:.18,maxLife:.18});}
  if(e.state.kromerGrab===grab&&(grab.hits>=KROMER.rHits||!t.alive))release(g,e,t.alive);
 }
 export function onDeath(g,e){if(e.key==='kromer')release(g,e);for(const owner of g.champions())if(owner.state.kromerGrab?.target===e)release(g,owner);}

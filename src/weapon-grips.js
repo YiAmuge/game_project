@@ -48,7 +48,7 @@ export function gripLayout(key,asset,m,pivot){
  const cacheKey=[key,asset,m.scale,pivot].join('/');if(layouts.has(cacheKey))return layouts.get(cacheKey);
  const [a,b]=GRIP_PATHS[asset],at=t=>gripSourcePoint([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],m,pivot),first=at(0),last=at(1),kind=asset==='guboRifle'||asset==='myoRifle'||asset==='jamilaRifle'?'gun':asset==='ishmaelShield'?'shield':'shaft';
  const nearest=x=>{let low=0,high=1;const target=Math.max(Math.min(first.x,last.x),Math.min(Math.max(first.x,last.x),x));for(let i=0;i<24;i++){const t=(low+high)/2;if((at(t).x<target)===(last.x>=first.x))low=t;else high=t;}return {...at((low+high)/2),kind};};
- const primary=nearest(0),support=asset==='jamilaRifle'?{...gripSourcePoint([.70,.60],m,pivot),kind,offHand:true}:key==='rudolph'?{...gripSourcePoint([.50,.53],m,pivot),kind,offHand:true}:{...nearest(primary.x+.27),offHand:true},points=TWO_HANDED_GRIPS.has(key)||asset==='jamilaRifle'?[primary,support]:[primary];
+ const primary=nearest(0),support=asset==='guboRifle'?{...gripSourcePoint([.70,.44],m,pivot),kind,offHand:true}:asset==='jamilaRifle'?{...gripSourcePoint([.70,.60],m,pivot),kind,offHand:true}:key==='rudolph'?{...gripSourcePoint([.50,.53],m,pivot),kind,offHand:true}:{...nearest(primary.x+.27),offHand:true},points=TWO_HANDED_GRIPS.has(key)||asset==='jamilaRifle'||asset==='guboRifle'?[primary,support]:[primary];
  if(layouts.size>=64)layouts.delete(layouts.keys().next().value);layouts.set(cacheKey,points);return points;
 }
 const textures=new Map();

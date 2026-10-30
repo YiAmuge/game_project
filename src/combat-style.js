@@ -22,6 +22,9 @@ export function combatStyle(key,g,e,{kind='basic',slot,type}={}){
  if(key==='yan'&&e&&g.buff(e,'yanDistorted'))s=style('#13141b','liquid','#454853','#030407');
  if(key==='gubo'&&(type==='guboBlast'||e&&g.buff(e,'guboReload')))s=style('#6f162a','metal','#bb4255','#200711');
  if(key==='myo'&&e&&g.buff(e,'rabbitFrenzy'))s=style('#efab61','metal','#ffe0a6','#784425');
+ if(key==='ryoshu'&&kind==='basic')s.accent='#e3545d';
+ if(key==='sinclair'&&kind==='basic'&&e&&g.buff(e,'marks'))s=style('#a8dc6c','metal','#e0ffac','#456523');
+ if(key==='ppui'&&(kind==='basic'||kind==='projectile'))s=style('#b82e45','metal','#f78d98','#4d1122');
  if(kind==='hit'){
   // Only explicit liquids/elements remain elemental on contact.
   if(!['water','liquid','fire','electric','mirror','petal'].includes(s.element))s={...s,element:'metal'};

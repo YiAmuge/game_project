@@ -14,7 +14,7 @@ import { Camera25D } from './camera-25d.js';
 import { TRAINING_25D as MAP } from './training-25d-map.js';
 import { WORLD,WALLS,TERRAIN,FOUNTAINS,FOUNTAIN_AREAS,BUSHES,lanePath } from './data.js';
 import * as Training from './training.js';
-import { championHud,orderMark,championEffects,towerMark } from './overlays.js';
+import { overheadY,championHud,orderMark,championEffects,towerMark } from './overlays.js';
 import * as CombatVisuals from './combat-visuals.js';
 import { ChampionVFX } from './champion-vfx.js';
 import { ProjectileVFX } from './projectile-vfx.js';
@@ -195,7 +195,7 @@ export class Renderer25D {
   });
   for(const e of game.champions().filter(e=>e.alive&&game.visibleTo(game.player.team,e)&&(!game.hidden(e)||e.motion?.kind==='leap')).sort((a,b)=>Number(a.player)-Number(b.player)))at(e,()=>{
    championEffects(r,e,game);CombatVisuals.front(r,e,game);championHud(r,e,game);CombatVisuals.meter(r,e,game);
-   if(e.easterText?.until>game.time)r.text(e.easterText.text,e.x,e.y-3.2,'#ffe3a7',.36);
+   if(e.easterText?.until>game.time)r.text(e.easterText.text,e.x,overheadY(e,game)-.5,'#ffe3a7',.36);
   },true);
   c.save();c.setTransform(r.dpr,0,0,r.dpr,0,0);drawPings(c,this.camera,game);drawCombatNumbers(c,this.camera,game);c.restore();
   if(this.contextLost){c.fillStyle='#102331dd';c.fillRect(0,r.height/2-45,r.width,90);c.fillStyle='#ffe1a6';c.font='16px sans-serif';c.textAlign='center';c.fillText('3D 화면 복구 중 · 계속 표시되면 페이지를 새로고침해 주세요.',r.width/2,r.height/2);}

@@ -35,10 +35,10 @@ test('Gubo allied execution and self-destruction cannot be stolen by a recent en
  const {g,p,t}=quiet('gubo'),a=ally(g);Object.assign(t,{x:70,y:7});a.hp=a.maxHp*.2;g.deal(t,a,1,{fixed:true});g.deal(p,a,1e7,{fixed:true,allowFriendly:true});assert.equal(t.kills,0);assert.equal(g.firstBlood,null);assert.equal(a.lastDeath.execution,false);assert.ok(a.state.executedReturn);close(a.respawnAt-g.time,3);g.deal(t,p,1,{fixed:true});g.kill(p,p);assert.equal(t.kills,0);
 });
 test('delayed Hohenheim death freezes the ten-second decision at the lethal hit',()=>{
- const {g,p,t}=quiet('hohenheim');g.deal(t,p,1,{fixed:true});g.time=9.9;g.deal(minion(g,1),p,1e7,{fixed:true});assert.ok(p.state.posthumous);run(g,2.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.lastDeath.killerId,t.id);
+ const {g,p,t}=quiet('hohenheim');g.deal(t,p,1,{fixed:true});g.time=9.9;g.deal(minion(g,1),p,1e7,{fixed:true});assert.ok(p.state.posthumous);run(g,4.6);assert.equal(p.alive,false);assert.equal(t.kills,1);assert.equal(p.lastDeath.killerId,t.id);
 });
 test('nested Nelly mark damage cannot bypass Hohenheim delayed death or award a second takedown',()=>{
- const {g,p}=quiet('nelly'),t=g.makeChampion('hohenheim',1,9);g.units=[p,t];Object.assign(t,{armor:0,x:41.4,y:7,hp:300});t.state.nellyMarks={[p.id]:{active:true,ready:Infinity,hold:0,until:7}};g.attack(p,t);assert.ok(t.alive&&t.state.posthumous);assert.equal(p.kills,0);assert.equal(g.firstBlood,null);run(g,2.6);assert.equal(t.alive,false);assert.equal(p.kills,1);assert.equal(t.deaths,1);assert.equal(g.firstBlood.victimId,t.id);close(p.gold,250+160+g.time);
+ const {g,p}=quiet('nelly'),t=g.makeChampion('hohenheim',1,9);g.units=[p,t];Object.assign(t,{armor:0,x:41.4,y:7,hp:300});t.state.nellyMarks={[p.id]:{active:true,ready:Infinity,hold:0,until:7}};g.attack(p,t);assert.ok(t.alive&&t.state.posthumous);assert.equal(p.kills,0);assert.equal(g.firstBlood,null);run(g,4.6);assert.equal(t.alive,false);assert.equal(p.kills,1);assert.equal(t.deaths,1);assert.equal(g.firstBlood.victimId,t.id);close(p.gold,250+160+g.time);
 });
 test('first blood adds a third of each participant currency exactly once and leaves XP unchanged',()=>{
  const {g,p,t}=quiet(),a=ally(g);g.deal(a,t,1,{fixed:true});g.deal(p,t,1e7,{fixed:true});close(p.gold,250+160);close(a.gold,250+40*4/3);close(p.xp,120);close(a.xp,70);assert.deepEqual(g.firstBlood.assistIds,[a.id]);assert.ok(g.currentAnnouncement().first);

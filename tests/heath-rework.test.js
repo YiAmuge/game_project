@@ -22,11 +22,11 @@ test('normal charge grants 20 percent armor and ultimate blocks basic attacks wi
  for(let i=0;i<3;i++){assert.equal(g.attack(p,{x:45,y:20}),false);run(g,.1);}near(p.ammo,ammo);
  run(g,.7);delete p.buffs.heathUlt;assert.ok(g.attack(p,{x:p.x+2,y:p.y}));
 });
-test('ultimate uses the five-unit circle, 175 damage every 0.3 seconds and 30 percent actual-damage healing',()=>{
+test('ultimate uses the five-unit circle, 215 damage every 0.3 seconds and 30 percent actual-damage healing',()=>{
  const{g,p}=arena(),inside=enemy(g,44.9),outside=enemy(g,45.7);p.hp=p.maxHp*.3;g.cast(p,'r',p);
  const rawDeal=g.deal.bind(g),hits=[],heals=[];g.deal=(s,t,n,o)=>{if(s===p)hits.push({target:t,n});return rawDeal(s,t,n,o);};
  const rawHeal=g.heal.bind(g);g.heal=(s,t,n,...rest)=>{if(s===p&&t===p)heals.push(n);return rawHeal(s,t,n,...rest);};
- run(g,.29);assert.equal(hits.length,0);run(g,.32);assert.equal(hits.length,2);assert.ok(hits.every(h=>h.n===175&&h.target===inside));
+ run(g,.29);assert.equal(hits.length,0);run(g,.32);assert.equal(hits.length,2);assert.ok(hits.every(h=>h.n===215&&h.target===inside));
  near(heals.reduce((a,b)=>a+b,0),(10000-inside.hp)*.3);near(outside.hp,10000);near(skillTargeting(g,p,'r').radius,5);assert.equal(p.state.heathSweepSerial,2);
 });
 test('ultimate Q immediately starts the existing full-charge leap and deals its damage only on landing',()=>{
@@ -68,6 +68,6 @@ test('Don uses the spiral from the initial ultimate dash to the end of blood thi
 });
 test('current codex describes immediate full-charge leaps and current ultimate values',()=>{
  const q=skillReference('heathcliff',2),r=skillReference('heathcliff',3),text=JSON.stringify({q,r});
- for(const n of ['20%','30%','175','즉시 도약','기본공격'])assert.ok(text.includes(n),n);
+ for(const n of ['20%','30%','215','즉시 도약','기본공격'])assert.ok(text.includes(n),n);
  assert.ok(!text.includes('순간이동')&&!text.includes('즉시 이동'));
 });
