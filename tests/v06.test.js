@@ -11,7 +11,7 @@ function quiet(key='faust'){
  const p=g.player,t=g.champions(1).find(c=>c.key==='faust')||g.makeChampion('faust',1,8);Object.assign(p,{x:40,y:7});Object.assign(t,{armor:0,x:42,y:7,hp:100000,maxHp:100000});g.units=[p,t];g.minionQueue=[];return {g,p,t};
 }
 test('twenty-four ordinary and two experimental champions retain finite stats and complete unique growth definitions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,30);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,32);
+ assert.equal(Object.keys(CHAMPIONS).length,31);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,33);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const g=new Game(key);assert.ok(g.player.maxHp>0);assert.ok(Number.isFinite(g.speed(g.player)));assert.ok(CHAMPIONS[key]?.growth||RUNTIME_CHAMPIONS[key].growth);}
 });
 test('new rear wings and two flank rooms are walkable and connected; void corners stay blocked',()=>{
@@ -99,8 +99,8 @@ test('Dongbaek Q readiness affects armor/reload and the instant flower ultimate 
  const {g,p,t}=quiet('dongbaek');close(g.armor(p),40);const reload=g.reloadInterval(p);g.cast(p,'q',p);close(g.armor(p),20);assert.ok(g.reloadInterval(p)>reload);assert.ok(g.shield(p)>0);t.x=47;const hp=t.hp;g.cast(p,'r',t);assert.ok(t.hp<hp);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.buff(p,'flowerReload'));assert.equal(p.channelUntil,undefined);
 });
 test('Dongrang power affects health and armor rather than damage or incoming healing and counts only actual healing from his own effects',()=>{
- const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,0);p.hp-=10;g.heal(p,p,100,false);close(p.totalHealingReceived-total,10);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
+ const {g,p,t}=quiet('dongrang');p.augments=['power15'];p.upgrades.power=5;const hp=t.hp;g.attack(p,t);close(hp-t.hp,260);p.hp=p.maxHp-10;const total=p.totalHealingReceived;g.heal(null,p,100,false);close(p.hp,p.maxHp);close(p.totalHealingReceived-total,0);p.hp-=10;g.heal(p,p,100,false);close(p.totalHealingReceived-total,100);assert.ok(g.maxHp(p)>p.maxHp);assert.ok(g.armor(p)>13);const stored=p.totalHealingReceived;run(g,.5);close(p.totalHealingReceived,stored);
 });
 test('Dongrang has one tree, fixed damage and healing, and his ultimate preserves it',()=>{
- const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);close(before-t.hp,340);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,1);
+ const {g,p,t}=quiet('dongrang');p.hp-=100;g.cast(p,'q',t);assert.equal(p.state.treeCharges,undefined);assert.equal(g.cast(p,'q',t),false);const hp=t.hp;run(g,1.6);close(hp-t.hp,105);assert.ok(p.totalHealingReceived>0);p.totalHealingReceived=8000;const before=t.hp;g.cast(p,'r',p);close(before-t.hp,380);assert.equal(g.zones.filter(z=>z.kind==='desireTree').length,1);
 });

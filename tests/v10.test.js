@@ -86,7 +86,7 @@ test('Dongrang can place overlapping trees and golden trees with radius 3.8',()=
  const {g,p}=quiet('dongrang');g.cast(p,'q',{x:44,y:7});g.zones[0].golden=true;p.qCd=0;assert.ok(g.cast(p,'q',{x:44,y:7}));assert.equal(g.zones.length,2);assert.ok(g.zones.every(z=>z.r===3.8));close(p.qCd,10);
 });
 test('Dongrang ultimate scales damage every 1000 healing with fixed impact radius',()=>{
- const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1000*21;assert.deepEqual(ultGrowth(p),{radius:3.2,damage:600});g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
+ const {g,p,t}=quiet('dongrang');p.totalHealingReceived=1000*21;close(ultGrowth(p).radius,3.9);close(ultGrowth(p).damage,705);g.cast(p,'q',{x:44,y:7});p.rCd=0;t.x=45;const hp=t.hp;assert.ok(g.cast(p,'r',{x:44,y:7}));close(p.motion.total,4);close(p.rCd,50);run(g,.6);assert.ok(t.hp<hp);assert.equal(g.zones.length,1);assert.ok(g.stat(t,'root'));close(t.status.root.until-(p.castAt+.5),1.2,.03);
 });
 test('Dongbaek refills all three petals every ten seconds and pauses ammo recovery throughout disarm',()=>{
  const {g,p,t}=quiet('dongbaek');t.x=41.5;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;g.attack(p,t);}close(p.state.petals,0);run(g,2.8);close(p.reloadProgress,0);close(p.ammo,0);run(g,.1);assert.ok(p.reloadProgress>0);run(g,7.08);close(p.state.petals,0);run(g,.04);close(p.state.petals,3);assert.equal(p.state.petalReady,Infinity);
@@ -113,7 +113,7 @@ test('consumables have no live module, champion resource, purchase, use or codex
  const {g,p}=quiet();assert.equal(existsSync(new URL('../src/items.js',import.meta.url)),false);assert.equal(g.usePotion,undefined);assert.equal(g.buyConsumable,undefined);assert.equal(g.sellConsumable,undefined);assert.equal('potion' in p,false);assert.equal('CONSUMABLES' in Catalog,false);assert.equal(g.buy(p,'potion'),false);
 });
 test('Starbuck joins ordinary drafts with requested grades, harpoon damage and jungle rewards',()=>{
- const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,30);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,55*1.1);
+ const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,31);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,55*1.1);
 });
 test('Starbuck every basic stabs once then advances 2.75 with either full or partial ammo',()=>{
  const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,200*.9);close(p.motion.total,2.75);run(g,.4);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.ok(p.motion);close(p.motion.total,2.75);

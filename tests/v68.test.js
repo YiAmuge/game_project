@@ -23,11 +23,11 @@ test('short-slide priority follows actual dash skills and excludes ground telepo
  for(const[key,slot]of[['don','basic'],['don','r'],['myo','basic'],['starbuck','basic'],['ryoshu','q'],['jamila','q'],['heathcliff','q'],['outis','r']]){const{g,p}=arena(key);assert.ok(dashSlidePriority(g,p,slot),`${key} ${slot}`);}
  for(const[key,slot]of[['don','q'],['nelly','r'],['sinclair','r'],['ryoshu','r'],['starbuck','r'],['yi','r'],['jamila','basic']]){const{g,p}=arena(key);assert.ok(!dashSlidePriority(g,p,slot),`${key} ${slot}`);}
 });
-test('manual Ppui basic heals an eligible in-range ally even when aimed in the opposite direction',()=>{
- const{g,p}=arena('ppui'),ally=hero(g,43,25,0,1000);hero(g,38);const point=mobileManualAim(g,p,'basic',-60,0,camera);near(point.x,ally.x);near(point.y,ally.y);assert.ok(g.attack(p,point));assert.equal(p.state.empower.target,ally.id);run(g,.5);assert.ok(ally.hp>1000);assert.equal(g.projectiles.length,0);
+test('manual Ppui basic follows the dragged direction without healing an ally',()=>{
+ const{g,p}=arena('ppui'),ally=hero(g,43,25,0,1000);hero(g,38);const point=mobileManualAim(g,p,'basic',-60,0,camera);assert.ok(point.x<p.x);near(point.y,p.y);assert.ok(g.attack(p,point));assert.equal(p.state.empower,undefined);run(g,.5);near(ally.hp,1000);
 });
-test('manual Ppui prioritizes an eligible wounded ally, can empower a full-health ally and avoids cooldown-blocked allies',()=>{
- const{g,p}=arena('ppui'),full=hero(g,43,25,0,10000),wounded=hero(g,42,26,0,1000);let point=mobileManualAim(g,p,'basic',-60,0,camera);near(point.x,wounded.x);wounded.state.ppuiEmpowerReady=2;point=mobileManualAim(g,p,'basic',-60,0,camera);near(point.x,full.x);full.state.ppuiEmpowerReady=2;point=mobileManualAim(g,p,'basic',-60,0,camera);assert.ok(point.x<p.x);
+test('manual Ppui direction is independent of allied health and former target locks',()=>{
+ const{g,p}=arena('ppui'),full=hero(g,43,25,0,10000),wounded=hero(g,42,26,0,1000);let point=mobileManualAim(g,p,'basic',-60,0,camera);assert.ok(point.x<p.x);wounded.hp=wounded.maxHp;point=mobileManualAim(g,p,'basic',-60,0,camera);assert.ok(point.x<p.x);near(point.y,p.y);
 });
 test('manual Ppui does not heal through walls, beyond range, or when an explicit enemy category is requested',()=>{
  const{g,p}=arena('ppui'),ally=hero(g,43,25,0,1000);g.map.walls=[{x:41,y:24,w:.5,h:2}];assert.ok(mobileManualAim(g,p,'basic',-60,0,camera).x<p.x);g.map.walls=[];ally.x=90;assert.ok(mobileManualAim(g,p,'basic',-60,0,camera).x<p.x);ally.x=43;assert.ok(mobileManualAim(g,p,'basic',-60,0,camera,{category:'creep'}).x<p.x);

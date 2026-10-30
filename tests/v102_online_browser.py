@@ -1,0 +1,18 @@
+"""Kromer grab and mobile steering through the authoritative host and snapshots."""
+import asyncio,os
+from playwright.async_api import async_playwright
+URL=os.getenv('MOBA_TEST_URL','http://127.0.0.1:5192').rstrip('/')
+async def main():
+ async with async_playwright() as pw:
+  browser=await pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage']);pc=await browser.new_context(viewport={'width':1280,'height':800});phone=await browser.new_context(viewport={'width':844,'height':390},is_mobile=True,has_touch=True);host=await pc.new_page();guest=await phone.new_page();errors=[]
+  await guest.add_init_script("Element.prototype.requestFullscreen=()=>Promise.reject(new Error('fixed test viewport'))")
+  for p in [host,guest]:p.on('pageerror',lambda e:errors.append(str(e)))
+  await host.goto(URL+'/?debug');await host.wait_for_function('window.__moba');await host.click('#online');await host.click('#online-create');await host.wait_for_function('__moba.online.room');code=await host.evaluate('__moba.online.room.code')
+  await guest.goto(URL+'/?debug&room='+code);await guest.wait_for_function('window.__moba');await guest.locator('#online-join').tap();await guest.wait_for_function('__moba.online.room');await guest.evaluate("__moba.online.send({type:'choose',slot:4,champion:'kromer'})");await guest.wait_for_function("__moba.online.room.members.find(m=>m.id===__moba.online.id).champion==='kromer'");await host.wait_for_function("[...__moba.online.peers.values()].some(p=>p.channel?.readyState==='open')",timeout=20000);await guest.locator('#online-ready').tap();await host.click('#online-start');await guest.wait_for_function("__moba.mode==='playing'&&__moba.game.time>.3",timeout=20000)
+  await host.evaluate("""()=>{const g=__moba.game;window.step102Online=g.step.bind(g);g.step=()=>{};for(const k of['aiChampion','aiMinion','aiNeutral','aiStructure'])g[k]=()=>{};g.units=g.champions().filter(e=>e.memberId);g.map={bounds:{x:0,y:0,w:100,h:100},walls:[]};g.bounds=g.map.bounds;const e=g.champions().find(e=>e.key==='kromer');Object.assign(e,{x:40,y:20,ammo:2,qCd:0,rCd:0});Object.assign(g.player,{x:42,y:20,hp:100000,maxHp:100000});window.remote102=e;}""")
+  await guest.wait_for_function('__moba.game.player.x===40');await guest.evaluate("__moba.game.input.aim={x:46,y:20};__moba.game.cast(__moba.game.player,'r',{x:46,y:20})");await host.wait_for_function("remote102.motion?.actionTag==='kromerRDash'");await host.evaluate('step102Online(.08)');await guest.wait_for_function('__moba.game.player.state.kromerGrab?.target===__moba.game.champions().find(e=>e.memberId!==__moba.online.id)')
+  cdp=await phone.new_cdp_session(guest);box=await guest.locator('#basic-btn').bounding_box();x=box['x']+box['width']/2;y=box['y']+box['height']/2
+  await cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'id':1,'x':x,'y':y}]});await cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'id':1,'x':x,'y':y-45}]});await host.wait_for_function('__moba.game.controllers.get(remote102.id).input.aim.y<remote102.y');await host.evaluate('step102Online(.1)');await guest.wait_for_function('__moba.game.player.state.kromerGrab.angle<-.1');await cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+  await host.evaluate('for(let i=0;i<220;i++)step102Online(1/120)');await guest.wait_for_function('!__moba.game.player.state.kromerGrab');assert await host.evaluate('!__moba.game.player.state.kromerHeldBy&&__moba.game.player.hp<100000');assert not errors,errors
+  await browser.close();print('Kromer remote cast, live grab reference, mobile steering and release passed.',flush=True)
+asyncio.run(main())

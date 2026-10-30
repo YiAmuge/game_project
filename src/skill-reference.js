@@ -36,6 +36,7 @@ function basicRanges(key,g,e,transformed){
  if(key==='rudolph')return[row('공격 범위','중심점 사거리 '+r+' · 반경 2.1675')];
  if(key==='ahab')return[row('직격','사거리 '+r+' · 직선 투사체'),row('폭발','적중 지점 반경 2')];
  if(key==='honglu')return[row('공격 범위','자신 중심 반경 '+r)];
+ if(key==='kromer')return[row('공격 범위','사거리 '+r+' · 직사각형 폭 2')];
  if(key==='meursault')return[row('공격 범위','사거리 '+r+' · 직사각형 폭 2.6')];
  if(key==='queequeg')return[row('공격 범위','사거리 '+r+' · 직선 폭 1.8')];
  const cones={sinclair:Math.PI,ryoshu:Math.PI,heathcliff:1.7,ishmael:1.6,nelly:1.2,dongbaek:1.3,dongrang:1.9,alisa:1.1,starbuck:.975*1.2};
@@ -46,13 +47,15 @@ function basicRanges(key,g,e,transformed){
 function skillRanges(key,index,g,e,transformed,variant){
  if(index===1)return basicRanges(key,g,e,transformed);
  if(index===0){
-  const targets={jamila:'공격한 적 · 자신',sinclair:'기본 공격에 적중한 적 챔피언',don:'반경 7의 적 챔피언 중 악당 선정',honglu:'스킬로 치유한 아군 챔피언 · 자신',gahwan:'공격한 적 챔피언',nelly:'공격한 적 챔피언'};
+  if(key==='ppui')return[row('보호 범위','자신 중심 반경 7의 아군 챔피언')];
+  const targets={kromer:'공격한 적 챔피언',jamila:'공격한 적 · 자신',sinclair:'기본 공격에 적중한 적 챔피언',don:'반경 7의 적 챔피언 중 악당 선정',honglu:'스킬로 치유한 아군 챔피언 · 자신',gahwan:'공격한 적 챔피언',nelly:'공격한 적 챔피언'};
   if(targets[key])return[row('적용 대상',targets[key])];
   const passive={yi:[row('보호막 대상','자신 중심 반경 10의 아군')],kim:[row('보호막 대상','자신 중심 반경 4의 아군')],gubo:[row('아군 처형','기본 공격 사거리 9.5 · 궁극기 조준 사거리 12'),row('처형 파급','처치 위치에서 사거리 14.7의 부채꼴')],marton:[row('초롱 미끼','시야 반경 8 · 도발 반경 6.5')],gregor:[row('변이 해충','자신 중심 반경 5.5')],alisa:[row('자폭','자신 중심 반경 4')],outis:[row('근접 강화','대상과 거리 2.5 이내')],sora:transformed?[row('적용 대상','자신')]:[row('자동 지령','자신 중심 반경 5 · 최대 표식 2개')],yan:transformed?[row('손 공격','손 중심 반경 3.5 · 조작 거리 10')]:[row('적용 대상','자신 또는 아군이 공격한 가짜 지령 대상')]};
   return passive[key]||[row('적용 대상',key==='ahab'?'처치에 관여한 아군 최대 3명':'자신')];
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return[row('변신 범위','자신')];
  if(index===3&&key==='sora')return[row('지령 대상','사거리 '+SORA.ultimateRange)];
+ if(key==='kromer')return index===2?[row('투척','사거리 7.2'),row('표식 추적','3.5초 내 재사용 · 지형·적 충돌 무시')]:[row('돌진','거리 3'),row('던지기','거리 3.5')];
  if(index===2&&key==='don')return[row('미충전','사거리 '+DON_CHARGE.minRange+' · 폭 '+DON_CHARGE.width),row('최대 충전','사거리 '+DON_CHARGE.maxRange+' · 폭 '+DON_CHARGE.width),row('충전 변화','사거리 최소 '+DON_CHARGE.minRange+' ~ 최대 '+DON_CHARGE.maxRange)];
  if(index===2&&key==='heathcliff')return[row('미충전','도약 거리 0.5 · 착지 반경 1.8'),row('최대 충전','도약 거리 7 · 착지 반경 1.8'),row('충전 변화','사거리 최소 0.5 ~ 최대 7')];
  if(index===2&&key==='gregor')return[row('기본','사거리 6 · 직선 폭 2.4'),row('변이','사거리 8.5 · 직선 폭 2.4')];
@@ -83,7 +86,7 @@ function skillRanges(key,index,g,e,transformed,variant){
  return[row('지정 대상','사거리 '+range)];
 }
 function cooldownLabel(key,index,g,e,transformed,variant){
- if(index===0)return ({yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
+ if(index===0)return ({ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
   if(key==='jamila')return '탄창 '+g.ammoCap(e)+'개 · 일괄 장전 '+number(g.reloadInterval(e))+'초 · 공격 간격 0.15초';
   if(key==='yan')return transformed?'탄창 소모 없음 · 손 기본 타격 주기 0.5초':'탄창 소모 없음 · 완충 '+YAN.chargeTime+'초 · 최소 공격 간격 0.85초';
@@ -92,7 +95,7 @@ function cooldownLabel(key,index,g,e,transformed,variant){
   return '탄창 '+g.ammoCap(e)+'개 · 1개 장전 '+number(g.reloadInterval(e))+'초 · 공격 간격 '+number(g.attackInterval(e))+'초';
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return '변신 재사용 대기 없음';
- const charges=index===2&&(key==='nelly'||key==='ryoshu'||key==='sora'&&transformed)?2:1;
+ const charges=index===2&&(key==='ppui'||key==='nelly'||key==='ryoshu'||key==='sora'&&transformed)?2:1;
  return (charges>1?'충전당 ':'쿨타임 ')+number(key==='myo'&&index===2?.15:g.cooldown(e,index===2?'q':'r'))+'초'+(charges>1?' · 최대 '+charges+'회 충전':'');
 }
 export function cleanSkillDetails(text){

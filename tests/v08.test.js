@@ -15,7 +15,7 @@ function quiet(key='faust'){
 }
 function ally(g,key='yi'){const e=g.makeChampion(key,0,5);Object.assign(e,{x:42,y:9});return e;}
 test('27 ordinary champions include all four additions; XP accrues at three per second (Faust nine) even while dead',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,30);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,32);
+ assert.equal(Object.keys(CHAMPIONS).length,31);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,33);
  for(const key of ['faust','hohenheim','alisa','marton','queequeg']){const {g,p,t}=quiet(key);run(g,1);close(p.xp,key==='faust'?9:3);g.kill(p,t);run(g,1);close(p.xp,key==='faust'?18:6);}
 });
 test('central, side, needle and buff camps award their configured XP; building HP stays reduced',()=>{
@@ -34,7 +34,7 @@ test('Dongbaek third extra attack lands then applies exactly 2.85 seconds of bas
  const {g,p,t}=quiet('dongbaek');t.x=41;for(let i=0;i<3;i++){p.ammo=0;p.attackCd=0;assert.ok(g.attack(p,t));}assert.equal(p.state.petals,0);close(p.status.disarm.until-g.time,2.85);p.ammo=3;p.attackCd=0;assert.equal(g.attack(p,t),false);p.qCd=0;assert.ok(g.cast(p,'q',p));run(g,2.9);assert.ok(g.attack(p,t));
 });
 test('Dongrang non-charge trees can coexist and only damage grows every 1000 healing',()=>{
- const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);p.hp-=3000;g.heal(p,p,1500,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1500);close(ultGrowth(p).damage,200);p.hp-=1500;g.heal(p,p,1500,false);close(ultGrowth(p).damage,240);
+ const {g,p,t}=quiet('dongrang');g.cast(p,'q',t);close(p.qCd,10);p.qCd=0;assert.equal(g.cast(p,'q',t),true);assert.equal(p.state.treeCharges,undefined);p.hp-=3000;g.heal(p,p,1500,false);close(g.cooldown(p,'r'),50);g.heal(null,p,5000,false,{natural:true});close(p.totalHealingReceived,1500);close(ultGrowth(p).damage,205);p.hp-=1500;g.heal(p,p,1500,false);close(ultGrowth(p).damage,255);
 });
 
 test('Hohenheim death state lasts 2.5 seconds, cannot move, heal or ult, and only awards one kill',()=>{

@@ -6,7 +6,7 @@ const tintTone=(color,light=0)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice
 
 export function projectileAppearance(p,g){
  const key=p.theme||p.source?.key,style=combatStyle(key,g,p.source,{kind:p.damageKind==='basic'?'basic':'projectile',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});
- const type=key==='sewingNeedle'?'needle':key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
+ const type=key==='kromerNail'?'nail':key==='sewingNeedle'?'needle':key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?(p.visualHeight??1):p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
  return {...style,...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(p.lcaShieldRound?{color:'#59b8ff',accent:'#c1ebff',dark:'#173c69'}:{}),...(type==='swordRay'?{visualWidth:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:key==='gubo'||key==='myo'&&p.slot==='q',aura:p.lcaShieldRound?'#3b9eff':p.guboUltimate?'#d24b66':empowered?'#a32b44':null};
@@ -18,7 +18,7 @@ export function beamAppearance(key){
 export const whipVisualInterval=(g,e)=>g.attackInterval(e)*1.2;
 export function projectileAsset(p){
  const key=p.theme||p.source?.key;if(p.swordWave||key==='yi'&&p.damageKind!=='skill'||p.slot==='r'&&['ishmael','rodya'].includes(key))return false;
- return {yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[key];
+ return {kromerNail:'kromerNail',yi:'yiDagger',nelly:'nellyKnife',rodya:'rodyaAxe',ppui:'ppuiNail',ishmael:'ishmaelMace',ahab:'ahabHarpoon',starbuck:'starbuckHarpoon'}[key];
 }
 export class ProjectileVFX {
  constructor(vfx){this.vfx=vfx;this.sprites=new Map();this.histories=new WeakMap();this.guboRanges=new WeakMap();}

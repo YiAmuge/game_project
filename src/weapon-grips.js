@@ -9,18 +9,20 @@ export const BARE_HAND_COLORS={yi:'#f8d8c0',faust:'#f0e0d8',don:'#f8d8c0',ryoshu
 const GLOVE_PALETTES={
  black:{base:'#292e38',shadow:'#141820',light:'#59616f',outline:'#090c11'},
  brown:{base:'#805a3b',shadow:'#4b3425',light:'#ad8357',outline:'#291e18'},
+ gray:{base:'#85878c',shadow:'#4c5058',light:'#b6bac1',outline:'#171b22'},
  white:{base:'#eee9df',shadow:'#b6afa5',light:'#fffaf1',outline:'#373438'},
 };
 const mix=(color,t)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(t>=0?n+(255-n)*t:n*(1+t)).toString(16).padStart(2,'0');}).join('');
 export function gripAppearance(key){
  if(UNCHANGED_HANDS.has(key))return null;
- const material=BLACK_GLOVES.has(key)?'black':BROWN_GLOVES.has(key)?'brown':key==='ahab'?'white':BARE_HAND_COLORS[key]?'skin':null;
+ const material=BLACK_GLOVES.has(key)?'black':BROWN_GLOVES.has(key)?'brown':key==='ahab'?'white':key==='kromer'?'gray':BARE_HAND_COLORS[key]?'skin':null;
  if(!material)return null;const base=BARE_HAND_COLORS[key];
  return {material,...(key==='alisa'?{base:'#5a292b',shadow:'#30191e',light:'#824044',outline:'#211014'}:material==='skin'?{base,shadow:mix(base,-.24),light:mix(base,.24),outline:'#302620'}:GLOVE_PALETTES[material])};
 }
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
 export const GRIP_PATHS={
+ kromerNail:[[.065,.5],[.16,.5]],
  jamilaKopis:[[.055,.48],[.22,.48]],jamilaRifle:[[.238,.80],[.238,.80]],
  yiDagger:[[.075,.49],[.33,.49]],faustSword:[[.035,.49],[.175,.49]],sinclairHalberd:[[.16,.39],[.62,.37]],
  donLance:[[.04,.49],[.22,.49]],ryoshuSword:[[.07,.36],[.245,.37]],hongluGlaive:[[.11,.19],[.37,.25]],

@@ -63,8 +63,8 @@ test('Dongrang converts bonus power with a 3:1 health and armor ratio and applie
  p.hp=p.maxHp*.4;g.addBuff(p,'power',1);const extra=1.1*1.12-1;near(p.maxHp,hp*(1+extra*.3));near(g.armor(p),armor*(1+extra*.1));near(p.hp/p.maxHp,.4);near(p.totalHealingReceived,0);run(g,1.01);near(p.maxHp,hp*1.03);near(p.hp/p.maxHp,.4);near(p.totalHealingReceived,0);
 });
 test('Dongrang nutrients require actual own healing and increase only ultimate damage, respecting armor',()=>{
- const{g,p}=arena('dongrang'),t=hero(g,'faust',1,42);t.armor=100;p.hp-=2000;g.heal(null,p,500,false);g.heal(t,p,500,false);g.heal(p,p,500,false,{natural:true});near(p.totalHealingReceived,0);g.heal(p,p,500,false);near(p.totalHealingReceived,500);p.hp-=1000;g.heal(p,p,500,false);near(p.totalHealingReceived,1000);assert.deepEqual(ultGrowth(p),{radius:3.2,damage:200});near(g.deal(p,t,260),130);near(g.deal(p,t,35,{fixed:true}),35);
- const old=t.hp;g.cast(p,'r',p);near(old-t.hp,100);assert.ok(g.stat(t,'root'));p.totalHealingReceived=0;near(ultGrowth(p).damage,180);
+ const{g,p}=arena('dongrang'),t=hero(g,'faust',1,42);t.armor=100;p.hp-=2000;g.heal(null,p,500,false);g.heal(t,p,500,false);g.heal(p,p,500,false,{natural:true});near(p.totalHealingReceived,0);g.heal(p,p,500,false);near(p.totalHealingReceived,500);p.hp-=1000;g.heal(p,p,500,false);near(p.totalHealingReceived,1000);assert.deepEqual(ultGrowth(p),{radius:3.2,damage:205});near(g.deal(p,t,260),130);near(g.deal(p,t,35,{fixed:true}),35);
+ const old=t.hp;g.cast(p,'r',p);near(old-t.hp,102.5);assert.ok(g.stat(t,'root'));p.totalHealingReceived=0;near(ultGrowth(p).damage,180);
 });
 test('health draws one thin black damage boundary rather than repeated tick marks',()=>{
  const e={hp:3400,maxHp:3400,alive:true},g={time:0,shield:()=>0},lines=[],c={fillRect(){},save(){},restore(){},beginPath(){},moveTo(x,y){lines.push([x,y]);},lineTo(x,y){lines.push([x,y]);},stroke(){}};
@@ -79,7 +79,7 @@ test('tower plinth anchors use the ground-plane midpoint inside the front foot l
 });
 test('every champion and form exposes complete summary, detail, resources and range facts',()=>{
  for(const key of Object.keys(CHAMPIONS))for(const form of(key==='sora'||key==='yan'?[false,true]:[false])){const stats=championReferenceStats(key,form);assert.ok(stats.health>0&&stats.armor>=0);for(let n=0;n<(form?3:4);n++){const r=skillReference(key,n,form);assert.ok(r.title&&r.cooldown&&r.summary&&r.details&&r.ranges.length,`${key}/${form}/${n}`);assert.ok(r.ranges.every(p=>p.label&&p.text));}}
- for(const key of ['nelly','ryoshu'])assert.match(skillReference(key,2).cooldown,/최대 2회/);assert.match(skillReference('sora',2,true).cooldown,/6초 · 최대 2회/);assert.match(skillReference('don',2).details,/최소 120 ~ 최대 450/);assert.match(skillReference('don',2).details,/탄창.*2개/);assert.match(skillReference('don',2).details,/10%.*돌려/);assert.match(skillReference('dongrang',0).details,/1000.*궁극기 피해.*20/);assert.doesNotMatch(skillReference('dongrang',3).details,/고정|일반 피해/);
+ for(const key of ['nelly','ryoshu'])assert.match(skillReference(key,2).cooldown,/최대 2회/);assert.match(skillReference('sora',2,true).cooldown,/6초 · 최대 2회/);assert.match(skillReference('don',2).details,/최소 120 ~ 최대 450/);assert.match(skillReference('don',2).details,/탄창.*2개/);assert.match(skillReference('don',2).details,/10%.*돌려/);assert.match(skillReference('dongrang',0).details,/1000.*궁극기 피해.*25/);assert.doesNotMatch(skillReference('dongrang',3).details,/고정|일반 피해/);
  assert.match(skillReference('jamila',1).details,/0.12초/);assert.match(skillReference('jamila',3).details,/전투력.*이동속도/);assert.equal(skillReference('sora',0,true).title,'당연한 믿음');
 });
 test('numeric effect colors distinguish healing, damage and fixed damage and always escape markup',()=>{

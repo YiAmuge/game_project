@@ -1,3 +1,4 @@
+import{drawKromerEffects}from'./kromer-vfx.js';
 import{drawLevelBadge}from'./level-badge.js';
 import { paintHealth } from './health-display.js';
 import { SORA,ego as soraEgo,marked as soraMarked } from './sora.js';
@@ -90,7 +91,7 @@ function directiveFlower(r,e,g,remaining,muted,offset){const c=r.ctx;
  c.beginPath();c.arc(0,0,.62,-Math.PI/2,-Math.PI/2+Math.min(1,remaining/SORA.markDuration)*Math.PI*2);c.strokeStyle=muted?'#b7c4cebb':'#62d9ffbb';c.lineWidth=.03;c.stroke();c.restore();
 }
 export function championEffects(r,e,g){
- const c=r.ctx,head=overheadY(e,g);c.save();orderMark(r,e,g);towerMark(r,e,g);
+ const c=r.ctx,head=overheadY(e,g);c.save();orderMark(r,e,g);towerMark(r,e,g);drawKromerEffects(r,e,g);
  if(g.stat(e,'silence')){const x=e.x-.9,y=head-.1;r.circle(x,y,.25,'#242938','#c6c0df',.04);r.line([{x:x-.12,y:y-.06},{x:x+.12,y:y-.06},{x:x+.12,y:y+.07},{x:x+.03,y:y+.07},{x:x-.04,y:y+.14},{x:x-.04,y:y+.07},{x:x-.12,y:y+.07},{x:x-.12,y:y-.06}],'#e8def4',.035);r.line([{x:x-.18,y:y+.19},{x:x+.18,y:y-.19}],'#dfa8b8',.055);}
  const villain=g.champions(1-e.team).some(a=>a.alive&&a.key==='don'&&a.state.villain===e.id);
  if(villain){const y=head-.1;for(const color of ['#ffe258','#d82b39'])for(const side of [-1,1])r.line([{x:e.x-.25,y:y-side*.25},{x:e.x+.25,y:y+side*.25}],color,color==='#ffe258'?.2:.1);}
@@ -132,7 +133,7 @@ export function championGroundEffects(r,e,g){
 }
 
 export function stackGauge(e,g){
- if(e.key==='dongrang')return null;
+ if(e.key==='dongrang'){const value=(e.totalHealingReceived||0)%1000;return{color:'#d8d48b',ratio:value/1000,label:`다음 양분까지 ${Math.ceil(1000-value)} 회복`,max:1};}
  const info=stackInfo(e,g);let state=info;
  if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))state={label:'광폭한 칼날'};
  if(!state)return null;

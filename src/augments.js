@@ -75,7 +75,7 @@ export function onCast(){}
 export function onDebuff(g,e,target){
  if(!e||e.kind!=='champion'||!e.alive||e.team===target.team||!has(e,'maskDeLu')||(e.state.maskReady||0)>g.time)return;
  e.state.maskReady=g.time+10;g.effects.push({type:'maskSplash',source:e.id,x:e.x,y:e.y,life:.65,maxLife:.65});e.qCd*=.8;e.rCd*=.8;
- for(const key of ['knifeReady','treeReady','ryoshuReady','egoQReady','qDelayUntil'])if(Number.isFinite(e.state[key])&&e.state[key]>g.time)e.state[key]=g.time+(e.state[key]-g.time)*.8;
+ for(const key of ['knifeReady','treeReady','ryoshuReady','egoQReady','ppuiReady','qDelayUntil'])if(Number.isFinite(e.state[key])&&e.state[key]>g.time)e.state[key]=g.time+(e.state[key]-g.time)*.8;
  e.ammo=Math.min(g.ammoCap(e),e.ammo+(e.key==='rudolph'?15:1));
 }
 export function convertedShield(g,e,amount){

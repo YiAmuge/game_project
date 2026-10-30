@@ -7,7 +7,7 @@ import*as AugmentArt from'./augment-art.js';
 import{absorbedOrder}from'./augments.js';
 
 export const MOBILE_STATUS_LIMIT=10;
-const timedPassives=new Set(['yi','kim','ishmael','gregor','sora','don','rudolph','dongbaek','ryoshu']);
+const timedPassives=new Set(['ppui','yi','kim','ishmael','gregor','sora','don','rudolph','dongbaek','ryoshu']);
 const augmentBuffs=new Set(['augBattleHaste','augReload','ampuleStride','writtenOrder']);
 const debuffNames={stun:'기절',silence:'침묵',root:'속박',slow:'감속',disarm:'무장해제',weak:'전투력 감소',armorWeak:'방어력 감소',armorDown:'방어력 감소',vulnerable:'받는 피해 증가',taunt:'도발',captured:'포획',netCapture:'포획',reloadWeak:'장전 감속',hasteWeak:'스킬 가속 감소'};
 function passiveActive(g,e){

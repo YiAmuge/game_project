@@ -52,7 +52,7 @@ export function respond(g,e,dt){
  if(p.kind==='defend'){
   if(target?.kind==='champion'&&d<=8){
    if(e.key==='queequeg'&&e.state.tether?.target!==target.id)g.cast(e,'q',target);
-   if(e.key==='ppui'){g.attack(e,target);if(target.hp<target.maxHp*.85)g.cast(e,'q',target);}
+   if(e.key==='ppui'&&d<=7&&target.hp<target.maxHp*.85)g.cast(e,'q',e);
   }
   const threat=g.champions(1-e.team).filter(t=>t.alive&&g.visibleTo(e.team,t)&&distance(t,point)<=8).sort((a,b)=>distance(a,point)-distance(b,point))[0];
   if(threat){if(distance(e,threat)>g.attackRange(e)+threat.radius)g.moveToward(e,threat,dt);else g.attack(e,threat);return true;}

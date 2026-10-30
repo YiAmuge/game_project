@@ -44,12 +44,14 @@ export class MobileControls{
   if(!this.enabled||e.pointerType!=='touch')return;e.preventDefault();e.stopImmediatePropagation();if(!this.api.allowed())return;
   if(slot==='basic'&&[...this.gestures.values()].some(s=>s.slot==='basic'))return;
   button.setPointerCapture(e.pointerId);if(slot==='move'){this.beginMove(e);return;}const g=this.api.game(),p=g.player,box=button.getBoundingClientRect(),gesture={slot,category,id:e.pointerId,at:performance.now(),cx:box.x+box.width/2,cy:box.y+box.height/2,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,manual:false,started:false,owner:p.id,game:g};this.gestures.set(e.pointerId,gesture);this.api.takeAim();
+  if(p.key==='kromer'&&p.state.kromerGrab&&['basic','r'].includes(slot)){gesture.kromerSteering=true;return;}
   gesture.autoTarget=mobileAutoAim(g,p,slot,{category,movement:this.axes}).target?.id;
   if(Infiltration.selecting(p)&&slot==='q'){g.input.precision=true;gesture.precision=true;}
   else if(this.chargeGesture(gesture,p))this.aim(gesture);
  },true);}
  move(e){const s=this.gestures.get(e.pointerId);if(!s)return;e.preventDefault();if(s.slot==='map'){if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>12)s.cancel=true;return;}s.x=e.clientX;s.y=e.clientY;
   if(s.slot==='move'){const dx=s.x-s.cx,dy=s.y-s.cy,n=Math.hypot(dx,dy),scale=Math.min(1,n/44);this.axes={x:n>7?dx/(n||1)*scale:0,y:n>7?dy/(n||1)*scale:0};if(n>7)this.api.game().player.mobileMoveDirection={x:dx/n,y:dy/n};$('mobile-stick').style.setProperty('--stick-x',Math.max(-44,Math.min(44,dx))+'px');$('mobile-stick').style.setProperty('--stick-y',Math.max(-44,Math.min(44,dy))+'px');return;}
+  if(s.kromerSteering){this.steerGrab(s);return;}
   if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&(s.autoHeld||s.autoLocked)){this.holdAttack(s);return;}
   if(s.precision)return;this.updateGesture(s);if(s.manual||s.autoLocked||this.chargeGesture(s,this.api.game().player))this.aim(s);
  }
@@ -68,6 +70,7 @@ export class MobileControls{
  }
  end(e,canceled=false){const ui=this.uiTouches.get(e.pointerId);this.uiTouches.delete(e.pointerId);const s=this.gestures.get(e.pointerId);if(!s){if(ui&&!canceled&&!ui.button.disabled&&Math.hypot(e.clientX-ui.x,e.clientY-ui.y)<=12){e.preventDefault();this.uiClick={button:ui.button,x:e.clientX,y:e.clientY,until:performance.now()+500};ui.button.click();}return;}e.preventDefault();e.stopImmediatePropagation();this.gestures.delete(e.pointerId);const g=this.api.game(),p=g.player;
   if(s.slot==='map'){if(!canceled&&!s.cancel){this.api.score(!this.api.scoreOpen());this.fitMap();this.updateSkillHelp();}return;}if(s.slot==='move'){this.axes={x:0,y:0};$('mobile-stick').style.setProperty('--stick-x','0px');$('mobile-stick').style.setProperty('--stick-y','0px');this.layout.applyPart('stick');return;}
+  if(s.kromerSteering){g.input.fire=false;this.finishAim(g);return;}
   g.input.fire=false;if(s.precision){g.input.precision=false;return;}
   if(canceled||s.cancel||!this.api.allowed()||s.owner!==p.id||s.game!==g){this.api.cancelCharge(p);this.finishAim(g);return;}
   if(Infiltration.selecting(p)&&s.slot==='basic'){this.api.confirm();this.finishAim(g);return;}
@@ -90,7 +93,8 @@ export class MobileControls{
   if(g.input.fire){g.input.aim=auto.point;g.mobileAim={slot:'basic',point:g.input.aim,autoTarget:auto.target?.id};this.api.takeAim();}else delete g.mobileAim;
  }
  chargeGesture(s,p){return s.slot==='basic'&&['yan','hohenheim'].includes(p.key)&&!distorted(this.api.game(),p)||s.slot==='q'&&this.api.chargeTactical(p);}
- tick(){this.refreshMode();if(!this.enabled||this.blocking)return;for(const s of this.gestures.values())if(!['map','move'].includes(s.slot)&&!s.precision){const mode=this.updateGesture(s);if(this.chargeGesture(s,this.api.game().player)){this.aim(s);continue;}if(mode==='tap')continue;if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&!s.manual){this.holdAttack(s);continue;}this.aim(s);}}
+ steerGrab(s){const g=this.api.game();if(!g.player.state.kromerGrab||!this.api.allowed())return;if(Math.hypot(s.x-s.cx,s.y-s.cy)<6)return;s.manual=true;g.input.aim=this.manualPoint(s);g.input.fire=false;g.mobileAim={slot:s.slot,point:g.input.aim};this.api.takeAim();}
+ tick(){this.refreshMode();if(!this.enabled||this.blocking)return;for(const s of this.gestures.values())if(!['map','move'].includes(s.slot)&&!s.precision){if(s.kromerSteering){this.steerGrab(s);continue;}const mode=this.updateGesture(s);if(this.chargeGesture(s,this.api.game().player)){this.aim(s);continue;}if(mode==='tap')continue;if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&!s.manual){this.holdAttack(s);continue;}this.aim(s);}}
  fitMap(){this.score.fit();}
  updateSkillHelp(){const g=this.api.game(),stamp=[g.player.key,g.buff(g.player,'soraEgo'),distorted(g,g.player),this.skillTab,this.descriptionMode].join(':');if(this.helpStamp===stamp)return;this.helpStamp=stamp;const help=mobileSkillHelp(g,g.player,this.skillTab,this.descriptionMode),root=$('mobile-score-skills');root.querySelector('strong').textContent=help.title;root.querySelector('p').textContent=help.text;for(const b of root.querySelectorAll('button')){const active=b.dataset.mode?b.dataset.mode===this.descriptionMode:Number(b.dataset.slot)===this.skillTab;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));}}
  hud(){if(!this.enabled)return;const g=this.api.game(),p=g.player;this.shop?.update(p);for(const id of['basic-btn','q-btn','r-btn'])$(id).setAttribute('aria-label',$(id).querySelector('span').textContent);const kinds=new Set(mobileAttackTargets(g,p).map(attackCategory)),visibleKinds=Object.keys(ATTACK_CATEGORIES).filter(kind=>kinds.has(kind)),positions=targetButtonPositions($('basic-btn').getBoundingClientRect(),visibleKinds);for(const b of document.querySelectorAll('.mobile-target-btn')){b.classList.toggle('hidden',!p.alive||Infiltration.absent(p)||!this.api.allowed()||!kinds.has(b.dataset.targetKind));const pos=positions.find(v=>v.kind===b.dataset.targetKind);if(pos){b.style.left=pos.x-18+'px';b.style.top=pos.y-18+'px';}}for(const slot of['q','r']){const b=$(slot+'-btn'),charges=skillCharges(g,p,slot),recast=p.alive&&!Infiltration.absent(p)&&Boolean(canRecast(g,p,slot));b.querySelector('.mobile-charges').textContent=charges?String(charges.current):'';b.dataset.skill=slot;b.classList.toggle('mobile-recast',recast);if(recast)b.setAttribute('aria-label',b.getAttribute('aria-label')+' · 재시전 가능');}

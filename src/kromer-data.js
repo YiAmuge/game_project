@@ -1,0 +1,1 @@
+export const KROMER_DATA={id:36,name:'크로머',tag:'KROMER',role:'돌격',color:'#bdb5a1',icon:'크',power:3,health:2,armor:5,speed:3,ammo:2,reload:4,range:3.7,damage:185,attackTime:.5,q:10,r:60,passive:'쥐는 자의 주시',basic:'죄악을 꿰뚫는 못',tactical:'처단',ultimate:'쥐어짐',brief:'못 표식과 추적 돌진으로 적을 붙잡는 처단자'};

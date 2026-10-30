@@ -3,7 +3,7 @@ import { distance,direction } from './geometry.js';
 import { area, dash } from './skills.js';
 
 export function init(g,e){if(e.key==='dongbaek'){e.state.petals=3;e.state.petalReady=Infinity;}if(e.key==='dongrang'){e.totalHealingReceived=0;}}
-export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1000);return {radius:3.2,damage:180+n*20};}
+export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1000);return {radius:3.2+Math.min(2,Math.floor(n/3)*.1),damage:180+n*25};}
 export function validate(g,e,slot,p){
  if(e.key==='myo'&&slot==='q')return e.ammo>=1&&!g.buff(e,'rabbitFrenzy');
  if(e.key==='dongrang'&&slot==='r')return !g.stat(e,'root')&&!g.blocked(p.x,p.y,e.radius);

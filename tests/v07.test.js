@@ -64,7 +64,7 @@ test('Dongrang passive power purchases apply health immediately and augment remo
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);
 });
 test('natural healing is excluded while direct healing advances 1500-point Dongrang growth',()=>{
- const {g,p}=quiet('dongrang');p.hp-=3000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(p,p,1500,false);assert.equal(ultGrowth(p).damage,200);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,200);
+ const {g,p}=quiet('dongrang');p.hp-=3000;g.step(.1);assert.ok(p.naturalHealing);close(p.totalHealingReceived,0);g.heal(p,p,1500,false);assert.equal(ultGrowth(p).damage,205);g.heal(null,p,800,false,{natural:true});assert.equal(ultGrowth(p).damage,205);
 });
 
 test('each desire tree converts at 350 actual damage, heals one for one, stops attacking and lasts ten more seconds',()=>{

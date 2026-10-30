@@ -47,16 +47,15 @@ test('Rudolph visual pulses run on their own timeline without changing attack hi
 test('Ahab opening ultimate strikes emit exactly two water spins at their actual strike moments',()=>{
  const {g,p,t}=arena('ahab'),v=new ChampionVFX(new SkillVFX()),seen=new Set();g.cast(p,'r',t);run(g,.5,()=>{v.sync(g);for(const e of v.effects.filter(f=>f.type==='waterSpin')){assert.equal(e.r,2.5);seen.add(e.at);}});const at=[...seen];assert.equal(at.length,2);close(at[1]-at[0],.2,.009);
 });
-test('Ppui ally buffs do not synthesize a fan, while enemy-directed basics still fire all three nails',()=>{
- const {g,p,t}=arena('ppui'),v=new SkillVFX();const ally=g.makeChampion('yi',0,12);Object.assign(ally,{x:22,y:20});g.attack(p,ally);v.sync(g,camera);assert.ok(g.buff(ally,'redEncouragement'));assert.ok(!v.emitters.some(e=>e.shape));
- g.units=g.units.filter(e=>e!==ally);t.x=35;p.attackCd=0;p.ammo=g.ammoCap(p);g.attack(p,t);run(g,.22);v.sync(g,camera);assert.equal(g.projectiles.filter(p=>p.theme==='ppui').length,3);assert.ok(!v.emitters.some(e=>e.shape&&!e.body));
+test('Ppui basics always create three nails without an allied regeneration effect',()=>{
+ const {g,p,t}=arena('ppui'),v=new SkillVFX();t.x=60;const ally=g.makeChampion('yi',0,12);Object.assign(ally,{x:22,y:20});g.attack(p,ally);run(g,.22);v.sync(g,camera);assert.equal(g.buff(ally,'ppuiMending'),false);assert.equal(g.projectiles.filter(p=>p.theme==='ppui').length,3);assert.ok(!v.emitters.some(e=>e.shape&&!e.body));
 });
 test('Ppui ultimate has twenty-two forward visual nails per volley with the same real five damage waves',()=>{
  const {g,p,t}=arena('ppui'),damage=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)damage.push(n);return deal(a,b,n,o);};g.cast(p,'r',t);run(g,.01);const fx=g.effects.find(f=>f.type==='nailVolley'),flight=fanFlight({...fx,type:'nailFan',at:10},.18);assert.equal(flight.length,22);for(const p of flight)assert.ok(p.target.x>=fx.x);
  run(g,2.1);assert.equal(damage.length,5);close(damage.reduce((a,b)=>a+b,0),720);
 });
-test('Ppui tactical effect follows the selected healing point and its real radius',()=>{
- const {g,p}=arena('ppui'),v=new ChampionVFX(new SkillVFX()),point={x:24,y:21};g.cast(p,'q',point);v.sync(g);const f=v.effects.find(e=>e.type==='petalField');assert.equal(f.x,point.x);assert.equal(f.y,point.y);assert.equal(f.r,3.5);assert.equal(f.life,2);
+test('Ppui tactical effect is centered on its caster with its real seven-unit radius',()=>{
+ const {g,p}=arena('ppui'),v=new ChampionVFX(new SkillVFX()),point={x:24,y:21};g.cast(p,'q',point);v.sync(g);const f=v.effects.find(e=>e.type==='petalField');assert.equal(f.x,p.x);assert.equal(f.y,p.y);assert.equal(f.r,7);assert.equal(f.life,.6);
 });
 test('Yan sword falls only during the final 0.15 seconds and reaches ground at the damage moment',()=>{
  assert.equal(fallingSwordHeight(.151),null);assert.equal(fallingSwordHeight(-.01),null);close(fallingSwordHeight(.15),11);close(fallingSwordHeight(0),0);let previous=11;for(let remaining=.14;remaining>=0;remaining-=.01){const height=fallingSwordHeight(remaining);assert.ok(height<previous);previous=height;}

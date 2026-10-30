@@ -77,8 +77,8 @@ test('mobile autoaim prefers hittable targets, then aims toward visible foes out
 test('mobile Marton prioritizes a melee target, otherwise automatically uses a ranged target',()=>{
  const{g,p}=arena('marton'),far=hero(g,{x:44.5}),close=hero(g,{x:42});let aim=mobileAutoAim(g,p);assert.equal(aim.target,close);assert.equal(aim.mode,'melee');assert.ok(Math.hypot(aim.point.x-p.x,aim.point.y-p.y)<2.5);close.alive=false;aim=mobileAutoAim(g,p);assert.equal(aim.target,far);assert.ok(Math.hypot(aim.point.x-p.x,aim.point.y-p.y)>=2.5);
 });
-test('mobile Ppui basic prioritizes wounded ally healing over an enemy, then attacks if no ally needs healing',()=>{
- const{g,p}=arena('ppui'),foe=hero(g,{x:42}),ally=hero(g,{team:0,x:43,hp:100});assert.equal(mobileAutoAim(g,p).target,ally);ally.hp=ally.maxHp;assert.equal(mobileAutoAim(g,p).target,foe);
+test('mobile Ppui basic selects enemies regardless of nearby allied injuries',()=>{
+ const{g,p}=arena('ppui'),foe=hero(g,{x:42}),ally=hero(g,{team:0,x:43,hp:100});assert.equal(mobileAutoAim(g,p).target,foe);ally.hp=ally.maxHp;assert.equal(mobileAutoAim(g,p).target,foe);
 });
 test('mobile Queequeg tether and Hong Lu waterfall prioritize the lowest-health nearby ally',()=>{
  for(const[key,slot]of[['queequeg','q'],['honglu','r']]){const{g,p}=arena(key),a=hero(g,{team:0,x:42,hp:8000}),b=hero(g,{team:0,x:45,hp:500});hero(g,{x:41});assert.equal(mobileAutoAim(g,p,slot).target,b);assert.ok(a.alive);}

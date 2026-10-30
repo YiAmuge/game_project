@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "source": {
+    "file": "source/kromer-v102.png",
+    "sha256": "803d2a0e7bca73988edf1946402e79aace467d7d518f7aa78c00563927c722e9"
+  },
+  "frames": {
+    "kromer": {
+      "x": 8,
+      "y": 8,
+      "w": 260,
+      "h": 400,
+      "sheet": 17,
+      "rotation": 0,
+      "source": "source/kromer-v102.png",
+      "sourceRect": [
+        388,
+        23,
+        510,
+        784
+      ],
+      "referenceHeight": 400,
+      "crownOffset": 0,
+      "heightScale": 1,
+      "heightBasis": "crown",
+      "foot": [
+        0.6,
+        1
+      ],
+      "face": [
+        18,
+        0,
+        224,
+        224
+      ]
+    },
+    "kromerNail": {
+      "x": 276,
+      "y": 8,
+      "w": 720,
+      "h": 80,
+      "sheet": 17,
+      "rotation": 0,
+      "source": "source/kromer-v102.png",
+      "sourceRect": [
+        28,
+        806,
+        1487,
+        166
+      ]
+    }
+  }
+}

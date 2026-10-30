@@ -2,6 +2,7 @@
 export const NEUTRAL={color:'#e6e7e9',accent:'#ffffff',dark:'#45484f',element:'metal'};
 const style=(color,element='metal',accent=color,dark='#33353b')=>({color,element,accent,dark});
 export const CHAMPION_STYLES={
+ kromer:style('#a19a8e','metal','#f3e7cf','#222227'),kromerNail:style('#56545a','metal','#c1c0c5','#09090c'),
  jamila:style('#d7b550','metal','#fff1bd','#514727'),
  yi:style('#dce9ef','mirror'),faust:{...NEUTRAL},sinclair:{...NEUTRAL},don:style('#e5bd38','metal','#fff1a5','#79611d'),meursault:{...NEUTRAL},gubo:{...NEUTRAL},
  kim:style('#629edc','metal','#c4e9ff','#1c3458'),queequeg:style('#376c70','water','#a7d4ce','#182f36'),ppui:{...NEUTRAL},

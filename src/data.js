@@ -1,3 +1,4 @@
+import {KROMER_DATA} from './kromer-data.js';
 import {JAMILA_DATA} from './jamila-data.js';
 import { CHAMPION_TEXT } from './champion-text.js';
 import { NEW_DATA } from './new-data.js';
@@ -40,6 +41,7 @@ export const CORE_POSITIONS=BASE_DIVIDERS.map((wall,team)=>{const area=FOUNTAIN_
 export const WELL_ROOMS=[{x:-3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width+3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:1}];
 export function inWell(e,team=e.team){const w=FOUNTAIN_AREAS[team];return Boolean(w&&e.x>=w.x&&e.x<=w.x+w.w&&e.y>=w.y&&e.y<=w.y+w.h);}
 export const CHAMPIONS = {
+  kromer:KROMER_DATA,
   jamila:JAMILA_DATA,
   faust: { id: 2, name: '파우스트', tag: 'FAUST', role: '저격', color: '#c9d8df', icon: 'F', power: 4, health: 3, speed: 2, ammo: 3, reload: 3, range: 7.5, damage: 180, attackTime: .46, q: 11, r: 48,
     passive: '게젤샤프트', basic: '대상 분석', tactical: '탐구', ultimate: '표상방출기',
@@ -62,13 +64,14 @@ export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!NEW_CHAMPION_KEYS.includes(key)));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const ARMOR_GRADES={jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:3,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
+export const ARMOR_GRADES={kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:3,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS))c.armor=ARMOR_GRADES[key]??2;
 export const GROWTH={
+ kromer:[.055,.05,.013],
  jamila:[.045,.055,.01],
  faust:[.055,.045,.008],yi:[.042,.052,.012],sinclair:[.058,.048,.016],meursault:[.038,.075,.007],don:[.052,.061,.013],ryoshu:[.064,.04,.017],honglu:[.046,.055,.014],heathcliff:[.061,.063,.01],ishmael:[.043,.072,.009],rodya:[.054,.065,.011],outis:[.06,.047,.01],gregor:[.045,.074,.008],gubo:[.063,.044,.006],gahwan:[.051,.049,.011],nelly:[.066,.043,.018],ahab:[.057,.041,.009],alisa:[.058,.057,.012],rudolph:[.05,.048,.007],moses:[.036,.058,.01],ezra:[.052,.067,.012],myo:[.064,.038,.015],dongbaek:[.053,.044,.01],dongrang:[.041,.075,.008],hohenheim:[.06,.039,.008],marton:[.038,.077,.009],queequeg:[.046,.079,.008],starbuck:[.058,.06,.013],kim:[.048,.068,.011],ppui:[.035,.054,.012],sora:[.06,.046,.013],yan:[.043,.058,.01],
 };
-export const ATTACK_STYLES={jamila:'shot',faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
+export const ATTACK_STYLES={kromer:'thrust',jamila:'shot',faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
 
 CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=4.65;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
@@ -141,8 +144,9 @@ export const lanePath = (team, lane) => {
   return team===0?points:points.reverse();
 };
 export const CHAMPION_ROLES={
+ kromer:['돌격','암살','top'],
  jamila:['저격','보호','bottom'],
- yi:['지원','방해','support'],faust:['저격','bottom'],sinclair:['암살','jungle'],don:['돌격','top'],meursault:['보호','방해','top'],gubo:['저격','bottom'],kim:['보호','top'],queequeg:['지원','보호','support'],ppui:['지원','support'],gahwan:['방해','저격','support'],hohenheim:['저격','방해','bottom'],alisa:['암살','돌격','jungle'],marton:['보호','방해','top'],nelly:['암살','jungle'],myo:['암살','jungle'],rudolph:['저격','bottom'],dongbaek:['저격','bottom'],dongrang:['보호','돌격','top'],outis:['저격','암살','bottom'],heathcliff:['돌격','암살','top'],ryoshu:['암살','jungle'],ishmael:['방해','보호','support'],honglu:['지원','support'],rodya:['방해','support'],gregor:['보호','돌격','top'],ahab:['저격','암살','bottom'],starbuck:['암살','방해','jungle'],sora:['암살','돌격','jungle'],yan:['방해','보호','support']
+ yi:['지원','방해','support'],faust:['저격','bottom'],sinclair:['암살','jungle'],don:['돌격','암살','top'],meursault:['보호','방해','top'],gubo:['저격','bottom'],kim:['보호','top'],queequeg:['지원','보호','support'],ppui:['지원','support'],gahwan:['방해','저격','support'],hohenheim:['저격','방해','bottom'],alisa:['암살','돌격','jungle'],marton:['보호','방해','top'],nelly:['암살','jungle'],myo:['암살','jungle'],rudolph:['저격','bottom'],dongbaek:['저격','bottom'],dongrang:['보호','top'],outis:['저격','암살','bottom'],heathcliff:['돌격','top'],ryoshu:['암살','jungle'],ishmael:['방해','보호','support'],honglu:['지원','support'],rodya:['방해','support'],gregor:['보호','돌격','top'],ahab:['저격','암살','bottom'],starbuck:['암살','방해','jungle'],sora:['암살','돌격','jungle'],yan:['방해','보호','support']
 };
 for(const [key,values] of Object.entries(CHAMPION_ROLES)){const c=CHAMPIONS[key];c.roles=values.slice(0,-1);c.role=c.roles[0];c.recommendedPosition=values.at(-1);}
 CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;

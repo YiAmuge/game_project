@@ -53,7 +53,7 @@ export function championPresentation(g,e){
  if(e.key==='marton'&&(buff('martonDrain')||s.fairy))set(FAIRY_COLORS.main,'glow',.65);
  if(buff('donLifesteal'))set('#8e2d3e');if(buff('guboReload'))set('#6c1429','flame',.8);
  if(buff('tetherGuard')||buff('tetherArmor'))set('#3c807e');if(buff('queequegUlt'))set('#a7333c','flame',.8);
- if(buff('redEncouragement'))set('#ad485b','petal');if(buff('insight')||buff('hongluCare'))set('#6bb7ad','mist',.75);
+ if(buff('ppuiMending'))set('#ad485b','petal');if(buff('insight')||buff('hongluCare'))set('#6bb7ad','mist',.75);
  if(buff('rabbitFrenzy'))set('#db8a49','bolt',e.motion?.actionKind==='basic'?.95:.7);
  if(buff('mutant'))set('#5c412d');if(buff('alisaReload'))set('#b86132','flame',.75);
  if(buff('flowerStride')||buff('flowerReload'))set('#dcc66e','petal');
@@ -83,7 +83,7 @@ export class ChampionVFX {
     if(e.key==='meursault'&&slot==='r')this.event('chainStrike',e,g,{angle:cast.angle,r:8,spread:Math.PI*100/180,life:.65});
     if(e.key==='rudolph')this.event('electricCast',e,g,{life:slot==='r'?1.25:.5});
     if(e.key==='ahab'&&slot==='q')this.event('shout',e,g,{life:.5});
-    if(e.key==='ppui'&&slot==='q')this.event('petalField',e,g,{...cast.point,r:3.5,life:2});
+    if(e.key==='ppui'&&slot==='q')this.event('petalField',e,g,{x:e.x,y:e.y,r:7,life:.6});
    }
    if(old.reload&&!buff('alisaReload'))this.event('embers',e,g,{life:.7});
    if(!old.exhausted&&s.exhaustedUntil>g.time)this.event('electricCast',e,g,{life:.25});

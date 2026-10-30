@@ -1,3 +1,5 @@
+import {ultGrowth} from './v06-champions.js';
+import * as Kromer from './kromer.js';
 import * as Hohenheim from './hohenheim.js';
 import { WORLD,AHAB } from './data.js';
 import { GREGOR } from './gregor.js';
@@ -9,6 +11,9 @@ import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
  if(slot==='r'&&['nelly','sinclair'].includes(e.key))return{kind:'circle',range:e.key==='nelly'?7:6,radius:e.key==='nelly'?1.2:3.8,impact:0,ignoreWalls:true,confirm:true};
+ if(e.key==='ppui'&&slot==='q')return{kind:'self',range:0,radius:7,impact:0,confirm:false};
+ if(e.key==='kromer')return slot==='q'?(Kromer.recast(g,e,slot)?{kind:'self',range:0,radius:1,impact:0,confirm:false}:{kind:'line',range:7.2,radius:.22,impact:0,confirm:false}):{kind:'quick',range:3,radius:1,impact:0,confirm:false};
+ if(e.key==='dongrang'&&slot==='r')return{kind:'circle',range:8.5,radius:ultGrowth(e).radius,impact:0,confirm:true};
  if(e.key==='jamila')return slot==='q'?{kind:'quick',range:3.5,radius:Math.PI,impact:0,confirm:false}:{kind:'self',range:0,radius:2,impact:0,confirm:false};
  if(e.key==='don'&&slot==='q')return {kind:'quick',range:6.5,radius:1.05,impact:0,confirm:false};
  const q={faust:['cone',5,Math.PI],yi:['circle',7,3.2],sinclair:['quick',3.2],meursault:['self',0,2],don:['line',4.5,1.05],ryoshu:['quick',3.8],honglu:['self',0,5],heathcliff:['quick',7],ishmael:['self',0,4.5],rodya:['self',0,1.6],outis:['quick',3],gregor:['line',GREGOR.range+(g.buff(e,'mutant')?2.5:0),GREGOR.halfWidth],gubo:['self',0,1.6],gahwan:['circle',8.2,2.5],nelly:['cone',7,.65],ahab:['self',0,AHAB.orderRadius],alisa:['quick',3],rudolph:['self',0,1.5],moses:['self',0,1.5],ezra:['self',0,1.5],myo:['cone',7,.2],dongbaek:['self',0,1.5],dongrang:['circle',7.5,3.8],hohenheim:['quick',2.5],marton:['self',0,5.5],queequeg:['ally',8,1],starbuck:['cone',STARBUCK.qRange,STARBUCK.qAngle],kim:['quick',2.8],ppui:['circle',8,3.5],sora:['circle',ego(g,e)?SORA.egoQRange:SORA.qRange,ego(g,e)?SORA.trailWidth:SORA.qWidth]};

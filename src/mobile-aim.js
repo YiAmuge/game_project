@@ -12,13 +12,13 @@ export function mobileAttackTargets(g,e,range=basicAimReach(g,e),{ignoreWalls=fa
  return g.units.filter(t=>t.alive&&g.hostile(e,t)&&!g.hidden(t)&&g.visibleTo(e.team,t)&&(ignoreWalls||g.clearLine(e,t))&&!g.locked(t)&&!t.returning&&!t.state?.posthumous&&!(t.invulnerableUntil>g.time)&&distance(e,t)<=range+(t.radius||0)+1e-8).sort((a,b)=>(b.kind==='champion')-(a.kind==='champion')||(a.kind==='champion'&&b.kind==='champion'?a.hp-b.hp:0)||distance(e,a)-distance(e,b)||a.id-b.id);
 }
 export function nearestMovementAim(g,e,slot){
- const moves={don:['basic','r'],myo:['basic'],starbuck:['basic','r'],jamila:['q'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q','r'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],kim:['q'],sora:['q']};
+ const moves={kromer:['r'],don:['basic','r'],myo:['basic'],starbuck:['basic','r'],jamila:['q'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q','r'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],kim:['q'],sora:['q']};
  return Boolean(moves[e.key]?.includes(slot));
 }
 export const movementAim=(g,e,slot)=>nearestMovementAim(g,e,slot)||e.key==='yi'&&slot==='r';
 export function dashSlidePriority(g,e,slot){
  if(slot==='basic')return ['don','myo','starbuck'].includes(e.key);
- return slot==='q'&&['sinclair','ryoshu','outis','jamila','heathcliff','hohenheim','kim','sora','alisa'].includes(e.key)||slot==='r'&&['don','outis','alisa'].includes(e.key);
+ return slot==='q'&&['sinclair','ryoshu','outis','jamila','heathcliff','hohenheim','kim','sora','alisa'].includes(e.key)||slot==='r'&&['kromer','don','outis','alisa'].includes(e.key);
 }
 export function rememberManualAim(e,slot,point){
  const x=point.x-e.x,y=point.y-e.y;if(Math.hypot(x,y)>.001)(e.mobileManualAim??={})[slot]={x,y};
@@ -34,14 +34,14 @@ export function mobileAutoAim(g,e,slot='basic',{category,targetId,movement}={}){
  const allyCandidates=[];
  let target;
  if(!category&&e.key==='gubo'&&['basic','r'].includes(slot))allyCandidates.push(...prioritize(allies.filter(t=>g.canGuboHitAlly(e,t)).sort(order)));
- if(!category&&e.key==='ppui'&&slot==='basic')allyCandidates.push(...wounded.filter(t=>!(t.state.ppuiEmpowerReady>g.time)));
  if(!category&&e.key==='queequeg'&&slot==='q')allyCandidates.push(...prioritize([...allies].sort((a,b)=>healthOrder(a)-healthOrder(b)||order(a,b))));
  if(e.key==='honglu'&&slot==='r'){
   allyCandidates.push(...prioritize(g.champions(e.team).filter(t=>visible(t)&&t.hp<t.maxHp).sort((a,b)=>healthOrder(a)-healthOrder(b)||order(a,b))));
  }
- if(e.key==='yi'&&slot==='r'||e.key==='ppui'&&slot==='q')allyCandidates.push(...prioritize(g.champions(e.team).filter(t=>visible(t)&&t.hp<t.maxHp).sort((a,b)=>healthOrder(a)-healthOrder(b)||order(a,b))));
+ if(e.key==='yi'&&slot==='r')allyCandidates.push(...prioritize(g.champions(e.team).filter(t=>visible(t)&&t.hp<t.maxHp).sort((a,b)=>healthOrder(a)-healthOrder(b)||order(a,b))));
  if(e.key==='yi'&&slot==='r'&&!allyCandidates.length)allyCandidates.push(...prioritize([...allies].sort(order)));
  target=[...allyCandidates,...enemies].find(t=>t.id===targetId)||allyCandidates[0]||enemies[0];
+ if(e.key==='kromer'&&slot==='q'&&e.state.kromerQMark?.until>g.time){const marked=g.units.find(t=>t.id===e.state.kromerQMark.targetId&&t.alive);if(marked)return{point:{x:marked.x,y:marked.y},target:marked,mode:'auto'};}
  if(e.key==='marton'&&slot==='basic'){
   const melee=enemies.find(t=>distance(e,t)<2.5+t.radius);if(melee&&(!targetId||target===melee)){target=melee;const d=direction(e,target);return{point:{x:e.x+d.x*2.45,y:e.y+d.y*2.45},target,mode:'melee'};}
  }
@@ -54,6 +54,6 @@ export function mobileManualAim(g,e,slot,dx,dy,camera,{category}={}){
  const a=camera.screenToWorld(0,0),b=camera.screenToWorld(dx,dy),vx=b.x-a.x,vy=b.y-a.y,n=Math.hypot(vx,vy)||1;
  const spec=slot==='basic'?{range:distorted(g,e)?YAN.handLeash:g.attackRange(e)}:skillTargeting(g,e,slot),range=spec.range||spec.radius||3,magnitude=Math.min(1,Math.hypot(dx,dy)/60);
  const point={x:e.x+vx/n*range*magnitude,y:e.y+vy/n*range*magnitude};
- if(e.key==='ppui'&&slot==='basic'&&!category){const ally=g.champions(e.team).filter(t=>t!==e&&t.alive&&!g.hidden(t)&&g.visibleTo(e.team,t)&&g.clearLine(e,t)&&distance(e,t)<=range+t.radius+1e-8&&!(t.state.ppuiEmpowerReady>g.time)).sort((a,b)=>healthOrder(a)-healthOrder(b)||distance(point,a)-distance(point,b)||a.id-b.id)[0];if(ally)return{x:ally.x,y:ally.y};}
+
  return point;
 }

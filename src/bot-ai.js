@@ -43,7 +43,7 @@ export function combatSkills(g,e,target){
  if(e.state.donCharge)return;
  if(e.key==='yan'){g.cast(e,'r',target);if(d<=5)g.cast(e,'q',target);return;}
  if(e.key==='sora'){g.cast(e,'r',target);if(d<=4.5)g.cast(e,'q',target);return;}
- if(e.key==='ppui'){const ally=g.champions(e.team).filter(a=>a!==e&&a.alive&&distance(e,a)<=6).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(ally){g.attack(e,ally);if(ally.hp<ally.maxHp*.85)g.cast(e,'q',ally);}}else if(e.key==='queequeg'){
+ if(e.key==='ppui'){const ally=g.champions(e.team).filter(a=>a!==e&&a.alive&&distance(e,a)<=6).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(ally&&ally.hp<ally.maxHp*.85)g.cast(e,'q',e);}else if(e.key==='queequeg'){
   const ally=g.champions(e.team).filter(a=>a!==e&&a.alive&&distance(e,a)<=5).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
   if(ally&&!e.state.tether)g.cast(e,'q',ally);
  }else if(d<=7&&!(e.key==='alisa'&&g.buff(e,'alisaReload')&&e.hp/e.maxHp>.65&&e.buffs.alisaReload-g.time>.4))g.cast(e,'q',target,DRAG_KEYS.includes(e.key)?{direction:'right'}:{});

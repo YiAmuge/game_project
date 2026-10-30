@@ -50,8 +50,8 @@ test('explicit category attacks choose only that category and report an unavaila
 test('category availability excludes hidden, invulnerable, blocked and out-of-range targets',()=>{
  const{g,p}=arena('gubo'),t=foe(g);assert.ok(mobileAttackTargets(g,p).includes(t));t.invulnerableUntil=1;assert.equal(mobileAttackTargets(g,p).length,0);t.invulnerableUntil=0;g.map.walls=[{x:41,y:24,w:.5,h:2}];assert.equal(mobileAttackTargets(g,p).length,0);g.map.walls=[];t.x=100;assert.equal(mobileAttackTargets(g,p).length,0);
 });
-test('the existing Gubo allied execution and Ppui ally healing priorities still override default enemy selection',()=>{
- for(const key of['gubo','ppui']){const{g,p}=arena(key);foe(g,{hp:1});const ally=g.makeChampion('yi',0,50);Object.assign(ally,{x:43,y:25,hp:1});assert.equal(mobileAutoAim(g,p).target,ally);assert.notEqual(mobileAutoAim(g,p,'basic',{category:'champion'}).target,ally);}
+test('Gubo allied execution retains its priority while Ppui basics select enemies',()=>{
+ for(const key of['gubo','ppui']){const{g,p}=arena(key);foe(g,{hp:1});const ally=g.makeChampion('yi',0,50);Object.assign(ally,{x:43,y:25,hp:1});assert.equal(mobileAutoAim(g,p).target===ally,key==='gubo');assert.notEqual(mobileAutoAim(g,p,'basic',{category:'champion'}).target,ally);}
 });
 test('circle autoaim hits targets at the far blast edge while keeping the center inside cast range',()=>{
  const{g,p}=arena('yi'),t=foe(g,{x:50});const aim=mobileAutoAim(g,p,'q');assert.equal(aim.target,t);near(aim.point.x,47);assert.ok(Math.abs(aim.point.x-t.x)<=3.2+t.radius);t.x=51;const outside=mobileAutoAim(g,p,'q');assert.equal(outside.target,t);near(outside.point.x,47);

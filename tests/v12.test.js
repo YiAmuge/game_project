@@ -67,12 +67,11 @@ test('Ppui gains fifteen percent assist XP, without changing kill XP or ally rew
  const {g,p,t}=quiet('ppui'),a=ally(g);g.deal(p,t,1,{fixed:true});g.deal(a,t,1e6,{fixed:true});close(p.xp,80.5);close(a.xp,120);close(p.gold,250+40*4/3);
  const next=g.makeChampion('faust',1,20);Object.assign(next,{x:42,y:7});g.kill(next,p);close(p.xp,200.5);
 });
-test('Ppui empowers an ally without firing additional nails when the ally attacks',()=>{
- const {g,p,t}=quiet('ppui'),a=ally(g,'meursault',41,7);g.attack(p,a);assert.equal(p.state.empower.target,a.id);g.attack(a,t);run(g,.3);assert.equal(g.projectiles.filter(b=>b.theme==='ppui').length,0);
+test('Ppui basics fire at enemies without granting regeneration to an allied target',()=>{
+ const {g,p,t}=quiet('ppui'),a=ally(g,'meursault',41,7);g.attack(p,a);assert.equal(p.state.empower,undefined);g.attack(a,t);run(g,.3);assert.ok(t.hp<t.maxHp);assert.equal(a.buffs.redEncouragement,undefined);
 });
-test('Ppui replacement removes previous healing target and Q reaches eight units to cleanse',()=>{
- const {g,p}=quiet('ppui');g.units=[p];const a=ally(g,'faust',42,7),b=ally(g,'yi',43,9);a.hp-=500;b.hp-=500;a.lastDamageAt=100;b.lastDamageAt=100;g.attack(p,a);p.attackCd=0;p.ammo=1;g.attack(p,b);const before=a.hp;run(g,.5);close(a.hp,before);assert.ok(b.hp>b.maxHp-500);
- Object.assign(b,{x:48,y:7});g.status(b,'stun',1,1);p.qCd=0;assert.ok(g.cast(p,'q',b));assert.equal(g.stat(b,'stun'),0);assert.ok(b.ccImmuneUntil>g.time);assert.equal(skillTargeting(g,p,'q').range,8);
+test('Ppui tactical heals allies around the caster and keeps outside targets unaffected',()=>{
+ const {g,p}=quiet('ppui');g.units=[p];const a=ally(g,'faust',42,7),b=ally(g,'yi',43,9),outside=ally(g,'yi',48,7);a.hp-=500;b.hp-=500;outside.hp-=500;a.lastDamageAt=b.lastDamageAt=100;g.canNaturalHeal=()=>false;g.inSpawn=()=>false;g.cast(p,'q',p);const before=a.hp;run(g,.5);assert.ok(a.hp>before&&b.hp>b.maxHp-500);close(outside.hp,outside.maxHp-500);assert.equal(skillTargeting(g,p,'q').kind,'self');assert.equal(skillTargeting(g,p,'q').radius,7);
 });
 test('Ppui ultimate deals five waves totaling seven hundred twenty before scaling',()=>{
  const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,5);close(amounts.reduce((a,b)=>a+b,0),720);
@@ -89,7 +88,7 @@ test('Kim half-second ultimate fires 450 or four sequential 338 waves at HP one'
  const f=quiet('kim');f.g.cast(f.p,'r',f.t);run(f.g,.51);const normal=f.g.projectiles.filter(b=>b.theme==='kim');assert.equal(normal.length,1);close(normal[0].damage,450);
 });
 test('new ordinary champions and augment codex share the gameplay definitions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,30);assert.ok(CHAMPIONS.kim&&CHAMPIONS.ppui);const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8'),html=readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/id="archive" class="codex-page hidden"/);assert.match(main,/CodexScreen/);assert.match(readFileSync(new URL('../src/codex-screen.js',import.meta.url),'utf8'),/AUGMENTS\.filter/);
+ assert.equal(Object.keys(CHAMPIONS).length,31);assert.ok(CHAMPIONS.kim&&CHAMPIONS.ppui);const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8'),html=readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/id="archive" class="codex-page hidden"/);assert.match(main,/CodexScreen/);assert.match(readFileSync(new URL('../src/codex-screen.js',import.meta.url),'utf8'),/AUGMENTS\.filter/);
 });
 
 test('capture respects status resistance and a full cleanse releases the arena immediately',()=>{
@@ -99,5 +98,5 @@ test('capture respects status resistance and a full cleanse releases the arena i
 
 test('new champion hit passives work against shields and a cleansed sword grab releases immediately',()=>{
  const {g,p,t}=quiet('kim');g.addShield(t,1000,'test');g.attack(p,t);run(g,.02);close(g.shield(p),60+p.maxHp*.012);p.qCd=0;run(g,.3);g.cast(p,'q',t);run(g,.2);assert.ok(p.state.swordGrab);t.status={};run(g,.02);assert.equal(p.state.swordGrab,undefined);
- const f=quiet('ppui'),a=ally(f.g,'meursault',41,7);f.g.attack(f.p,a);f.g.addShield(f.t,1000,'test');f.g.attack(a,f.t);run(f.g,.02);assert.equal(f.g.projectiles.filter(b=>b.theme==='ppui').length,0);
+ const f=quiet('ppui'),a=ally(f.g,'meursault',41,7);f.g.attack(f.p,a);f.g.addShield(f.t,1000,'test');f.g.attack(a,f.t);run(f.g,.02);assert.ok(f.g.projectiles.some(b=>b.theme==='ppui'));
 });

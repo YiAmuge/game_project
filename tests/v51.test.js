@@ -29,8 +29,8 @@ test('Ryoshu Q recharges at base eight seconds and refills one round per distinc
 test('Ryoshu ultimate applies twenty-percent vulnerability for five seconds with four hits',()=>{
  const{g,p}=arena('ryoshu'),t=target(g,34);assert.ok(g.cast(p,'r',{x:34,y:20}));run(g,.5);near(g.stat(t,'vulnerable'),.2);near(g.stat(t,'armorDown'),0);const until=t.status.vulnerable.until;assert.ok(until-g.time>4.8&&until-g.time<=5);near(t.maxHp-t.hp,damageFormula(140,CHAMPIONS.ryoshu.power,1)*(1+3*1.2));g.time=until;near(g.stat(t,'vulnerable'),0);
 });
-test('Dongrang ultimate gains twenty damage per full nutrient stack without changing radius',()=>{
- const{g,p}=arena('dongrang');for(const [healing,damage]of [[0,180],[999,180],[1000,200],[2000,220],[21000,600]]){p.totalHealingReceived=healing;assert.deepEqual(ultGrowth(p),{radius:3.2,damage});}
+test('Dongrang ultimate gains twenty-five damage per nutrient and capped radius every three stacks',()=>{
+ const{g,p}=arena('dongrang');for(const [healing,damage,radius]of [[0,180,3.2],[999,180,3.2],[1000,205,3.2],[2000,230,3.2],[21000,705,3.9],[60000,1680,5.2]]){p.totalHealingReceived=healing;assert.ok(Math.abs(ultGrowth(p).radius-radius)<1e-8);assert.equal(ultGrowth(p).damage,damage);}
 });
 test('Living towers reveal concealed enemies to their entire team within attack range and acquire them',()=>{
  const{g,p}=arena(),t=target(g);g.map=null;const b=BUSHES[0];Object.assign(t,{x:b.x+b.w/2,y:b.y+b.h/2,lastCombat:-99});Object.assign(p,{x:3,y:23.4});assert.ok(g.bushAt(t));assert.equal(g.visibleTo(0,t),false);

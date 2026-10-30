@@ -1,3 +1,5 @@
+import * as Kromer from './kromer.js';
+import * as Ppui from './ppui.js';
 import * as Jamila from './jamila.js';
 import * as Reworks from './reworks.js';
 import * as Don from './don.js';
@@ -53,7 +55,7 @@ export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
 export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
 export function skillCharges(g,e,slot){
- if(slot!=='q')return null;
+ if(slot!=='q')return null;if(e.key==='ppui')return Ppui.charges(g,e);
  const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='ryoshu'?[s.ryoshuCharges??2,2,s.ryoshuReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
  if(!values)return null;const [current,max,ready]=values;return {current,max,remaining:current<max&&Number.isFinite(ready)?Math.max(0,ready-g.time):0};
 }
@@ -67,6 +69,7 @@ function guboTarget(g,e,p,allyOnly=false){
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','ezra','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(Kromer.recast(g,e,slot))return true;
  if(e.key==='honglu'&&slot==='q'&&e.state.insightUntil>g.time)return true;
  if(e.key==='honglu'&&slot==='r'&&g.zones.some(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time))return true;
 
@@ -75,13 +78,15 @@ export function canRecast(g,e,slot){
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')))||slot==='r'&&e.key==='ezra'&&g.buff(e,'ezraUlt');
 }
-export function init(g,e){if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
+export function init(g,e){Ppui.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
 export function onRespawn(g,e){if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
 export const coverMultiplier=New.coverMultiplier;
 export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.key==='kromer')return Kromer.validate(g,e,slot);
+ if(e.key==='ppui'&&slot==='q')return (e.state.ppuiCharges??2)>0;
  if(e.key==='jamila')return Jamila.validate(g,e,slot);
  if(e.state.donCharge)return false;if(e.key==='ryoshu'&&slot==='q'&&(e.state.ryoshuCharges??2)<=0)return false;
  if(!Hohenheim.validate(g,e,slot,p)||!Sora.validate(g,e,slot,p)||!Yan.validate(g,e,slot))return false;
@@ -111,6 +116,7 @@ export function switchWeapon(g,e,step,shield=false){
  if(shield)g.addShield(e,Math.min(360,120*(1+Math.floor((1-e.hp/e.maxHp)/.3)*.3)),`bag-${e.id}`);
 }
 export function beforeBasic(g,e,point,options={}){
+ if(e.state.kromerGrab)return false;
  if(e.key==='starbuck'&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
  if(g.stat(e,'captured')&&(['don','rodya','myo'].includes(e.key)||e.key==='ezra'))return false;
  if(!V12.beforeBasic(g,e,point)||!V06.beforeBasic(g,e,point,options))return false;
@@ -120,6 +126,7 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
+ if(e.key==='kromer'){Kromer.basic(g,e,d);return true;}
  if(Jamila.basic(g,e,p,d))return true;
  if(Sora.basic(g,e,p,d)||V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
@@ -170,6 +177,7 @@ function shockIshmael(g,e){
 }
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
+ if(e.key==='kromer'){Kromer.cast(g,e,slot,p,d);return true;}
  if(e.key==='jamila')return Jamila.cast(g,e,slot,p,d,options);
  const state=e.state;
  if(e.key==='faust')return Reworks.faust(g,e,slot,p,d);
@@ -241,6 +249,7 @@ export function damageBonus(g,e,t){
  return b;
 }
 export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
+ Kromer.afterDamage(g,e,t,actual,proc,kind,absorbed);
  Yan.afterDamage(g,e,t,actual,proc,absorbed);Sora.afterDamage(g,e,t,actual,absorbed);V12.afterDamage(g,e,t,actual,proc,kind,absorbed);
  New.afterDamage(g,e,t,actual,proc,kind);
  if(e.kind==='champion'&&e.key==='don'&&actual+absorbed>0&&t.kind==='champion'&&t.hp>0&&e.state.villain===t.id&&(e.state.villainHits?.[t.id]||0)<=g.time){e.state.villainHits??={};e.state.villainHits[t.id]=g.time+6;g.deal(e,t,15+g.combatPower(t)*.1,{fixed:true,proc:false});g.status(t,'root',1,.75,e);}
@@ -287,6 +296,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
+ Ppui.tick(g,e);Kromer.tick(g,e,dt);
  const s=e.state;
  if(s.ishmaelWeak)for(const [id,mark]of Object.entries(s.ishmaelWeak))if(mark.until<=g.time)delete s.ishmaelWeak[id];
  if(e.key==='ryoshu'){s.ryoshuCharges??=2;s.ryoshuReady??=Infinity;while(s.ryoshuCharges<2&&g.time+1e-8>=s.ryoshuReady){s.ryoshuCharges++;s.ryoshuReady=s.ryoshuCharges<2?s.ryoshuReady+g.cooldown(e,'q'):Infinity;}e.qCd=s.ryoshuCharges>0?0:Math.max(0,s.ryoshuReady-g.time);}

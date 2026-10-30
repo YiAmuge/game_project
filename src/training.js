@@ -1,4 +1,5 @@
 import * as Sewing from './sewing.js';
+import * as Kromer from './kromer.js';
 import * as Yan from './yan.js';
 import * as V08 from './v08-champions.js';
 import { onDeath as releaseReferences } from './v12-champions.js';
@@ -81,6 +82,7 @@ export function tickDummy(g,e,dt){
  }
 }
 function resetDummyPosition(g,e){
+ Kromer.onDeath(g,e);
  if(e.state.swordHeldBy){const owner=g.units.find(u=>u.id===e.state.swordHeldBy);if(owner)releaseGrab(g,owner);}
  delete e.motion;delete e.state.netTrap;delete e.status.netCapture;Object.assign(e,e.trainingDummy.home);settleBody(g,e,e.trainingDummy.home);e.path=[];
 }
@@ -97,6 +99,7 @@ export function refreshOptions(g){
  if(o.infiniteAmmo){p.ammo=g.ammoCap(p);p.reloadProgress=0;if(p.state.exhaustedUntil){delete p.state.exhaustedUntil;delete p.status.silence;}}
  if(o.noCooldown){
   p.qCd=p.rCd=0;
+  if(p.key==='ppui'){p.state.ppuiCharges=2;p.state.ppuiReady=Infinity;}
   if(p.key==='ryoshu'){p.state.ryoshuCharges=2;p.state.ryoshuReady=Infinity;}
   if(p.key==='nelly'){p.state.knifeCharges=2;p.state.knifeReady=Infinity;p.state.qDelayUntil=0;}
   if(p.key==='sora'&&Sora.ego(g,p)){p.state.egoQCharges=2;p.state.egoQReady=Infinity;}
@@ -178,8 +181,8 @@ export function summonLabel(e){return `${e.name} ${e.summonNumber} · ${e.team==
 export function removeSummoned(g,id=null){
  if(!g.training)return false;const targets=summoned(g).filter(e=>id===null||e.id===id);if(!targets.length)return false;
  const ids=new Set(targets.map(e=>e.id));
- for(const e of targets){releaseReferences(g,e);V08.detach(g,e);const owner=g.units.find(t=>t.id===e.state.tetherSource);if(owner)V08.detach(g,owner);Yan.removeHand(g,e);e.alive=false;delete e.motion;}
- for(const e of g.units){if(ids.has(e.owner))ids.add(e.id);if(e.motion?.follow&&ids.has(e.motion.follow.id)){delete e.motion;settleBody(g,e,e.bodySafe);}if(ids.has(e.state?.guboAim?.target?.id)){delete e.state.guboAim;e.channelUntil=g.time;}if(ids.has(e.state?.empower?.target))delete e.state.empower;}
+ for(const e of targets){releaseReferences(g,e);Kromer.onDeath(g,e);V08.detach(g,e);const owner=g.units.find(t=>t.id===e.state.tetherSource);if(owner)V08.detach(g,owner);Yan.removeHand(g,e);e.alive=false;delete e.motion;}
+ for(const e of g.units){if(ids.has(e.owner))ids.add(e.id);if(e.motion?.follow&&ids.has(e.motion.follow.id)){delete e.motion;settleBody(g,e,e.bodySafe);}if(ids.has(e.state?.guboAim?.target?.id)){delete e.state.guboAim;e.channelUntil=g.time;}if(ids.has(e.state?.kromerGrab?.target?.id)){delete e.state.kromerGrab;}if(ids.has(e.state?.kromerQMark?.targetId))delete e.state.kromerQMark;}
  g.units=g.units.filter(e=>!ids.has(e.id));g.events=g.events.filter(e=>!ids.has(e.source.id));g.pending=g.pending.filter(e=>!ids.has(e.source.id));g.zones=g.zones.filter(e=>!ids.has(e.source.id));g.projectiles=g.projectiles.filter(p=>!ids.has(p.source.id)&&!ids.has(p.target?.id));
  for(const z of g.zones)if(ids.has(z.targetId))z.waitingForTarget=true;g.corpses=g.corpses.filter(c=>!ids.has(c.unitId));return true;
 }

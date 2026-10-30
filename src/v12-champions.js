@@ -1,8 +1,9 @@
+import * as Ppui from './ppui.js';
 import { RULES,RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { carried } from './attachments.js';
 import { distance,direction } from './geometry.js';
 import { settleBody } from './collision.js';
-import { dash,targetAt } from './skills.js';
+import { dash } from './skills.js';
 import { KIM_WAVE_HALF_WIDTH,KIM_COUNTER_HALF_WIDTH } from './projectile-rules.js';
 
 export const KIM={shield:60,shieldRatio:.012,shieldTime:5,qRange:2.8,qDamage:250,grab:1.8,throwDamage:100,rDamage:450,counterDamage:338};
@@ -11,16 +12,14 @@ export function validate(g,e,slot,p){
  if(e.key==='kim'&&slot==='q'&&!recast(g,e,slot)&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
  return true;
 }
-export function beforeBasic(g,e,p){if(e.key!=='ppui')return true;const ally=targetAt(g,e,p,g.attackRange(e),e.team,a=>a!==e);return !ally||!(ally.state.ppuiEmpowerReady>g.time);}
+export function beforeBasic(){return true;}
 export function basic(g,e,p,d){
  if(e.key==='kim'){
   if(e.state.followSlashUntil>g.time){e.state.kimWideSlashSerial=e.attackSerial;delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e)*1.2*1.08,1.9*1.3*1.2*1.08,210);g.addShield(e,100,`draw-${e.id}`,3);}
   else{delete e.state.kimWideSlashSerial;e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2*1.3,75));}return true;
  }
  if(e.key==='ppui'){
-  const ally=targetAt(g,e,p,g.attackRange(e),e.team,a=>a!==e);
-  if(ally){ally.state.ppuiEmpowerReady=g.time+2.5;const old=g.units.find(a=>a.id===e.state.empower?.target);if(old)delete old.buffs.redEncouragement;e.state.empower={target:ally.id,until:g.time+4,healUntil:g.time+3,healingEvent:e.healingEvent};g.support(e);g.addBuff(ally,'redEncouragement',4,{copy:false});ally.supporters[e.id]=g.time;}
-  else for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,65,g.attackRange(e),{theme:'ppui',width:.2}));
+  for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,75,g.attackRange(e),{theme:'ppui',width:.2}));
   return true;
  }return false;
 }
@@ -54,11 +53,9 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='ppui'){
   if(slot==='q'){
-   const allies=g.champions(e.team).filter(a=>a.alive&&distance(a,p)<=3.5&&g.clearLine(p,a));
-   e.state.helping={targets:[],until:g.time+2,healingEvent:e.healingEvent,rate:(450+g.combatPower(e)*.3)/2};for(const t of allies){const cc=g.stat(t,'netCapture')||['stun','root','silence','disarm','taunt','captured','slow'].some(k=>g.stat(t,k))||t.motion?.forced;if(cc){t.status={};delete t.state.netTrap;if(t.motion?.forced)delete t.motion;t.ccImmuneUntil=Math.max(t.ccImmuneUntil||0,g.time+1);}e.state.helping.targets.push(t.id);t.supporters[e.id]=g.time;g.support(e);}
-   g.effects.push({type:'ring',...p,r:3.5,color:'#efadb5',life:.6,maxLife:.6});
+   Ppui.cast(g,e);
   }else{
-   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.qCd=0;e.state.nailStorm={d:{...d},aim:{...p},until:g.time+2};
+   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.state.nailStorm={d:{...d},aim:{...p},until:g.time+2};
    for(let i=0;i<5;i++)g.schedule(e,i*.4,()=>{
     if(g.stat(e,'stun')||g.stat(e,'silence')){delete e.state.nailStorm;return;}
     const storm=e.state.nailStorm;if(!storm)return;const aim=distance(e,storm.aim)>.1?direction(e,storm.aim):storm.d;storm.d={...aim};const angle=Math.atan2(aim.y,aim.x);e.facing=angle;
@@ -77,24 +74,9 @@ export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
 export function tick(g,e,dt){
  if(e.key==='kim'&&e.state.swordGrab&&(!carried(g,e)||g.stat(e,'stun')))releaseGrab(g,e);
  if(e.key!=='ppui')return;
- const empower=e.state.empower;
- if(empower){
-  const t=g.champions(e.team).find(a=>a.id===empower.target&&a.alive),span=Math.min(dt,Math.max(0,empower.healUntil-(g.time-dt)));
-  if(t){
-   if(span>0){
-    // Integrate the missing-HP term over this frame, retaining normal healing power scaling.
-    const scale=g.powerScale(e)*.9*RULES.power[CHAMPIONS[e.key].power],missing=t.maxHp-t.hp;
-    g.heal(e,t,(150+.025*missing)*-Math.expm1(-.025*scale*span)/.025,false,{healingKey:empower.healingEvent?.key,startedAt:empower.healingEvent?.at});
-   }
-   if(empower.until>g.time)t.supporters[e.id]=g.time;
-  }
-  if(!t||empower.until<=g.time)delete e.state.empower;
- }
- const help=e.state.helping;
- if(help){const span=Math.min(dt,Math.max(0,help.until-(g.time-dt)));for(const id of help.targets){const t=g.champions(e.team).find(a=>a.id===id&&a.alive);if(t&&span>0){g.heal(e,t,help.rate*span,true,{healingKey:help.healingEvent?.key,startedAt:help.healingEvent?.at});t.supporters[e.id]=g.time;}}if(help.until<=g.time)delete e.state.helping;}
  if(e.state.nailStorm?.until<=g.time)delete e.state.nailStorm;
 }
 export function onDeath(g,e){
- if(e.key==='kim')releaseGrab(g,e);if(e.key==='ppui'){const old=g.units.find(a=>a.id===e.state.empower?.target);if(old)delete old.buffs.redEncouragement;}
+ if(e.key==='kim')releaseGrab(g,e);
  for(const kim of g.champions().filter(a=>a.key==='kim'&&a.state.swordGrab?.target===e))releaseGrab(g,kim);
 }

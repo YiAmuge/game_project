@@ -8,6 +8,7 @@ export function front(){}
 export function preview(r,e,g){
  const angle=Math.atan2(g.input.aim.y-e.y,g.input.aim.x-e.x),d={x:Math.cos(angle),y:Math.sin(angle)},ctx=r.ctx;
  const polygon=(range,width)=>{const s={x:-d.y*width/2,y:d.x*width/2},to={x:e.x+d.x*range,y:e.y+d.y*range};r.polygon([[e.x+s.x,e.y+s.y],[to.x+s.x,to.y+s.y],[to.x-s.x,to.y-s.y],[e.x-s.x,e.y-s.y]],'#b8d8d313','#c3e8df66');};
+ if(e.key==='kromer')polygon(g.attackRange(e),2);
  if(e.key==='gahwan'||e.key==='rodya')polygon(g.attackRange(e),1.5);
  if(e.key==='faust')polygon(g.attackRange(e),projectileHitWidth({width:FAUST_WAVE_HALF_WIDTH})*2);
  if(e.key==='queequeg')polygon(g.attackRange(e),1.8);

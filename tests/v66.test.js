@@ -63,8 +63,8 @@ test('in-range targets are preferred before unselected visible targets outside r
 for(const[key,radius]of[['rudolph',2.1675],['marton',2.2]])test(`${key} basic autoaim acquires and damages targets at the endpoint area's outer edge`,()=>{
  const{g,p}=arena(key),range=g.attackRange(p),t=foe(g,p.x+range+radius+.3);near(basicAimReach(g,p),range+radius);assert.ok(mobileAttackTargets(g,p).includes(t));const aim=mobileAutoAim(g,p);assert.equal(aim.target,t);assert.ok(g.attack(p,aim.point));assert.ok(t.hp<5000);t.x+=1;assert.ok(!mobileAttackTargets(g,p).includes(t));
 });
-test('wounded ally autoaim can retain a visible ally outside healing range',()=>{
- const{g,p}=arena('ppui'),ally=g.makeChampion('yi',0,20);Object.assign(ally,{x:65,y:28,hp:1});foe(g,42);const aim=mobileAutoAim(g,p);assert.equal(aim.target,ally);near(aim.point.x,65);
+test('Ppui basic autoaim never selects a distant wounded ally',()=>{
+ const{g,p}=arena('ppui'),ally=g.makeChampion('yi',0,20);Object.assign(ally,{x:65,y:28,hp:1});const enemy=foe(g,42),aim=mobileAutoAim(g,p);assert.equal(aim.target,enemy);assert.notEqual(aim.target,ally);
 });
 test('shop opens procedures until every procedure reaches its actual cap',()=>{
  const{p}=arena();assert.equal(defaultShopSection(p),'upgrades');for(const u of UPGRADES)p.upgrades[u.key]=u.max;assert.equal(defaultShopSection(p),'augments');p.upgrades.health--;assert.equal(defaultShopSection(p),'upgrades');
