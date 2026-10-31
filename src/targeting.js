@@ -1,3 +1,6 @@
+import{QUEEN,ARCANA_STAGES,stage}from'./queen.js';
+import{NOSFERATU}from'./nosferatu.js';
+import{FAN_ANGLE}from'./data.js';
 import { HEATH } from './heathcliff.js';
 import {ultGrowth} from './v06-champions.js';
 import * as Kromer from './kromer.js';
@@ -11,6 +14,8 @@ import { STARBUCK } from './v10-champions.js';
 import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
+ if(e.key==='queen')return slot==='q'?{kind:'line',range:QUEEN.qRange,radius:QUEEN.qWidth/2,impact:0,confirm:false}:{kind:'line',range:ARCANA_STAGES[stage(g,e)].range,radius:ARCANA_STAGES[stage(g,e)].width/2,impact:0,confirm:false,ignoreWalls:true};
+ if(e.key==='nosferatu')return slot==='q'?{kind:'circle',range:NOSFERATU.qRange,radius:.75,impact:0,confirm:true}:{kind:'circle',range:NOSFERATU.rRange,radius:0,impact:0,confirm:!e.state.bloodfiend,ignoreWalls:true};
  if(slot==='r'&&['nelly','sinclair'].includes(e.key))return{kind:'circle',range:e.key==='nelly'?7:6,radius:e.key==='nelly'?1.2:3.8,impact:0,ignoreWalls:true,confirm:true};
  if(e.key==='ppui'&&slot==='q')return{kind:'self',range:0,radius:7,impact:0,confirm:false};
  if(e.key==='kromer')return slot==='q'?(Kromer.recast(g,e,slot)?{kind:'self',range:0,radius:1,impact:0,confirm:false}:{kind:'line',range:Kromer.KROMER.qRange,radius:.22,impact:0,confirm:false}):{kind:'quick',range:3,radius:1,impact:0,confirm:false};
@@ -22,7 +27,7 @@ export function skillTargeting(g,e,slot){
  if(e.key==='honglu'&&slot==='r'&&g.zones.some(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time))return {kind:'self',range:0,radius:6.5,confirm:false};
  if(e.key==='sora'&&slot==='q'&&ego(g,e))return {kind:'quick',range:SORA.egoQRange,radius:SORA.egoHitWidth,impact:0,confirm:false};
  if(e.key==='yan')return slot==='q'?(yanDistorted(g,e)?{kind:'circle',range:YAN.distortedQRange,radius:YAN.distortedQRadius,impact:0,confirm:false}:{kind:'cone',range:YAN.qRange,radius:Math.PI,impact:0,confirm:false}):{kind:'self',range:0,radius:YAN.radius,impact:0,confirm:false};
- const [kind,range,radius=0,impact=0]=(slot==='q'?q:r)[e.key]||['self',0,2];return {kind,range,radius,impact,confirm:['circle','global'].includes(kind)||e.key==='nelly'&&slot==='r'};
+ const [kind,range,baseRadius=0,impact=0]=(slot==='q'?q:r)[e.key]||['self',0,2];const radius=kind==='cone'?FAN_ANGLE:baseRadius;return {kind,range,radius,impact,confirm:['circle','global'].includes(kind)||e.key==='nelly'&&slot==='r'};
 }
 export function castPoint(e,point,spec,bounds=WORLD){
  if(spec.kind==='self')return {x:e.x,y:e.y};

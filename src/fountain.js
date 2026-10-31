@@ -1,3 +1,4 @@
+import{ejectBat}from'./nosferatu.js';
 import { FOUNTAIN_AREAS,inWell } from './data.js';
 import{ejectHand}from'./yan.js';
 export const FOUNTAIN_RULES={interval:.5,damage:1000};
@@ -11,6 +12,7 @@ export function tickReturnHaste(g,e){
 }
 export function tick(g,e,dt){
  if(!e.alive)return;
+ if(e.bloodBat){ejectBat(g,e);e.fountainTick=0;return;}
  if(e.key==='yanHand'){ejectHand(g,e);e.fountainTick=0;return;}
  if(g.training)return;
  const zone=FOUNTAIN_AREAS.find(z=>e.team!==z.team&&inWell(e,z.team));

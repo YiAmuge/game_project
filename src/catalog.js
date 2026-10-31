@@ -40,7 +40,7 @@ export const GAME_RULES=[
  ['미니언 성장과 캠프','미니언의 기본 체력은 근접 680·원거리 480·공성 1320. 새 웨이브는 2분마다 체력 6%·공격력 5%씩 증가하며 12분(6단계)에 멈춘다. 크립은 공격받기 전에는 선공하지 않는다. 적대 중 캠프 반경 3.4 밖에서 1.85초가 지나면 적대를 해제하고 빠르게 복귀한다. 복귀 중에는 공격할 수 없다. 사망한 크립의 재생성 시간은 전장과 미니맵·Tab 지도에 표시한다.'],
  ['특수 조작','루돌프: 정신력 50% 이상일 때 Space 후 사거리 10.5 안에서 좌클릭으로 궁극기 지점을 확정. 모제스: 우클릭 드래그 방향으로 곰방대 선택. 에즈라: 우클릭 좌우 드래그로 무기 선택. 방향 선택 후 버튼을 놓으면 바로 적용한다. 히스클리프: 우클릭 또는 전술기 버튼을 누른 채 충전 후 놓아서 도약. 드래그 없는 손 떼기는 자원·쿨다운 소모 없이 취소. 도감의 실험실에서 확인 가능.'],
 ];
-export const BUFF_LABELS={darkWorld:'어둠의 세계',lightWorld:'빛의 세계',fullBloom:'만발',fruition:'결실',sewingStitches:'땀수! · 건물 최종 피해의 6% 추가 고정피해 · 해체 불가',bossBuff:'빛바랜 원단 · 전투/귀환/미니언 강화',writtenOrder:'쪽지로 전해진 지령 · 방어력 강화',infiltrationStride:'침투 · 이동속도 +10%',
+export const BUFF_LABELS={arcanaStride:'아르카나 비트 · 이동속도 +17%',bloodfiend:'혈귀',darkWorld:'어둠의 세계',lightWorld:'빛의 세계',fullBloom:'만발',fruition:'결실',sewingStitches:'땀수! · 건물 최종 피해의 6% 추가 고정피해 · 해체 불가',bossBuff:'빛바랜 원단 · 전투/귀환/미니언 강화',writtenOrder:'쪽지로 전해진 지령 · 방어력 강화',infiltrationStride:'침투 · 이동속도 +10%',
  yanDistorted:'enlxmfflsdis · 뒤틀림',
  soraEgo:'개화 E.G.O::대행',soraScratch:'대행: 새기기 · 이동 +5%',
  swordDiscipline:'본국검술 · 장전/가속 +12%',ppuiMending:'뿌이의 지속 치유',

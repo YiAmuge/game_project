@@ -1,3 +1,4 @@
+import{initRivalries,refreshPracticeRivalries}from'./rivalries.js';
 import * as Sewing from './sewing.js';
 import * as Kromer from './kromer.js';
 import * as Yan from './yan.js';
@@ -39,7 +40,7 @@ export function init(g,key,position){
  a.trainingDummy.opponent=b.id;b.trainingDummy.opponent=a.id;
  const patrol=layout?.patrol||{x:62,y:18,to:28};const moving=dummy(g,1,patrol.x,patrol.y,{hp:1000,mode:'patrol',name:'이동 허수아비'});moving.trainingDummy.patrolTo=patrol.to;
  makeCreeps(g);
- resetLane(g);g.log('연습장 · 우측 상단 옵션 · G 무료 상점');
+ resetLane(g);initRivalries(g);g.log('연습장 · 우측 상단 옵션 · G 무료 상점');
 }
 function makeCreeps(g){
  const layout=TRAINING_25D,center={x:56.5,y:36.5};
@@ -136,9 +137,9 @@ export function changeChampion(g,key){
  if(!g.training||!RUNTIME_CHAMPIONS[key])return false;
  const old=g.player,point=old.alive?{x:old.x,y:old.y}:{...spawn(g)},saved={level:old.level,xp:old.xp,gold:old.gold,upgrades:{...old.upgrades},augments:[...old.augments]};
  if(old.alive)g.kill(old,old);g.corpses=[];
- const army=new Set(g.units.filter(e=>e.lcaTrooper&&e.owner===old.id));g.units=g.units.filter(e=>e!==old&&!army.has(e));g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old&&!army.has(e.source));
+ const army=new Set(g.units.filter(e=>(e.lcaTrooper||e.bloodBat)&&e.owner===old.id));g.units=g.units.filter(e=>e!==old&&!army.has(e));g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old&&!army.has(e.source));
  g.makeChampion(key,0,0,old.position);g.player=g.units.find(e=>e.player);Object.assign(g.player,saved,point);
- g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,spawn(g));refreshOptions(g);return true;
+ g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,spawn(g));refreshOptions(g);initRivalries(g);return true;
 }
 
 export function summon(g,key,team,point){
@@ -146,7 +147,7 @@ export function summon(g,key,team,point){
  const probe={kind:'champion',team,radius:.48,alive:true,state:{}};
  if(!canOccupy(g,probe,point,{phaseEnemies:false}))return false;
  const e=g.makeChampion(key,team,10+g.nextId,'top');
- g.practice.summonCounts??={};const number=g.practice.summonCounts[key]=(g.practice.summonCounts[key]||0)+1;Object.assign(e,point,{player:false,trainingSummoned:true,summonNumber:number,trainingHome:{...point}});e.path=[];return e;
+ g.practice.summonCounts??={};const number=g.practice.summonCounts[key]=(g.practice.summonCounts[key]||0)+1;Object.assign(e,point,{player:false,trainingSummoned:true,summonNumber:number,trainingHome:{...point}});e.path=[];refreshPracticeRivalries(g);return e;
 }
 export function setChampionAI(g,on){
  if(!g.training)return false;g.practice.championAI=Boolean(on);

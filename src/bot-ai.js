@@ -39,6 +39,8 @@ export function draft(g,position,used=[]){
 export function combatSkills(g,e,target){
  if(!safeTowerTarget(g,e,target))return;
  const d=distance(e,target);
+ if(e.key==='queen'){if(!e.state.queenQ)g.cast(e,'q',target);if(!e.state.queenR)g.cast(e,'r',target);return;}
+ if(e.key==='nosferatu'){if((e.state.bloodFeast||0)>=200&&d<=6.8)g.cast(e,'q',target);if(!e.state.bloodfiend&&d<=7.5)g.cast(e,'r',target);return;}
  if(e.key==='hohenheim'&&e.state.hohenCharge)return;
  if(e.state.donCharge)return;
  if(e.key==='yan'){g.cast(e,'r',target);if(d<=5)g.cast(e,'q',target);return;}

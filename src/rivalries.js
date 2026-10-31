@@ -13,12 +13,23 @@ export function initRivalries(g){
  g.rivalries=PAIRS.map(keys=>{
   const heroes=g.champions().filter(e=>!e.trainingDummy&&keys.includes(e.key));
   const participants=heroes.filter(e=>heroes.some(other=>other.key!==e.key&&other.team!==e.team)).map(e=>e.id);
-  return {keys,participants:g.training?[]:participants,winner:null};
+  return {keys,participants,winner:null};
  });
+}
+export function refreshPracticeRivalries(g){
+ if(!g.training)return;
+ if(!g.rivalries)initRivalries(g);
+ for(const duel of g.rivalries){
+  if(duel.winner!==null)continue;
+  const heroes=g.champions().filter(e=>!e.trainingDummy&&duel.keys.includes(e.key));
+  duel.participants=heroes.filter(e=>heroes.some(other=>other.key!==e.key&&other.team!==e.team)).map(e=>e.id);
+ }
 }
 export const rivalBonus=(e,stat)=>RIVAL_REWARDS[e.rivalReward]?.[stat]||0;
 export function rivalKill(g,killer,victim){
- if(g.training||killer?.kind!=='champion'||victim.kind!=='champion'||killer.team===victim.team||killer.trainingDummy||victim.trainingDummy)return;
+ if(killer?.kind!=='champion'||victim.kind!=='champion'||killer.team===victim.team||killer.trainingDummy||victim.trainingDummy)return;
+ if(!g.rivalries)initRivalries(g);
+ refreshPracticeRivalries(g);
  const duel=g.rivalries?.find(d=>d.winner===null&&d.keys.includes(killer.key)&&d.keys.includes(victim.key)&&killer.key!==victim.key&&d.participants.includes(killer.id)&&d.participants.includes(victim.id));
  if(!duel)return;
  duel.winner=killer.id;const [reward,text]=LINES[killer.key];killer.rivalReward=reward;killer.rivalRewardOrder=++g.buffSequence;

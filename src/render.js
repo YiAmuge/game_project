@@ -1,3 +1,4 @@
+import{drawBloodBat}from'./arcana-vfx.js';
 import * as Infiltration from './infiltration.js';
 import{drawCampCreep,isCampCreep,campVisualHeight,drawStructure,structureVisualHeight}from'./world-art.js';
 import{cinematicCamera,endingCore}from'./match-presentation.js';
@@ -132,6 +133,7 @@ export class Renderer {
   }
   unit(e,game) {
     if(!e.alive||game.hidden(e)&&e.motion?.kind!=='leap'||!game.visibleTo((game.player?.team??0),e))return;
+    if(e.bloodBat){drawBloodBat(this,e,game);return;}
     if(e.kind==='summon'){this.yanHand(e,game);return;}
     const c=this.ctx,team=e.team===(game.player?.team??0)?'#92cad3':e.team===1-(game.player?.team??0)?'#d99588':e.camp==='boss'?'#c1a0d9':e.camp==='blessing'?'#84bdc5':e.camp==='amplify'?'#c69db6':'#c7b67c';
     if(!this.billboardPass)this.circle(e.x+.1,e.y+.3,e.radius+.14,'#07161a77');

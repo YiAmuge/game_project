@@ -1,3 +1,6 @@
+import{FAN_ANGLE}from'./data.js';
+import*as Queen from'./queen.js';
+import*as Nosferatu from'./nosferatu.js';
 import * as Kromer from './kromer.js';
 import * as Ppui from './ppui.js';
 import * as Jamila from './jamila.js';
@@ -70,6 +73,7 @@ function guboTarget(g,e,p,allyOnly=false){
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','ezra','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(Queen.recast(g,e,slot)||Nosferatu.recast(g,e,slot))return true;
  if(Kromer.recast(g,e,slot))return true;
  if(e.key==='honglu'&&slot==='q'&&e.state.insightUntil>g.time)return true;
  if(e.key==='honglu'&&slot==='r'&&g.zones.some(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time))return true;
@@ -86,6 +90,8 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.key==='queen')return Queen.validate(g,e,slot);
+ if(e.key==='nosferatu')return Nosferatu.validate(g,e,slot,p);
  if(e.key==='kromer')return Kromer.validate(g,e,slot);
  if(e.key==='ppui'&&slot==='q')return (e.state.ppuiCharges??2)>0;
  if(e.key==='jamila')return Jamila.validate(g,e,slot);
@@ -127,6 +133,8 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
+ if(e.key==='queen'){Queen.basic(g,e,d);return true;}
+ if(e.key==='nosferatu'){Nosferatu.basic(g,e,d);return true;}
  if(e.key==='kromer'){Kromer.basic(g,e,d);return true;}
  if(Jamila.basic(g,e,p,d))return true;
  if(Sora.basic(g,e,p,d)||V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
@@ -178,6 +186,8 @@ function shockIshmael(g,e){
 }
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
+ if(e.key==='queen'){Queen.cast(g,e,slot,p,d);return true;}
+ if(e.key==='nosferatu'){Nosferatu.cast(g,e,slot,p);return true;}
  if(e.key==='kromer'){Kromer.cast(g,e,slot,p,d);return true;}
  if(e.key==='jamila')return Jamila.cast(g,e,slot,p,d,options);
  const state=e.state;
@@ -257,7 +267,7 @@ export function damageBonus(g,e,t){
  return b;
 }
 export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
- Kromer.afterDamage(g,e,t,actual,proc,kind,absorbed);
+ Nosferatu.afterDamage(g,e,t,actual);Kromer.afterDamage(g,e,t,actual,proc,kind,absorbed);
  Yan.afterDamage(g,e,t,actual,proc,absorbed);Sora.afterDamage(g,e,t,actual,absorbed);V12.afterDamage(g,e,t,actual,proc,kind,absorbed);
  New.afterDamage(g,e,t,actual,proc,kind);
  if(e.kind==='champion'&&e.key==='don'&&actual+absorbed>0&&t.kind==='champion'&&t.hp>0&&e.state.villain===t.id&&(e.state.villainHits?.[t.id]||0)<=g.time){e.state.villainHits??={};e.state.villainHits[t.id]=g.time+6;g.deal(e,t,15+g.combatPower(t)*.1,{fixed:true,proc:false});g.status(t,'root',1,.75,e);}
@@ -286,8 +296,8 @@ export function takedown(g,e,victim,direct){
 }
 export function guboBlast(g,e,victim,ratio=e.state.guboLaserFiring?.25:.2){
  const enemies=g.units.filter(t=>t.team===1-e.team&&t.alive),enemy=enemies.slice().sort((a,b)=>distance(a,victim)-distance(b,victim))[0];if(!enemy)return;
- const d=direction(victim,enemy);for(const t of enemies.filter(t=>distance(t,victim)<=14.7+t.radius)){const td=direction(victim,t);if(td.x*d.x+td.y*d.y>.4)g.deal(e,t,ratio*(g.combatPower(e)+t.maxHp),{fixed:true,proc:false});}
- g.effects.push({type:'guboBlast',source:e.id,x:victim.x,y:victim.y,r:14.7,angle:Math.atan2(d.y,d.x),spread:Math.acos(.4)*2,theme:'gubo',life:.8,maxLife:.8});
+ const d=direction(victim,enemy);for(const t of enemies.filter(t=>distance(t,victim)<=14.7+t.radius)){const td=direction(victim,t);if(td.x*d.x+td.y*d.y>=Math.cos(FAN_ANGLE/2))g.deal(e,t,ratio*(g.combatPower(e)+t.maxHp),{fixed:true,proc:false});}
+ g.effects.push({type:'guboBlast',source:e.id,x:victim.x,y:victim.y,r:14.7,angle:Math.atan2(d.y,d.x),spread:FAN_ANGLE,theme:'gubo',life:.8,maxLife:.8});
 }
 export function endAlisaReload(g,e){if(!e.state.alisaReloadActive)return;const heat=e.state.heat||0;delete e.buffs.alisaReload;delete e.state.alisaReloadActive;e.state.heat=0;g.heal(e,e,e.maxHp*(.05+.035*heat),false);}
 export function beginAlisaDetonation(g,e,killer,{lethal=false}={}){
@@ -304,6 +314,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
+ Queen.tick(g,e);Nosferatu.tick(g,e);
  Ppui.tick(g,e);Kromer.tick(g,e,dt);
  const s=e.state;
  if(s.ishmaelWeak)for(const [id,mark]of Object.entries(s.ishmaelWeak))if(mark.until<=g.time)delete s.ishmaelWeak[id];

@@ -4,7 +4,7 @@ import { distance,segmentDistance } from './geometry.js';
 
 const structure=e=>['tower','core'].includes(e.kind);
 export function solid(g,e,other,{phaseEnemies=e.motion?.phaseEnemies||e.phaseEnemiesUntil>g.time||false}={}){
- if(e.kind==='summon'||other.kind==='summon')return false;
+ if(e.kind==='summon'||other.kind==='summon'||e.bloodBat||other.bloodBat)return false;
  if(e===other||!other.alive||g.hidden(other)||other.state?.posthumous)return false;
  if(structure(other))return !(e.kind==='minion'&&other.kind==='tower'&&e.team===other.team);
  if(paired(g,e,other))return false;

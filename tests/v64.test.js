@@ -1,3 +1,4 @@
+import{FAN_ANGLE}from'../src/data.js';
 import test from'node:test';
 import assert from'node:assert/strict';
 import{Game,damageFormula}from'../src/game.js';
@@ -53,8 +54,8 @@ test('Myo tactical has a real 0.15-second minimum cooldown and retains all four 
 test('Hong Lu waterfall lasts three seconds and care uses his old mist presentation',()=>{
  const{g,p}=arena('honglu'),a=hero(g,{team:0,x:41,hp:100});g.cast(p,'r',p);near(g.zones[0].until-g.time,3);assert.ok(g.buff(a,'hongluCare'));assert.equal(championPresentation(g,a).aura.form,'mist');run(g,3.01);assert.equal(g.zones.some(z=>z.kind==='waterfall'),false);
 });
-test('Marton ranged impacts are full circles and Sinclair previews the actual two-range semicircle',()=>{
- const{g,p}=arena('marton');g.attack(p,{x:45,y:25});const fx=g.effects.find(f=>f.type==='burst');assert.deepEqual(visualShape(fx),{kind:'circle',range:2.2});const b=arena('sinclair'),arcs=[],c=context();c.arc=(...args)=>arcs.push(args);preview({ctx:c,circle(){},polygon(){},text(){}},b.p,b.g);near(arcs[0][2],2);near(arcs[0][4]-arcs[0][3],Math.PI);
+test('Marton ranged impacts are full circles and Sinclair previews the actual two-range 165-degree sector',()=>{
+ const{g,p}=arena('marton');g.attack(p,{x:45,y:25});const fx=g.effects.find(f=>f.type==='burst');assert.deepEqual(visualShape(fx),{kind:'circle',range:2.2});const b=arena('sinclair'),arcs=[],c=context();c.arc=(...args)=>arcs.push(args);preview({ctx:c,circle(){},polygon(){},text(){}},b.p,b.g);near(arcs[0][2],2);near(arcs[0][4]-arcs[0][3],FAN_ANGLE);
 });
 test('north needles spawn beyond the center timer and the king appears at exactly 3:30',()=>{
  const g=new Game('faust','top',{seed:64});g.time=90;Sewing.tick(g);const needles=g.units.filter(e=>e.camp==='needle');assert.equal(needles.length,2);assert.ok(needles.every(n=>Math.hypot(n.x-MAP_CENTER.x,n.y-Sewing.NORTH_CAMP.y)>2));const timer=g.campTimers({upcoming:true}).find(t=>t.upcoming);near(timer.seconds,120);g.time=209.999;Sewing.tick(g);assert.equal(g.sewingKingSpawned,false);g.time=210;Sewing.tick(g);assert.ok(g.sewingKingSpawned);assert.equal(g.campTimers({upcoming:true}).some(t=>t.upcoming),false);

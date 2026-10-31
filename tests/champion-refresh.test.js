@@ -15,8 +15,8 @@ for(const[winner,loser,reward,line]of[['kromer','sinclair','darkWorld','아아..
  g.time=p.respawnAt;g.step(.01);assert.ok(p.alive);assert.equal(g.buff(p,reward),true);
  const copy=arena(winner).g;assert.ok(applySnapshot(copy,new SnapshotWriter().capture(g,true),p.id));assert.equal(copy.player.rivalReward,reward);assert.equal(copy.buff(copy.player,reward),true);assert.deepEqual(copy.rivalries,g.rivalries);
 });
-test('rivalries require opposing original rosters and ignore training, later spawns and environmental kills',()=>{
- for(const kind of['training','sameTeam','later','tower']){const{g,p}=arena('sinclair');if(kind!=='training')g.training=false;let t;if(kind==='later'){initRivalries(g);t=hero(g,'kromer');}else{t=hero(g,'kromer',kind==='sameTeam'?0:1);initRivalries(g);}const killer=kind==='tower'?g.entity({kind:'tower',team:0,x:40,y:20,maxHp:100}):p;g.kill(t,killer);assert.equal(p.rivalReward,undefined,kind);}
+test('rivalries require opposing original rosters and ignore dummies, later match spawns and environmental kills',()=>{
+ for(const kind of['dummy','sameTeam','later','tower']){const{g,p}=arena('sinclair');g.training=false;let t;if(kind==='later'){initRivalries(g);t=hero(g,'kromer');}else{t=hero(g,'kromer',kind==='sameTeam'?0:1);initRivalries(g);}if(kind==='dummy')t.trainingDummy={infinite:false};const killer=kind==='tower'?g.entity({kind:'tower',team:0,x:40,y:20,maxHp:100}):p;g.kill(t,killer);assert.equal(p.rivalReward,undefined,kind);}
 });
 test('online rosters activate rivalries after actual room slots replace the temporary draft',()=>{
  const match={seed:103,slots:[{memberId:'a',team:0,position:'top',champion:'sinclair',nickname:'a'},{memberId:'b',team:1,position:'top',champion:'kromer',nickname:'b'}]},g=makeOnlineGame(match,'a'),p=g.player,t=g.champions(1)[0];assert.equal(g.rivalries[0].participants.length,2);g.kill(t,p);assert.equal(p.rivalReward,'lightWorld');

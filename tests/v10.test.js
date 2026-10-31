@@ -113,7 +113,7 @@ test('consumables have no live module, champion resource, purchase, use or codex
  const {g,p}=quiet();assert.equal(existsSync(new URL('../src/items.js',import.meta.url)),false);assert.equal(g.usePotion,undefined);assert.equal(g.buyConsumable,undefined);assert.equal(g.sellConsumable,undefined);assert.equal('potion' in p,false);assert.equal('CONSUMABLES' in Catalog,false);assert.equal(g.buy(p,'potion'),false);
 });
 test('Starbuck joins ordinary drafts with requested grades, harpoon damage and jungle rewards',()=>{
- const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,31);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,55*1.1);
+ const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,33);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,55*1.1);
 });
 test('Starbuck every basic stabs once then advances 2.75 with either full or partial ammo',()=>{
  const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,200*.9);close(p.motion.total,2.75);run(g,.4);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.ok(p.motion);close(p.motion.total,2.75);

@@ -7,7 +7,7 @@ export const recast=(g,e,slot)=>e.key==='kromer'&&slot==='q'&&Boolean(qTarget(g,
 export function validate(g,e,slot){if(e.state.kromerGrab)return false;return !(slot==='r'||slot==='q'&&recast(g,e,slot))||!g.stat(e,'root')&&!g.stat(e,'captured');}
 export function basic(g,e,d){const to={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};
  for(const t of [...g.units]){if(!g.hostile(e,t)||!g.clearLine(e,t))continue;const dx=t.x-e.x,dy=t.y-e.y,along=dx*d.x+dy*d.y,across=Math.abs(dx*d.y-dy*d.x);if(along>=-t.radius&&along<=g.attackRange(e)+t.radius&&across<=KROMER.basicWidth/2+t.radius)g.deal(e,t,KROMER.basicDamage,{armorPen:KROMER.basicPen});}
- g.effects.push({type:'slash',source:e.id,theme:e.key,damageKind:'basic',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),spread:.2,r:g.attackRange(e),shape:{kind:'rect',range:g.attackRange(e),width:KROMER.basicWidth},life:.25,maxLife:.25});
+ g.effects.push({type:'thrust',source:e.id,theme:e.key,damageKind:'basic',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),spread:.2,r:g.attackRange(e),shape:{kind:'rect',range:g.attackRange(e),width:KROMER.basicWidth,angle:Math.atan2(d.y,d.x)},life:.25,maxLife:.25});
 }
 export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
  if(!proc||actual+absorbed<=0||e.key!=='kromer'||t.kind!=='champion'||e.team===t.team||!t.alive||t.hp<=0)return;

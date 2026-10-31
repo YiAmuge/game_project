@@ -1,9 +1,7 @@
+import{drawMagicCircle}from'./magic-circle.js';
 export function battleHasteLights(time){return Array.from({length:16},(_,i)=>{const phase=(time*.65+i/16)%1,angle=i*2.4+time*.18,radius=.25+i%4*.15;return{x:Math.cos(angle)*radius,y:Math.sin(angle)*radius,height:.06+phase*(2.3+i%3*.15),alpha:Math.sin(phase*Math.PI)*.95,color:i%2?'#ffe77c':'#ff73bd',size:.035+.025*(.5+.5*Math.sin(time*10+i*1.7))};});}
 export function drawAugmentGround(c,camera,g){
- for(const e of g.champions().filter(e=>e.alive&&!g.hidden(e)&&g.visibleTo(g.player.team,e)&&g.buff(e,'augBattleHaste'))){const o=camera.worldToScreen(e,.09),dx=camera.worldToScreen({x:e.x+1,y:e.y},.09),dy=camera.worldToScreen({x:e.x,y:e.y+1},.09);c.save();c.translate(o.x,o.y);c.transform(dx.x-o.x,dx.y-o.y,dy.x-o.x,dy.y-o.y,0,0);const glow=c.createRadialGradient(0,0,.15,0,0,1.15);glow.addColorStop(0,'#ff4daf08');glow.addColorStop(.7,'#ff4daf33');glow.addColorStop(1,'#ff4daf00');c.fillStyle=glow;c.fillRect(-1.2,-1.2,2.4,2.4);c.rotate(g.time*.13);c.strokeStyle='#ff83c9';c.lineWidth=.028;
-  for(const radius of [.72,.96]){c.beginPath();c.arc(0,0,radius,0,Math.PI*2);c.stroke();}
-  c.strokeStyle='#f761b5bb';c.lineWidth=.022;for(let triangle=0;triangle<2;triangle++){c.beginPath();for(let i=0;i<3;i++){const a=i*Math.PI*2/3+triangle*Math.PI/3,x=Math.cos(a)*.65,y=Math.sin(a)*.65;i?c.lineTo(x,y):c.moveTo(x,y);}c.closePath();c.stroke();}
-  c.strokeStyle='#ffb7e0';for(let i=0;i<8;i++){const a=i*Math.PI/4,x=Math.cos(a)*.84,y=Math.sin(a)*.84;c.save();c.translate(x,y);c.rotate(a);c.beginPath();c.moveTo(-.045,0);c.lineTo(0,-.065);c.lineTo(.045,0);c.lineTo(0,.065);c.closePath();c.stroke();c.restore();}c.restore();
+ for(const e of g.champions().filter(e=>e.alive&&!g.hidden(e)&&g.visibleTo(g.player.team,e)&&g.buff(e,'augBattleHaste'))){const o=camera.worldToScreen(e,.09),dx=camera.worldToScreen({x:e.x+1,y:e.y},.09),dy=camera.worldToScreen({x:e.x,y:e.y+1},.09);c.save();c.translate(o.x,o.y);c.transform(dx.x-o.x,dx.y-o.y,dy.x-o.x,dy.y-o.y,0,0);const glow=c.createRadialGradient(0,0,.15,0,0,1.15);glow.addColorStop(0,'#ff4daf08');glow.addColorStop(.7,'#ff4daf33');glow.addColorStop(1,'#ff4daf00');c.fillStyle=glow;c.fillRect(-1.2,-1.2,2.4,2.4);drawMagicCircle(c,g.time);c.restore();
  }
 }
 export function drawAugmentEffects(c,camera,g){

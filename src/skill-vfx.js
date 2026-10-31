@@ -5,16 +5,16 @@ import { leapLift } from './projection-25d.js';
 import { guboEffectAxis,weaponEmissionScreen,myoFiring } from './weapon-art.js';
 // Render-only effects: gameplay X/Y is the ground, Z is height (Three.js Y).
 // Analytic motion uses simulation time, so pause, low FPS and replay stay stable.
-export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384,highlight:.28,lights:8};
+export const VFX_LIMITS={particles:640,emitters:32,tintFrames:64,sprites:384,highlight:.4,lights:8};
 export const CHAMPION_ELEMENTS=Object.fromEntries(Object.entries(CHAMPION_STYLES).map(([k,v])=>[k,v.element]));
 const ELEMENT_FORMS={metal:['chip','spark','spark'],ice:['crystal','spark','frost'],electric:['bolt','spark','spark'],wood:['woodchip','leaf','spark'],water:['drop','drop','mist'],liquid:['drop','drop','mist'],petal:['petal','petal','spark'],mirror:['crystal','crystal','spark'],feather:['feather','smoke','feather'],arcane:['spark','chip','spark'],blood:['drop','spark','spark']};
 const ELEMENT_MOTION={electric:{speed:1.25,life:.75,drag:1.2},ice:{lift:.85,gravity:1.25},wood:{speed:.8,gravity:.75,drag:1.35},water:{lift:.9,gravity:1.2},petal:{gravity:.6,drag:1.4}};
 export const VFX_PRESETS={
- explosion:{count:80,speed:23,lift:11,life:1.55,size:.66,drag:6,gravity:22,light:.4,ring:true},
- slash:{count:18,speed:12,lift:5.5,life:.8,size:.15,drag:7,gravity:18,light:.08,ring:false},
- pierce:{count:16,speed:22,lift:4,life:.7,size:.13,drag:7.5,gravity:18,light:.08,ring:false},
- impact:{count:20,speed:14,lift:7,life:.85,size:.21,drag:7,gravity:22,light:.12,ring:false},
- shot:{count:12,speed:26,lift:3.5,life:.48,size:.13,drag:9,gravity:20,light:.12,ring:false},
+ explosion:{count:80,speed:23,lift:11,life:1.55,size:.66,drag:6,gravity:22,light:.52,ring:true},
+ slash:{count:18,speed:12,lift:5.5,life:.8,size:.15,drag:7,gravity:18,light:.22,ring:false},
+ pierce:{count:16,speed:22,lift:4,life:.7,size:.13,drag:7.5,gravity:18,light:.22,ring:false},
+ impact:{count:20,speed:14,lift:7,life:.85,size:.21,drag:7,gravity:22,light:.28,ring:false},
+ shot:{count:12,speed:26,lift:3.5,life:.48,size:.13,drag:9,gravity:20,light:.28,ring:false},
 };
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
@@ -32,7 +32,7 @@ export function particlePose(p,time){
   size:p.size*(1-t)**.8,alpha:(1-t)**1.5,progress:t,landed:age>0&&airborne<=0};
 }
 export function effectRecipe(fx){
- const kinds={burst:'explosion',ryoshuStorm:'explosion',martonExplosion:'explosion',slash:'slash',
+ const kinds={bloodCleave:'slash',bloodBatHit:'impact',burst:'explosion',ryoshuStorm:'explosion',martonExplosion:'explosion',slash:'slash',
   yanCleave:'slash',soraClaw:'slash',hongluSweep:'slash',thrust:'pierce',gregorPierce:'pierce',yanWave:'pierce',
   outisSpin:'slash',outisShotgun:'pierce',strikeRect:'pierce',nellyProc:'slash',impact:'impact',soraShockwave:'impact',ishmaelShock:'impact',yanGreatsword:'impact',guboLaser:'shot',whipArc:'shot',nailVolley:'shot',guboBlast:'explosion'};
  const kind=fx.type==='line'&&fx.theme==='hohenheim'?'shot':kinds[fx.type];if(!kind)return null;
@@ -154,7 +154,7 @@ export class SkillVFX {
   ctx.save();
   while(this.cursor<this.frame.length&&this.frame[this.cursor].pose.y<=depth){
    const f=this.frame[this.cursor++],{p,pose,screen:s,size}=f,hot=pose.progress<.65&&!['smoke','mist','frost','woodchip','leaf','petal'].includes(p.form);
-   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=pose.alpha*(p.body?1:.75);
+   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=pose.alpha*(p.body?1:.94);ctx.shadowBlur=hot?(p.body?7:4):0;if(hot)ctx.shadowColor=p.color;
    if(p.form==='bolt'){this.drawBolt(ctx,f);continue;}
    if(p.form==='spark'){
     const old=particlePose(p,Math.max(p.born,this.time-.035)),current=particlePose(p,this.time);old.x+=pose.x-current.x;old.y+=pose.y-current.y;old.z+=pose.z-current.z;const tail=this.camera.worldToScreen(old,old.z+.075);
@@ -219,9 +219,9 @@ export class SkillVFX {
   ctx.save();
   for(const e of this.emitters.filter(e=>!e.body&&!e.beam&&!e.muzzle)){ctx.save();clipShape(ctx,camera,e);this.strokes.draw(ctx,camera,e,this.time);ctx.restore();}
   for(const e of this.emitters.filter(e=>!e.body).sort((a,b)=>b.light-a.light).slice(0,VFX_LIMITS.lights)){
-   const age=this.time-e.born;if(age<0)continue;const power=e.light*Math.exp(-age*6),range=e.radius*(e.kind==='explosion'?1.65:1.2)+1;
+   const age=this.time-e.born;if(age<0)continue;const power=e.light*Math.exp(-age*6),range=Math.min(e.radius,7)*(e.kind==='explosion'?1.65:1.2)+1;
    if(power>.005)this.groundDisc(ctx,camera,e,range,()=>{
-    ctx.globalCompositeOperation='source-over';const glow=ctx.createRadialGradient(0,0,0,0,0,1);
+    ctx.globalCompositeOperation='lighter';const glow=ctx.createRadialGradient(0,0,0,0,0,1);
     glow.addColorStop(0,css(rgb(e.accent),power*.65));glow.addColorStop(.35,css(rgb(e.accent),power*.24));glow.addColorStop(1,css(rgb(e.color),0));
     ctx.fillStyle=glow;ctx.fillRect(-1,-1,2,2);
    });

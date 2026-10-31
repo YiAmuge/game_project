@@ -10,3 +10,8 @@ export function projectileDimensions(style,scale=1){
  const factor=PROJECTILE_VISUAL_SCALE*(style.visualScale??1);
  return {width:width*factor,length:length*factor};
 }
+
+export function projectileIntersects(p,t){
+ if(!p.bloodBlade)return Math.hypot(t.x-p.x,t.y-p.y)<=t.radius+projectileHitWidth(p);
+ const dx=t.x-p.x,dy=t.y-p.y;return Math.abs(dx*p.dx+dy*p.dy)<=.25+t.radius&&Math.abs(dx*p.dy-dy*p.dx)<=projectileHitWidth(p)+t.radius;
+}

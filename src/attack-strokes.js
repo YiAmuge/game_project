@@ -79,7 +79,7 @@ export class AttackStrokes {
   // rim. Sharp filaments give it direction without leaving empty damage areas.
   for(let y=0;y<256;y++)for(let x=0;x<256;x++){
    const n=noise(x/19,y/19,variant+7),grain=noise(x/4,y/4,variant+11),i=(y*256+x)*4,light=.7+n*.3;
-   for(let j=0;j<3;j++)pixels.data[i+j]=Math.round(rgb[j]*light);pixels.data[i+3]=Math.round(36+n*36+grain*17);
+   for(let j=0;j<3;j++)pixels.data[i+j]=Math.round(rgb[j]*light);pixels.data[i+3]=Math.round(55+n*46+grain*20);
   }c.putImageData(pixels,0,0);c.lineCap='round';
   if(e.kind==='pressure'){this.fields.set(key,canvas);return canvas;}
   const directional=e.shape?.kind==='rect'||!e.shape&&['pierce','shot'].includes(e.kind);
@@ -95,7 +95,7 @@ export class AttackStrokes {
  }
  drawFootprint(ctx,camera,e,alpha,progress=0){
   const b=footprintBounds(e.shape),o=camera.worldToScreen(e,.12),x=camera.worldToScreen({x:e.x+1,y:e.y},.12),y=camera.worldToScreen({x:e.x,y:e.y+1},.12);
-  ctx.save();clipShape(ctx,camera,e);ctx.translate(o.x,o.y);ctx.transform(x.x-o.x,x.y-o.y,y.x-o.x,y.y-o.y,0,0);ctx.rotate(e.shape.angle||0);ctx.globalAlpha=alpha;ctx.drawImage(this.fieldTexture(e.pressure?{...e,kind:'pressure'}:e),b.x,b.y,b.w,b.h);
+  ctx.save();clipShape(ctx,camera,e);ctx.translate(o.x,o.y);ctx.transform(x.x-o.x,x.y-o.y,y.x-o.x,y.y-o.y,0,0);ctx.rotate(e.shape.angle||0);ctx.globalAlpha=alpha;ctx.shadowColor=e.color;ctx.shadowBlur=8;ctx.drawImage(this.fieldTexture(e.pressure?{...e,kind:'pressure'}:e),b.x,b.y,b.w,b.h);
   if(e.kind!=='field'){
    ctx.globalAlpha=alpha*.85;const kind=e.pressure?'pressure':e.kind==='slash'?'slash':e.kind==='impact'||e.kind==='explosion'?'impact':'pierce';
    if(e.shape.kind==='rect')ctx.drawImage(this.texture(kind,e),b.x,b.y,b.w,b.h);
@@ -108,7 +108,7 @@ export class AttackStrokes {
   const age=time-e.born,duration=e.kind==='explosion'?.48:e.kind==='shot'?.18:.34;if(age<0||age>duration)return;
   const kind=e.kind==='slash'?'slash':['pierce','shot'].includes(e.kind)?'pierce':'impact',t=age/duration,ease=1-Math.exp(-t*7),radius=e.kind==='explosion'?e.radius:e.kind==='impact'?.8+ease*1.2:e.radius;
   const origin=camera.worldToScreen(e,.16),x=camera.worldToScreen({x:e.x+1,y:e.y},.16),y=camera.worldToScreen({x:e.x,y:e.y+1},.16);
-  ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=(1-t)**1.25*(e.kind==='explosion'?.22:.55);
+  ctx.save();ctx.globalCompositeOperation='source-over';ctx.shadowColor=e.color;ctx.shadowBlur=9;ctx.globalAlpha=(1-t)**1.25*(e.kind==='explosion'?.38:.85);
   ctx.translate(origin.x,origin.y);ctx.transform(x.x-origin.x,x.y-origin.y,y.x-origin.x,y.y-origin.y,0,0);
   ctx.rotate(e.angle+(kind==='slash'?(ease-.5)*.8:0));
   if(kind==='pierce'){

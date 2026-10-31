@@ -1,3 +1,4 @@
+import{ARCANA_FRAMES}from'./arcana-sprites.js';
 import{PORTRAIT_CROPS}from'./portrait-framing.js';
 import{ULTIMATE_WEAPON_FRAMES}from'./ultimate-weapon-sprites.js';
 import{KROMER_FRAMES}from'./kromer-sprites.js';
@@ -35,12 +36,14 @@ export const FRAMES = {
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
 Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES,BOSS_FRAMES,JAMILA_FRAMES,WORLD_FRAMES,KROMER_FRAMES);
-Object.assign(FRAMES,ULTIMATE_WEAPON_FRAMES);
+Object.assign(FRAMES,ULTIMATE_WEAPON_FRAMES,ARCANA_FRAMES);
 for(const [key,face]of Object.entries(PORTRAIT_CROPS))if(FRAMES[key])FRAMES[key].face=face;
-export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62','world-v69','kromer-v102','ultimate-weapons-v102'];
-const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62','world-data-v69','kromer-data-v102','ultimate-weapon-data-v102'];
+export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62','world-v69','kromer-v102','ultimate-weapons-v102','arcana-v102'];
+const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62','world-data-v69','kromer-data-v102','ultimate-weapon-data-v102','arcana-data-v102'];
 const atlasImages=new Map();
 export function visualForm(g,e){
+ if(e.bloodBat)return 'bloodBat';
+ if(e.key==='nosferatu'&&e.state?.bloodfiend)return 'bloodfiend';
  if(e.lcaTrooper)return 'jamilaTrooper';
  if(e.key==='sora'&&g.buff(e,'soraEgo'))return 'soraEgo';
  if(e.key==='yan'&&g.buff(e,'yanDistorted'))return 'yanDistorted';
@@ -49,6 +52,7 @@ export function visualForm(g,e){
 }
 export const spriteHeight=(key,height=2.1)=>height*(FRAMES[key]?.heightScale||1);
 export const THEMES = {
+ queen:{light:'#fff0b5',dark:'#6c184d',accent:'#ff69c1',weapon:'wand'},nosferatu:{light:'#ff647c',dark:'#350a20',accent:'#c41134',weapon:'wine'},
  kromer:{light:'#ede6d7',dark:'#28282b',accent:'#b9aa86',weapon:'nail'},
  jamila:{light:'#e3d28a',dark:'#292c2c',accent:'#d8b64b',weapon:'rifle'},
   yan:{light:'#c3e6ff',dark:'#344d69',accent:'#83c6f6',weapon:'yanSword'},

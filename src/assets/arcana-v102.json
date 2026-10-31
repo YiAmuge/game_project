@@ -1,0 +1,190 @@
+{
+  "version": 1,
+  "sources": {
+    "bodies": {
+      "file": "source/arcana-bodies-v102.png",
+      "sha256": "5d7084a32047ca151193d2ba09c7dd7f307353fdd5c005061f3dd64fb427b461"
+    },
+    "props": {
+      "file": "source/arcana-props-v102.png",
+      "sha256": "339c89b32278ab457a1e3ff3bbd694f0da85df52bf04ee93afc65467c3703a31"
+    },
+    "wand": {
+      "file": "source/queen-wand-v102.png",
+      "sha256": "8b91111ff4ef17b36aa0bc9c47c42382f680de3ec9194f6ca139ddcff5e893b8"
+    },
+    "seed": {
+      "file": "source/champion-avatar-seed.png",
+      "sha256": "281c4191e4fd5527da517dfc9328a1e3d971704a094136c8559a8f1f4186f60d"
+    },
+    "blood": {
+      "file": "source/bloodfiend-v102.png",
+      "sha256": "3e93d512fcba9e1e60fb5540f8c034a13dffcc7a9a18cdf67dec5b0506daca37"
+    }
+  },
+  "proportions": "Original gray armless two-head champion avatar, anatomical crown to sole 400px",
+  "frames": {
+    "queen": {
+      "x": 8,
+      "y": 8,
+      "w": 292,
+      "h": 425,
+      "sheet": 19,
+      "rotation": 0,
+      "source": "source/arcana-bodies-v102.png",
+      "sourceRect": [
+        14,
+        99,
+        584,
+        852
+      ],
+      "referenceHeight": 400,
+      "crownOffset": 25,
+      "heightScale": 1.0625,
+      "heightBasis": "crown",
+      "foot": [
+        0.56,
+        1
+      ],
+      "face": [
+        33,
+        18,
+        240,
+        185
+      ]
+    },
+    "nosferatu": {
+      "x": 308,
+      "y": 8,
+      "w": 240,
+      "h": 403,
+      "sheet": 19,
+      "rotation": 0,
+      "source": "source/arcana-bodies-v102.png",
+      "sourceRect": [
+        565,
+        139,
+        482,
+        808
+      ],
+      "referenceHeight": 400,
+      "crownOffset": 3,
+      "heightScale": 1.0075,
+      "heightBasis": "crown",
+      "foot": [
+        0.53,
+        1
+      ],
+      "face": [
+        5,
+        0,
+        232,
+        182
+      ]
+    },
+    "bloodfiend": {
+      "x": 556,
+      "y": 8,
+      "w": 323,
+      "h": 459,
+      "sheet": 19,
+      "rotation": 0,
+      "source": "source/bloodfiend-v102.png",
+      "sourceRect": [
+        20,
+        38,
+        991,
+        1411
+      ],
+      "referenceHeight": 400,
+      "crownOffset": 59,
+      "heightScale": 1.1475,
+      "heightBasis": "crown",
+      "foot": [
+        0.63,
+        1
+      ],
+      "face": [
+        62,
+        0,
+        260,
+        254
+      ]
+    },
+    "bloodBat": {
+      "x": 887,
+      "y": 8,
+      "w": 310,
+      "h": 180,
+      "sheet": 19,
+      "rotation": 0,
+      "source": "source/arcana-props-v102.png",
+      "sourceRect": [
+        1130,
+        296,
+        387,
+        225
+      ]
+    },
+    "queenWand": {
+      "x": 1205,
+      "y": 8,
+      "w": 376,
+      "h": 800,
+      "sheet": 19,
+      "rotation": 1.5707963267948966,
+      "source": "source/queen-wand-v102.png",
+      "sourceRect": [
+        167,
+        32,
+        692,
+        1471
+      ]
+    },
+    "nosWine": {
+      "x": 1589,
+      "y": 8,
+      "w": 90,
+      "h": 180,
+      "sheet": 19,
+      "rotation": 0,
+      "source": "source/arcana-props-v102.png",
+      "sourceRect": [
+        623,
+        780,
+        93,
+        186
+      ]
+    },
+    "bloodClawLeft": {
+      "x": 1687,
+      "y": 8,
+      "w": 284,
+      "h": 192,
+      "sheet": 19,
+      "rotation": 0,
+      "source": "source/arcana-props-v102.png",
+      "sourceRect": [
+        829,
+        775,
+        284,
+        192
+      ]
+    },
+    "bloodClawRight": {
+      "x": 8,
+      "y": 816,
+      "w": 283,
+      "h": 193,
+      "sheet": 19,
+      "rotation": 0,
+      "source": "source/arcana-props-v102.png",
+      "sourceRect": [
+        1206,
+        776,
+        283,
+        193
+      ]
+    }
+  }
+}

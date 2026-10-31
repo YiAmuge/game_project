@@ -15,7 +15,7 @@ function arena(key='faust'){const g=new Game(key,'top',{seed:49}),p=g.player;for
 function enemy(g,x=31,y=20){const t=g.makeChampion('faust',1,8);Object.assign(t,{x,y,hp:10000,maxHp:10000,armor:0,player:false});return t;}
 test('Every champion moves with its original static body and no walking sheet or runtime remains',async()=>{
  const meta=JSON.parse(await readFile(new URL('../src/assets/sprites-v36.json',import.meta.url)));assert.equal(meta.animations,undefined);assert.ok(!Object.keys(FRAMES).some(k=>/Walk\d/.test(k)));assert.ok(!ATLAS_FILES.some(k=>/walk/.test(k)));assert.equal(existsSync(new URL('../src/walk-animation.js',import.meta.url)),false);
- for(const key of Object.keys(CHAMPIONS)){const {g,p}=arena(key),f=FRAMES[key];g.input.x=1;g.input.aim={x:40,y:20};for(let i=0;i<5;i++)g.step(1/30);assert.ok(p.x>30,key);assert.equal(visualForm(g,p),key);assert.equal(FRAMES[visualForm(g,p)],f);assert.equal(f.sheet,key==='kromer'?17:key==='jamila'?15:9);}
+ for(const key of Object.keys(CHAMPIONS)){const {g,p}=arena(key),f=FRAMES[key];g.input.x=1;g.input.aim={x:40,y:20};for(let i=0;i<5;i++)g.step(1/30);assert.ok(p.x>30,key);assert.equal(visualForm(g,p),key);assert.equal(FRAMES[visualForm(g,p)],f);assert.equal(f.sheet,['queen','nosferatu','bloodfiend'].includes(key)?19:key==='kromer'?17:key==='jamila'?15:9);}
 });
 test('Boss aura reaches 9.5, lasts one second after leaving, refreshes on reentry, and preserves health ratios without stacking',()=>{
  const {g,p}=arena();Boss.reward(g,0);const ally=g.makeChampion('faust',0,3);Object.assign(ally,{x:30,y:20});Boss.reward(g,0);

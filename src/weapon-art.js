@@ -16,6 +16,7 @@ export const HANDLE_EXTENSIONS={
  hongluGlaive:{from:.025,to:.45,scale:1.25},
 };
 export const WEAPON_ART={
+ queen:['queenWand',2.1],nosferatu:['nosWine',.43],
  kromer:['kromerNail',2.45],
  jamila:['jamilaRifle',2.25],
  yi:['yiDagger',1.15],faust:['faustSword',2.2],sinclair:['sinclairHalberd',2.45],meursault:['meursaultFist',.78],
@@ -25,9 +26,10 @@ export const WEAPON_ART={
  hohenheim:['hohenheimStaff',2.6],alisa:['alisaClub',1.75],marton:['martonHammer',2.4],queequeg:['queequegHarpoon',2.25],starbuck:['starbuckHarpoon',2.45],kim:['kimSword',2.35],ppui:['ppuiHand',.48],sora:['soraFists',.84*.75],yan:['yanSword',3],
 };
 export const MIDDLE_GRIP=new Set(['starbuck','don','sinclair','honglu','dongrang','hohenheim','marton','rudolph']);
-export const gripPivot=key=>key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
+export const gripPivot=key=>key==='queen'?.42:key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
 export function equippedWeapon(g,e){
  const base=WEAPON_ART[e.key];if(!base)return null;
+ if(e.key==='nosferatu'&&g.buff(e,'bloodfiend'))return ['bloodClawRight',1.15,.08];
  if(e.alive&&e.key==='don'&&(g.buff(e,'donLifesteal')||e.motion?.actionTag==='donR'))return ['donBloodLance',weaponGeometry(base[0],base[1]).span,.12];
  if(e.alive&&e.key==='heathcliff'&&g.buff(e,'heathUlt'))return ['heathBloodSack',2.6,.045];
  return [...base,gripPivot(e.key)];
@@ -39,7 +41,7 @@ export const SORA_CLAW_LENGTH=1.65*.8*.88;
 export const ISHMAEL_SHIELD_LENGTH=.38;
 export const EMISSION_ANCHORS={gubo:[.99,.32],rudolph:[.94,.48],myo:[.995,.50],jamila:[.99,.23]};
 // Anatomical hands in crown-to-sole world units, independent of hair/ornaments.
-export const HAND_ANCHORS={kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
+export const HAND_ANCHORS={queen:[-.35,-.88],nosferatu:[-.35,-.7],kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
 export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
  const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],aim=e.facing??(e.team?Math.PI:0),stance=basicStance(g,e)||(!combatPoseActive(g,e)&&Math.abs(Math.sin(aim))<1e-6?restingStance(g,e,aim):null),facing=stance?.weaponFacing??aim,flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[baseX,y]=HAND_ANCHORS[e.key]||[-.3,-.8],x=baseX*(e.key==='sora'&&g.buff(e,'soraEgo')?1.1:1);
@@ -308,6 +310,10 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){const body=FRAMES.yanDistorted,height=2.1*body.heightScale,right=height*body.w/body.h*(1-body.foot[0]);c.save();c.translate(p.origin.x+right+1.72,p.origin.y-.6);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
+ if(e.key==='queen'){const side=p.flip,hand={x:p.origin.x+side*.48,y:p.origin.y-.88};held(entry[0],entry[1],hand,attacking?p.angle:side>0?-1.12:Math.PI+1.12,.42,{mode:attacking?'swing':null,progress:p.swing,trail:attacking});return true;}
+ if(e.key==='nosferatu'){
+  if(!g.buff(e,'bloodfiend')){const pulse=attacking?Math.sin(p.swing*Math.PI):0;held('nosWine',.43,{x:p.origin.x+p.flip*(.53+Math.sin(p.swing*16)*.025*pulse),y:p.origin.y-.64},.08*pulse,.5,{mode:null,trail:false});}
+  else for(const pose of bloodClawPoses(g,e,p)){held(pose.asset,pose.length,pose.hand,pose.angle,.08,{mode:attacking?'swing':null,progress:p.swing,trail:attacking,part:pose.asset});}return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}
  if(e.key==='kromer'){
   const pose=kromerWeaponPose(g,e,p,camera);if(!pose.hidden)held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:false,centerGrip:pose.centerGrip});return true;
@@ -385,4 +391,9 @@ export function kromerWeaponPose(g,e,p=equipmentPose(g,e),camera){
  if(grab){const age=g.time-(e.state.kromerStrikeAt??-99),progress=Math.max(0,Math.min(1,age/KROMER_WEAPON_MOTION.impaleDuration)),pulse=age>=0&&age<KROMER_WEAPON_MOTION.impaleDuration?Math.sin(progress*Math.PI):0,side=Math.cos(grab.angle)<0?-1:1,angle=side>0?Math.PI/4:Math.PI*3/4,target=targetTorsoPoint(g,e,grab.target,camera),reach=WEAPON_ART.kromer[1]*(1+.2*pulse)*.5+.15;target.y+=KROMER_WEAPON_MOTION.torsoDrop;return{hand:{x:target.x-Math.cos(angle)*reach,y:target.y-Math.sin(angle)*reach},angle,pivot:.5,mode:'thrust',progress,thrust:.5*pulse,centerGrip:true};}
  const qAge=g.time-(e.state.kromerQStrikeAt??-99),q=qAge>=0&&qAge<.25;
  return{hand:p.right,angle:q?e.state.kromerQStrikeFacing:p.angle,pivot:.11,mode:q?'thrust':undefined,progress:q?qAge/.25:undefined,thrust:q?.45*Math.sin(qAge/.25*Math.PI):p.attacking?.38*Math.sin(p.swing*Math.PI):0};
+}
+
+export function bloodClawPoses(g,e,p=equipmentPose(g,e)){
+ const phase=Math.max(0,Math.min(1,p.swing)),forward=p.attacking?(e.attackFacing??p.facing):p.facing;
+ return ['bloodClawLeft','bloodClawRight'].map((asset,i)=>{const side=i?1:-1;return {asset,length:1.15*(p.attacking?1+.3*Math.sin(phase*Math.PI):1),angle:forward+side*(p.attacking?(phase-.5)*.7:.12),hand:{x:p.origin.x+Math.cos(forward)*.32-Math.sin(forward)*side*.24,y:p.origin.y-.75+Math.sin(forward)*.32+Math.cos(forward)*side*.24}};});
 }

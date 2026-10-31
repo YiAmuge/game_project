@@ -1,3 +1,4 @@
+import{FAN_ANGLE}from'../src/data.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game,damageFormula } from '../src/game.js';
@@ -98,6 +99,6 @@ test('Gubo ally executions reserve one dedicated 14.7 cone footprint for basic a
  for(const slot of ['basic','r']){
   const {g,p}=arena('gubo'),a=hero(g,24,20,0,'rodya'),enemy=hero(g,28,20);a.hp=1;
   if(slot==='basic'){g.attack(p,a);run(g,.25);}else{g.cast(p,'r',a);run(g,1.26);}
-  assert.equal(a.alive,false);const f=g.effects.find(f=>f.type==='guboBlast');assert.equal(f.source,p.id);close(f.r,14.7);close(f.angle,0);close(f.spread,Math.acos(.4)*2);assert.ok(enemy.hp<100000);
+  assert.equal(a.alive,false);const f=g.effects.find(f=>f.type==='guboBlast');assert.equal(f.source,p.id);close(f.r,14.7);close(f.angle,0);close(f.spread,FAN_ANGLE);assert.ok(enemy.hp<100000);
  }
 });

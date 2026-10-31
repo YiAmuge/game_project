@@ -1,3 +1,5 @@
+import{stage as queenStage}from'./queen.js';
+import{capacity as bloodCapacity}from'./nosferatu.js';
 import{HEATH}from'./heathcliff.js';
 import{drawDebuffBadges}from'./champion-update-effects.js';
 import{drawKromerEffects}from'./kromer-vfx.js';
@@ -15,6 +17,8 @@ import { THEMES } from './art.js';
 import { heathCharge,guardAlly } from './skills.js';
 
 export function stackInfo(e,g){
+ if(e.key==='nosferatu')return {label:'혈찬',value:Math.floor(e.state.bloodFeast||0),max:Math.floor(bloodCapacity(g,e)),color:'#ed3c65',textOnly:true};
+ if(e.key==='queen'&&e.state.queenR)return{label:'아르카나',value:queenStage(g,e),max:3,color:'#ff9ce0',textOnly:true};
  if(e.key==='yan'&&Yan.distorted(g,e))return {label:`뒤틀림 ${(e.buffs.yanDistorted-g.time).toFixed(1)}s · 중첩 획득 중지`,textOnly:true,color:'#c4e5fa'};
  if(e.key==='yan')return {label:`불길한 힘${Yan.ready(g,e)?' · 뒤틀림 준비':''}`,value:e.state.ominous||0,max:Yan.YAN.maxPower,color:'#b2cfdf',shape:'mirror'};
  if(e.key==='sora'&&soraEgo(g,e))return {label:`대행 ${(e.buffs.soraEgo-g.time).toFixed(1)}s · 말살 ${e.state.egoQCharges}/2${Number.isFinite(e.state.egoQReady)?' · 충전 '+Math.max(0,e.state.egoQReady-g.time).toFixed(1)+'s':''}`,textOnly:true,color:'#e7cb80'};
@@ -57,6 +61,7 @@ export function championHud(r,e,g){
   c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);
  }else if(e.key==='rudolph'){
   c.fillStyle='#322018';c.fillRect(x,resourceY,width,.24);c.fillStyle=e.state.exhaustedUntil>g.time?'#866347':'#f5a34e';c.fillRect(x,resourceY,width*(e.state.exhaustedUntil>g.time?Math.min(1,(g.time-e.state.exhaustedAt)/e.state.recoveryDuration):Math.min(1,Math.max(0,e.ammo/cap))),.24);if(!(e.state.exhaustedUntil>g.time))r.text(`SP ${Math.floor(e.ammo)} / ${cap}`,e.x,resourceY+.12,'#fff2da',.205);
+ }else if(e.key==='nosferatu'&&e.state.bloodfiend){r.text('∞',e.x,resourceY+.12,'#ff8fa8',.30);
  }else if(e.key==='jamila'){
   c.fillStyle='#0d1822db';c.fillRect(x,resourceY,width,.27);r.text(`${Math.floor(e.ammo)} | ${cap}`,x+.59,resourceY+.14,e.ammo>0?'#f2d89b':'#e39383',.25);
   const count=Math.ceil(cap/4),ready=shieldRounds(e),gap=1.15/Math.max(1,count);for(let i=0;i<count;i++){const px=e.x+.15+i*gap;c.fillStyle=i<ready?'#63bcff':'#24415a';c.beginPath();c.moveTo(px,resourceY+.23);c.lineTo(px,resourceY+.085);c.quadraticCurveTo(px+.04,resourceY-.005,px+.08,resourceY+.085);c.lineTo(px+.08,resourceY+.23);c.closePath();c.fill();}
@@ -134,6 +139,8 @@ export function championGroundEffects(r,e,g){
 }
 
 export function stackGauge(e,g){
+ if(e.key==='nosferatu'){const s=e.state.bloodfiend;return{ratio:s?Math.max(0,(s.until-g.time)/10):(e.state.bloodFeast||0)/bloodCapacity(g,e),color:'#ed3c65',label:s?'':`혈찬 ${Math.floor(e.state.bloodFeast||0)} / ${Math.floor(bloodCapacity(g,e))}`,timer:Boolean(s),max:s?0:bloodCapacity(g,e)/200};}
+ if(e.key==='queen'&&e.state.queenR){const s=e.state.queenR;return{ratio:s.phase==='charging'?Math.min(1,(g.time-s.at)/3.75):s.stage/3,color:'#ff91dc',label:'',timer:false,max:3};}
  if(e.key==='dongrang'){const value=(e.totalHealingReceived||0)%1000;return{color:'#d8d48b',ratio:value/1000,label:`다음 양분까지 ${Math.ceil(1000-value)} 회복`,max:1};}
  const info=stackInfo(e,g);let state=info;
  if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))state={label:'광폭한 칼날'};

@@ -1,3 +1,5 @@
+import{FAN_ANGLE}from'./data.js';
+import{drawArcanaEffects}from'./arcana-vfx.js';
 import{drawBodyAdditions}from'./champion-update-effects.js';
 import{RULES}from'./data.js';
 import { HEATH } from './heathcliff.js';
@@ -73,7 +75,7 @@ export function championPresentation(g,e){
 export class ChampionVFX {
  constructor(vfx,projectiles,art){this.vfx=vfx;this.projectiles=projectiles;this.art=art;this.previous=new WeakMap();this.effects=[];this.seen=new WeakSet();this.cache=new Map();this.pulse=new WeakMap();}
  reset(game){this.game=game;this.previous=new WeakMap();this.effects=[];this.seen=new WeakSet();this.pulse=new WeakMap();}
- event(type,e,g,options={}){this.effects.push({type,owner:e.id,x:e.x,y:e.y,at:g.time,life:1,...options});if(this.effects.length>72)this.effects.shift();}
+ event(type,e,g,options={}){if(options.spread)options={...options,spread:FAN_ANGLE};this.effects.push({type,owner:e.id,x:e.x,y:e.y,at:g.time,life:1,...options});if(this.effects.length>72)this.effects.shift();}
  sync(g){
   if(this.game!==g||g.time<(this.time||0))this.reset(g);this.time=g.time;this.effects=this.effects.filter(f=>g.time-f.at<f.life);
   for(const e of g.champions().filter(e=>e.alive&&!e.trainingDummy)){
@@ -220,6 +222,7 @@ export class ChampionVFX {
   else if(f.type==='shout'){c.save();c.translate(.2,-1.7);c.strokeStyle='#f3ddae';c.shadowColor='#ffba65';c.shadowBlur=11;c.lineWidth=.085;c.globalAlpha=(1-t)*.95;for(let i=0;i<4;i++){const size=.3+age*2.7*(1+i*.35);c.beginPath();c.arc(0,0,size,-.65,.65);c.stroke();}c.restore();}
  }
  events(c,camera,g){
+  drawArcanaEffects(c,camera,g);
   v58Front(c,camera,g);drawAugmentEffects(c,camera,g);drawPassiveAugmentFront(c,camera,g);
   c.save();
   for(const f of this.effects){

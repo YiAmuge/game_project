@@ -1,3 +1,4 @@
+import{FAN_ANGLE}from'../src/data.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game.js';
@@ -11,8 +12,8 @@ const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*240);i++)g.step(1/240);};
 function arena(key){const g=new Game(key,'top',{seed:46}),e=g.player;for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};Object.assign(e,{x:30,y:20,facing:0});g.units=[e];g.effects=[];g.minionQueue=[];g.wave=100;g.map={bounds:WORLD,walls:[]};g.input.aim={x:36,y:20};return {g,e};}
 function target(g,x=32,y=20){const t=g.makeChampion('faust',1,9);Object.assign(t,{x,y,hp:100000,maxHp:100000});g.units.push(t);return t;}
-test('Sinclair basic reaches both sides of a two-unit forward semicircle while missing the rear and distant targets',()=>{
- const {g,e}=arena('sinclair'),front=target(g,31.8),left=target(g,30+1.8*Math.cos(1.35),20+1.8*Math.sin(1.35)),right=target(g,30+1.8*Math.cos(1.35),20-1.8*Math.sin(1.35)),back=target(g,29),far=target(g,33);g.attack(e,{x:36,y:20});for(const t of [front,left,right])assert.ok(t.hp<100000);for(const t of [back,far])assert.equal(t.hp,100000);close(g.attackRange(e),2);const fx=g.effects.find(f=>f.source===e.id&&f.damageKind==='basic'&&f.shape);close(fx.shape.range,2);close(fx.shape.spread,Math.PI);
+test('Sinclair basic reaches both sides of a two-unit forward 165-degree sector while missing the rear and distant targets',()=>{
+ const {g,e}=arena('sinclair'),front=target(g,31.8),left=target(g,30+1.8*Math.cos(1.35),20+1.8*Math.sin(1.35)),right=target(g,30+1.8*Math.cos(1.35),20-1.8*Math.sin(1.35)),back=target(g,29),far=target(g,33);g.attack(e,{x:36,y:20});for(const t of [front,left,right])assert.ok(t.hp<100000);for(const t of [back,far])assert.equal(t.hp,100000);close(g.attackRange(e),2);const fx=g.effects.find(f=>f.source===e.id&&f.damageKind==='basic'&&f.shape);close(fx.shape.range,2);close(fx.shape.spread,FAN_ANGLE);
 });
 test('Gubo Q keeps the same range and cannot hit the former extended-range target',()=>{
  const {g,e}=arena('gubo'),range=g.attackRange(e),t=target(g,e.x+range*1.15);g.cast(e,'q',e);close(g.attackRange(e),range);g.attack(e,t);assert.equal(g.projectiles[0].damage,288);run(g,.8);assert.equal(t.hp,100000);assert.ok(g.buff(e,'guboReload'));

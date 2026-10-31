@@ -1,7 +1,9 @@
+import{FAN_ANGLE}from'./data.js';
 // Rendering palettes are intentional per attack, independent of team/skin tint.
 export const NEUTRAL={color:'#e6e7e9',accent:'#ffffff',dark:'#45484f',element:'metal'};
 const style=(color,element='metal',accent=color,dark='#33353b')=>({color,element,accent,dark});
 export const CHAMPION_STYLES={
+ queen:style('#f16ac0','arcane','#fff2ab','#701b6a'),nosferatu:style('#cd173d','blood','#ff767a','#420b23'),
  kromer:style('#a19a8e','metal','#f3e7cf','#222227'),kromerNail:style('#56545a','metal','#c1c0c5','#09090c'),
  jamila:style('#d7b550','metal','#fff1bd','#514727'),
  yi:style('#dce9ef','mirror'),faust:{...NEUTRAL},sinclair:{...NEUTRAL},don:style('#e5bd38','metal','#fff1a5','#79611d'),meursault:{...NEUTRAL},gubo:{...NEUTRAL},
@@ -49,15 +51,15 @@ export function hitStyle(g,source,fx){
 }
 export function bodyHeight(e){return (e.kind==='champion'||e.lcaTrooper)?1.25:e.kind==='tower'?2.1:e.kind==='core'?1.6:e.camp==='boss'?1.1:e.kind==='neutral'?.65:e.kind==='summon'?.9:.35;}
 export function visualShape(fx){
- if(fx.shape)return fx.shape;
+ if(fx.shape)return fx.shape.kind==='cone'?{...fx.shape,spread:FAN_ANGLE,angle:fx.shape.angle??fx.angle??0}:fx.shape.kind==='rect'?{...fx.shape,angle:fx.shape.angle??fx.angle??0}:fx.shape;
  const angle=fx.angle||0,r=fx.r||1;
- if(fx.type==='yanWave')return {kind:'cone',range:r,spread:Math.PI,angle};
+ if(fx.type==='yanWave')return {kind:'cone',range:r,spread:FAN_ANGLE,angle};
  if(fx.type==='yanCleave')return {kind:'rect',range:Math.hypot(fx.to.x-fx.x,fx.to.y-fx.y),width:fx.width,angle:Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x)};
  if(fx.type==='line'&&fx.theme==='hohenheim')return {kind:'rect',range:Math.hypot(fx.to.x-fx.x,fx.to.y-fx.y),width:.4,angle:Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x)};
  if(fx.type==='whipArc')return {kind:'circle',range:2.1675};
  if(fx.type==='gregorPierce')return {kind:'rect',range:r,width:fx.width*2,angle};
- if(fx.type==='guboBlast')return {kind:'cone',range:r,spread:fx.spread,angle};
- if(fx.spread&&!fx.circle)return {kind:'cone',range:r,spread:Math.min(Math.PI*2,fx.spread),angle};
+ if(fx.type==='guboBlast')return {kind:'cone',range:r,spread:FAN_ANGLE,angle};
+ if(fx.spread&&!fx.circle)return {kind:'cone',range:r,spread:fx.spread>=Math.PI*2?fx.spread:FAN_ANGLE,angle};
  return {kind:'circle',range:r};
 }
 export function insideShape(shape,x,y){

@@ -1,3 +1,4 @@
+import{FAN_ANGLE}from'../src/data.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.js';
@@ -42,7 +43,7 @@ test('physical contacts stay attached to the torso and remain visible during the
  assert.equal(v.particles.length,12);assert.ok(v.particles.every(p=>['chip','spark'].includes(p.form)&&p.size<=.12));g.time+=.22;v.advance(g.time);assert.ok(v.emitters.includes(hit));
 });
 test('Dongbaek basic petals travel outward inside their real fan without a stationary slash emitter',()=>{
- const {g,p,t}=arena('dongbaek'),v=new SkillVFX(),champion=new ChampionVFX(v);g.attack(p,t);const fx=g.effects.find(f=>f.type==='petalFan');assert.ok(fx);assert.equal(fx.source,p.id);assert.equal(fx.r,g.attackRange(p));assert.equal(fx.shape.spread,1.3);
+ const {g,p,t}=arena('dongbaek'),v=new SkillVFX(),champion=new ChampionVFX(v);g.attack(p,t);const fx=g.effects.find(f=>f.type==='petalFan');assert.ok(fx);assert.equal(fx.source,p.id);assert.equal(fx.r,g.attackRange(p));assert.equal(fx.shape.spread,FAN_ANGLE);
  v.sync(g,camera);champion.sync(g);assert.ok(!v.emitters.some(e=>!e.body));const f=champion.effects.find(f=>f.type==='petalFan'),a=petalFanFlight(f,.09),b=petalFanFlight(f,.25);
  assert.equal(a.length,36);assert.equal(b.length,36);for(const p of b){assert.ok(p.distance>a.find(q=>q.id===p.id).distance);assert.ok(insideShape(fx.shape,p.x-f.x,p.y-f.y));}assert.equal(petalFanFlight(f,.6).length,0);
  const paused=JSON.stringify(b);assert.equal(JSON.stringify(petalFanFlight(f,.25)),paused);

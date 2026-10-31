@@ -189,6 +189,7 @@ export class Renderer25D {
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(game.player.team,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);const y=e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:isCampCreep(e)?campVisualHeight(e)+.18:.95);r.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,y,game);}
+   else if(e.bloodBat)r.bar(e,.8,e.y-.85,game,{height:.12});
    else if(e.lcaTrooper)r.bar(e,2.1,e.y-2.3,game,{height:.26});
    else if(e.kind==='minion')r.bar(e,.95,e.y-minionHeight(e)-.18,game);
    else if(e.kind==='tower'||e.kind==='core')r.bar(e,e.kind==='core'?3.3:2.3,e.y-structureVisualHeight(game,e)-.18,game);towerMark(r,e,game);
