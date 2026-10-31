@@ -8,7 +8,7 @@ async def main():
   pc=await b.new_context(viewport={'width':1440,'height':900});phone=await b.new_context(viewport={'width':844,'height':390},has_touch=True,is_mobile=True);h=await pc.new_page();c=await phone.new_page();errors=[]
   for page in [h,c]:page.on('pageerror',lambda e:errors.append(str(e)))
   await c.add_init_script("Element.prototype.requestFullscreen=()=>Promise.reject(new Error('Fixed test viewport'))")
-  await h.goto(URL+'/?debug');await h.wait_for_function('window.__moba');assert await h.locator('#menu-version').is_visible();assert await h.inner_text('#menu-version')=='v1.0.2'
+  await h.goto(URL+'/?debug');await h.wait_for_function('window.__moba');assert await h.locator('#menu-version').is_visible();assert await h.inner_text('#menu-version')=='v1.0.3'
   await h.click('#practice-open');await h.click('#position-select [data-position="top"]')
   assert await h.locator('#champion-select .champion-recommend').count()>0
   await h.click('#pick-roles [data-role="암살"]');assert await h.locator('#champion-select .pick-role-heading').all_text_contents()==['주 역할군','부 역할군']

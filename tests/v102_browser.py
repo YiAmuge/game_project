@@ -9,7 +9,7 @@ async def main():
   errors=[]
   for mobile in [False,True]:
    ctx=await browser.new_context(viewport={'width':844 if mobile else 1440,'height':390 if mobile else 900},is_mobile=mobile,has_touch=mobile);p=await ctx.new_page();p.on('pageerror',lambda e:errors.append(str(e)));await p.add_init_script("Element.prototype.requestFullscreen=()=>Promise.reject(new Error('fixed test viewport'))")
-   await p.goto(URL+'/?debug');await p.wait_for_function('window.__moba');assert await p.inner_text('#menu-version')=='v1.0.2';await p.locator('#training-open').click();await p.locator('[data-key=kromer]').click();await p.locator('#start').click();await p.wait_for_function("__moba.game.player.key==='kromer'&&__moba.game.training");await p.evaluate(SETUP);await p.wait_for_function("__moba.renderer.atlasFor('kromer').naturalWidth>0");await asyncio.sleep(.2)
+   await p.goto(URL+'/?debug');await p.wait_for_function('window.__moba');assert await p.inner_text('#menu-version')=='v1.0.3';await p.locator('#training-open').click();await p.locator('[data-key=kromer]').click();await p.locator('#start').click();await p.wait_for_function("__moba.game.player.key==='kromer'&&__moba.game.training");await p.evaluate(SETUP);await p.wait_for_function("__moba.renderer.atlasFor('kromer').naturalWidth>0");await asyncio.sleep(.2)
    await p.screenshot(path=str(ART/f'v102-kromer-{ "mobile" if mobile else "pc"}-idle.png'))
    if not mobile:
     # The real pointer and ultimate button start the grab; ticks are stepped deterministically.

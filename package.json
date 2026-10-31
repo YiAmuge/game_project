@@ -1,6 +1,6 @@
 {
   "name": "city-border-moba",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "type": "module",
   "description": "Browser-hosted 4v4 MOBA fan-game with invitation rooms and offline practice",

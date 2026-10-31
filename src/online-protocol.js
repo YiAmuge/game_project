@@ -1,5 +1,5 @@
 // Shared by the browser and the room/signalling service. No combat runs on the service.
-export const ONLINE_VERSION='1.0.2';
+export const ONLINE_VERSION='1.0.3';
 export const ROOM_CAPACITY=8;
 export const ROOM_POSITIONS=['top','jungle','bottom','support'];
 export const NET={inputEvery:1/30,snapshotEvery:1/15,inputTimeout:1.5,maxPacket:4*1024*1024,chunk:12000};
