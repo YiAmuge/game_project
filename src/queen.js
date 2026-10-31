@@ -55,11 +55,9 @@ export function telegraph(g,e,slot,viewerTeam=g.player.team){
  const spec=slot==='q'?{range:QUEEN.qRange,width:QUEEN.qWidth}:ARCANA_STAGES[s.phase==='charging'?stage(g,e):s.stage];
  return {x:s.x,y:s.y,angle:s.angle,range:spec.range,width:spec.width,slot};
 }
-export function cameraView(g,e,width,height){
+export function cameraView(g,e){
  const s=e?.key==='queen'&&e.state.queenR;if(s?.phase!=='charging')return 1;
  const elapsed=Math.max(0,g.time-s.at),progress=Math.min(1,elapsed/(QUEEN.stageTime*3));
- if(!width||!height)return 1+3*progress;
- const range=15+45*progress,halfWidth=ARCANA_STAGES[stage(g,e)].width/2,scale=Math.max(width/32,height/21),dx=Math.abs(Math.cos(s.angle)),dy=Math.abs(Math.sin(s.angle)),vertical=g.training25d?.786:1;
- const fit=Math.max(1,2*(dx*range+dy*halfWidth)*scale/(width*.9),2*(dy*range+dx*halfWidth)*vertical*scale/(height*.9));
- return 1+(fit-1)*Math.min(1,elapsed/.3);
+ // Keep the champion readable even when the beam reaches beyond the screen.
+ return 1+.6*progress;
 }

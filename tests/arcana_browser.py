@@ -52,7 +52,7 @@ async def main():
    # Zoom uses real renderer state, and restores rapidly on release.
    await p.evaluate(SETUP,'queen');await p.wait_for_timeout(450)
    await p.evaluate("()=>{const g=__moba.game;g.input.aim={x:40,y:-40};g.cast(g.player,'r',g.input.aim);advance(2.5);}");await p.wait_for_timeout(500)
-   assert await p.evaluate('__moba.renderer.viewBlend>3'),(mode,await p.evaluate('__moba.renderer.viewBlend'))
+   assert await p.evaluate('__moba.renderer.viewBlend>1.35&&__moba.renderer.viewBlend<=1.6'),(mode,await p.evaluate('__moba.renderer.viewBlend'))
    assert await p.evaluate("__moba.game.cast(__moba.game.player,'r',{x:40,y:-40})");await p.wait_for_function('__moba.renderer.viewBlend<1.05',timeout=2000)
    # The real skill button must recast during the ultimate channel, on both input modes.
    await p.evaluate(SETUP,'queen');await p.evaluate('()=>{const g=__moba.game,t=target(46);g.input.aim={x:t.x,y:t.y};}')
