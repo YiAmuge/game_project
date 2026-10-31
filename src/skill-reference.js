@@ -1,4 +1,4 @@
-import{FAN_ANGLE}from'./data.js';
+import{basicFanAngle}from'./data.js';
 import{ARCANA_STAGES}from'./queen.js';
 import {Game} from './game.js';
 import {CHAMPIONS,RULES} from './data.js';
@@ -30,13 +30,13 @@ const degrees=r=>number(Number((r*180/Math.PI).toFixed(1)))+'°';
 function basicRanges(key,g,e,transformed){
  const range=g.attackRange(e),r=number(range);
  if(key==='queen')return[row('관통 투사체','사거리 6.5'),row('아군 통과 강화','추가 사거리 1.2')];
- if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 부채꼴 165°'),row('피의 칼날','사거리 6.8 · 폭 4.54 · 관통 불가')];
+ if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 전방 반원 180°'),row('피의 칼날','사거리 6.8 · 폭 4.54 · 관통 불가')];
  if(key==='yan')return transformed?[row('손 조작','조작 거리 '+YAN.handLeash+' · 손 공격 반경 '+YAN.handRadius)]:[row('미충전','사거리 '+YAN.basicRange+' · 폭 '+YAN.width),row('최대 충전','사거리 '+YAN.fullRange+' · 폭 '+YAN.width),row('충전 변화','사거리 최소 '+YAN.basicRange+' ~ 최대 '+YAN.fullRange)];
  if(key==='hohenheim')return[row('미충전','사거리 '+HOHENHEIM.minRange+' · 직선 폭 '+number(HOHENHEIM.width*2)),row('최대 충전','사거리 '+HOHENHEIM.maxRange+' · 직선 폭 '+number(HOHENHEIM.width*2)),row('충전 변화','사거리 최소 '+HOHENHEIM.minRange+' ~ 최대 '+HOHENHEIM.maxRange)];
  if(key==='sora')return transformed?[row('공격 범위','자신 중심 반경 '+SORA.egoRadius)]:[row('공격 범위','중심점 사거리 '+SORA.basicRange+' · 반경 '+SORA.basicRadius)];
  if(key==='marton')return[row('근접 조준: 거리 2.5 미만','사거리 2.5 · 부채꼴 165°'),row('원거리 조준: 거리 2.5 이상','중심점 사거리 '+r+' · 반경 2.2')];
- if(key==='kim')return[row('발검','사거리 '+r+' · 부채꼴 '+degrees(FAN_ANGLE)),row('후속 베기','사거리 '+number(range*1.2*1.08)+' · 부채꼴 '+degrees(FAN_ANGLE))];
- if(key==='gregor')return[row('기본','사거리 '+r+' · 부채꼴 '+degrees(FAN_ANGLE)),row('변이','사거리 '+number(range*1.3)+' · 부채꼴 '+degrees(FAN_ANGLE))];
+ if(key==='kim')return[row('발검','사거리 '+r+' · 부채꼴 '+degrees(basicFanAngle(key))),row('후속 베기','사거리 '+number(range*1.2*1.08)+' · 부채꼴 '+degrees(basicFanAngle(key)))];
+ if(key==='gregor')return[row('기본','사거리 '+r+' · 부채꼴 '+degrees(basicFanAngle(key))),row('변이','사거리 '+number(range*1.3)+' · 부채꼴 '+degrees(basicFanAngle(key)))];
  if(key==='yi')return[row('기본','사거리 '+r+' · 관통 파편 3개'),row('오감도','사거리 '+number(range+1)+' · 관통 파편 7개')];
  if(key==='gahwan')return[row('전체 공격','사거리 '+r+' · 직선 폭 1.5'),row('근접 추가 공격','같은 직선 안 거리 3.25 이내')];
  if(key==='rudolph')return[row('공격 범위','중심점 사거리 '+r+' · 반경 2.1675')];
@@ -46,7 +46,7 @@ function basicRanges(key,g,e,transformed){
  if(key==='meursault')return[row('공격 범위','사거리 '+r+' · 직사각형 폭 2.6')];
  if(key==='queequeg')return[row('공격 범위','사거리 '+r+' · 직선 폭 1.8')];
  const cones={sinclair:Math.PI,ryoshu:Math.PI,heathcliff:1.7,ishmael:1.6,nelly:1.2,dongbaek:1.3,dongrang:1.9,alisa:1.1,starbuck:.975*1.2};
- if(cones[key])return[row('공격 범위','사거리 '+r+' · '+('부채꼴 '+degrees(FAN_ANGLE)))];
+ if(cones[key])return[row('공격 범위','사거리 '+r+' · '+('부채꼴 '+degrees(basicFanAngle(key))))];
  const widths={faust:2.196,rodya:1.65,jamila:.242,yi:.594};
  return[row('공격 범위','사거리 '+r+' · 직선'+(widths[key]?' 폭 '+number(widths[key]):''))];
 }
@@ -104,6 +104,7 @@ function cooldownLabel(key,index,g,e,transformed,variant){
   return '탄창 '+g.ammoCap(e)+'개 · 1개 장전 '+number(g.reloadInterval(e))+'초 · 공격 간격 '+number(g.attackInterval(e))+'초';
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return '변신 재사용 대기 없음';
+ if(key==='nosferatu'&&index===2)return '쿨타임 '+number(g.cooldown(e,'q'))+'초 · 2.5초 내 최대 4회 재사용';
  const charges=index===2&&(key==='ppui'||key==='nelly'||key==='ryoshu'||key==='sora'&&transformed)?2:1;
  return (charges>1?'충전당 ':'쿨타임 ')+number(key==='myo'&&index===2?.15:g.cooldown(e,index===2?'q':'r'))+'초'+(charges>1?' · 최대 '+charges+'회 충전':'');
 }

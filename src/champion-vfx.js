@@ -1,4 +1,4 @@
-import{FAN_ANGLE}from'./data.js';
+import{FAN_ANGLE,basicFanAngle}from'./data.js';
 import{drawArcanaEffects}from'./arcana-vfx.js';
 import{drawBodyAdditions}from'./champion-update-effects.js';
 import{RULES}from'./data.js';
@@ -75,7 +75,7 @@ export function championPresentation(g,e){
 export class ChampionVFX {
  constructor(vfx,projectiles,art){this.vfx=vfx;this.projectiles=projectiles;this.art=art;this.previous=new WeakMap();this.effects=[];this.seen=new WeakSet();this.cache=new Map();this.pulse=new WeakMap();}
  reset(game){this.game=game;this.previous=new WeakMap();this.effects=[];this.seen=new WeakSet();this.pulse=new WeakMap();}
- event(type,e,g,options={}){if(options.spread)options={...options,spread:FAN_ANGLE};this.effects.push({type,owner:e.id,x:e.x,y:e.y,at:g.time,life:1,...options});if(this.effects.length>72)this.effects.shift();}
+ event(type,e,g,options={}){if(options.spread)options={...options,spread:type==='petalFan'?basicFanAngle(e.key):FAN_ANGLE};this.effects.push({type,owner:e.id,x:e.x,y:e.y,at:g.time,life:1,...options});if(this.effects.length>72)this.effects.shift();}
  sync(g){
   if(this.game!==g||g.time<(this.time||0))this.reset(g);this.time=g.time;this.effects=this.effects.filter(f=>g.time-f.at<f.life);
   for(const e of g.champions().filter(e=>e.alive&&!e.trainingDummy)){

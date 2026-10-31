@@ -59,7 +59,7 @@ export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
 export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
 export function skillCharges(g,e,slot){
- if(slot!=='q')return null;if(e.key==='ppui')return Ppui.charges(g,e);
+ if(slot!=='q')return null;if(e.key==='nosferatu')return Nosferatu.charges(g,e);if(e.key==='ppui')return Ppui.charges(g,e);
  const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='ryoshu'?[s.ryoshuCharges??2,2,s.ryoshuReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
  if(!values)return null;const [current,max,ready]=values;return {current,max,remaining:current<max&&Number.isFinite(ready)?Math.max(0,ready-g.time):0};
 }

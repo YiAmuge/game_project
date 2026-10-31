@@ -1,6 +1,6 @@
 import{FRAMES,loadAtlas}from'./art.js';
 import{drawMagicCircle}from'./magic-circle.js';
-import{stage as queenStage,telegraph}from'./queen.js';
+import{magicCircleCount,telegraph}from'./queen.js';
 const TAU=Math.PI*2;
 export function drawBloodBat(r,e,g){const f=FRAMES.bloodBat,a=loadAtlas(f.sheet);if(!a.complete||!a.naturalWidth)return;const c=r.ctx,w=1.26,h=w*f.h/f.w,flap=.85+.15*Math.sin(g.time*23+e.id);c.save();c.translate(e.x,e.y-.55);c.scale(Math.cos(e.facing||0)<0?-1:1,flap);c.shadowColor='#c1143a';c.shadowBlur=5;c.drawImage(a,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
 function roundedStar(c,r){const points=Array.from({length:10},(_,i)=>{const a=i*Math.PI/5-Math.PI/2,rad=i%2?r*.5:r;return{x:Math.cos(a)*rad,y:Math.sin(a)*rad};});c.beginPath();for(let i=0;i<10;i++){const p=points[i],next=points[(i+1)%10],prev=points[(i+9)%10],a={x:p.x*.8+prev.x*.2,y:p.y*.8+prev.y*.2},b={x:p.x*.8+next.x*.2,y:p.y*.8+next.y*.2};i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y);c.quadraticCurveTo(p.x,p.y,b.x,b.y);}c.closePath();}
@@ -40,7 +40,7 @@ export function drawArcanaEffects(c,camera,g){
   if(e.key==='queen'){
    const q=e.state.queenQ;if(q)uprightSeal(c,camera,q,q.angle,2.1,g.time,q.phase==='preparing'?.8:1);
    for(const slot of ['q','r']){const shape=telegraph(g,e,slot);if(shape)drawTelegraph(c,camera,shape,g.time,e.team===g.player.team);}
-   const r=e.state.queenR;if(r){const n=r.phase==='charging'?queenStage(g,e):r.stage;for(let i=0;i<n;i++){const offset=.55+i*.65,p={x:r.x+Math.cos(r.angle)*offset,y:r.y+Math.sin(r.angle)*offset};uprightSeal(c,camera,p,r.angle,1.5*1.1**i,g.time+i*.4,.8+i*.08);}}
+   const r=e.state.queenR;if(r){const n=magicCircleCount(g,e);for(let i=0;i<n;i++){const offset=.55+i*.65,p={x:r.x+Math.cos(r.angle)*offset,y:r.y+Math.sin(r.angle)*offset};uprightSeal(c,camera,p,r.angle,1.5*1.1**i,g.time+i*.4,.8+i*.08);}}
   }
   if(e.key==='nosferatu'&&e.state.bloodfiend)bloodMist(c,camera,g,e,e.state.bloodfiend);
  }

@@ -21,7 +21,7 @@ import * as Towers from './tower-rules.js';
 import { FAUST_WAVE_HALF_WIDTH } from './projectile-rules.js';
 import * as Reworks from './reworks.js';
 import * as Debuffs from './debuffs.js';
-import { FAN_ANGLE, RULES, RUNTIME_CHAMPIONS as CHAMPIONS, UPGRADES, upgradeRate, BUSHES, POSITIONS, POSITION_ORDER, lanePath, worldPoint, MAP_CENTER, FOUNTAINS, MINIONS, CAMP_RULES, CORE_POSITIONS, inWell, WORLD } from './data.js';
+import { FAN_ANGLE, basicFanAngle, RULES, RUNTIME_CHAMPIONS as CHAMPIONS, UPGRADES, upgradeRate, BUSHES, POSITIONS, POSITION_ORDER, lanePath, worldPoint, MAP_CENTER, FOUNTAINS, MINIONS, CAMP_RULES, CORE_POSITIONS, inWell, WORLD } from './data.js';
 import { regionContains, clamp, distance, direction, clearLine, slide, findPath, segmentDistance, blocked } from './geometry.js';
 import * as Infestation from './infestation.js';
 import { carried } from './attachments.js';
@@ -507,7 +507,7 @@ export class Game {
     this.projectiles.push({source:e,damageKind:e.actionKind||'skill',x:e.x,y:e.y,slot:e.actionKind==='skill'?e.castSlot:undefined,bornAt:this.time,origin:{x:e.x,y:e.y},dx:dir.x,dy:dir.y,damage,remaining:range,width:.18,speed:22,knock:0,color:e.key==='gubo'?'#a62c45':e.team===0?'#92d5dd':'#e6a097',theme:e.key,hitIds:new Set(),...options});
   }
   cone(e,dir,range,angle,damage,onHit=()=>{},{exclude}={}) {
-    angle=angle>=Math.PI*2-1e-8?angle:FAN_ANGLE;
+    angle=angle>=Math.PI*2-1e-8?angle:e.actionKind==='basic'?basicFanAngle(e.key):FAN_ANGLE;
     for(const target of this.units.filter(u=>this.hostile(e,u))) {
       if(exclude?.has(target.id))continue;
       const d=direction(e,target);

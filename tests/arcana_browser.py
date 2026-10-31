@@ -13,6 +13,7 @@ SCENES={
  'queen-stage-three':('queen',"const g=__moba.game,p=g.player,t=target(46);g.input.aim=t;g.cast(p,'r',t);advance(3.85);"),
  'queen-charge-camera':('queen',"const g=__moba.game,p=g.player;g.input.aim={x:40,y:-40};g.cast(p,'r',g.input.aim);advance(3.2);"),
  'queen-aim-up':('queen',"const p=__moba.game.player;p.facing=-Math.PI/3;p.lastCombat=0;"),
+ 'heath-ultimate-leap':('heathcliff',"const g=__moba.game,p=g.player;g.cast(p,'r',p);advance(.1);g.cast(p,'q',{x:47,y:20});advance(.3);"),
  'nos-idle':('nosferatu',"target(46);"),
  'nos-basic':('nosferatu',"const g=__moba.game,p=g.player,t=target(42.5);g.attack(p,t);advance(.1);"),
  'nos-bats':('nosferatu',"const g=__moba.game,p=g.player,t=target(46);p.state.bloodFeast=1200;for(let i=0;i<4;i++){p.qCd=0;g.cast(p,'q',{x:42+i*.5,y:20+(i%2)});}advance(.2);"),
@@ -52,8 +53,8 @@ async def main():
    # Zoom uses real renderer state, and restores rapidly on release.
    await p.evaluate(SETUP,'queen');await p.wait_for_timeout(450)
    await p.evaluate("()=>{const g=__moba.game;g.input.aim={x:40,y:-40};g.cast(g.player,'r',g.input.aim);advance(2.5);}");await p.wait_for_timeout(500)
-   assert await p.evaluate('__moba.renderer.viewBlend>1.35&&__moba.renderer.viewBlend<=1.6'),(mode,await p.evaluate('__moba.renderer.viewBlend'))
-   assert await p.evaluate("__moba.game.cast(__moba.game.player,'r',{x:40,y:-40})");await p.wait_for_function('__moba.renderer.viewBlend<1.05',timeout=2000)
+   assert await p.evaluate('__moba.renderer.viewBlend>1.7&&__moba.renderer.viewBlend<=2.25'),(mode,await p.evaluate('__moba.renderer.viewBlend'))
+   assert await p.evaluate("__moba.game.cast(__moba.game.player,'r',{x:40,y:-40})");await p.evaluate('advance(.59)');await p.wait_for_timeout(200);assert await p.evaluate('__moba.renderer.viewBlend>1.7');await p.evaluate('advance(.03)');await p.wait_for_function('__moba.renderer.viewBlend<1.05',timeout=2000)
    # The real skill button must recast during the ultimate channel, on both input modes.
    await p.evaluate(SETUP,'queen');await p.evaluate('()=>{const g=__moba.game,t=target(46);g.input.aim={x:t.x,y:t.y};}')
    if mobile:await p.locator('#r-btn').tap()
@@ -63,6 +64,8 @@ async def main():
    if mobile:await p.locator('#r-btn').tap()
    else:await p.locator('#r-btn').click()
    assert await p.evaluate("__moba.game.player.state.queenR?.phase==='firing'&&__moba.game.player.state.queenR.stage===1")
+   await p.evaluate(SETUP,'heathcliff');assert await p.evaluate("()=>{const g=__moba.game,p=g.player;return g.cast(p,'r',p)&&Math.abs(p.buffs.heathUlt-g.time-3.8)<1e-6;}")
+   await p.evaluate('advance(3.79)');assert await p.evaluate('__moba.game.buff(__moba.game.player,"heathUlt")');await p.evaluate('advance(.02)');assert not await p.evaluate('__moba.game.buff(__moba.game.player,"heathUlt")')
    for a,b,reward in [('sinclair','kromer','lightWorld'),('kromer','sinclair','darkWorld'),('dongbaek','dongrang','fullBloom'),('dongrang','dongbaek','fruition')]:
     await p.evaluate(SETUP,a);await p.evaluate('__moba.game.rivalries=null');result=await p.evaluate('''args=>{const g=__moba.game,p=g.player,t=target(44,20,1,args[0]);t.trainingSummoned=true;g.deal(p,t,999999,{fixed:true,proc:false});return{reward:p.rivalReward,text:p.easterText?.text};}''',[b]);assert result['reward']==reward,result;assert result['text'];await p.wait_for_timeout(80)
    assert not external,external;assert not errors,errors

@@ -145,7 +145,7 @@ export function stackGauge(e,g){
  const info=stackInfo(e,g);let state=info;
  if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))state={label:'광폭한 칼날'};
  if(!state)return null;
- const timed={don:['donLifesteal',7],heathcliff:['heathUlt',11],sinclair:['marks',4],gregor:['mutant',5],sora:['soraEgo',SORA.egoDuration],yan:['yanDistorted',20],myo:['rabbitFrenzy',4.5]},entry=timed[e.key];
+ const timed={don:['donLifesteal',7],heathcliff:['heathUlt',HEATH.duration+6],sinclair:['marks',4],gregor:['mutant',5],sora:['soraEgo',SORA.egoDuration],yan:['yanDistorted',20],myo:['rabbitFrenzy',4.5]},entry=timed[e.key];
  let remaining,total;
  if(entry&&g.buff(e,entry[0])){remaining=e.buffs[entry[0]]-g.time;total=Math.max(entry[1],e.buffs[entry[0]]-(e.visuals[entry[0]]?.at??g.time));}
  if(e.key==='hohenheim'&&e.state.posthumous){remaining=e.state.posthumous.until-g.time;total=Hohenheim.HOHENHEIM.posthumousDuration;}

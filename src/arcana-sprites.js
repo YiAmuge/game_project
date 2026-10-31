@@ -153,7 +153,7 @@ export const ARCANA_FRAMES={
     "w": 283,
     "h": 193,
     "sheet": 19,
-    "rotation": 0,
+    "rotation": 3.141592653589793,
     "source": "source/arcana-props-v102.png",
     "sourceRect": [
       1206,

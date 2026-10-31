@@ -22,7 +22,7 @@ function extract([key,source,[rx,ry,rw,rh],referenceHeight,crown,foot,face]){
  let x0=rw,y0=rh,x1=0,y1=0;for(let y=0;y<rh;y++)for(let x=0;x<rw;x++)if(mask[y*rw+x]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
  const cw=x1-x0+1,ch=y1-y0+1,scale=crown?referenceHeight/(ry+y1-crown+1):referenceHeight?referenceHeight/ch:Math.min(1,800/cw),w=Math.round(cw*scale),h=Math.round(ch*scale),data=new Uint8Array(w*h*4);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const sx=x0+Math.min(cw-1,Math.floor(x/scale)),sy=y0+Math.min(ch-1,Math.floor(y/scale));if(!mask[sy*rw+sx])continue;const from=((ry+sy)*input.width+rx+sx)*4,to=(y*w+x)*4;data.set(input.data.subarray(from,from+4),to);data[to+3]=255;}
- const meta={sheet:19,rotation:key==='queenWand'?Math.PI/2:0,source:'source/'+paths[source],sourceRect:[rx+x0,ry+y0,cw,ch]};if(crown)Object.assign(meta,{referenceHeight,crownOffset:h-referenceHeight,heightScale:h/referenceHeight,heightBasis:'crown',foot,face:[(face[0]-rx-x0)*scale,(face[1]-ry-y0)*scale,face[2]*scale,face[3]*scale].map(n=>Math.max(0,Math.round(n)))});
+ const meta={sheet:19,rotation:key==='queenWand'?Math.PI/2:key==='bloodClawRight'?Math.PI:0,source:'source/'+paths[source],sourceRect:[rx+x0,ry+y0,cw,ch]};if(crown)Object.assign(meta,{referenceHeight,crownOffset:h-referenceHeight,heightScale:h/referenceHeight,heightBasis:'crown',foot,face:[(face[0]-rx-x0)*scale,(face[1]-ry-y0)*scale,face[2]*scale,face[3]*scale].map(n=>Math.max(0,Math.round(n)))});
  if(meta.face){meta.face[2]=Math.min(meta.face[2],w-meta.face[0]);meta.face[3]=Math.min(meta.face[3],h-meta.face[1]);}
  return{key,w,h,data,meta};
 }
