@@ -1,7 +1,7 @@
 import{RULES,RUNTIME_CHAMPIONS,FOUNTAIN_AREAS,upgradeRate,FAN_ANGLE}from'./data.js';
 import{distance,direction,clamp}from'./geometry.js';
 import{settleBody,moveBody}from'./collision.js';
-export const NOSFERATU={lifesteal:.2,capacity:1200,cost:200,qRange:6.8,qDamage:35,batDuration:5,bats:4,batDamage:35,batEvery:.5,batRange:2.5,leash:8,basicDamage:160,basicRange:3.3,bladeRange:6.8,bladeDamage:80,rRange:7.5,rDuration:10,rEvery:.5,rDrain:.045,rAttackEvery:.35,rLifesteal:.4};
+export const NOSFERATU={lifesteal:.25,capacity:1200,cost:100,qRange:6.8,qDamage:35,batDuration:5,bats:4,batDamage:35,batEvery:.5,batRange:2.5,leash:8,basicDamage:160,basicRange:1.7,bladeWidth:2*3.3*Math.sin(FAN_ANGLE/2)-2,bladeRange:6.8,bladeDamage:80,rRange:7.5,rDuration:10,rEvery:.5,rDrain:.045,rAttackEvery:.35,rLifesteal:.4,rSize:1.15,rFeast:.3};
 export const bloodfiend=(g,e)=>e.key==='nosferatu'&&Boolean(e.state?.bloodfiend);
 export function healthRatio(g,e){return Math.max(1,(1+RUNTIME_CHAMPIONS.nosferatu.growth.health*(e.level-1))*(1+upgradeRate(e,'health'))*(1+g.nosHealthAugments(e)));}
 export const capacity=(g,e)=>NOSFERATU.capacity+Math.max(0,healthRatio(g,e)-1)*2000;
@@ -14,16 +14,19 @@ export function ejectBat(g,e){
  const owner=g.units.find(o=>o.id===e.owner),p=points.find(p=>validBatPoint(g,e,p)&&!g.blocked(p.x,p.y,e.radius))||owner;if(p)Object.assign(e,{x:p.x,y:p.y});delete e.motion;e.fountainTick=0;
 }
 export function validate(g,e,slot,p){if(slot==='q')return(e.state.bloodFeast||0)>=NOSFERATU.cost&&validBatPoint(g,e,p);return bloodfiend(g,e)||!g.stat(e,'root')&&!g.stat(e,'captured');}
-export function afterDamage(g,e,t,actual){
+export function afterDamage(g,e,t,actual,kind){
  if(e.key!=='nosferatu'||e.kind!=='champion'||e.team===t.team||actual<=0||!e.alive)return;
+ if(e.state.bloodfiend&&e.state.bloodStriking&&kind==='basic')e.state.bloodfiend.damage=(e.state.bloodfiend.damage||0)+actual;
  if(!e.state.batStriking)e.state.lastBloodTarget=t.id;const amount=actual*(bloodfiend(g,e)?NOSFERATU.rLifesteal:NOSFERATU.lifesteal);g.heal(e,e,amount,false);e.state.bloodFeast=Math.min(capacity(g,e),(e.state.bloodFeast||0)+amount);
 }
+export const basicBonus=e=>1+Math.min(5,Math.floor((e.state.bloodFeast||0)/200))*.05;
 export function basic(g,e,d){
- if(bloodfiend(g,e)){for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t))g.deal(e,t,NOSFERATU.basicDamage,{damageKind:'basic'});g.effects.push({type:'bloodCleave',source:e.id,theme:e.key,x:e.x,y:e.y,r:g.attackRange(e),angle:e.facing,shape:{kind:'circle',range:g.attackRange(e)},life:.3,maxLife:.3});}
- else{g.cone(e,d,g.attackRange(e),FAN_ANGLE,NOSFERATU.basicDamage);g.bullet(e,d,NOSFERATU.bladeDamage,NOSFERATU.bladeRange+(g.attackRange(e)-NOSFERATU.basicRange),{bloodBlade:true,speed:17,width:g.attackRange(e)*Math.sin(FAN_ANGLE/2)/1.1});}
+ const bonus=basicBonus(e);
+ if(bloodfiend(g,e)){const form=e.state.bloodfiend;e.state.bloodStriking=true;try{for(const t of [...g.units]){if(e.state.bloodfiend!==form)break;if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t))g.deal(e,t,NOSFERATU.basicDamage*bonus,{damageKind:'basic'});}}finally{delete e.state.bloodStriking;}g.effects.push({type:'bloodCleave',source:e.id,theme:e.key,x:e.x,y:e.y,r:g.attackRange(e),angle:e.facing,shape:{kind:'circle',range:g.attackRange(e)},life:.3,maxLife:.3});}
+ else{g.cone(e,d,g.attackRange(e),FAN_ANGLE,NOSFERATU.basicDamage*bonus);g.bullet(e,d,NOSFERATU.bladeDamage*bonus,NOSFERATU.bladeRange+(g.attackRange(e)-NOSFERATU.basicRange),{bloodBlade:true,speed:17,width:(NOSFERATU.bladeWidth/2+Math.max(0,g.attackRange(e)-NOSFERATU.basicRange)*Math.sin(FAN_ANGLE/2))/1.1});}
 }
 export function restore(g,e){
- if(e.key!=='nosferatu')return false;const s=e.state?.bloodfiend;if(!s)return false;delete e.state.bloodfiend;delete e.buffs.bloodfiend;e.phaseEnemiesUntil=0;delete e.motion;e.hp=Math.min(e.maxHp,s.hp);e.state.bloodFeast=Math.min(capacity(g,e),s.feast);e.attackCd=0;
+ if(e.key!=='nosferatu')return false;const s=e.state?.bloodfiend;if(!s)return false;delete e.state.bloodfiend;delete e.buffs.bloodfiend;e.phaseEnemiesUntil=0;delete e.motion;e.hp=Math.min(e.maxHp,s.hp);e.radius=s.radius??.48;e.state.bloodFeast=Math.min(capacity(g,e),s.feast+(s.damage||0)*NOSFERATU.rFeast);e.attackCd=0;
  for(const owner of g.champions())for(const key of ['swordGrab','kromerGrab'])if(owner.state[key]?.target===e){delete owner.state[key];if(e.status.stun?.grabOwner===owner.id)delete e.status.stun;}delete e.state.swordHeldBy;delete e.state.kromerHeldBy;delete e.state.netTrap;delete e.status.netCapture;
  Object.assign(e,{x:s.x,y:s.y});settleBody(g,e,s);g.effects.push({type:'bloodReturn',source:e.id,theme:e.key,x:e.x,y:e.y,r:2,life:.7,maxLife:.7});return true;
 }
@@ -33,7 +36,7 @@ export function cast(g,e,slot,p){
   const point=g.safeLanding(e,p,NOSFERATU.qRange),b=g.entity({kind:'trooper',bloodBat:true,key:'nosferatu',owner:e.id,team:e.team,x:point.x,y:point.y,radius:.22,maxHp:e.maxHp*.5,armor:0,until:g.time+NOSFERATU.batDuration,nextStrike:g.time,snapshot:{speed:g.speed(e)*.8,power:RULES.power[RUNTIME_CHAMPIONS.nosferatu.power]*.9*g.powerScale(e)*.5},name:'핏빛 박쥐'});ejectBat(g,b);
   for(const t of [...g.units])if(t!==b&&g.hostile(e,t)&&distance(t,b)<=.75+t.radius&&g.clearLine(b,t))g.deal(e,t,NOSFERATU.qDamage,{damageKind:'skill'});
  }else if(bloodfiend(g,e))restore(g,e);
- else{e.state.bloodfiend={x:e.x,y:e.y,hp:e.hp,feast:e.state.bloodFeast||0,at:g.time,until:g.time+NOSFERATU.rDuration,nextDrain:g.time+NOSFERATU.rEvery,nextAttack:g.time};Object.assign(e,g.safeLanding(e,p,NOSFERATU.rRange));e.hp=e.maxHp;e.phaseEnemiesUntil=g.time+NOSFERATU.rDuration;g.addBuff(e,'bloodfiend',NOSFERATU.rDuration,{copy:false});e.attackCd=0;}
+ else{e.state.bloodfiend={radius:e.radius,damage:0,x:e.x,y:e.y,hp:e.hp,feast:e.state.bloodFeast||0,at:g.time,until:g.time+NOSFERATU.rDuration,nextDrain:g.time+NOSFERATU.rEvery,nextAttack:g.time};e.radius*=NOSFERATU.rSize;Object.assign(e,g.safeLanding(e,p,NOSFERATU.rRange));e.hp=e.maxHp;e.phaseEnemiesUntil=g.time+NOSFERATU.rDuration;g.addBuff(e,'bloodfiend',NOSFERATU.rDuration,{copy:false});e.attackCd=0;}
 }
 export function tick(g,e){
  if(e.key!=='nosferatu'||e.bloodBat)return;e.state.bloodFeast=Math.min(capacity(g,e),e.state.bloodFeast||0);

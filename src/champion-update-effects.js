@@ -39,7 +39,7 @@ export function drawBodyAdditions(c,e,g,front){
  }
  if(front&&state.swordHeldBy)for(const f of g.effects)if(f.type==='kimEmbers'&&f.target===e.id)blueEmberPulse(c,f.maxLife-f.life,f.at||0);
  if(front&&(e.burn?.until>time||e.key==='alisa'&&(state.heat||0)>0)){
-  c.save();c.globalCompositeOperation='lighter';const glow=c.createRadialGradient(0,-1,0,0,-1,1.5);glow.addColorStop(0,'#ffb03f55');glow.addColorStop(.5,'#ee3f202d');glow.addColorStop(1,'#a50e1600');c.fillStyle=glow;c.fillRect(-1.5,-2.5,3,3);c.shadowColor='#f75325';c.shadowBlur=14;
-  for(let i=0;i<10;i++){const t=(time*(1.1+i%3*.1)+i*.137)%1,x=Math.sin(i*2.4+t*3)*(.3+i%3*.17),y=-.15-t*1.9,w=.12+(1-t)*.17,h=.32+(1-t)*.55;c.globalAlpha=.85*(1-t*.55);c.fillStyle=i%3?'#ed5428':'#ffcf61';c.beginPath();c.moveTo(x-w,y);c.bezierCurveTo(x-w*1.2,y-h*.4,x+w*.6,y-h*.55,x,y-h);c.bezierCurveTo(x+w*1.7,y-h*.35,x+w,y-h*.12,x+w,y);c.closePath();c.fill();}c.restore();
+  c.save();const intensity=e.burn?.until>time?1:Math.min(1,state.heat/5);c.globalAlpha*=intensity;c.globalCompositeOperation='lighter';const glow=c.createRadialGradient(0,-1,0,0,-1,1.5);glow.addColorStop(0,'#ffb03f55');glow.addColorStop(.5,'#ee3f202d');glow.addColorStop(1,'#a50e1600');c.fillStyle=glow;c.fillRect(-1.5,-2.5,3,3);c.shadowColor='#f75325';c.shadowBlur=14;
+  for(let i=0;i<10;i++){const t=(time*(1.1+i%3*.1)+i*.137)%1,x=Math.sin(i*2.4+t*3)*(.3+i%3*.17),y=-.15-t*1.9,w=(.12+(1-t)*.17)*.8,h=(.32+(1-t)*.55)*.8;c.globalAlpha=intensity*.85*(1-t*.55);c.fillStyle=i%3?'#ed5428':'#ffcf61';c.beginPath();c.moveTo(x-w,y);c.bezierCurveTo(x-w*1.2,y-h*.4,x+w*.6,y-h*.55,x,y-h);c.bezierCurveTo(x+w*1.7,y-h*.35,x+w,y-h*.12,x+w,y);c.closePath();c.fill();}c.restore();
  }
 }

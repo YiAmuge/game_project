@@ -26,6 +26,7 @@ import { WALLS, BUSHES, RULES, MAP_SCALE, MAP_CENTER, FOUNTAINS, WELL_ROOMS, FOU
 import { distance } from './geometry.js';
 import { Camera } from './camera.js';
 import { Renderer25D } from './render-25d.js';
+import{cameraView as queenCameraView}from'./queen.js';
 import { FRAMES, THEMES, loadAtlas,visualForm,spriteHeight } from './art.js';
 import { drawEquipment,drawBackEquipment,equipmentPose,spriteOrigin,orientWeapon,equippedWeapon } from './weapon-art.js';
 import{bodyFacing}from'./champion-pose.js';
@@ -49,7 +50,7 @@ export class Renderer {
     this.camera=game.training25d?this.scene25d.camera:this.flatCamera;
     if(this.scene25d)this.scene25d.canvas.hidden=!game.training25d;
   }
-  follow(game,playing){this.prepare(game);const cinematic=cinematicCamera(game);const now=performance.now(),dt=Math.min(.1,Math.max(0,(now-(this.viewAt??now))/1000));this.viewAt=now;const target=Infiltration.cameraView(game,game.player);this.viewBlend=cinematic?.view??((this.viewBlend??1)+(target-(this.viewBlend??1))*(1-Math.exp(-dt/ .085)));if(Math.abs(this.viewBlend-target)<.001&&!cinematic)this.viewBlend=target;this.camera.update(this.width,this.height,cinematic?.anchor||game.player.state.infiltration?.point||renderAnchor(game.player),playing,this.viewBlend);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
+  follow(game,playing){this.prepare(game);const cinematic=cinematicCamera(game);const now=performance.now(),dt=Math.min(.1,Math.max(0,(now-(this.viewAt??now))/1000));this.viewAt=now;const target=Math.max(Infiltration.cameraView(game,game.player),queenCameraView(game,game.player,this.width,this.height));this.viewBlend=cinematic?.view??((this.viewBlend??1)+(target-(this.viewBlend??1))*(1-Math.exp(-dt/(game.player.state.queenR?.phase==='charging'?.16:.085))));if(Math.abs(this.viewBlend-target)<.001&&!cinematic)this.viewBlend=target;this.camera.update(this.width,this.height,cinematic?.anchor||game.player.state.infiltration?.point||renderAnchor(game.player),playing,this.viewBlend);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
   point(clientX,clientY) {const r=this.canvas.getBoundingClientRect();return this.camera.screenToWorld(clientX-r.left,clientY-r.top);}
   circle(x,y,r,fill,stroke=null,width=.07) {const c=this.ctx;c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
   line(points,color,width,dash=[]) {const c=this.ctx;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.setLineDash(dash);c.stroke();c.setLineDash([]);}
@@ -161,7 +162,7 @@ export class Renderer {
     if(!this.billboardPass&&game.shield(e)>0)this.circle(e.x,e.y-.65,1.05,'#9fc9d711','#c8e4df99',.055);
     if(!this.billboardPass&&(game.buff(e,'marks')||game.buff(e,'resolve')))this.circle(e.x,e.y,1,null,'#d9be78aa',.09);
     drawBackEquipment(this,e,game,{lift:championPresentation(game,e).lift});
-    const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
+    const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual)*(e.state.bloodfiend?1.15:1),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
     c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
       c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);drawResentmentBody(c,game,e,f,atlas,{left,top,w,h});

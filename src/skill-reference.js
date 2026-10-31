@@ -30,7 +30,7 @@ const degrees=r=>number(Number((r*180/Math.PI).toFixed(1)))+'°';
 function basicRanges(key,g,e,transformed){
  const range=g.attackRange(e),r=number(range);
  if(key==='queen')return[row('관통 투사체','사거리 6.5'),row('아군 통과 강화','추가 사거리 1.2')];
- if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 부채꼴 165°'),row('피의 칼날','사거리 6.8 · 관통 불가')];
+ if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 부채꼴 165°'),row('피의 칼날','사거리 6.8 · 폭 4.54 · 관통 불가')];
  if(key==='yan')return transformed?[row('손 조작','조작 거리 '+YAN.handLeash+' · 손 공격 반경 '+YAN.handRadius)]:[row('미충전','사거리 '+YAN.basicRange+' · 폭 '+YAN.width),row('최대 충전','사거리 '+YAN.fullRange+' · 폭 '+YAN.width),row('충전 변화','사거리 최소 '+YAN.basicRange+' ~ 최대 '+YAN.fullRange)];
  if(key==='hohenheim')return[row('미충전','사거리 '+HOHENHEIM.minRange+' · 직선 폭 '+number(HOHENHEIM.width*2)),row('최대 충전','사거리 '+HOHENHEIM.maxRange+' · 직선 폭 '+number(HOHENHEIM.width*2)),row('충전 변화','사거리 최소 '+HOHENHEIM.minRange+' ~ 최대 '+HOHENHEIM.maxRange)];
  if(key==='sora')return transformed?[row('공격 범위','자신 중심 반경 '+SORA.egoRadius)]:[row('공격 범위','중심점 사거리 '+SORA.basicRange+' · 반경 '+SORA.basicRadius)];

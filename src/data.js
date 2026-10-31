@@ -78,7 +78,7 @@ export const GROWTH={
 export const ATTACK_STYLES={queen:'slash',nosferatu:'slash',kromer:'thrust',jamila:'shot',faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
 
-CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=4.65;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
+CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=5.2;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
 
 CHAMPIONS.gubo.damage=240;CHAMPIONS.rudolph.damage=57;CHAMPIONS.marton.color='#02ebf7';
 CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
@@ -154,7 +154,7 @@ export const CHAMPION_ROLES={
  yi:['지원','방해','support'],faust:['저격','bottom'],sinclair:['암살','jungle'],don:['돌격','암살','top'],meursault:['보호','방해','top'],gubo:['저격','bottom'],kim:['보호','top'],queequeg:['지원','보호','support'],ppui:['지원','support'],gahwan:['방해','저격','support'],hohenheim:['저격','방해','bottom'],alisa:['암살','돌격','jungle'],marton:['보호','방해','top'],nelly:['암살','jungle'],myo:['암살','jungle'],rudolph:['저격','bottom'],dongbaek:['저격','bottom'],dongrang:['보호','top'],outis:['저격','암살','bottom'],heathcliff:['돌격','top'],ryoshu:['암살','jungle'],ishmael:['방해','보호','support'],honglu:['지원','support'],rodya:['방해','support'],gregor:['보호','돌격','top'],ahab:['저격','암살','bottom'],starbuck:['암살','방해','jungle'],sora:['암살','돌격','jungle'],yan:['방해','보호','support']
 };
 for(const [key,values] of Object.entries(CHAMPION_ROLES)){const c=CHAMPIONS[key];c.roles=values.slice(0,-1);c.role=c.roles[0];c.recommendedPosition=values.at(-1);}
-CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
+CHAMPIONS.nelly.range=1.8;CHAMPIONS.alisa.range=2;CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
 
 export const AUGMENT_RULES={cost:500,refund:.7,slots:6,categorySlots:2};
 export const AUGMENTS=[

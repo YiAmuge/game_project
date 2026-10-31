@@ -1,3 +1,4 @@
+import{absorbOrder}from'./augments.js';
 import{championDescription}from'./champion-reference.js';
 import { distance,direction,segmentDistance } from './geometry.js';
 import { settleBody } from './collision.js';
@@ -36,7 +37,7 @@ function restoreGuard(e){const s=e.state.soraGuard;if(!s)return;delete e.state.s
 function transform(g,e){
  const fraction=e.hp/e.maxHp;e.state.unlock=0;e.rCd=0;e.state.egoActive=true;
  g.addBuff(e,'soraEgo',SORA.egoDuration,{copy:false});e.maxHp=g.maxHp(e);e.hp=e.maxHp*fraction;
- e.state.egoQCharges=SORA.egoQCharges;e.state.egoQReady=Infinity;e.qCd=0;
+ absorbOrder(g,e);e.state.egoQCharges=SORA.egoQCharges;e.state.egoQReady=Infinity;e.qCd=0;
  g.effects.push({type:'burst',x:e.x,y:e.y,r:3.2,theme:'sora',life:.75,maxLife:.75});
 }
 function endTransform(g,e){

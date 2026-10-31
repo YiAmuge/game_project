@@ -43,7 +43,7 @@ if (!template.includes(styleTag) || !template.includes(moduleTag)) {
 const thirdPartyLicense=await readFile(resolve(root,'src/vendor/THREE-LICENSE.txt'),'utf8');
 const tacticalFont=await readFile(resolve(root,'src/assets/chakra-petch-bold.ttf')),fontLicense=await readFile(resolve(root,'src/assets/chakra-petch-OFL.txt'),'utf8'),embeddedCss=css.replace('./assets/chakra-petch-bold.ttf','data:font/ttf;base64,'+tacticalFont.toString('base64'));
 const data = JSON.stringify(JSON.parse(roster)).replace(/</g, '\\u003c');
-const augmentSheets=['combat','survival','tech','mourning','mask','carrier','antimatter'];
+const augmentSheets=['combat','survival','tech','mourning','mask','carrier','antimatter','terminal'];
 const augmentData=(await Promise.all(augmentSheets.map(async key=>{const image=await readFile(resolve(root,`src/assets/augments-${key}.png`));return `<script id="augment-data-${key}" type="application/json">${JSON.stringify('data:image/png;base64,'+image.toString('base64'))}</script>`;}))).join('\n');
 const backstreetImage=await readFile(resolve(root,'src/assets/backstreet-materials.png'));
 const backstreetData=`<script id="backstreet-data" type="application/json">${JSON.stringify('data:image/png;base64,'+backstreetImage.toString('base64'))}</script>`;

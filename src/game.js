@@ -329,7 +329,7 @@ export class Game {
         if(source.key!=='dongrang'&&this.buff(source,'marks'))amount*=1.12;
       }
       amount*=Skills.receivedMultiplier?.(this,source,target,damageKind)??1;
-      if(source.kind==='champion'&&Augments.converts(this,source)){bypass=amount*.1;amount*=.9;}
+      if(source.kind==='champion'&&Augments.converts(this,source)){const rate=Augments.conversionRate(this,source);bypass=amount*rate;amount*=1-rate;}
       if(target.state?.outisRush)amount*=.5;
       amount*=100/(100+Math.max(0,this.armor(target)-this.stat(target,'armorDown'))*(1-Math.min(1,armorPen+Augments.armorPen(source)+(source.kind==='tower'?Towers.TOWER_RULES.armorPen:0))));
       if(target.kind==='minion'&&['tower','core'].includes(source.kind))amount*=target.siege?.5:target.ranged?.8:.7;

@@ -15,7 +15,7 @@ import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
  if(e.key==='queen')return slot==='q'?{kind:'line',range:QUEEN.qRange,radius:QUEEN.qWidth/2,impact:0,confirm:false}:{kind:'line',range:ARCANA_STAGES[stage(g,e)].range,radius:ARCANA_STAGES[stage(g,e)].width/2,impact:0,confirm:false,ignoreWalls:true};
- if(e.key==='nosferatu')return slot==='q'?{kind:'circle',range:NOSFERATU.qRange,radius:.75,impact:0,confirm:true}:{kind:'circle',range:NOSFERATU.rRange,radius:0,impact:0,confirm:!e.state.bloodfiend,ignoreWalls:true};
+ if(e.key==='nosferatu')return slot==='q'?{kind:'circle',range:NOSFERATU.qRange,radius:.75,impact:0,confirm:false}:{kind:'circle',range:NOSFERATU.rRange,radius:0,impact:0,confirm:!e.state.bloodfiend,ignoreWalls:true};
  if(slot==='r'&&['nelly','sinclair'].includes(e.key))return{kind:'circle',range:e.key==='nelly'?7:6,radius:e.key==='nelly'?1.2:3.8,impact:0,ignoreWalls:true,confirm:true};
  if(e.key==='ppui'&&slot==='q')return{kind:'self',range:0,radius:7,impact:0,confirm:false};
  if(e.key==='kromer')return slot==='q'?(Kromer.recast(g,e,slot)?{kind:'self',range:0,radius:1,impact:0,confirm:false}:{kind:'line',range:Kromer.KROMER.qRange,radius:.22,impact:0,confirm:false}):{kind:'quick',range:3,radius:1,impact:0,confirm:false};

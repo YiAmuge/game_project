@@ -1,3 +1,4 @@
+import{has}from'./augments.js';
 import{RULES,RUNTIME_CHAMPIONS}from'./data.js';
 import{damageBonus}from'./skills.js';
 export const QUEEN={heal:.4,shieldCap:.15,shieldTime:2,basicDamage:170,basicRange:6.5,basicSpeed:13,basicWidth:.28,allySpeed:1.3,allyRange:1.2,allyDamage:15,qDelay:1.5,qRange:7.7,qWidth:4.2,qDamage:115,qHits:4,qEvery:.25,qSpeed:.17,qSpeedTime:1.8,stageTime:1.25};
@@ -36,7 +37,7 @@ export function cast(g,e,slot,p,d){
   const old=e.state.queenQ;if(old?.phase==='preparing'&&!old.redirected){old.angle=angleFrom(g,e,old,p);old.redirected=true;return;}
   e.state.queenQ={phase:'preparing',at:g.time,next:g.time+QUEEN.qDelay,x:e.x+d.x*.75,y:e.y+d.y*.75,angle:Math.atan2(d.y,d.x),hits:0,redirected:false};g.addBuff(e,'arcanaStride',QUEEN.qSpeedTime);
  }else if(recast(g,e,'r'))release(g,e,p);
- else{e.state.queenR={phase:'charging',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),aim:{...p},at:g.time};e.channelUntil=g.time+QUEEN.stageTime*3+1;}
+ else{e.state.queenR={phase:'charging',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),aim:{...p},at:g.time};e.channelUntil=g.time+QUEEN.stageTime*3+1;if(has(e,'battleHaste')){g.addBuff(e,'augBattleHaste',.1,{copy:false});e.visuals.battleHaste={at:g.time,until:g.time+1};}}
 }
 export function cancel(g,e){if(e.state?.queenR){delete e.state.queenR;e.channelUntil=0;}}
 export function tick(g,e){
@@ -45,4 +46,20 @@ export function tick(g,e){
  const r=e.state.queenR;if(!r)return;if(g.stat(e,'stun')||g.stat(e,'silence')||e.motion?.forced){cancel(g,e);return;}
  if(r.phase==='charging'){if(e.player){r.aim={...g.input.aim};r.angle=angleFrom(g,e,r,r.aim);}if(stage(g,e)<3)return;release(g,e,r.aim);}
  const spec=ARCANA_STAGES[r.stage];while(r.hits<spec.hits&&g.time+1e-8>=r.next){r.next+=spec.every;beam(g,e,r,spec,'r');r.hits++;}if(r.hits>=spec.hits&&g.time>=r.next){delete e.state.queenR;e.channelUntil=0;}
+}
+
+// Shared by local and network renderers; only Q's footprint has delayed enemy visibility.
+export function telegraph(g,e,slot,viewerTeam=g.player.team){
+ const s=e.state[slot==='q'?'queenQ':'queenR'];if(!s)return null;
+ if(slot==='q'&&viewerTeam!==e.team&&g.time<s.at+QUEEN.qDelay-.5-1e-8)return null;
+ const spec=slot==='q'?{range:QUEEN.qRange,width:QUEEN.qWidth}:ARCANA_STAGES[s.phase==='charging'?stage(g,e):s.stage];
+ return {x:s.x,y:s.y,angle:s.angle,range:spec.range,width:spec.width,slot};
+}
+export function cameraView(g,e,width,height){
+ const s=e?.key==='queen'&&e.state.queenR;if(s?.phase!=='charging')return 1;
+ const elapsed=Math.max(0,g.time-s.at),progress=Math.min(1,elapsed/(QUEEN.stageTime*3));
+ if(!width||!height)return 1+3*progress;
+ const range=15+45*progress,halfWidth=ARCANA_STAGES[stage(g,e)].width/2,scale=Math.max(width/32,height/21),dx=Math.abs(Math.cos(s.angle)),dy=Math.abs(Math.sin(s.angle)),vertical=g.training25d?.786:1;
+ const fit=Math.max(1,2*(dx*range+dy*halfWidth)*scale/(width*.9),2*(dy*range+dx*halfWidth)*vertical*scale/(height*.9));
+ return 1+(fit-1)*Math.min(1,elapsed/.3);
 }

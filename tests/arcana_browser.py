@@ -11,6 +11,8 @@ SCENES={
  'queen-circle':('queen',"const g=__moba.game,p=g.player,t=target(46);g.cast(p,'q',t);advance(.6);"),
  'queen-ray':('queen',"const g=__moba.game,p=g.player,t=target(46);g.cast(p,'q',t);advance(1.55);"),
  'queen-stage-three':('queen',"const g=__moba.game,p=g.player,t=target(46);g.input.aim=t;g.cast(p,'r',t);advance(3.85);"),
+ 'queen-charge-camera':('queen',"const g=__moba.game,p=g.player;g.input.aim={x:40,y:-40};g.cast(p,'r',g.input.aim);advance(3.2);"),
+ 'queen-aim-up':('queen',"const p=__moba.game.player;p.facing=-Math.PI/3;p.lastCombat=0;"),
  'nos-idle':('nosferatu',"target(46);"),
  'nos-basic':('nosferatu',"const g=__moba.game,p=g.player,t=target(42.5);g.attack(p,t);advance(.1);"),
  'nos-bats':('nosferatu',"const g=__moba.game,p=g.player,t=target(46);p.state.bloodFeast=1200;for(let i=0;i<4;i++){p.qCd=0;g.cast(p,'q',{x:42+i*.5,y:20+(i%2)});}advance(.2);"),
@@ -40,6 +42,18 @@ async def main():
    await p.wait_for_function('window.__moba');await p.click('#training-open');await p.locator('[data-key=queen]').click();await p.click('#start');await p.wait_for_function('__moba.game.training');await p.wait_for_timeout(400)
    for name,(key,script)in SCENES.items():
     await p.evaluate(SETUP,key);await p.evaluate('()=>{'+script+'}');await p.wait_for_timeout(180);assert not errors,(mode,name,errors);await p.screenshot(path=str(ART/f'arcana-{mode}-{name}.png'))
+   # Champion-specific terminal art must also work without any external files.
+   await p.evaluate(SETUP,'sora');await p.locator('#shop-toggle').click()
+   if mobile:await p.locator('#mobile-shop-tabs [data-section=survival]').click()
+   await p.locator('#select-augment-writtenOrder').click();await p.wait_for_function("document.querySelector('#detail-name').textContent==='단말기로 전해진 지령'&&document.querySelector('#detail-icon canvas').dataset.painted==='terminalOrder'")
+   await p.screenshot(path=str(ART/f'arcana-{mode}-terminal-shop.png'));await p.locator('#detail-buy').click();await p.locator('#shop-close').click()
+   await p.evaluate("()=>{const g=__moba.game;g.player.state.unlock=5;if(!g.cast(g.player,'r',g.player))throw Error('Sora transformation failed');}");await p.wait_for_function('__moba.game.player.absorbedOrder&&!__moba.game.player.augments.includes("writtenOrder")')
+   if mobile:await p.wait_for_function("document.querySelector('.mobile-status-icon.passive-state canvas[data-art-key=terminalOrder]')")
+   # Zoom uses real renderer state, and restores rapidly on release.
+   await p.evaluate(SETUP,'queen');await p.wait_for_timeout(450)
+   await p.evaluate("()=>{const g=__moba.game;g.input.aim={x:40,y:-40};g.cast(g.player,'r',g.input.aim);advance(2.5);}");await p.wait_for_timeout(500)
+   assert await p.evaluate('__moba.renderer.viewBlend>3'),(mode,await p.evaluate('__moba.renderer.viewBlend'))
+   assert await p.evaluate("__moba.game.cast(__moba.game.player,'r',{x:40,y:-40})");await p.wait_for_function('__moba.renderer.viewBlend<1.05',timeout=2000)
    # The real skill button must recast during the ultimate channel, on both input modes.
    await p.evaluate(SETUP,'queen');await p.evaluate('()=>{const g=__moba.game,t=target(46);g.input.aim={x:t.x,y:t.y};}')
    if mobile:await p.locator('#r-btn').tap()

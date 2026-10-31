@@ -53,7 +53,7 @@ export function championPresentation(g,e){
  const set=(color,element='smoke',strength=.65)=>{aura={color,form:element,strength};};
  if(Object.entries(e.buffs||{}).some(([key,t])=>t>g.time&&key!=='augBattleHaste'))set('#c6cbd0','smoke',.5);
  if(g.shield(e)>0)set('#b5c7ce','mist',.7);
- if(e.key==='alisa'&&(s.heat||0)>0)set('#b86132','flame',.7);if(s.detonatesAt>g.time)set('#f05832','flame',.65+.3*Math.min(1,(g.time-(s.detonationAt??g.time))/2));
+ if(e.key==='alisa'&&(s.heat||0)>0)set('#b86132','flame',.7*Math.min(1,s.heat/5));if(s.detonatesAt>g.time)set('#f05832','flame',.65+.3*Math.min(1,(g.time-(s.detonationAt??g.time))/2));
  if(buff('marks'))set('#a2c879');if(buff('resolve'))set('#d9dce0','glow');if(buff('chainArmor'))set('#eef0e7','glow',.7);
  if(e.key==='marton'&&(buff('martonDrain')||s.fairy))set(FAIRY_COLORS.main,'glow',.65);
  if(buff('donLifesteal'))set('#8e2d3e');if(buff('guboReload'))set('#6c1429','flame',.8);
@@ -134,8 +134,8 @@ export class ChampionVFX {
   if(a.rimOnly)return;
   for(let i=0;i<3;i++){const x=Math.sin(time*.8+i*2)*.5,y=-.8+Math.cos(time+i)*.2;c.save();c.scale(1,1.45);this.mote(c,a.form==='bolt'?'smoke':a.form,a.color,x,y,1.1+i*.08,time*.15+i,a.strength*.45,i);c.restore();}
  }
- motes(c,form,color,time,count=8,radius=1,alpha=.5){
-  for(let i=0;i<count;i++){const a=i*2.4+time*.5,r=radius*(.55+noise(i,time*.2,3)*.45),y=-.9+Math.sin(a)*radius*.6;this.mote(c,form,color,Math.cos(a)*r,y,.1+noise(i,time*.4,6)*.1,a,alpha,i%4);}
+ motes(c,form,color,time,count=8,radius=1,alpha=.5,size=1){
+  for(let i=0;i<count;i++){const a=i*2.4+time*.5,r=radius*(.55+noise(i,time*.2,3)*.45),y=-.9+Math.sin(a)*radius*.6;this.mote(c,form,color,Math.cos(a)*r,y,(.1+noise(i,time*.4,6)*.1)*size,a,alpha,i%4);}
  }
  formulas(c,time,radius=1.4,alpha=.7){
   c.save();c.font='.23px monospace';c.textAlign='center';c.fillStyle='#ffffff';c.shadowColor='#e6f5ff';c.shadowBlur=2;
@@ -161,7 +161,7 @@ export class ChampionVFX {
    if(e.key==='yi'&&g.buff(e,'ogamdo'))for(const side of [-1,1])for(let i=0;i<6;i++)this.mote(c,'crystal','#dce7e8',side*(.55+i*.15),-1-i*.18+Math.sin(time)*.04,.19+i*.025,side*(.4+i*.15),.6,i%4);
    if(e.key==='marton'&&s.fairy){c.save();c.translate(0,-4);this.fairy(c,time,.65);c.restore();}
   }else{
-   if(e.burn?.until>time||e.key==='alisa'&&(s.heat||0)>0)this.motes(c,'flame','#cf8a4a',time*2,8,.65,.9);
+   if(e.burn?.until>time||e.key==='alisa'&&(s.heat||0)>0)this.motes(c,'flame','#cf8a4a',time*2,8,.65,.9*(e.burn?.until>time?1:Math.min(1,s.heat/5)),.8);
    if(e.key==='ryoshu'&&time-e.lastCombat>=2){c.save();c.translate(0,-1.7);this.mote(c,'smoke','#d4d2cf',.12,-.08,.3+Math.sin(time)*.025,0,.55,Math.floor(time)%4);c.restore();}
    if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))this.electric(c,time,'#d79954',.7,8);
    if(e.key==='rudolph'&&e.castSlot==='r'&&e.channelUntil>time)this.electric(c,time,'#d2944e',1,12);

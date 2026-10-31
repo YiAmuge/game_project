@@ -145,7 +145,7 @@ export function basic(g,e,p,d,options={}){
  case 'honglu':area(g,e,e,g.attackRange(e),190);g.effects.push({type:'hongluSweep',x:e.x,y:e.y,r:g.attackRange(e),life:.4,maxLife:.4});return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
  case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive&&!(t.invulnerableUntil>g.time)&&!(t.ccImmuneUntil>g.time)&&!g.debuffImmune(t)&&!(g.training&&t===g.player&&g.practice.invincible)){t.state.ishmaelWeak??={};const prior=t.state.ishmaelWeak[e.id],old=prior?.until>g.time?prior.stacks:0;t.state.ishmaelWeak[e.id]={stacks:Math.min(2,old+1),until:g.time+1.5};if(old<2)g.triggerDisrupt(e,t);}});return true;
- case 'rodya':g.bullet(e,d,220,g.attackRange(e),{swordWave:true,pierce:Infinity,speed:13,width:.75,onHit:t=>{g.status(t,'slow',.03,2.2,e);g.status(t,'weak',.035,2.2,e);}});return true;
+ case 'rodya':{let hits=0;g.bullet(e,d,220,g.attackRange(e),{swordWave:true,pierce:Infinity,speed:13,width:.75,beforeHit:(t,b)=>b.damage=220*(1-Math.min(.5,hits*.1)),onHit:t=>{hits++;g.status(t,'slow',.03,2.2,e);g.status(t,'weak',.035,2.2,e);}});return true;}
  case 'outis':g.bullet(e,d,215,g.attackRange(e),{width:.16});return true;
  case 'gregor':cone(g.attackRange(e),1.8*(g.buff(e,'mutant')?1.3*1.2:1),210);return true;
  case 'gubo':{
@@ -267,7 +267,7 @@ export function damageBonus(g,e,t){
  return b;
 }
 export function afterDamage(g,e,t,actual,proc=true,kind,absorbed=0){
- Nosferatu.afterDamage(g,e,t,actual);Kromer.afterDamage(g,e,t,actual,proc,kind,absorbed);
+ Nosferatu.afterDamage(g,e,t,actual,kind);Kromer.afterDamage(g,e,t,actual,proc,kind,absorbed);
  Yan.afterDamage(g,e,t,actual,proc,absorbed);Sora.afterDamage(g,e,t,actual,absorbed);V12.afterDamage(g,e,t,actual,proc,kind,absorbed);
  New.afterDamage(g,e,t,actual,proc,kind);
  if(e.kind==='champion'&&e.key==='don'&&actual+absorbed>0&&t.kind==='champion'&&t.hp>0&&e.state.villain===t.id&&(e.state.villainHits?.[t.id]||0)<=g.time){e.state.villainHits??={};e.state.villainHits[t.id]=g.time+6;g.deal(e,t,15+g.combatPower(t)*.1,{fixed:true,proc:false});g.status(t,'root',1,.75,e);}
