@@ -2,6 +2,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { build } from 'esbuild';
+import { SLASH_SAMPLES } from '../src/slash-samples.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = resolve(root, 'dist');
@@ -43,6 +44,7 @@ if (!template.includes(styleTag) || !template.includes(moduleTag)) {
 const thirdPartyLicense=await readFile(resolve(root,'src/vendor/THREE-LICENSE.txt'),'utf8');
 const tacticalFont=await readFile(resolve(root,'src/assets/chakra-petch-bold.ttf')),fontLicense=await readFile(resolve(root,'src/assets/chakra-petch-OFL.txt'),'utf8'),embeddedCss=css.replace('./assets/chakra-petch-bold.ttf','data:font/ttf;base64,'+tacticalFont.toString('base64'));
 const data = JSON.stringify(JSON.parse(roster)).replace(/</g, '\\u003c');
+const slashAudioData=`<script id="slash-audio-data" type="application/json">${JSON.stringify(Object.fromEntries(await Promise.all(SLASH_SAMPLES.map(async s=>[s.id,'data:audio/mpeg;base64,'+(await readFile(resolve(root,'src/assets/audio',s.file))).toString('base64')]))))}</script>`;
 const augmentSheets=['combat','survival','tech','mourning','mask','carrier','antimatter','terminal'];
 const augmentData=(await Promise.all(augmentSheets.map(async key=>{const image=await readFile(resolve(root,`src/assets/augments-${key}.png`));return `<script id="augment-data-${key}" type="application/json">${JSON.stringify('data:image/png;base64,'+image.toString('base64'))}</script>`;}))).join('\n');
 const backstreetImage=await readFile(resolve(root,'src/assets/backstreet-materials.png'));
@@ -51,7 +53,7 @@ const rooftopData=(await Promise.all(['menu-city-pixel','rooftop-skyline','rooft
 const latestSpriteData=(await Promise.all([['sprite-data-v36','champions-v36'],['weapon-data-v36','weapons-v36'],['clerk-data-v49','clerks-v49'],['minion-data-v52','minions-v52'],['needle-data-v54','needles-v54'],['boss-data-v55','boss-v55'],['fairy-data-v58','fairy-v58'],['jamila-data-v62','jamila-v62'],['kromer-data-v102','kromer-v102'],['ultimate-weapon-data-v102','ultimate-weapons-v102'],['arcana-data-v102','arcana-v102'],['world-data-v69','world-v69'],['augment-effects-data-v71','augment-effects-v71']].map(async([id,name])=>`<script id="${id}" type="application/json">${JSON.stringify('data:image/png;base64,'+(await readFile(resolve(root,`src/assets/${name}.png`))).toString('base64'))}</script>`))).join('\n');
 const html = template
   .replace('<head>', '<head>\n<meta name="city-border-offline" content="true">')
-  .replace(moduleTag,rooftopData+'\n'+latestSpriteData+'\n'+moduleTag)
+  .replace(moduleTag,rooftopData+'\n'+latestSpriteData+'\n'+slashAudioData+'\n'+moduleTag)
   .replace(styleTag, () => `<style>/* Chakra Petch · SIL Open Font License 1.1\n${fontLicense}*/\n${embeddedCss.replace(/<\/style/gi, '<\\/style')}</style>`)
   .replace(moduleTag, () => `${backstreetData}${augmentData}<script id="roster-data" type="application/json">${data}</script>\n<script id="sprite-data" type="application/json">${JSON.stringify('data:image/png;base64,'+atlas.toString('base64'))}</script>\n<script id="sprite-data-extra" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasExtra.toString('base64'))}</script>\n<script id="sprite-data-v05" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV05.toString('base64'))}</script>\n<script id="sprite-data-v06" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV06.toString('base64'))}</script>\n<script id="sprite-data-v08" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV08.toString('base64'))}</script>\n<script id="sprite-data-v10" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV10.toString('base64'))}</script>\n<script id="sprite-data-v12" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV12.toString('base64'))}</script>\n<script id="sprite-data-v13" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV13.toString('base64'))}</script>\n<script id="sprite-data-v17" type="application/json">${JSON.stringify('data:image/png;base64,'+atlasV17.toString('base64'))}</script>\n<script>/* Three.js · MIT License\n${thirdPartyLicense}*/\n${bundle.outputFiles[0].text}</script>`);
 await mkdir(output, { recursive: true });

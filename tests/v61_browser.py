@@ -1,5 +1,6 @@
 """Real Web Audio playback, offline waveform checks and positional waterfall cleanup."""
-import base64,json,os,wave
+import base64,json,os,wave,threading,shutil
+from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
 from pathlib import Path
 import numpy as np
 from playwright.sync_api import sync_playwright,expect
@@ -12,12 +13,17 @@ with sync_playwright() as pw:
  p=b.new_page(viewport={'width':1440,'height':950});errors=[];requests=[]
  p.on('pageerror',lambda e:(errors.append(str(e)),print(str(e),flush=True)));p.on('request',lambda r:requests.append(r.url))
  if offline:
-  p.route('http*://**/*',lambda r:r.abort())
-  html=(root/'dist/city-border.html').read_text().replace('if (new URLSearchParams(location.search).has("debug"))','if (true)')
-  p.set_content(html,wait_until='networkidle',timeout=60000)
- else:p.goto('http://127.0.0.1:5180/?debug=1',wait_until='networkidle')
+  class Standalone(BaseHTTPRequestHandler):
+   def do_GET(self):
+    file=root/'dist/city-border.html';self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(file.stat().st_size));self.end_headers()
+    with file.open('rb')as f:shutil.copyfileobj(f,self.wfile)
+   def log_message(self,*args):pass
+  server=ThreadingHTTPServer(('127.0.0.1',0),Standalone);threading.Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_address[1]}/?debug=1'
+  p.route('**/*',lambda r:r.continue_()if r.request.url==url else r.abort());p.goto(url,wait_until='networkidle',timeout=90000)
+ else:p.goto(os.getenv('MOBA_TEST_URL','http://127.0.0.1:5199')+'/?debug=1',wait_until='networkidle')
  p.click('#training-open');p.click('#start')
  p.wait_for_function('__moba.audio.context?.state==="running"')
+ p.evaluate('()=>__moba.audio.synth.slashes.ready');assert p.evaluate('__moba.audio.synth.slashes.buffers.size===3')
  p.evaluate('''()=>{const g=__moba.game;window.step61=g.step.bind(g);g.step=()=>{};
  window.advance61=s=>{for(let n=0;n<Math.round(s*120);n++)step61(1/120);};
  g.practice.lineStopped=true;g.units=[g.player];g.events=[];g.projectiles=[];g.effects=[];g.zones=[];g.pending=[];
@@ -49,10 +55,11 @@ with sync_playwright() as pw:
  p.evaluate('__moba.game.zones[0].until=__moba.game.time');p.wait_for_function('__moba.audio.fields.size===0')
  p.evaluate('''()=>{const g=__moba.game,a=__moba.audio;g.zones=[{kind:'waterfall',source:g.player,x:42,y:25,r:6.5,d:{x:1,y:0},until:g.time+4}];a.sync(g,{playing:true});a.sync(g,{playing:false});window.fieldsStopped61=a.fields.size===0;g.zones=[];}''')
  assert p.evaluate('fieldsStopped61')
- # Render the same synthesizer offline; no audio/network assets are needed.
+ # Render the same sample/synthesis mixer; standalone includes all audio data.
  samples=p.evaluate('''async()=>{const Audio=__moba.audio.constructor,rate=22050,results=[];
  const cases=[['slash',{kind:'swing',key:'ryoshu'}],['slash-variant',{kind:'swing',key:'ryoshu',variant:3}],['heavy-hit',{kind:'hit',key:'marton'}],['punch',{kind:'hit',key:'meursault'}],['rifle',{kind:'shot',key:'gubo'}],['electric',{kind:'swing',key:'rudolph'}],['glass',{kind:'swing',key:'yi'}],['ice',{kind:'shot',key:'rodya',slot:'r'}],['chain',{kind:'cast',key:'meursault',slot:'q'}],['petals',{kind:'cast',key:'dongbaek',slot:'q'}],['organic',{kind:'swing',key:'gregor'}],['alisa-explosion',{kind:'explosion',key:'alisa',phase:'alisa-detonation'}],['outis-shotgun',{kind:'explosion',key:'outis',phase:'outis-shotgun'}],['tower-explosion',{kind:'explosion',sourceKind:'tower',element:'stone'}],['attack-ping',{kind:'ping',ping:'attack'}],['retreat-brass',{kind:'ping',ping:'danger'}],['waterfall-loop',null],['crowded-combat',null],['muted',null]];
  for(const[name,event]of cases){const c=new OfflineAudioContext(2,rate*2,rate),a=new Audio({context:c,storage:false});
+  await a.synth.slashes.ready;
   if(event)a.play({...event,x:0,y:0},{x:0,y:0});
   else if(name==='waterfall-loop'){const f=a.synth.field(a.ambience);f.stop(.9);}
   else if(name==='crowded-combat'){for(let i=0;i<40;i++)a.play({kind:'swing',key:'marton',sourceKind:'champion',sourceId:3000+i},{x:0,y:0});if(a.played>11||!a.play({kind:'ping',ping:'danger'},{x:0,y:0}))throw new Error('combat budget suppressed the warning');}
@@ -80,7 +87,8 @@ with sync_playwright() as pw:
  assert rms(waves['waterfall-loop'],1.5,1.8)<rms(waves['waterfall-loop'],.5,.8)*.02
  assert rms(waves['attack-ping'],.7,.85)>.00001
  assert not errors,errors
- if offline:assert not requests,requests
+ if offline:assert requests==[url],requests
  (art/'analysis.json').write_text(json.dumps(stats,ensure_ascii=False,indent=2))
  print(json.dumps({'offline':offline,'championPalettes':True,'fourVariants':True,'positionalWaterfall':True,'mute':True,'retreatBrass':stats['retreat-brass'],'waveforms':len(samples),'errors':errors},ensure_ascii=False))
  b.close()
+ if offline:server.shutdown();server.server_close()
