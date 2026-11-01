@@ -29,22 +29,28 @@ async def main():
     await p.route('**/*',route)
    await p.goto(url,wait_until='networkidle',timeout=90000);await p.wait_for_function('window.__moba')
    await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"')
-   await p.evaluate('()=>__moba.audio.synth.slashes.ready');assert await p.evaluate('__moba.audio.synth.slashes.buffers.size===3&&__moba.audio.synth.slashes.failures.length===0')
+   await p.evaluate('()=>__moba.audio.synth.slashes.ready');assert await p.evaluate('__moba.audio.synth.slashes.buffers.size===5&&__moba.audio.synth.slashes.failures.length===0')
    # The real game emitter, mixer, routing and synthesizer all reach the recordings.
    await p.evaluate(SETUP,'ryoshu');before=await p.evaluate('__moba.audio.synth.slashes.played')
    await p.evaluate('__moba.game.attack(__moba.game.player,target(41.3))');await p.wait_for_function('n=>__moba.audio.synth.slashes.played>n',arg=before)
    await p.wait_for_timeout(300);assert await p.evaluate('__moba.audio.synth.slashes.active.size===0')
+   assert await p.evaluate('__moba.audio.synth.slashes.history.some(s=>s.cue==="impact"&&s.id==="flesh")')
+   await p.evaluate(SETUP,'faust');await p.evaluate('__moba.audio.synth.slashes.history=[];__moba.game.attack(__moba.game.player,target(41.3));advance(.2)')
+   await p.wait_for_function('__moba.audio.synth.slashes.history.some(s=>s.cue==="weapon"&&s.id==="slash")&&__moba.audio.synth.slashes.history.some(s=>s.cue==="impact"&&s.id==="flesh")')
+   await p.evaluate('__moba.game.cast(__moba.game.player,"q",{x:44,y:20})');await p.wait_for_function('__moba.audio.synth.slashes.history.some(s=>s.cue==="cast"&&s.id==="slash")')
    # Real decoding, dynamics limiting, edge fades, speed/pitch differences and node cleanup.
    rendered=await p.evaluate('''async()=>{
     const Audio=__moba.audio.constructor,rate=24000,results=[];
-    const cases=[...['knife','katana','blade','axe','greatsword','scythe','glaive','claw'].flatMap(family=>[0,3].map(variant=>({name:family+'-'+variant,family,variant,kind:'swing'}))),{name:'cut-impact',family:'katana',kind:'hit'},{name:'heavy-impact',family:'axe',kind:'hit'},{name:'crowded',kind:'crowded'},{name:'muted',kind:'muted'}];
+    const cases=[...['knife','katana','blade','axe','greatsword','scythe','glaive','claw'].flatMap(family=>[0,3].map(variant=>({name:family+'-'+variant,family,variant,kind:'swing'}))),{name:'cut-impact',family:'katana',kind:'hit'},{name:'heavy-impact',family:'axe',kind:'hit'},{name:'blade-cast',family:'blade',kind:'cast'},{name:'blade-fire',family:'blade',kind:'swing',variant:0,element:'fire'},{name:'crowded',kind:'crowded'},{name:'muted',kind:'muted'}];
     for(const spec of cases){
-     const c=new OfflineAudioContext(2,rate*2.5,rate),a=new Audio({context:c,storage:false});await a.synth.slashes.ready;if(a.synth.slashes.buffers.size!==3)throw Error('Missing recordings');
+     const c=new OfflineAudioContext(2,rate*2.5,rate),a=new Audio({context:c,storage:false});await a.synth.slashes.ready;if(a.synth.slashes.buffers.size!==5)throw Error('Missing recordings');
+     let layers=0;for(const name of ['noise','tone','element']){const original=a.synth[name].bind(a.synth);a.synth[name]=(...args)=>{layers++;return original(...args);};}
      const play=(extra={})=>a.play({key:'ryoshu',element:'metal',sourceKind:'champion',sourceId:1,x:0,y:0,...spec,...extra},{x:0,y:0});
      if(spec.kind==='crowded'){for(let i=0;i<40;i++)play({kind:'swing',sourceId:i});if(a.played>11||!a.play({kind:'ping',ping:'danger'},{x:0,y:0}))throw Error('Lost warning priority');}
      else if(spec.kind==='muted'){a.enabled=false;play({kind:'swing'});}
      else if(!play())throw Error('Slash rejected');
      const sample=a.synth.slashes.history[0],out=await c.startRendering();if(a.synth.slashes.active.size)throw Error('Leaked sample voices');
+     if(!['crowded','muted'].includes(spec.name)&&(layers||a.synth.slashes.played!==1))throw Error('Mixed additional sound layers');
      const bytes=new Uint8Array(out.getChannelData(0).buffer);let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
      results.push({name:spec.name,rate,sample,played:a.synth.slashes.played,data:btoa(binary)});
     }return results;
@@ -56,14 +62,19 @@ async def main():
     else:assert .0004<rms<.2 and peak<.99,(mode,entry['name'],rms,peak);assert entry['played']>0
     if entry.get('sample'):assert entry['sample']['rates'][1]>entry['sample']['rates'][0] and entry['sample']['rates'][1]>entry['sample']['rates'][2]
     stats[entry['name']]={'peak':round(peak,5),'rms':round(rms,5),'sample':entry.get('sample')};waves[entry['name']]=data
-   for family in ['knife','katana','blade','axe','greatsword','scythe','glaive','claw']:assert np.corrcoef(waves[family+'-0'],waves[family+'-3'])[0,1]<.95,(mode,family)
+   for family in ['knife','katana','blade','axe','greatsword','scythe','glaive','claw']:
+    assert np.corrcoef(waves[family+'-0'],waves[family+'-3'])[0,1]<.95,(mode,family)
+    assert stats[family+'-0']['sample']['id']==stats[family+'-3']['sample']['id'],(mode,family)
+   assert stats['blade-0']['sample']['id']==stats['blade-cast']['sample']['id']=='slash'
+   assert stats['cut-impact']['sample']['id']==stats['heavy-impact']['sample']['id']=='flesh'
+   assert np.array_equal(waves['blade-0'],waves['blade-fire']),'Element overlays changed the fixed weapon sound'
    assert stats['knife-0']['sample']['pitch']>stats['greatsword-0']['sample']['pitch'];assert stats['knife-0']['sample']['duration']<stats['greatsword-0']['sample']['duration']
    if mode=='desktop':
-    sequence=['knife-0','katana-0','blade-0','greatsword-0','cut-impact','heavy-impact'];preview=np.concatenate([np.concatenate([waves[name][:int(.65*rate)],np.zeros(int(.18*rate))])for name in sequence])
+    sequence=['blade-0','cut-impact','knife-0','katana-0','axe-0','greatsword-0'];preview=np.concatenate([np.concatenate([waves[name][:int(.65*rate)],np.zeros(int(.18*rate))])for name in sequence])
     with wave.open(str(ROOT/'artifacts'/'slash-audio-preview.wav'),'wb')as f:f.setnchannels(1);f.setsampwidth(2);f.setframerate(rate);f.writeframes((np.clip(preview,-1,1)*32767).astype('<i2').tobytes())
    # Once unlocked, mute still silences these sources through the existing master bus.
    await p.click('#sound-toggle');await p.wait_for_timeout(300);assert await p.evaluate('!__moba.audio.enabled&&__moba.audio.master.gain.value<.01')
    assert not errors,(mode,errors);assert not external,(mode,external);(ART/f'{mode}-analysis.json').write_text(json.dumps(stats,indent=2));await ctx.close();await browser.close()
-   print(mode+': uploaded sample decoding, actual attack playback, 20 waveform cases, pitch/speed/envelope variation, crowd budget, cleanup and mute passed.',flush=True)
+   print(mode+': all five recordings decoded; 22 waveform cases, fixed weapon sources, dedicated flesh impacts, no mixed layers, pitch/speed/envelope variation, crowd budget, cleanup and mute passed.',flush=True)
  await asyncio.to_thread(server.shutdown);server.server_close()
 if __name__=='__main__':asyncio.run(main())

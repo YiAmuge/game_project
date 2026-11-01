@@ -4,29 +4,32 @@ export const SLASH_SAMPLES=[
  {id:'sword',file:'daviddumaisaudio-sword-slash-and-swing-185432.mp3',start:.07,end:.94},
  {id:'cut',file:'freesound_community-slashkut-108175.mp3',start:.05,end:.53},
  {id:'metal',file:'floraphonic-metal-whoosh-hit-2-201903.mp3',start:.08,end:.50},
+ {id:'slash',file:'yodguard-sword_slashing-2-382396.mp3',start:.055,end:.63},
+ {id:'flesh',file:'universfield-sword-blade-slicing-flesh-352708.mp3',start:.145,end:.53},
 ];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const families={
- knife:{pitch:4,duration:.15,rates:[1.2,1.8,1.12],samples:['cut','sword','cut','sword']},
- katana:{pitch:2,duration:.21,rates:[.96,1.5,.88],samples:['sword','cut','sword','cut']},
- blade:{pitch:0,duration:.25,rates:[.86,1.4,.82],samples:['sword','cut','metal','sword']},
- axe:{pitch:-3,duration:.34,rates:[.78,1.22,.72],samples:['metal','sword','metal','sword']},
- greatsword:{pitch:-5,duration:.41,rates:[.72,1.12,.67],samples:['sword','metal','sword','metal']},
- scythe:{pitch:-4,duration:.37,rates:[.75,1.18,.70],samples:['sword','metal','sword','cut']},
- glaive:{pitch:-1,duration:.30,rates:[.82,1.3,.77],samples:['sword','cut','sword','metal']},
- claw:{pitch:1,duration:.22,rates:[1.04,1.55,.91],samples:['cut','sword','cut','sword']},
+ knife:{sample:'cut',pitch:4,duration:.15,rates:[1.2,1.8,1.12]},
+ katana:{sample:'sword',pitch:2,duration:.21,rates:[.96,1.5,.88]},
+ blade:{sample:'slash',pitch:0,duration:.25,rates:[.86,1.4,.82]},
+ axe:{sample:'metal',pitch:-3,duration:.34,rates:[.78,1.22,.72]},
+ greatsword:{sample:'sword',pitch:-5,duration:.41,rates:[.72,1.12,.67]},
+ scythe:{sample:'metal',pitch:-4,duration:.37,rates:[.75,1.18,.70]},
+ glaive:{sample:'slash',pitch:-1,duration:.30,rates:[.82,1.3,.77]},
+ claw:{sample:'slash',pitch:1,duration:.22,rates:[1.04,1.55,.91]},
 };
 export function slashProfile(voice){
- const base=families[voice.family];if(!base||!['weapon','impact'].includes(voice.cue))return null;
- const variant=((Math.trunc(voice.variant)||0)%4+4)%4,impact=voice.cue==='impact',heavy=base.pitch<0;
+ const base=families[voice.family];if(!base||!['weapon','impact','cast'].includes(voice.cue))return null;
+ const variant=((Math.trunc(voice.variant)||0)%4+4)%4,impact=voice.cue==='impact',preparing=voice.cue==='cast',heavy=base.pitch<0;
  return {
-  id:impact?(heavy?'metal':'cut'):base.samples[variant],
+  // A weapon keeps one recording across attacks/casts; variants only process it.
+  id:impact?'flesh':base.sample,
   pitch:base.pitch+[-.55,.3,-.15,.65][variant]+(impact?-.5:0),
-  duration:base.duration*(impact?.58:1)*(1+[0,.045,-.035,.02][variant]),
+  duration:base.duration*(impact?.58:preparing?.75:1)*(1+[0,.045,-.035,.02][variant]),
   rates:base.rates.map((n,i)=>n*(impact?[1.45,1.12,1][i]:1)),
-  gain:(impact?.88:.78)*clamp(.85+(voice.weight||1)*.15,.85,1.12),
+  gain:(impact?.88:preparing?.50:.78)*clamp(.85+(voice.weight||1)*.15,.85,1.12),
   cutoff:voice.family==='claw'?6500:heavy?7600:11500,
-  offset:impact?(heavy?.125:.065):0,
+  offset:impact?.015:0,
  };
 }
 async function loadRecording(spec){

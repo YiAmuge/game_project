@@ -14,11 +14,20 @@ test('cutting weapons have distinct light/heavy pitch and length, accelerating t
   for(const p of variants){assert.ok(p.rates[1]>p.rates[0]&&p.rates[1]>p.rates[2]);assert.ok(p.duration>.1&&p.duration<.5);}
   const hit=slashProfile({family,cue:'impact'});assert.ok(hit.duration<variants[0].duration);assert.ok(hit.offset>0);
  }
- assert.deepEqual(new Set(Array.from({length:4},(_,variant)=>slashProfile({family:'blade',cue:'weapon',variant}).id)),new Set(SLASH_SAMPLES.map(s=>s.id)));
 });
-test('guns, blunt weapons, signals, preparation sounds and special Kromer strikes retain their own sounds',()=>{
+test('one weapon keeps one swing recording across variants, elements, basic attacks and skill casts',()=>{
+ const chosen=new Set();
+ for(const family of ['knife','katana','blade','axe','greatsword','scythe','glaive','claw']){
+  const ids=new Set();for(const cue of ['weapon','cast'])for(const element of ['metal','blood','water','fire'])for(let variant=0;variant<4;variant++)ids.add(slashProfile({family,cue,element,variant}).id);
+  assert.equal(ids.size,1,family);chosen.add([...ids][0]);
+  for(let variant=0;variant<4;variant++)assert.equal(slashProfile({family,cue:'impact',variant}).id,'flesh');
+ }
+ assert.deepEqual(chosen,new Set(['cut','sword','slash','metal']));
+ assert.equal(slashProfile({family:'blade',cue:'weapon'}).id,'slash');
+});
+test('guns, blunt weapons, signals and special Kromer strikes retain their own sounds',()=>{
  for(const family of ['rifle','punch','club','hammer','spear','shield','glass','organic'])assert.equal(slashProfile({family,cue:'weapon'}),null);
- for(const cue of ['cast','charge','tick','ping','impale','nailBreak'])assert.equal(slashProfile({family:'blade',cue}),null);
+ for(const cue of ['charge','tick','ping','impale','nailBreak'])assert.equal(slashProfile({family:'blade',cue}),null);
  for(const phase of ['kromer-impale','kromer-nail-break'])assert.equal(slashProfile(soundVoice({key:'kromer',kind:'hit',phase})),null);
 });
 test('decoded recordings are trimmed, mixed to mono, peak-normalized and edge-faded without changing the originals',()=>{
@@ -28,15 +37,20 @@ test('decoded recordings are trimmed, mixed to mono, peak-normalized and edge-fa
  assert.equal(out.numberOfChannels,1);assert.equal(out.length,870);assert.ok(data[0]===0&&data.at(-1)===0);
  assert.ok(Math.max(...data.map(Math.abs))<=.820001);assert.ok(data.some(n=>Math.abs(n)>.7));assert.deepEqual(input.getChannelData(0),original);
 });
-test('the three sources decode once per context and are reused across synthesizers and matches',async()=>{
+test('all five sources decode once per context and are reused across synthesizers and matches',async()=>{
  const c=context();let loads=0,decodes=0;c.decodeAudioData=async()=>{decodes++;return buffer(2,48000,48000);};
  const loader=async()=>{loads++;return new ArrayBuffer(4);},a=new SlashSamples(c,{loader}),b=new SlashSamples(c,{loader});
- await Promise.all([a.ready,b.ready]);assert.equal(loads,3);assert.equal(decodes,3);assert.equal(a.buffers,b.buffers);assert.equal(a.buffers.size,3);assert.deepEqual(a.failures,[]);
+ await Promise.all([a.ready,b.ready]);assert.equal(loads,5);assert.equal(decodes,5);assert.equal(a.buffers,b.buffers);assert.equal(a.buffers.size,5);assert.deepEqual(a.failures,[]);
 });
 test('recording failures resolve cleanly and allow the original synthesis fallback',async()=>{
  const samples=new SlashSamples(context(),{loader:async()=>{throw new Error('offline cache missing');}});await samples.ready;
- assert.equal(samples.buffers.size,0);assert.equal(samples.failures.length,3);assert.equal(samples.play({},soundVoice({key:'ryoshu',kind:'swing'})),false);
- let noise=0;const synth={slashes:samples,noise:()=>noise++,metal:()=>{},tone:()=>{},thud:()=>{}};
- SoundSynth.prototype.weapon.call(synth,{},soundVoice({key:'ryoshu',kind:'swing'}));assert.ok(noise>0);
- synth.slashes={play:()=>true};noise=0;SoundSynth.prototype.weapon.call(synth,{},soundVoice({key:'ryoshu',kind:'swing'}));assert.equal(noise,0);
+ assert.equal(samples.buffers.size,0);assert.equal(samples.failures.length,5);assert.equal(samples.play({},soundVoice({key:'ryoshu',kind:'swing'})),false);
+ let noise=0;const synth={slashes:samples,weapon:SoundSynth.prototype.weapon,element:()=>{},noise:()=>noise++,metal:()=>{},tone:()=>{},thud:()=>{}};
+ SoundSynth.prototype.render.call(synth,{},soundVoice({key:'ryoshu',kind:'swing'}));assert.ok(noise>0);
+});
+test('recorded cutting swings, hits and casts play exactly one source without synthetic weapon or elemental layers',()=>{
+ for(const cue of ['weapon','impact','cast'])for(const element of ['metal','fire','water','arcane','shadow']){
+  let recordings=0,layers=0;const synth={slashes:{play:()=>{recordings++;return true;}},weapon:()=>layers++,element:()=>layers++,tone:()=>layers++,noise:()=>layers++};
+  SoundSynth.prototype.render.call(synth,{}, {family:'blade',cue,element,variant:0,weight:1});assert.equal(recordings,1);assert.equal(layers,0,`${cue}/${element}`);
+ }
 });
