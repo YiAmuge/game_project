@@ -1,7 +1,7 @@
 import{RULES,RUNTIME_CHAMPIONS,FOUNTAIN_AREAS,upgradeRate}from'./data.js';
 import{distance,direction,clamp}from'./geometry.js';
 import{settleBody,moveBody}from'./collision.js';
-export const NOSFERATU={lifesteal:.25,capacity:1200,cost:100,qWindow:2.5,qRecasts:4,qRange:6.8,qDamage:35,batDuration:5,bats:4,batDamage:35,batEvery:.5,batSpeed:1.25,batRange:2.5,leash:8,basicDamage:160,basicRange:1.7,bladeWidth:2*3.3*Math.sin(165*Math.PI/360)-2,bladeRange:6.8,bladeDamage:80,rRange:7.5,rDuration:10,rEvery:.5,rDrain:.045,rAttackEvery:.35,rLifesteal:.4,rSize:1.15,rFeast:.3};
+export const NOSFERATU={lifesteal:.25,capacity:1200,cost:100,qWindow:2.5,qRecasts:2,qRange:6.8,qDamage:35,batDuration:5,bats:3,batDamage:35,batEvery:.5,batSpeed:1.25,batRange:2.5,leash:8,basicDamage:160,basicRange:1.7,bladeWidth:2*3.3*Math.sin(165*Math.PI/360)-2,bladeRange:6.8,bladeDamage:80,rRange:7.5,rDuration:10,rEvery:.5,rDrain:.05,rAttackEvery:.35,rLifesteal:.3,rDamage:130,rSize:1.15,rFeast:.3};
 export const bloodfiend=(g,e)=>e.key==='nosferatu'&&Boolean(e.state?.bloodfiend);
 export function healthRatio(g,e){return Math.max(1,(1+RUNTIME_CHAMPIONS.nosferatu.growth.health*(e.level-1))*(1+upgradeRate(e,'health'))*(1+g.nosHealthAugments(e)));}
 export const capacity=(g,e)=>NOSFERATU.capacity+Math.max(0,healthRatio(g,e)-1)*2000;
@@ -23,7 +23,7 @@ export function afterDamage(g,e,t,actual,kind){
 export const basicBonus=e=>1+Math.min(5,Math.floor((e.state.bloodFeast||0)/200))*.05;
 export function basic(g,e,d){
  const bonus=basicBonus(e);
- if(bloodfiend(g,e)){const form=e.state.bloodfiend;e.state.bloodStriking=true;try{for(const t of [...g.units]){if(e.state.bloodfiend!==form)break;if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t))g.deal(e,t,NOSFERATU.basicDamage*bonus,{damageKind:'basic'});}}finally{delete e.state.bloodStriking;}g.effects.push({type:'bloodCleave',source:e.id,theme:e.key,x:e.x,y:e.y,r:g.attackRange(e),angle:e.facing,shape:{kind:'circle',range:g.attackRange(e)},life:.3,maxLife:.3});}
+ if(bloodfiend(g,e)){const form=e.state.bloodfiend;e.state.bloodStriking=true;try{for(const t of [...g.units]){if(e.state.bloodfiend!==form)break;if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t))g.deal(e,t,NOSFERATU.rDamage*bonus,{damageKind:'basic'});}}finally{delete e.state.bloodStriking;}g.effects.push({type:'bloodCleave',source:e.id,theme:e.key,x:e.x,y:e.y,r:g.attackRange(e),angle:e.facing,shape:{kind:'circle',range:g.attackRange(e)},life:.3,maxLife:.3});}
  else{g.cone(e,d,g.attackRange(e),Math.PI,NOSFERATU.basicDamage*bonus);g.bullet(e,d,NOSFERATU.bladeDamage*bonus,NOSFERATU.bladeRange+(g.attackRange(e)-NOSFERATU.basicRange),{bloodBlade:true,speed:17,width:(NOSFERATU.bladeWidth/2+Math.max(0,g.attackRange(e)-NOSFERATU.basicRange)*Math.sin(165*Math.PI/360))/1.1});}
 }
 export function restore(g,e){
@@ -46,13 +46,31 @@ export function tick(g,e){
  while(g.time+1e-8>=s.nextDrain){s.nextDrain+=NOSFERATU.rEvery;e.hp=Math.max(0,e.hp-e.maxHp*NOSFERATU.rDrain);if(e.hp<=0){restore(g,e);return;}}
  if(g.time+1e-8>=s.nextAttack){if(e.attackCd>1e-8)return;e.attackCd=0;s.nextAttack=g.time+NOSFERATU.rAttackEvery;g.attack(e,{x:e.x+Math.cos(e.facing||0),y:e.y+Math.sin(e.facing||0)});}
 }
+// Frame-local lookup tables are shared by all bats; target decisions run at 8 Hz.
+// The maps never enter entity snapshots and cannot outlive the game instance.
+const batFrames=new WeakMap();
+function batFrame(g){
+ let f=batFrames.get(g);if(!f||f.at!==g.time||f.units!==g.units||f.nextId!==g.nextId){f={at:g.time,units:g.units,nextId:g.nextId,byId:new Map(g.units.map(t=>[t.id,t])),targets:new Map()};batFrames.set(g,f);}return f;
+}
+function batCandidates(g,owner,f){
+ if(!f.targets.has(owner.id))f.targets.set(owner.id,g.units.filter(t=>g.hostile(owner,t)&&distance(owner,t)<=NOSFERATU.leash+t.radius&&g.visibleTo(owner.team,t)));
+ return f.targets.get(owner.id);
+}
+function acquireBatTarget(g,b,owner,f){
+ let target,best=Infinity;
+ for(const t of batCandidates(g,owner,f)){
+  if(!t.alive||g.hidden(t))continue;const d=(b.x-t.x)**2+(b.y-t.y)**2,preferred=t.id===owner.state.lastBloodTarget;
+  if((preferred||d<best||d===best&&t.id<(target?.id??Infinity))&&g.clearLine(b,t)){target=t;best=d;if(preferred)break;}
+ }
+ b.targetId=target?.id;b.bloodPriority=owner.state.lastBloodTarget;b.bloodThinkAt=g.time+.125;return target;
+}
 export function tickBat(g,b,dt){
- const owner=g.units.find(e=>e.id===b.owner&&e.alive);if(!owner||g.time>=b.until){b.alive=false;b.hp=0;return;}ejectBat(g,b);if(g.stat(b,'stun'))return;
- const candidates=g.units.filter(t=>t!==b&&g.hostile(owner,t)&&g.visibleTo(b.team,t)&&distance(owner,t)<=NOSFERATU.leash+t.radius&&g.clearLine(b,t));
- const target=candidates.find(t=>t.id===owner.state.lastBloodTarget)||candidates.sort((a,c)=>distance(b,a)-distance(b,c)||a.id-c.id)[0];
- const goal=distance(b,owner)>NOSFERATU.leash?owner:target||owner;
- if(target&&distance(b,owner)<=NOSFERATU.leash&&distance(b,target)<=NOSFERATU.batRange+target.radius&&!g.stat(b,'disarm')){
-  if(g.time>=b.nextStrike){b.nextStrike=g.time+NOSFERATU.batEvery;b.facing=Math.atan2(target.y-b.y,target.x-b.x);b.struckAt=g.time;owner.state.batStriking=true;try{g.deal(owner,target,NOSFERATU.batDamage*b.snapshot.power,{rawPower:true,damageKind:'skill',sound:{slot:'q',element:'blood'}});}finally{delete owner.state.batStriking;}g.effects.push({type:'bloodBatHit',source:owner.id,target:target.id,theme:owner.key,x:target.x,y:target.y,life:.22,maxLife:.22});}
+ const f=batFrame(g),owner=f.byId.get(b.owner);if(!owner?.alive||g.time>=b.until){b.alive=false;b.hp=0;return;}ejectBat(g,b);if(g.stat(b,'stun'))return;
+ let target=f.byId.get(b.targetId);
+ if(!target?.alive||!g.hostile(owner,target)||!g.visibleTo(b.team,target)||distance(owner,target)>NOSFERATU.leash+target.radius||g.time>=(b.bloodThinkAt||0)||b.bloodPriority!==owner.state.lastBloodTarget)target=acquireBatTarget(g,b,owner,f);
+ const fromOwner=distance(b,owner),goal=fromOwner>NOSFERATU.leash?owner:target||owner;
+ if(target&&fromOwner<=NOSFERATU.leash&&distance(b,target)<=NOSFERATU.batRange+target.radius&&!g.stat(b,'disarm')){
+  if(g.time>=b.nextStrike){if(!g.clearLine(b,target)){b.bloodThinkAt=0;return;}b.nextStrike=g.time+NOSFERATU.batEvery;b.facing=Math.atan2(target.y-b.y,target.x-b.x);b.struckAt=g.time;owner.state.batStriking=true;try{g.deal(owner,target,NOSFERATU.batDamage*b.snapshot.power,{rawPower:true,damageKind:'skill',sound:{slot:'q',element:'blood'}});}finally{delete owner.state.batStriking;}g.effects.push({type:'bloodBatHit',source:owner.id,target:target.id,theme:owner.key,x:target.x,y:target.y,life:.22,maxLife:.22});}
  }else if(!g.stat(b,'root')&&distance(b,goal)>.5){const d=direction(b,goal),step=Math.min(distance(b,goal),b.snapshot.speed*dt),next={x:b.x+d.x*step,y:b.y+d.y*step};if(validBatPoint(g,b,next))moveBody(g,b,d.x*step,d.y*step,{phaseEnemies:true});}
  if(distance(b,owner)>NOSFERATU.leash+.01){const d=direction(owner,b),point={x:owner.x+d.x*(NOSFERATU.leash-.1),y:owner.y+d.y*(NOSFERATU.leash-.1)};if(validBatPoint(g,b,point)&&!g.blocked(point.x,point.y,b.radius))Object.assign(b,point);else Object.assign(b,{x:owner.x,y:owner.y});}ejectBat(g,b);
 }

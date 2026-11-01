@@ -186,7 +186,7 @@ function shockIshmael(g,e){
 }
 function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
- if(e.key==='queen'){Queen.cast(g,e,slot,p,d);return true;}
+ if(e.key==='queen'){Queen.cast(g,e,slot,p,d,options);return true;}
  if(e.key==='nosferatu'){Nosferatu.cast(g,e,slot,p);return true;}
  if(e.key==='kromer'){Kromer.cast(g,e,slot,p,d);return true;}
  if(e.key==='jamila')return Jamila.cast(g,e,slot,p,d,options);

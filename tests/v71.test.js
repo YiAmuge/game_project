@@ -68,10 +68,10 @@ test('Jamila shield rounds alone gain ten base damage and actually hit for the i
  const{g,p}=arena('jamila'),t=foe(g,45);for(let shot=1;shot<=4;shot++){p.attackCd=0;g.attack(p,t);const projectile=g.projectiles.find(b=>b.source===p);assert.equal(projectile.damage,shot===4?60:50);const hp=t.hp;run(g,.2);near(hp-t.hp,(shot===4?60:50)*(1+(damageFormula(1,1,1)-1)*.55)*1.15);}
 });
 test('shield rounds still give both soldiers a fresh half shield when Jamila has reached her personal cap',()=>{
- const{g,p}=arena('jamila');g.cast(p,'r',p);g.addShield(p,p.maxHp*.075,`udjat-${p.id}`,3);const soldiers=Jamila.army(g,p);for(const u of soldiers)u.shields=[];const hp=g.shield(p);
+ const{g,p}=arena('jamila');g.cast(p,'r',p);run(g,.25);g.addShield(p,p.maxHp*.075,`udjat-${p.id}`,3);const soldiers=Jamila.army(g,p);for(const u of soldiers)u.shields=[];const hp=g.shield(p);
  for(let n=1;n<=2;n++){p.ammo=1;p.attackCd=0;g.attack(p,{x:47,y:25});near(g.shield(p),hp);for(const u of soldiers){near(g.shield(u),p.maxHp*.0075*n);near(u.shields[0].until-g.time,3);}}
  for(const u of soldiers){u.ammo=0;Jamila.basic(g,u,{x:47,y:25},{x:1,y:0});assert.equal(g.projectiles.findLast(b=>b.source===u).damage,15);}
 });
 test('the full-total-shield exception also shares shield rounds without increasing the commander beyond the global cap',()=>{
- const{g,p}=arena('jamila');g.addShield(p,p.maxHp*.35,'full',10);g.cast(p,'r',p);p.ammo=1;g.attack(p,{x:47,y:25});near(g.shield(p),p.maxHp*.35);for(const u of Jamila.army(g,p))near(g.shield(u),p.maxHp*.0075);
+ const{g,p}=arena('jamila');g.addShield(p,p.maxHp*.35,'full',10);g.cast(p,'r',p);run(g,.25);p.ammo=1;g.attack(p,{x:47,y:25});near(g.shield(p),p.maxHp*.35);for(const u of Jamila.army(g,p))near(g.shield(u),p.maxHp*.0075);
 });

@@ -33,7 +33,7 @@ export function mobileAutoAim(g,e,slot='basic',{category,targetId,movement}={}){
  const allies=g.champions(e.team).filter(t=>t!==e&&visible(t)),wounded=prioritize(allies.filter(t=>t.hp<t.maxHp).sort((a,b)=>healthOrder(a)-healthOrder(b)||order(a,b)));
  const allyCandidates=[];
  let target;
- if(!category&&e.key==='queen')allyCandidates.push(...wounded);
+
  if(!category&&e.key==='gubo'&&['basic','r'].includes(slot))allyCandidates.push(...prioritize(allies.filter(t=>g.canGuboHitAlly(e,t)).sort(order)));
  if(!category&&e.key==='queequeg'&&slot==='q')allyCandidates.push(...prioritize([...allies].sort((a,b)=>healthOrder(a)-healthOrder(b)||order(a,b))));
  if(e.key==='honglu'&&slot==='r'){

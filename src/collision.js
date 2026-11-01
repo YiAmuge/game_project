@@ -19,15 +19,15 @@ export function carryFits(g,e,p){
   !solid(g,t,other,{phaseEnemies:false})||segmentDistance(other,t,to)>=t.radius+other.radius-.001);
 }
 export function canOccupy(g,e,p,options={}){
- return (options.includeCarry===false||carryFits(g,e,p))&&(options.ignoreTrap||withinTrap(g,e,p))&&!g.blocked(p.x,p.y,e.radius)&&g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6);
+ return (options.includeCarry===false||carryFits(g,e,p))&&(options.ignoreTrap||withinTrap(g,e,p))&&!g.blocked(p.x,p.y,e.radius)&&(e.bloodBat||g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6));
 }
 export function moveBody(g,e,dx,dy,options={}){
  const n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.12));
- const safe=p=>carryFits(g,e,p)&&withinTrap(g,e,p)&&!g.blocked(p.x,p.y,e.radius)&&g.units.every(t=>{
+ const safe=p=>carryFits(g,e,p)&&withinTrap(g,e,p)&&!g.blocked(p.x,p.y,e.radius)&&(e.bloodBat||g.units.every(t=>{
   if(!solid(g,e,t,options))return true;
   const before=distance(e,t),after=distance(p,t),gap=e.radius+t.radius+.006;
   return after>=gap-1e-6||before<gap&&after>before+1e-7;
- });
+ }));
  for(let i=0;i<n;i++){
   const x={x:e.x+dx/n,y:e.y};if(safe(x)){const from={x:e.x,y:e.y};e.x=x.x;shiftCarried(g,e,from,e);e.bodyMoved=true;}
   const y={x:e.x,y:e.y+dy/n};if(safe(y)){const from={x:e.x,y:e.y};e.y=y.y;shiftCarried(g,e,from,e);e.bodyMoved=true;}

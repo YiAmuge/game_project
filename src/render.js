@@ -1,3 +1,5 @@
+import{deploymentGhosts}from'./jamila.js';
+import{drawDeploymentGlow}from'./jamila-deployment.js';
 import{drawBloodBat}from'./arcana-vfx.js';
 import * as Infiltration from './infiltration.js';
 import{drawCampCreep,isCampCreep,campVisualHeight,drawStructure,structureVisualHeight}from'./world-art.js';
@@ -176,7 +178,7 @@ export class Renderer {
     else {c.fillStyle=def.color;c.fillRect(-.42,-1.8,.84,.8);c.fillStyle='#273642';c.fillRect(-.38,-1,.76,1);}
     c.restore();
     if(e.naturalHealing){this.text('+',e.x+.85,e.y-1.6+Math.sin(game.time*5)*.1,'#a4e9a1',.55);if(!this.billboardPass)this.circle(e.x,e.y,.8,null,'#a3d89766',.05);}
-    this.weapon(e,game);
+    this.weapon(e,game);drawDeploymentGlow(c,e,game);
     c.restore();
 
     if(e.player&&inBush)this.text(e.revealedUntil>game.time?'노출 중':'푸른연기 은닉',e.x,e.y+.8,'#a9d890',.32);
@@ -225,7 +227,7 @@ export class Renderer {
     }
     if(playing&&game.player.alive&&game.player.key==='hohenheim'&&game.player.state.hohenCharge)this.hohenheimChargePreview(game.player,game);
     targetingPreview(this,game);
-    if(!this.groundPass)for(const e of game.units.filter(e=>!['core','tower'].includes(e.kind)).sort((a,b)=>a.y-b.y))this.unit(e,game);
+    if(!this.groundPass)for(const e of [...game.units.filter(e=>!['core','tower'].includes(e.kind)),...deploymentGhosts(game)].sort((a,b)=>a.y-b.y))this.unit(e,game);
     if(!game.training)for(const b of BUSHES)this.bush(b,true);
     for(const fx of game.effects){
       if(fx.type==='number'&&!this.groundPass){c.save();c.globalAlpha=Math.max(0,fx.life/fx.maxLife);c.font='bold .53px Arial';c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=.085;c.strokeStyle='#05070c';c.strokeText(String(fx.text),fx.x,fx.y-2.5-(1-fx.life/fx.maxLife));c.fillStyle=fx.color;c.fillText(String(fx.text),fx.x,fx.y-2.5-(1-fx.life/fx.maxLife));c.restore();}

@@ -16,7 +16,7 @@ SCENES={
  'heath-ultimate-leap':('heathcliff',"const g=__moba.game,p=g.player;g.cast(p,'r',p);advance(.1);g.cast(p,'q',{x:47,y:20});advance(.3);"),
  'nos-idle':('nosferatu',"target(46);"),
  'nos-basic':('nosferatu',"const g=__moba.game,p=g.player,t=target(42.5);g.attack(p,t);advance(.1);"),
- 'nos-bats':('nosferatu',"const g=__moba.game,p=g.player,t=target(46);p.state.bloodFeast=1200;for(let i=0;i<4;i++){p.qCd=0;g.cast(p,'q',{x:42+i*.5,y:20+(i%2)});}advance(.2);"),
+ 'nos-bats':('nosferatu',"const g=__moba.game,p=g.player,t=target(46);p.state.bloodFeast=1200;for(let i=0;i<3;i++){p.qCd=0;g.cast(p,'q',{x:42+i*.5,y:20+(i%2)});}advance(.2);"),
  'nos-bloodfiend':('nosferatu',"const g=__moba.game,p=g.player,t=target(47);p.state.bloodFeast=500;p.hp=1234;g.cast(p,'r',{x:44,y:20});advance(.35);"),
 }
 async def main():

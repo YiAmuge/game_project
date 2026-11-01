@@ -747,3 +747,5 @@ body:not(.mobile-ui) .scoreboard td{padding-top:3px;padding-bottom:3px}
 /* The static fallback uses the same menu and is independent of the room server. */
 a.menu-action{text-decoration:none;cursor:pointer;color:inherit}
 .offline-link{display:block;text-align:center;color:#adc5d8;font-size:12px;padding:8px 4px;text-decoration:underline}
+
+#recall-choice{position:fixed;z-index:130;display:flex;gap:8px;width:240px;padding:8px;border:1px solid #7195a8;border-radius:8px;background:#0b1829f2;box-shadow:0 4px 24px #0009;pointer-events:none}#recall-choice>span{flex:1;padding:9px 4px;text-align:center;border:1px solid #4b6574;border-radius:5px;color:#cad6db}#recall-choice b{display:block;font-size:13px}#recall-choice small{display:block;font-size:10px;margin-top:5px}#recall-choice .selected{border-color:#f1d58b;background:#8e774b66;box-shadow:0 0 12px #ffdc7860}#recall-choice .unavailable{opacity:.45}.infiltration-description p{margin:6px 0!important;line-height:1.6!important}

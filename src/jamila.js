@@ -3,7 +3,7 @@ import {distance,direction} from './geometry.js';
 import {canOccupy} from './collision.js';
 import * as Infiltration from './infiltration.js';
 
-export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,idlePerRound:.12,idleReductionCap:1.2,reload:1.5,powerRatio:.55,shield:.015,shieldEvery:4,shieldRoundBonus:10,shieldCap:.075,shieldTime:3,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15};
+export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,idlePerRound:.12,idleReductionCap:1.2,reload:1.5,powerRatio:.55,shield:.015,shieldEvery:4,shieldRoundBonus:10,shieldCap:.075,shieldTime:3,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15,summonTime:.25,dropHeight:8,releaseTime:.35};
 export const isTrooper=e=>Boolean(e.lcaTrooper);
 export const army=(g,e)=>g.units.filter(t=>t.lcaTrooper&&t.owner===e.id&&t.alive&&t.until>g.time);
 export const commander=(g,e)=>e.lcaTrooper?g.units.find(t=>t.id===e.owner):e;
@@ -44,7 +44,7 @@ export function afterDamage(g,e,t,actual,proc,damageKind,absorbed){
  e.state.lcaTarget=t.id;
  if(t.alive&&t.hp>0)g.deal(e,t,(actual+absorbed)*JAMILA.bonusDamage,{rawPower:true,proc:false,campBonus:false,damageKind});
 }
-export function validate(g,e,slot){return !e.state.jamilaQ&&(slot!=='q'||!g.stat(e,'root')&&!g.stat(e,'captured')&&!g.stat(e,'netCapture'));}
+export function validate(g,e,slot){return !e.state.jamilaQ&&!e.state.jamilaSummon&&(slot!=='q'||!g.stat(e,'root')&&!g.stat(e,'captured')&&!g.stat(e,'netCapture'));}
 function endQ(e){delete e.state.jamilaQ;}
 function retreat(g,e,q){
  if(e.state.jamilaQ!==q||!e.alive)return;
@@ -71,13 +71,37 @@ function spawnPoint(g,e,index){
  for(let r=.65;r<=3;r+=.25)for(let i=0;i<16;i++){const a=i*Math.PI/8+index*Math.PI,p={x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r};if(canOccupy(g,dummy,p)&&g.clearLine(e,p,.38))return p;}
  return {x:e.x,y:e.y};
 }
-export function ultimate(g,e,{infiltrationBonus=false}={}){
+function deployArmy(g,e,{infiltrationBonus=false}={}){
  for(const u of army(g,e)){u.alive=false;u.hp=0;}
  const snapshot={maxHp:e.maxHp*.45,armor:g.armor(e)*.45,power:g.combatPower(e)*.2,damagePower:RULES.power[1]*.9*g.powerScale(e)*(1-g.powerWeak(e))*.2,reload:g.reloadMultiplier(e),speed:g.speed(e)},duration=infiltrationBonus?JAMILA.infiltrationDuration:JAMILA.duration;
  for(let i=0;i<2;i++){
   const u=g.entity({kind:'trooper',key:'jamila',name:'LCA 우제트 전투원',lcaTrooper:true,owner:e.id,formation:i,team:e.team,...spawnPoint(g,e,i),maxHp:snapshot.maxHp,armor:snapshot.armor,snapshot:{...snapshot},until:g.time+duration,range:JAMILA.range,radius:.38,ammo:16,level:e.level,path:[],facing:e.facing||0,attackSerial:0,attackAt:-99,lastAttackAt:-99,lastDamageAt:-99,state:{lcaShotAt:g.time},buffs:{},buffHistory:{},buffPotency:{},visuals:{},supporters:{},contributors:{},augments:[],upgrades:{power:0,health:0,speed:0,haste:0,reload:0},reloadProgress:0});
-  g.effects.push({type:'ring',x:u.x,y:u.y,r:.9,color:'#e5c75d',life:.45,maxLife:.45});
+  u.visuals.deployment={at:g.time,until:g.time+JAMILA.releaseTime};g.effects.push({type:'ring',x:u.x,y:u.y,r:.9,color:'#e5c75d',life:.45,maxLife:.45});
  }e.state.udjatUntil=g.time+duration;return true;
+}
+export function ultimate(g,e,{infiltrationBonus=false,point}={}){
+ if(e.state.jamilaSummon)return false;
+ const at={x:point?.x??e.x,y:point?.y??e.y},ghostOwner={...e,...at};
+ e.state.jamilaSummon={at:g.time,readyAt:g.time+JAMILA.summonTime,point:at,facing:e.facing||0,infiltrationBonus,cooldown:e.rCd,positions:[spawnPoint(g,ghostOwner,0),spawnPoint(g,ghostOwner,1)]};
+ e.channelUntil=Math.max(e.channelUntil||0,g.time+JAMILA.summonTime);return true;
+}
+export function tickDeployment(g,e){
+ const cast=e.state?.jamilaSummon;if(!cast||!e.alive||g.time+1e-8<cast.readyAt)return false;
+ if(cast.infiltrationBonus&&!Infiltration.arrive(g,e,cast.point)){delete e.state.jamilaSummon;e.rCd=0;e.channelUntil=0;if(e.state.infiltration)e.state.infiltration.phase='selecting';return false;}
+ delete e.state.jamilaSummon;e.rCd=Math.max(0,cast.cooldown-Math.max(0,g.time-cast.readyAt));e.channelUntil=Math.min(e.channelUntil||0,g.time);
+ if(cast.infiltrationBonus)e.visuals.deployment={at:g.time,until:g.time+JAMILA.releaseTime};
+ const facing=e.facing;e.facing=cast.facing;try{return deployArmy(g,e,{infiltrationBonus:cast.infiltrationBonus});}finally{e.facing=facing;}
+}
+// Render-only actors: no collision, damage, lifetime or squad bonus before landing.
+export function deploymentGhosts(g){
+ const ghosts=[];
+ for(const owner of g.champions()){
+  const s=owner.alive&&owner.state.jamilaSummon;if(!s||g.time>=s.readyAt)continue;
+  const progress=Math.max(0,Math.min(1,(g.time-s.at)/JAMILA.summonTime)),lift=JAMILA.dropHeight*(1-progress)**1.35,base={...owner,player:false,state:{},status:{},buffs:{},shields:[],visuals:{},attackAt:-99,untargetableUntil:0,deploymentGhost:true,dropProgress:progress,deploymentLift:lift,facing:s.facing};
+  if(s.infiltrationBonus)ghosts.push({...base,...s.point,id:-owner.id*10-1});
+  for(const[i,point]of s.positions.entries())ghosts.push({...base,...point,id:-owner.id*10-2-i,kind:'trooper',lcaTrooper:true,owner:owner.id});
+ }
+ return ghosts;
 }
 export function cast(g,e,slot,p,d,options){if(e.key!=='jamila')return false;return slot==='q'?tactical(g,e,d):ultimate(g,e,options);}
 export function tick(g,e,dt){
@@ -106,7 +130,7 @@ export function tickTrooper(g,e,dt,{moving=false}={}){
 }
 export const infiltrationUltimate=(g,e,slot)=>e.key==='jamila'&&slot==='r'&&Infiltration.absent(e)&&e.augments.includes('highRisk');
 export function deployFromInfiltration(g,e,slot){
- if(!infiltrationUltimate(g,e,slot)||!e.alive||e.rCd>0||g.winner!==null||!Infiltration.valid(g,e,e.state.infiltration.point))return false;
- const point={...e.state.infiltration.point};Infiltration.arrive(g,e,point);
- return g.cast(e,'r',point,{infiltrationBonus:true});
+ if(!infiltrationUltimate(g,e,slot)||!e.alive||e.rCd>0||e.state.jamilaSummon||g.winner!==null||!Infiltration.valid(g,e,e.state.infiltration.point))return false;
+ const point={...e.state.infiltration.point};e.rCd=g.cooldown(e,'r');ultimate(g,e,{infiltrationBonus:true,point});
+ e.state.infiltration.phase='deploying';e.state.infiltration.until=Infinity;g.emitSound('ultimate',e,{slot:'r'});return true;
 }

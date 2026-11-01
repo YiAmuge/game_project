@@ -172,11 +172,11 @@ export class Game {
     for(let n=len;n>=0;n-=.08){const p={x:clamp(e.x+d.x*n,b.x+e.radius,b.x+b.w-e.radius),y:clamp(e.y+d.y*n,b.y+e.radius,b.y+b.h-e.radius)};if(canOccupy(this,e,p,{phaseEnemies:false}))return p;}
     return {x:e.x,y:e.y};
   }
-  recall(e){
+  recall(e,{mode='auto'}={}){
     if(e.state.kromerGrab)return false;
     if(e.recall||Infiltration.absent(e)){this.cancelRecall(e);return true;}
     if(e.kind!=='champion'||!e.alive||e.state.posthumous||e.motion||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||this.winner!==null)return false;
-    if(Infiltration.replacesRecall(this,e))return Infiltration.begin(this,e);
+    if(mode==='infiltration'||mode==='auto'&&Infiltration.replacesRecall(this,e)&&(e.state.infiltrationReady||0)<=this.time)return Infiltration.begin(this,e);
     if(e.state.chargeAt!==undefined){delete e.state.chargeAt;delete e.status.slow;}
     Yan.cancelCharge(e);Hohenheim.cancelCharge(e);e.recall={startedAt:this.time,until:this.time+RULES.recallTime*(this.buff(e,'bossBuff')?BossBuff.BOSS_BUFF.recall:1),x:e.x,y:e.y};
     if(e.player){this.input.fire=false;this.input.x=0;this.input.y=0;}return true;
@@ -525,6 +525,7 @@ export class Game {
     if(e.aiThinking&&point?.kind&&!BotAI.safeTowerTarget(this,e,point))return false;
     if(!e.alive||this.winner!==null)return false;
     if(this.stat(e,'taunt')&&!options.taunted)return false;
+    if(options.queenAim&&this.mobileInput)return Queen.lockWeakest(this,e);
     if(this.training&&e===this.player)Training.refreshOptions(this);
     if(e.key==='kim'&&carried(this,e))return false;
     if(e.state.ahabUlt||e.key==='heathcliff'&&this.buff(e,'heathUlt')||this.stat(e,'disarm')||e.state.donCharge||e.motion||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||e.attackCd>0)return false;
@@ -795,13 +796,13 @@ export class Game {
       if(e.trainingDummy){Training.tickDummy(this,e,dt);if(e.alive){Ppui.tick(this,e);Kromer.tick(this,e,dt);CampBuffs.tick(this,e);}continue;}
       if(e.kind==='champion') {
         this.syncDesire(e);
-        e.gold+=dt;this.award(e,(e.key==='faust'?9:RULES.passiveXpPerSecond)*dt,0,{passive:true});e.qCd=Math.max(0,e.qCd-dt*(e.key==='jamila'&&e.hp<e.maxHp*.5?1.5:1));e.rCd=Math.max(0,e.rCd-dt);
+        e.gold+=dt;this.award(e,(e.key==='faust'?9:RULES.passiveXpPerSecond)*dt,0,{passive:true});e.qCd=Math.max(0,e.qCd-dt*(e.key==='jamila'&&e.hp<e.maxHp*.5?1.5:1));e.rCd=Math.max(0,e.rCd-(e.state.jamilaSummon?0:dt));
         if(!e.alive&&this.time>=e.respawnAt){e.alive=true;e.hp=e.maxHp;Object.assign(e,this.spawnPoint(e));e.ammo=this.ammoCap(e);e.reloadProgress=0;e.retreat=false;e.path=[];e.laneEntered=false;e.lastAttackAt=this.time-3;e.lastDamageAt=this.time-3;e.lastCombat=this.time-3;
           if(e.state.executedReturn){Fountain.returnHaste(this,e,'executedHaste',3);delete e.state.executedReturn;}
           if(e.state.fastReturn){Fountain.returnHaste(this,e,'alisaHaste',5);delete e.state.fastReturn;}Skills.onRespawn(this,e);
         }
       } else if(e.kind==='neutral'&&!e.alive&&this.time>=e.respawnAt&&!(e.camp==='central'&&this.bossSpawned)){e.alive=true;e.hp=e.maxHp;e.x=e.home.x;e.y=e.home.y;e.aggro=null;e.hostile=false;e.returning=false;CreepPatterns.cancel(e);e.swingUntil=0;delete e.outsideSince;delete e.patternReady;if(e.camp==='boss')BossPatterns.cancel(e);delete e.burn;e.status={};e.shields=[];e.lastCombat=-99;}
-      if(!e.alive)continue;Fountain.tickReturnHaste(this,e);if(Infiltration.absent(e)){Infiltration.tick(this,e,dt);if(Infiltration.absent(e))continue;}Fountain.tick(this,e,dt);if(!e.alive)continue;
+      if(!e.alive)continue;Jamila.tickDeployment(this,e);Fountain.tickReturnHaste(this,e);if(Infiltration.absent(e)){Infiltration.tick(this,e,dt);if(Infiltration.absent(e))continue;}Fountain.tick(this,e,dt);if(!e.alive)continue;
       if(e.bloodBat){Nosferatu.tickBat(this,e,dt);continue;}
       if(e.kind==='summon'){Yan.tickHand(this,e,dt);continue;}
       if(e.lcaTrooper){const moved=Boolean(e.motion);this.updateMotion(e,dt);Jamila.tickTrooper(this,e,dt,{moving:moved||Boolean(e.motion)});continue;}

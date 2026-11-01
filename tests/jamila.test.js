@@ -58,17 +58,17 @@ test('low-health tactical cooldown runs fifty percent faster and adjusts immedia
  const {g,p}=arena();p.qCd=6;p.hp=p.maxHp*.49;run(g,1);near(p.qCd,4.5);p.hp=p.maxHp;run(g,1);near(p.qCd,3.5);
 });
 test('ultimate snapshots two targetable soldiers, keeps cooldown running and expires both after ten seconds',()=>{
- const {g,p}=arena(),baseSpeed=g.speed(p);assert.ok(g.cast(p,'r',p));const units=Jamila.army(g,p);assert.equal(units.length,2);
+ const {g,p}=arena(),baseSpeed=g.speed(p);assert.ok(g.cast(p,'r',p));assert.equal(Jamila.army(g,p).length,0);run(g,.25);const units=Jamila.army(g,p);assert.equal(units.length,2);
  for(const u of units){near(u.maxHp,p.maxHp*.45);near(g.armor(u),40*.45);near(g.combatPower(u),g.combatPower(p)*.2);near(g.ammoCap(u),16);assert.ok(g.hostile(enemy(g,70),u));near(g.speed(u),baseSpeed*1.1);}
  near(g.speed(p),baseSpeed*1.1);near(g.reloadMultiplier(p),1);const hp=units[0].maxHp,armor=g.armor(units[0]);p.upgrades.health=3;p.upgrades.power=3;p.armor=90;g.refreshEquipment(p);near(units[0].maxHp,hp);near(g.armor(units[0]),armor);
  run(g,1);near(p.rCd,74);g.kill(units[0],p);near(Jamila.squadBonus(g,p),.05);run(g,9.02);assert.equal(Jamila.army(g,p).length,0);near(p.rCd,64.975,.02);
 });
 test('soldiers receive half of newly acquired shields and never trigger the extra damage themselves',()=>{
- const {g,p}=arena(),e=enemy(g);g.cast(p,'r',p);const [u]=Jamila.army(g,p);g.deal(p,e,10,{damageKind:'basic'});near(g.shield(u),0);
+ const {g,p}=arena(),e=enemy(g);g.cast(p,'r',p);run(g,.25);const [u]=Jamila.army(g,p);g.deal(p,e,10,{damageKind:'basic'});near(g.shield(u),0);
  g.addShield(p,p.maxHp*.2,'test',5);const before=e.hp,shield=g.shield(p);g.deal(u,e,15,{damageKind:'basic'});near(before-e.hp,15*(1+(u.snapshot.damagePower*1.1-1)*.55));near(g.shield(p),shield);
 });
 test('soldiers prefer the commanded enemy over a nearer enemy and inherit no extra-magazine bonuses',()=>{
- const {g,p}=arena(),a=enemy(g,44,26),b=enemy(g,42,24);p.augments=['magazine2'];g.cast(p,'r',p);g.deal(p,a,1,{damageKind:'basic'});run(g,.01);
+ const {g,p}=arena(),a=enemy(g,44,26),b=enemy(g,42,24);p.augments=['magazine2'];g.cast(p,'r',p);run(g,.25);g.deal(p,a,1,{damageKind:'basic'});run(g,.01);
  for(const u of Jamila.army(g,p)){assert.equal(u.targetId,a.id);near(g.ammoCap(u),16);}assert.ok(b.alive);
 });
 test('exclusive augment prerequisites and descriptions apply only to the matching champion',()=>{
@@ -78,26 +78,26 @@ test('exclusive augment prerequisites and descriptions apply only to the matchin
 test('Kim exclusive shield pulses every two seconds, caps at twelve percent and expires without renewal',()=>{
  const {g,p}=arena('kim');g.buyAugment(p,'power15');run(g,2);near(g.shield(p),p.maxHp*.01);run(g,24);near(g.shield(p),p.maxHp*.12);p.augments=[];run(g,5.01);near(g.shield(p),0);
 });
-test('Jamila infiltration covers forty-five and can deploy instantly with a fifteen-second army',()=>{
+test('Jamila infiltration covers forty-five and deploys after a quarter second with a fifteen-second army',()=>{
  const {g,p}=arena();g.buyAugment(p,'highRisk');assert.ok(g.recall(p));run(g,1.76);assert.ok(Infiltration.selecting(p));near(Infiltration.range(g,p),45);
- p.state.infiltration.point={x:84,y:25};assert.ok(g.cast(p,'r',p));near(p.x,84);assert.equal(Infiltration.absent(p),false);near(p.rCd,75);near(p.state.infiltrationReady,75);
+ p.state.infiltration.point={x:84,y:25};assert.ok(g.cast(p,'r',p));near(p.x,40);assert.ok(Infiltration.absent(p));run(g,.25);near(p.x,84);assert.equal(Infiltration.absent(p),false);near(p.rCd,75);near(p.state.infiltrationReady,75);
  for(const u of Jamila.army(g,p))near(u.until-g.time,15);
 });
 test('infiltration ultimate refuses an invalid landing and preserves both cooldowns and absence',()=>{
  const {g,p}=arena();g.buyAugment(p,'highRisk');g.recall(p);run(g,1.76);p.state.infiltration.point={x:100,y:25};assert.equal(g.cast(p,'r',p),false);near(p.rCd,0);assert.ok(Infiltration.absent(p));
 });
 test('soldiers are affected by disarm and forced movement, without a hidden crowd-control immunity',()=>{
- const {g,p}=arena(),t=enemy(g,45);g.cast(p,'r',p);const [u]=Jamila.army(g,p);g.status(u,'disarm',1,2,t);run(g,.1);assert.equal(u.ammo,16);
+ const {g,p}=arena(),t=enemy(g,45);g.cast(p,'r',p);run(g,.25);const [u]=Jamila.army(g,p);u.ammo=16;g.status(u,'disarm',1,2,t);run(g,.1);assert.equal(u.ammo,16);
  const x=u.x;assert.ok(g.startMotion(u,{x:-1,y:0},1,{kind:'knock',source:t}));run(g,.1);assert.ok(u.x<x-.3);assert.equal(u.ammo,16);
 });
 test('soldier kills credit the commander while killing a soldier yields no champion or minion bounty',()=>{
- const {g,p}=arena(),t=enemy(g,45);g.cast(p,'r',p);const [u]=Jamila.army(g,p);t.hp=1;const dealt=p.totalDamage;g.deal(u,t,100,{fixed:true});near(p.totalDamage-dealt,1);near(p.lastCombat,g.time);assert.equal(p.kills,1);assert.equal(g.kills[0],1);
+ const {g,p}=arena(),t=enemy(g,45);g.cast(p,'r',p);run(g,.25);const [u]=Jamila.army(g,p);t.hp=1;const dealt=p.totalDamage;g.deal(u,t,100,{fixed:true});near(p.totalDamage-dealt,1);near(p.lastCombat,g.time);assert.equal(p.kills,1);assert.equal(g.kills[0],1);
  const killer=enemy(g,60),xp=killer.xp,gold=killer.gold;g.kill(u,killer);near(killer.xp,xp);near(killer.gold,gold);assert.equal(killer.kills,0);
 });
 test('an unavailable ultimate cannot exit infiltration or extend the army',()=>{
  const {g,p}=arena();g.buyAugment(p,'highRisk');g.recall(p);run(g,1.76);p.rCd=1;assert.equal(g.cast(p,'r',p),false);assert.ok(Infiltration.absent(p));near(p.rCd,1);assert.equal(Jamila.army(g,p).length,0);
 });
 test('taunt overrides the command target and Yan lock slows soldiers normally',()=>{
- const {g,p}=arena(),priority=enemy(g,45,24),taunter=enemy(g,45,26);g.cast(p,'r',p);const [u]=Jamila.army(g,p);p.state.lcaTarget=priority.id;
+ const {g,p}=arena(),priority=enemy(g,45,24),taunter=enemy(g,45,26);g.cast(p,'r',p);run(g,.25);const [u]=Jamila.army(g,p);p.state.lcaTarget=priority.id;
  const speed=g.speed(u);g.status(u,'yanLock',.2,2,taunter);near(g.speed(u),speed*.8);g.status(u,'taunt',1,1,taunter);u.state.tauntedBy=taunter.id;run(g,.01);assert.equal(u.targetId,taunter.id);
 });

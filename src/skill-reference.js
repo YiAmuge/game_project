@@ -52,7 +52,7 @@ function basicRanges(key,g,e,transformed){
 }
 function skillRanges(key,index,g,e,transformed,variant){
  if(key==='queen'&&index===3)return ARCANA_STAGES.map((s,i)=>row(i+'단계','사거리 '+s.range+' · 폭 '+s.width));
- if(key==='nosferatu'&&index===2)return[row('소환','사거리 6.8 · 최대 4마리'),row('박쥐 활동','주인 중심 거리 8 · 공격 사거리 2.5')];
+ if(key==='nosferatu'&&index===2)return[row('소환','사거리 6.8 · 최대 3마리'),row('박쥐 활동','주인 중심 거리 8 · 공격 사거리 2.5')];
  if(index===1)return basicRanges(key,g,e,transformed);
  if(index===0){
   if(key==='ppui')return[row('보호 범위','자신 중심 반경 7의 아군 챔피언')];
@@ -104,7 +104,7 @@ function cooldownLabel(key,index,g,e,transformed,variant){
   return '탄창 '+g.ammoCap(e)+'개 · 1개 장전 '+number(g.reloadInterval(e))+'초 · 공격 간격 '+number(g.attackInterval(e))+'초';
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return '변신 재사용 대기 없음';
- if(key==='nosferatu'&&index===2)return '쿨타임 '+number(g.cooldown(e,'q'))+'초 · 2.5초 내 최대 4회 재사용';
+ if(key==='nosferatu'&&index===2)return '쿨타임 '+number(g.cooldown(e,'q'))+'초 · 2.5초 내 최대 2회 재사용';
  const charges=index===2&&(key==='ppui'||key==='nelly'||key==='ryoshu'||key==='sora'&&transformed)?2:1;
  return (charges>1?'충전당 ':'쿨타임 ')+number(key==='myo'&&index===2?.15:g.cooldown(e,index===2?'q':'r'))+'초'+(charges>1?' · 최대 '+charges+'회 충전':'');
 }

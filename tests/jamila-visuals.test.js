@@ -40,7 +40,7 @@ test('tactical uses the shared swing pose, returns to rifle after the cut and di
  e.state.jamilaQ.phase='retreat';assert.equal(jamilaWeaponPose(g,e).asset,'jamilaRifle');
 });
 test('troopers retain champion proportions and grounded feet without a second weapon',()=>{
- const g=new Game('jamila','bottom',{mode:'training'});g.cast(g.player,'r',g.player);const u=g.units.find(e=>e.lcaTrooper);
+ const g=new Game('jamila','bottom',{mode:'training'});g.cast(g.player,'r',g.player);g.step(.25);const u=g.units.find(e=>e.lcaTrooper);
  assert.equal(visualForm(g,u),'jamilaTrooper');assert.equal(jamilaWeaponPose(g,u).asset,'jamilaRifle');near(feetOffset(u),feetOffset(g.player));
  const a=equipmentPose(g,u);u.y+=2;const b=equipmentPose(g,u);near(b.right.y-a.right.y,2);
  for(const angle of [-Math.PI,-2,-1,0,1,2,Math.PI])assert.ok(Math.abs(weaponOrientation(angle).angle)<=Math.PI/2+1e-8);

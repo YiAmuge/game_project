@@ -1,3 +1,4 @@
+import{deploymentGhosts}from'./jamila.js';
 import{isCampCreep,campVisualHeight,structureVisualHeight}from'./world-art.js';
 import{drawCombatNumbers}from'./combat-text.js';
 import{endingCore}from'./match-presentation.js';
@@ -183,7 +184,7 @@ export class Renderer25D {
   // Reuse atlas draws directly instead of uploading a canvas texture per entity.
   this.vfx.prepare(this.camera,r.width,r.height);
   const old=r.billboardPass,oldVfx=r.skillVfx;r.billboardPass=true;r.skillVfx=this.vfx;
-  const actors=[...this.units.values()].map(a=>({e:a.entity,tree:false}));for(const z of game.zones)if(z.kind==='desireTree'&&z.until>game.time)actors.push({e:z,tree:true});
+  const actors=[...this.units.values()].map(a=>({e:a.entity,tree:false}));for(const e of deploymentGhosts(game))actors.push({e,tree:false});for(const z of game.zones)if(z.kind==='desireTree'&&z.until>game.time)actors.push({e:z,tree:true});
   try{for(const {e,tree} of actors.sort((a,b)=>a.e.y-b.e.y||(a.e.id||0)-(b.e.id||0))){
    this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>['tower','core'].includes(e.kind)?r.structure(e,game):r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
   }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}

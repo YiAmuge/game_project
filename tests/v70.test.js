@@ -31,12 +31,12 @@ test('remaining shield round counts and idle delays follow the actual magazine',
  p.ammo=15;p.state.lcaShotAt=g.time;run(g,1.79);assert.equal(Jamila.reloading(p),false);run(g,.02);assert.ok(Jamila.reloading(p));run(g,1.5);assert.equal(p.ammo,16);
 });
 test('ultimate shares only newly gained shields, preserves separate durations, and does not copy old shields on summon',()=>{
- const{g,p}=arena();g.addShield(p,100,'before',8);g.cast(p,'r',p);const[u,v]=Jamila.army(g,p);near(g.shield(u),0);
+ const{g,p}=arena();g.addShield(p,100,'before',8);g.cast(p,'r',p);run(g,.25);const[u,v]=Jamila.army(g,p);near(g.shield(u),0);
  g.addShield(p,200,'a',3);near(g.shield(u),100);g.addShield(p,200,'a',3);near(g.shield(u),100);g.addShield(p,300,'a',3);near(g.shield(u),150);g.addShield(p,100,'b',6);near(g.shield(u),200);near(g.shield(v),200);
  run(g,3.01);near(g.shield(u),50);g.addShield(p,200,'b',6);near(g.shield(u),100);run(g,6.01);near(g.shield(u),0);
 });
 test('squad power and movement affect commander and actual soldier damage while reload stays at snapshot speed',()=>{
- const{g,p}=arena(),power=g.combatPower(p),speed=g.speed(p),reload=g.reloadMultiplier(p),t=hero(g);g.cast(p,'r',p);const[u,v]=Jamila.army(g,p);
+ const{g,p}=arena(),power=g.combatPower(p),speed=g.speed(p),reload=g.reloadMultiplier(p),t=hero(g);g.cast(p,'r',p);run(g,.25);const[u,v]=Jamila.army(g,p);
  near(g.combatPower(p),power*1.1);near(g.combatPower(u),power*.2*1.1);near(g.speed(p),speed*1.1);near(g.reloadMultiplier(p),reload);near(g.reloadMultiplier(u),reload);
  const dealt=g.deal(u,t,15,{damageKind:'basic'});near(dealt,15*(1+(u.snapshot.damagePower*1.1-1)*.55));v.alive=false;near(g.combatPower(p),power*1.05);near(g.combatPower(u),power*.2*1.05);near(g.deal(u,t,15,{damageKind:'basic'}),15*(1+(u.snapshot.damagePower*1.05-1)*.55));
 });

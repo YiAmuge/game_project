@@ -25,7 +25,7 @@ export function makeOnlineGame(match,memberId){
 export function cancelCharge(g,e){Yan.cancelCharge(e);Hohenheim.cancelCharge(e);cancelHeath(e);Don.cancel(g,e);}
 export function releaseBasic(g,e,p){return e.key==='hohenheim'?Hohenheim.release(g,e,p):Yan.release(g,e,p);}
 export function releaseTactical(g,e,p){return e.key==='don'?Don.release(g,e,p):releaseHeath(g,e,p);}
-const options=value=>({...(typeof value?.direction==='string'&&['left','right','up','down'].includes(value.direction)?{direction:value.direction}:{}),...(value?.manual===true?{manual:true}:{}),...(value?.targetKind&&['champion','minion','building','creep'].includes(value.targetKind)?{targetKind:value.targetKind}:{})});
+const options=value=>({...(typeof value?.direction==='string'&&['left','right','up','down'].includes(value.direction)?{direction:value.direction}:{}),...(value?.manual===true?{manual:true}:{}),...(value?.queenAim===true?{queenAim:true}:{}),...(value?.targetKind&&['champion','minion','building','creep'].includes(value.targetKind)?{targetKind:value.targetKind}:{})});
 export function executeCommand(g,e,p){
  if(!e||!p||!g.controllers?.get(e.id)?.connected||g.winner!==null||g.presentation?.type==='intro')return false;
  if(p.point&&!validPoint(p.point))return false;
@@ -37,7 +37,7 @@ export function executeCommand(g,e,p){
    case'releaseBasic':return releaseBasic(g,e,point);
    case'releaseTactical':return releaseTactical(g,e,point);
    case'cancelCharge':cancelCharge(g,e);return true;
-   case'recall':return g.recall(e);
+   case'recall':return g.recall(e,{mode:['auto','recall','infiltration'].includes(p.mode)?p.mode:'auto'});
    case'cancelRecall':g.cancelRecall(e);return true;
    case'infiltrate':return g.infiltrate(e);
    case'buy':return g.buy(e,p.key);
@@ -53,7 +53,7 @@ export class OnlineMatch{
  constructor(g,online,memberId){this.game=g;this.online=online;this.memberId=memberId;this.host=online.isHost;this.writers=new Map();this.clock=0;this.lastSnapshot=0;this.lastInput=0;this.lastKeepAlive=0;
   if(!this.host){g.netCommand=value=>this.command(value);for(const method of ['attack','cast','recall','cancelRecall','infiltrate','buy','buyAugment','sellAugment'])g[method]=(e,...args)=>{
    if(e!==g.player)return false;let value={action:method};
-   if(method==='attack')value={...value,point:args[0],options:args[1]};else if(method==='cast')value={...value,slot:args[0],point:args[1],options:args[2]};else if(['buy','buyAugment','sellAugment'].includes(method))value.key=args[0];
+   if(method==='attack')value={...value,point:args[0],options:args[1]};else if(method==='cast')value={...value,slot:args[0],point:args[1],options:args[2]};else if(method==='recall')value.mode=args[0]?.mode;else if(['buy','buyAugment','sellAugment'].includes(method))value.key=args[0];
    return this.command(value);
   };g.sendPing=(kind,point,choice)=>this.command({action:'ping',kind,point,choice});}
  }

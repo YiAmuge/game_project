@@ -37,6 +37,7 @@ export function arrive(g,e,point=e.state?.infiltration?.point){
 }
 export function cancel(g,e){
  const cast=e.state?.infiltration;if(!cast&&!e.recall?.infiltration)return false;
+ if(e.state.jamilaSummon?.infiltrationBonus){delete e.state.jamilaSummon;e.rCd=0;e.channelUntil=Math.min(e.channelUntil||0,g.time);}
  if(cast){Object.assign(e,cast.origin);delete e.state.infiltration;settleBody(g,e,cast.origin);}
  delete e.recall;e.state.infiltrationReady=g.time+INFILTRATION.cancelCooldown;return true;
 }
