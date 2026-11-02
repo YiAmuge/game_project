@@ -1,6 +1,6 @@
 import{WeaponSwings}from'./weapon-swings.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-// One sampled weapon whoosh; original synthesized impacts and other cues.
+// Sampled weapon movement and a single pre-mixed contact sound.
 export class SoundSynth{
  constructor(context,destination){this.context=context;this.destination=destination;this.swings=new WeaponSwings(context);this.seed=6101;this.buffers={};const length=Math.ceil(context.sampleRate*2.5),white=context.createBuffer(1,length,context.sampleRate),brown=context.createBuffer(1,length,context.sampleRate),pink=context.createBuffer(1,length,context.sampleRate),w=white.getChannelData(0),b=brown.getChannelData(0),p=pink.getChannelData(0);let low=0,mid=0;for(let i=0;i<length;i++){const n=this.random()*2-1;w[i]=n;low=(low+n*.08)/1.04;mid=mid*.85+n*.15;b[i]=clamp(low*2.8,-1,1);p[i]=clamp(n*.25+mid*.9+low*.8,-1,1);}this.buffers={white,brown,pink};
   const real=new Float32Array(18),imag=new Float32Array(18);for(let i=1;i<imag.length;i++)imag[i]=Math.pow(i,-.82)*(i<4?.65:1.15)*Math.exp(-i/13);this.brassWave=context.createPeriodicWave(real,imag,{disableNormalization:false});
@@ -42,8 +42,7 @@ export class SoundSynth{
  }
  explosion(out,v,{shotgun=false}={}){this.noise(out,{d:shotgun?.42:.85,v:.65,color:'brown',freq:shotgun?2300:1500,end:160});this.noise(out,{d:.07,v:.6,filter:'highpass',freq:2100,attack:.001});this.tone(out,{freq:shotgun?110:86,end:shotgun?38:26,d:shotgun?.3:.65,v:.42,type:'sine'});this.noise(out,{d:.35,v:.23,color:'pink',filter:'bandpass',freq:800,end:240,delay:.07});if(v.element==='stone')for(let i=0;i<4;i++)this.noise(out,{d:.065,v:.15,filter:'bandpass',freq:350+i*330,q:3,delay:.08+i*.06});else this.element(out,'fire',.35,v.variant);}
  render(out,v,event={}){
-  // Weapon movement uses one recording; impacts keep the original synthesis.
-  // Keep the whoosh clear of additional weapon or elemental layers.
+  // Each movement/contact event plays one recording without extra synth layers.
   if(this.swings.play(out,v))return;
   if(v.cue==='impale'||v.cue==='nailBreak'){const impale=v.cue==='impale';this.noise(out,{d:.055,v:.44,filter:'highpass',freq:4100,end:1700});this.noise(out,{d:impale?.16:.11,v:.35,color:'pink',filter:'bandpass',freq:1300,end:220,q:1.5});this.thud(out,impale?1.7:1.4,.75,1.1);this.metal(out,impale?760:2100,.045,.23,.018);this.tone(out,{freq:impale?142:205,end:42,d:.16,v:.13,type:'triangle'});this.element(out,'blood',.9,v.variant);}
   else if(v.cue==='weapon'||v.cue==='impact'){this.weapon(out,v,v.cue==='impact');if(!['metal','mirror'].includes(v.element)||v.family!=='glass')this.element(out,v.element,v.cue==='impact'?.5:.65,v.variant);}

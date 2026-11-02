@@ -1,6 +1,8 @@
-// One user-supplied whoosh for weapon movement. Hits use the original synthesizer.
+// Shared whoosh, base-form Yan greatsword and one pre-mixed impact recording.
 export const SWING_SAMPLES=[
  {id:'swing',file:'floraphonic-swing-whoosh-weapon-3-189823.mp3',start:.03,end:.235},
+ {id:'yanGreatsword',file:'daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3',start:.04,end:.98},
+ {id:'impactMix',file:'mixed-impact.wav',mime:'audio/wav',start:0,end:.455},
 ];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 // Pitch in semitones, envelope in seconds, then start/peak/end playback speed.
@@ -17,15 +19,21 @@ const families={
 };
 const physicalCasts=new Set(['knife','katana','blade','axe','greatsword','scythe','glaive','claw','spear','hammer','club','mace','branch','chain','shield','punch','organic','drill','needle','nail','cloth']);
 export function swingProfile(voice){
- const base=families[voice.family];if(!base||voice.cue!=='weapon'&&!(voice.cue==='cast'&&physicalCasts.has(voice.family)))return null;
+ const yan=voice.key==='yan'&&voice.form==='base'&&voice.family==='greatsword';
+ const base=yan?[-1,.40,[1.02,1.40,.92]]:families[voice.family];if(!base||voice.cue!=='weapon'&&!(voice.cue==='cast'&&physicalCasts.has(voice.family)))return null;
  const variant=((Math.trunc(voice.variant)||0)%4+4)%4,preparing=voice.cue==='cast',weight=voice.weight||1;
  return {
-  id:'swing',pitch:base[0]+[-.45,.25,-.15,.55][variant],
+  id:yan?'yanGreatsword':'swing',pitch:base[0]+[-.45,.25,-.15,.55][variant],
   duration:base[1]*(preparing?.8:1)*(1+[0,.04,-.03,.02][variant]),
   rates:base[2].map(n=>n),offset:0,
   gain:(preparing?.50:.76)*clamp(.85+weight*.15,.85,1.12),
   cutoff:base[0]<0?7200:11500,
  };
+}
+export function impactProfile(voice){
+ if(voice.cue!=='impact')return null;
+ const heavy=['axe','greatsword','scythe','hammer','club','mace','cannon'].includes(voice.family),light=['knife','katana','needle','nail'].includes(voice.family),variant=((Math.trunc(voice.variant)||0)%4+4)%4;
+ return {id:'impactMix',pitch:(heavy?-3:light?1:0)+[-.45,.25,-.15,.55][variant],duration:(heavy?.22:light?.13:.17)*(1+[0,.04,-.03,.02][variant]),rates:heavy?[.85,1.25,.80]:light?[1.10,1.60,1]:[1,1.40,.90],offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12),cutoff:heavy?7400:10000};
 }
 async function loadRecording(spec){
  const inline=globalThis.document?.getElementById('weapon-swing-audio');
@@ -57,7 +65,7 @@ export class WeaponSwings{
   this.buffers=cache.buffers;this.failures=cache.failures;this.ready=cache.ready;
  }
  play(out,voice){
-  const profile=swingProfile(voice),buffer=profile&&this.buffers.get(profile.id);if(!buffer)return false;
+  const profile=impactProfile(voice)||swingProfile(voice),buffer=profile&&this.buffers.get(profile.id);if(!buffer)return false;
   const c=this.context,t=c.currentTime,source=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain(),nodes=[source,filter,gain];
   const pitchRate=2**(profile.pitch/12),duration=Math.min(profile.duration,(buffer.duration-profile.offset)/Math.max(...profile.rates)/pitchRate*.96);
   if(duration<=.015){nodes.forEach(n=>n.disconnect());return false;}

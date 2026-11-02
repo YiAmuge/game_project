@@ -44,7 +44,7 @@ if (!template.includes(styleTag) || !template.includes(moduleTag)) {
 const thirdPartyLicense=await readFile(resolve(root,'src/vendor/THREE-LICENSE.txt'),'utf8');
 const tacticalFont=await readFile(resolve(root,'src/assets/chakra-petch-bold.ttf')),fontLicense=await readFile(resolve(root,'src/assets/chakra-petch-OFL.txt'),'utf8'),embeddedCss=css.replace('./assets/chakra-petch-bold.ttf','data:font/ttf;base64,'+tacticalFont.toString('base64'));
 const data = JSON.stringify(JSON.parse(roster)).replace(/</g, '\\u003c');
-const swingAudioData=`<script id="weapon-swing-audio" type="application/json">${JSON.stringify(Object.fromEntries(await Promise.all(SWING_SAMPLES.map(async s=>[s.id,'data:audio/mpeg;base64,'+(await readFile(resolve(root,'src/assets/audio',s.file))).toString('base64')]))))}</script>`;
+const swingAudioData=`<script id="weapon-swing-audio" type="application/json">${JSON.stringify(Object.fromEntries(await Promise.all(SWING_SAMPLES.map(async s=>[s.id,'data:'+(s.mime||'audio/mpeg')+';base64,'+(await readFile(resolve(root,'src/assets/audio',s.file))).toString('base64')]))))}</script>`;
 const augmentSheets=['combat','survival','tech','mourning','mask','carrier','antimatter','terminal'];
 const augmentData=(await Promise.all(augmentSheets.map(async key=>{const image=await readFile(resolve(root,`src/assets/augments-${key}.png`));return `<script id="augment-data-${key}" type="application/json">${JSON.stringify('data:image/png;base64,'+image.toString('base64'))}</script>`;}))).join('\n');
 const backstreetImage=await readFile(resolve(root,'src/assets/backstreet-materials.png'));

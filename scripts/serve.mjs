@@ -8,7 +8,7 @@ import { inspectRuntime, serverFingerprint, projectId, SERVICE, PROTOCOL } from 
 import { attachOnline } from './online-server.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
-const mime = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain', '.mp3': 'audio/mpeg' };
+const mime = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain', '.mp3': 'audio/mpeg', '.wav': 'audio/wav' };
 export function createDevServer(root=projectRoot,{production=false,env=process.env}={}) {
 root=resolve(root);
 let revision=Date.now(),watchers=[],healthRevision,healthPromise;

@@ -23,7 +23,7 @@ with sync_playwright() as pw:
  else:p.goto(os.getenv('MOBA_TEST_URL','http://127.0.0.1:5199')+'/?debug=1',wait_until='networkidle')
  p.click('#training-open');p.click('#start')
  p.wait_for_function('__moba.audio.context?.state==="running"')
- p.evaluate('()=>__moba.audio.synth.swings.ready');assert p.evaluate('__moba.audio.synth.swings.buffers.size===1')
+ p.evaluate('()=>__moba.audio.synth.swings.ready');assert p.evaluate('__moba.audio.synth.swings.buffers.size===3')
  p.evaluate('''()=>{const g=__moba.game;window.step61=g.step.bind(g);g.step=()=>{};
  window.advance61=s=>{for(let n=0;n<Math.round(s*120);n++)step61(1/120);};
  g.practice.lineStopped=true;g.units=[g.player];g.events=[];g.projectiles=[];g.effects=[];g.zones=[];g.pending=[];
@@ -79,7 +79,8 @@ with sync_playwright() as pw:
   with wave.open(str(art/f"{s['name']}.wav"),'wb')as f:f.setnchannels(1);f.setsampwidth(2);f.setframerate(rate);f.writeframes((np.clip(data,-1,1)*32767).astype('<i2').tobytes())
  assert stats['retreat-brass']['dominantHz']<650,stats['retreat-brass']
  assert stats['retreat-brass']['centroidHz']<stats['attack-ping']['centroidHz'],stats
- assert stats['heavy-hit']['centroidHz']<stats['slash']['centroidHz'],stats
+ # Compare weight variants of the new impact mix, rather than a different whoosh.
+ assert stats['heavy-hit']['centroidHz']<stats['punch']['centroidHz'],stats
  assert np.corrcoef(waves['slash'],waves['slash-variant'])[0,1]<.95
  rms=lambda data,a,b:float(np.sqrt(np.mean(data[int(a*rate):int(b*rate)]**2)))
  assert rms(waves['waterfall-loop'],.5,.8)>.002
