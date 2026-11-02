@@ -1,44 +1,39 @@
-// User-supplied recordings. Trim/normalize only the decoded playback buffers;
-// the committed MP3 files remain the originals.
-export const SLASH_SAMPLES=[
- {id:'sword',file:'daviddumaisaudio-sword-slash-and-swing-185432.mp3',start:.07,end:.94},
- {id:'cut',file:'freesound_community-slashkut-108175.mp3',start:.05,end:.53},
- {id:'metal',file:'floraphonic-metal-whoosh-hit-2-201903.mp3',start:.08,end:.50},
- {id:'slash',file:'yodguard-sword_slashing-2-382396.mp3',start:.055,end:.63},
- {id:'flesh',file:'universfield-sword-blade-slicing-flesh-352708.mp3',start:.145,end:.53},
+// One user-supplied whoosh for weapon movement. Hits use the original synthesizer.
+export const SWING_SAMPLES=[
+ {id:'swing',file:'floraphonic-swing-whoosh-weapon-3-189823.mp3',start:.03,end:.235},
 ];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+// Pitch in semitones, envelope in seconds, then start/peak/end playback speed.
 const families={
- knife:{sample:'cut',pitch:4,duration:.15,rates:[1.2,1.8,1.12]},
- katana:{sample:'sword',pitch:2,duration:.21,rates:[.96,1.5,.88]},
- blade:{sample:'slash',pitch:0,duration:.25,rates:[.86,1.4,.82]},
- axe:{sample:'metal',pitch:-3,duration:.34,rates:[.78,1.22,.72]},
- greatsword:{sample:'sword',pitch:-5,duration:.41,rates:[.72,1.12,.67]},
- scythe:{sample:'metal',pitch:-4,duration:.37,rates:[.75,1.18,.70]},
- glaive:{sample:'slash',pitch:-1,duration:.30,rates:[.82,1.3,.77]},
- claw:{sample:'slash',pitch:1,duration:.22,rates:[1.04,1.55,.91]},
+ knife:[5,.11,[1.16,1.60,.98]],katana:[2,.145,[.95,1.35,.80]],blade:[0,.18,[.80,1.16,.68]],
+ axe:[-4,.26,[.65,.96,.55]],greatsword:[-7,.37,[.54,.80,.46]],scythe:[-5,.30,[.60,.89,.50]],
+ glaive:[-2,.23,[.72,1.04,.60]],claw:[1,.16,[1.02,1.47,.87]],spear:[1,.15,[.98,1.40,.85]],
+ hammer:[-6,.32,[.60,.86,.50]],club:[-5,.29,[.62,.90,.53]],mace:[-4.5,.27,[.63,.93,.52]],
+ staff:[0,.20,[.78,1.12,.68]],branch:[1.5,.17,[.86,1.27,.74]],chain:[-1,.23,[.74,1.08,.60]],
+ shield:[-3,.24,[.68,1,.58]],punch:[-1,.15,[.94,1.40,.80]],organic:[-3,.23,[.70,1.03,.60]],
+ cloth:[-2,.25,[.65,.92,.50]],chime:[3,.15,[.92,1.30,.78]],glass:[4,.12,[1.15,1.55,.95]],
+ drill:[-2,.20,[.79,1.14,.68]],needle:[6,.10,[1.20,1.65,1]],nail:[6,.10,[1.20,1.65,1]],
+ coin:[4,.12,[1.05,1.50,.92]],smoke:[-2,.25,[.65,.92,.50]],
 };
-export function slashProfile(voice){
- const base=families[voice.family];if(!base||!['weapon','impact','cast'].includes(voice.cue))return null;
- const variant=((Math.trunc(voice.variant)||0)%4+4)%4,impact=voice.cue==='impact',preparing=voice.cue==='cast',heavy=base.pitch<0;
+const physicalCasts=new Set(['knife','katana','blade','axe','greatsword','scythe','glaive','claw','spear','hammer','club','mace','branch','chain','shield','punch','organic','drill','needle','nail','cloth']);
+export function swingProfile(voice){
+ const base=families[voice.family];if(!base||voice.cue!=='weapon'&&!(voice.cue==='cast'&&physicalCasts.has(voice.family)))return null;
+ const variant=((Math.trunc(voice.variant)||0)%4+4)%4,preparing=voice.cue==='cast',weight=voice.weight||1;
  return {
-  // A weapon keeps one recording across attacks/casts; variants only process it.
-  id:impact?'flesh':base.sample,
-  pitch:base.pitch+[-.55,.3,-.15,.65][variant]+(impact?-.5:0),
-  duration:base.duration*(impact?.58:preparing?.75:1)*(1+[0,.045,-.035,.02][variant]),
-  rates:base.rates.map((n,i)=>n*(impact?[1.45,1.12,1][i]:1)),
-  gain:(impact?.88:preparing?.50:.78)*clamp(.85+(voice.weight||1)*.15,.85,1.12),
-  cutoff:voice.family==='claw'?6500:heavy?7600:11500,
-  offset:impact?.015:0,
+  id:'swing',pitch:base[0]+[-.45,.25,-.15,.55][variant],
+  duration:base[1]*(preparing?.8:1)*(1+[0,.04,-.03,.02][variant]),
+  rates:base[2].map(n=>n),offset:0,
+  gain:(preparing?.50:.76)*clamp(.85+weight*.15,.85,1.12),
+  cutoff:base[0]<0?7200:11500,
  };
 }
 async function loadRecording(spec){
- const inline=globalThis.document?.getElementById('slash-audio-data');
+ const inline=globalThis.document?.getElementById('weapon-swing-audio');
  const embedded=inline&&JSON.parse(inline.textContent)[spec.id];
  if(embedded){const raw=atob(embedded.slice(embedded.indexOf(',')+1));return Uint8Array.from(raw,c=>c.charCodeAt(0)).buffer;}
- const response=await fetch('./src/assets/audio/'+spec.file);if(!response.ok)throw new Error('Slash audio '+response.status);return response.arrayBuffer();
+ const response=await fetch('./src/assets/audio/'+spec.file);if(!response.ok)throw new Error('Weapon swing audio '+response.status);return response.arrayBuffer();
 }
-export function prepareSlashBuffer(context,decoded,spec){
+export function prepareSwingBuffer(context,decoded,spec){
  const rate=decoded.sampleRate,start=Math.min(decoded.length-1,Math.floor(spec.start*rate)),end=Math.min(decoded.length,Math.ceil(spec.end*rate));
  const output=context.createBuffer(1,Math.max(1,end-start),rate),data=output.getChannelData(0);let peak=0;
  for(let ch=0;ch<decoded.numberOfChannels;ch++){const input=decoded.getChannelData(ch);for(let i=0;i<data.length;i++)data[i]+=input[start+i]/decoded.numberOfChannels;}
@@ -48,21 +43,21 @@ export function prepareSlashBuffer(context,decoded,spec){
  return output;
 }
 const contexts=new WeakMap();
-export class SlashSamples{
+export class WeaponSwings{
  constructor(context,{loader=loadRecording}={}){
   this.context=context;this.active=new Set();this.played=0;this.history=[];
   let cache=contexts.get(context);
   if(!cache){
    cache={buffers:new Map(),failures:[]};contexts.set(context,cache);
-   cache.ready=typeof context.decodeAudioData!=='function'?Promise.resolve(cache.buffers):Promise.all(SLASH_SAMPLES.map(async spec=>{
-    try{const bytes=await loader(spec),decoded=await context.decodeAudioData(bytes);cache.buffers.set(spec.id,prepareSlashBuffer(context,decoded,spec));}
+   cache.ready=typeof context.decodeAudioData!=='function'?Promise.resolve(cache.buffers):Promise.all(SWING_SAMPLES.map(async spec=>{
+    try{const bytes=await loader(spec),decoded=await context.decodeAudioData(bytes);cache.buffers.set(spec.id,prepareSwingBuffer(context,decoded,spec));}
     catch{cache.failures.push(spec.id);}
    })).then(()=>cache.buffers);
   }
   this.buffers=cache.buffers;this.failures=cache.failures;this.ready=cache.ready;
  }
  play(out,voice){
-  const profile=slashProfile(voice),buffer=profile&&this.buffers.get(profile.id);if(!buffer)return false;
+  const profile=swingProfile(voice),buffer=profile&&this.buffers.get(profile.id);if(!buffer)return false;
   const c=this.context,t=c.currentTime,source=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain(),nodes=[source,filter,gain];
   const pitchRate=2**(profile.pitch/12),duration=Math.min(profile.duration,(buffer.duration-profile.offset)/Math.max(...profile.rates)/pitchRate*.96);
   if(duration<=.015){nodes.forEach(n=>n.disconnect());return false;}

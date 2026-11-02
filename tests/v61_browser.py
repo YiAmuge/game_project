@@ -23,7 +23,7 @@ with sync_playwright() as pw:
  else:p.goto(os.getenv('MOBA_TEST_URL','http://127.0.0.1:5199')+'/?debug=1',wait_until='networkidle')
  p.click('#training-open');p.click('#start')
  p.wait_for_function('__moba.audio.context?.state==="running"')
- p.evaluate('()=>__moba.audio.synth.slashes.ready');assert p.evaluate('__moba.audio.synth.slashes.buffers.size===5')
+ p.evaluate('()=>__moba.audio.synth.swings.ready');assert p.evaluate('__moba.audio.synth.swings.buffers.size===1')
  p.evaluate('''()=>{const g=__moba.game;window.step61=g.step.bind(g);g.step=()=>{};
  window.advance61=s=>{for(let n=0;n<Math.round(s*120);n++)step61(1/120);};
  g.practice.lineStopped=true;g.units=[g.player];g.events=[];g.projectiles=[];g.effects=[];g.zones=[];g.pending=[];
@@ -59,7 +59,7 @@ with sync_playwright() as pw:
  samples=p.evaluate('''async()=>{const Audio=__moba.audio.constructor,rate=22050,results=[];
  const cases=[['slash',{kind:'swing',key:'ryoshu'}],['slash-variant',{kind:'swing',key:'ryoshu',variant:3}],['heavy-hit',{kind:'hit',key:'marton'}],['punch',{kind:'hit',key:'meursault'}],['rifle',{kind:'shot',key:'gubo'}],['electric',{kind:'swing',key:'rudolph'}],['glass',{kind:'swing',key:'yi'}],['ice',{kind:'shot',key:'rodya',slot:'r'}],['chain',{kind:'cast',key:'meursault',slot:'q'}],['petals',{kind:'cast',key:'dongbaek',slot:'q'}],['organic',{kind:'swing',key:'gregor'}],['alisa-explosion',{kind:'explosion',key:'alisa',phase:'alisa-detonation'}],['outis-shotgun',{kind:'explosion',key:'outis',phase:'outis-shotgun'}],['tower-explosion',{kind:'explosion',sourceKind:'tower',element:'stone'}],['attack-ping',{kind:'ping',ping:'attack'}],['retreat-brass',{kind:'ping',ping:'danger'}],['waterfall-loop',null],['crowded-combat',null],['muted',null]];
  for(const[name,event]of cases){const c=new OfflineAudioContext(2,rate*2,rate),a=new Audio({context:c,storage:false});
-  await a.synth.slashes.ready;
+  await a.synth.swings.ready;
   if(event)a.play({...event,x:0,y:0},{x:0,y:0});
   else if(name==='waterfall-loop'){const f=a.synth.field(a.ambience);f.stop(.9);}
   else if(name==='crowded-combat'){for(let i=0;i<40;i++)a.play({kind:'swing',key:'marton',sourceKind:'champion',sourceId:3000+i},{x:0,y:0});if(a.played>11||!a.play({kind:'ping',ping:'danger'},{x:0,y:0}))throw new Error('combat budget suppressed the warning');}

@@ -1,18 +1,7 @@
-The user supplied these five original MP3 recordings on 2026-11-02:
+The user supplied `floraphonic-swing-whoosh-weapon-3-189823.mp3` on 2026-11-03. It is the only recorded sound used by the game.
 
-- `daviddumaisaudio-sword-slash-and-swing-185432.mp3`
-- `freesound_community-slashkut-108175.mp3`
-- `floraphonic-metal-whoosh-hit-2-201903.mp3`
-- `yodguard-sword_slashing-2-382396.mp3` — cutting swings.
-- `universfield-sword-blade-slicing-flesh-352708.mp3` — cutting impact.
+`weapon-swings.js` uses this whoosh for weapon movement, including blades, spears, blunt weapons, staves, chains, fists and claws. Weapon weight changes pitch, duration and acceleration/deceleration; every variant uses the same source. Recorded swings do not add synthesized weapon or elemental layers.
 
-The files are preserved unchanged. `slash-samples.js` decodes them once per audio context, trims silence, mixes to mono for positional audio, normalizes peaks and fades the edges. The standalone builder embeds all five recordings in `slash-audio-data` for offline playback.
+Impacts and other cues use the original synthesis. The five previous uploaded recordings and their sound assignments have been removed.
 
-Each cutting weapon uses one fixed swing recording for both attacks and skill casts. Pitch, speed curves and envelope length vary without switching the source. Recorded events do not add synthesized weapon or elemental layers. Cutting impacts use the separate `flesh` recording.
-
-| Weapon | Fixed swing source |
-| --- | --- |
-| Blade, glaive, claw | `yodguard-sword_slashing-2-382396.mp3` |
-| Katana, greatsword | `daviddumaisaudio-sword-slash-and-swing-185432.mp3` |
-| Knife | `freesound_community-slashkut-108175.mp3` |
-| Axe, scythe | `floraphonic-metal-whoosh-hit-2-201903.mp3` |
+The MP3 is preserved unchanged. It is decoded once per audio context, trimmed, mixed to mono, normalized and faded in the playback buffer. The standalone builder embeds it in `weapon-swing-audio` for offline playback.
