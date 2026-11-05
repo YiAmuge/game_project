@@ -1,4 +1,4 @@
-"""Yi recordings, real combat routing, sustained-buff cleanup and offline audio."""
+"""Yi recordings, real combat routing, one-shot fade cleanup and offline audio."""
 import asyncio,base64,json,os,re,shutil,threading,wave
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
@@ -27,7 +27,7 @@ async def main():
      else:external.append(r.request.url);await r.abort()
     await page.route('**/*',route)
    await page.goto(url,wait_until='networkidle',timeout=90000);await page.click('#training-open');await page.click('#start');await page.wait_for_function('__moba.audio.context?.state==="running"');await page.evaluate('()=>__moba.audio.synth.swings.ready')
-   assert await page.evaluate('__moba.audio.synth.swings.buffers.size===9&&__moba.audio.synth.swings.failures.length===0')
+   assert await page.evaluate('__moba.audio.synth.swings.buffers.size===13&&__moba.audio.synth.swings.failures.length===0')
    await page.evaluate(SETUP,'yi')
    await page.evaluate('()=>{const g=__moba.game;__moba.audio.synth.swings.history=[];target(46);target(41,20,0);g.cast(g.player,"q",{x:46,y:20});}')
    await page.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="yiDeploy")')
@@ -36,23 +36,25 @@ async def main():
    await page.wait_for_function('__moba.audio.yiBuff.field&&__moba.audio.synth.swings.history.some(s=>s.id==="yiImpact")')
    assert await page.evaluate('q=>__moba.audio.synth.swings.history.filter(s=>s.id==="yiDeploy").length===1&&__moba.audio.synth.swings.history.find(s=>s.id==="yiDeploy").gain*1.5<q',qgain)
    assert await page.evaluate('__moba.game.soundEvents.filter(e=>e.phase==="yi-zone-hit").every(e=>e.slot==="q")')
-   await page.evaluate('()=>{window.shineEnded=false;__moba.audio.yiBuff.field.source.addEventListener("ended",()=>window.shineEnded=true);window.shineSource=__moba.audio.yiBuff.field.source;advance(2.9);}')
-   await page.wait_for_timeout(100);assert await page.evaluate('__moba.audio.yiBuff.field?.source===shineSource')
-   await page.evaluate('advance(.7)');await page.wait_for_function('!__moba.audio.yiBuff.field&&shineEnded')
+   await page.evaluate('()=>{window.shineEnded=false;__moba.audio.yiBuff.field.source.addEventListener("ended",()=>window.shineEnded=true);}')
+   await page.wait_for_function('!__moba.audio.yiBuff.field&&shineEnded',timeout=3000)
+   assert await page.evaluate('__moba.game.buff(__moba.game.player,"ogamdo")')
+   await page.wait_for_timeout(150);assert await page.evaluate('!__moba.audio.yiBuff.field')
    # Basic projectile contacts use the mixed glass recording as well.
    await page.evaluate(SETUP,'yi');await page.evaluate('()=>{const g=__moba.game;__moba.audio.synth.swings.history=[];g.attack(g.player,target(44));advance(.3);}')
    await page.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="yiImpact"&&s.cue==="impact")')
    # Mute, pause, menu exit and the last recipient dying stop the sustained source.
    await page.evaluate('__moba.game.addBuff(__moba.game.player,"ogamdo",4)');await page.wait_for_function('__moba.audio.yiBuff.field')
-   await page.click('#sound-toggle');await page.wait_for_function('!__moba.audio.yiBuff.field');await page.click('#sound-toggle');await page.wait_for_function('__moba.audio.yiBuff.field')
+   await page.click('#sound-toggle');await page.wait_for_function('!__moba.audio.yiBuff.field');await page.click('#sound-toggle');await page.wait_for_timeout(100);assert await page.evaluate('!__moba.audio.yiBuff.field')
+   await page.evaluate('__moba.game.time+=.1;__moba.game.addBuff(__moba.game.player,"ogamdo",4)');await page.wait_for_function('__moba.audio.yiBuff.field')
    assert await page.evaluate('()=>{const a=__moba.audio,g=__moba.game;a.sync(g,{playing:true,paused:true});const paused=!a.yiBuff.field;a.sync(g,{playing:false});return paused&&!a.yiBuff.field;}')
-   await page.wait_for_function('__moba.audio.yiBuff.field');await page.evaluate('__moba.game.player.alive=false');await page.wait_for_function('!__moba.audio.yiBuff.field')
+   await page.evaluate('__moba.game.time+=.1;__moba.game.addBuff(__moba.game.player,"ogamdo",4)');await page.wait_for_function('__moba.audio.yiBuff.field');await page.evaluate('__moba.game.player.alive=false');await page.wait_for_function('!__moba.audio.yiBuff.field')
    samples=await page.evaluate('''async()=>{
     const Audio=__moba.audio.constructor,rate=24000,rows=[];
     for(const spec of [{name:'q',kind:'cast',slot:'q'},{name:'r',kind:'ultimate',slot:'r'},{name:'hit',kind:'hit'},{name:'q-hit',kind:'hit',slot:'q'},{name:'hit-variant',kind:'hit',variant:3},{name:'shine'}]){
      const shine=spec.name==='shine',c=new OfflineAudioContext(2,rate*(shine?4.5:2),rate),a=new Audio({context:c,storage:false});await a.synth.swings.ready;
      let synthLayers=0;for(const key of ['tone','noise','element']){const original=a.synth[key].bind(a.synth);a.synth[key]=(...args)=>{synthLayers++;return original(...args);};}
-     if(shine){const p={id:1,kind:'champion',alive:true,x:0,y:0,buffs:{ogamdo:4}},g={time:0,units:[p],player:p,winner:null};a.yiBuff.sync(g,p,true);c.suspend(4).then(()=>{g.time=4;a.yiBuff.sync(g,p,true);c.resume();});}
+     if(shine){const p={id:1,kind:'champion',alive:true,x:0,y:0,buffs:{ogamdo:4}},g={time:0,units:[p],player:p,winner:null};a.yiBuff.sync(g,p,true);c.suspend(.75).then(()=>{const level=a.yiBuff.field.envelope.gain.value;if(level<.18||level>.20)throw Error("Incorrect fade envelope");c.resume();});c.suspend(2).then(()=>{a.yiBuff.sync(g,p,true);if(a.yiBuff.field)throw Error("Repeated shine while buff active");c.resume();});}
      else a.play({key:'yi',sourceKind:'champion',sourceId:1,x:0,y:0,...spec},{x:0,y:0});
      const out=await c.startRendering();if(synthLayers)throw Error('Added synthesized layers');if(a.synth.swings.active.size||a.yiBuff.field)throw Error('Leaked Yi source');
      const channels=[];for(let ch=0;ch<2;ch++){const bytes=new Uint8Array(out.getChannelData(ch).buffer);let raw='';for(let i=0;i<bytes.length;i+=8192)raw+=String.fromCharCode(...bytes.subarray(i,i+8192));channels.push(btoa(raw));}
@@ -66,12 +68,12 @@ async def main():
     stats[row['name']]={'rms':rms,'peak':peak,'sample':row.get('sample')}
    assert stats['q']['rms']>stats['r']['rms']*1.4
    assert np.array_equal(waves['hit'],waves['q-hit'])
-   assert np.sqrt(np.mean(waves['shine'][int(4.2*24000):]**2))<1e-7
-   assert np.sqrt(np.mean(waves['shine'][int(3.2*24000):int(3.8*24000)]**2))>.0002
+   assert np.sqrt(np.mean(waves['shine'][int(1.51*24000):]**2))<1e-7
+   assert np.sqrt(np.mean(waves['shine'][int(.2*24000):int(.8*24000)]**2))>.0002
    if mode=='desktop':
-    previews={'yi-deploy-preview.wav':np.concatenate([waves['q'],waves['r']]),'yi-shine-preview.wav':waves['shine'],'yi-impact-preview.wav':np.concatenate([waves['hit'],waves['hit-variant']])}
+    previews={'yi-deploy-preview.wav':np.concatenate([waves['q'],waves['r']]),'yi-shine-fade-preview.wav':waves['shine'][:48000],'yi-impact-preview.wav':np.concatenate([waves['hit'],waves['hit-variant']])}
     for name,x in previews.items():
      with wave.open(str(ROOT/'artifacts'/name),'wb')as file:file.setnchannels(2);file.setsampwidth(2);file.setframerate(24000);file.writeframes((np.clip(x,-1,1)*32767).astype('<i2').tobytes())
-   assert not errors,(mode,errors);assert not external,(mode,external);(ART/(mode+'.json')).write_text(json.dumps(stats,indent=2));await ctx.close();await browser.close();print(mode+': Yi Q/R, louder deployment, basic/Q glass mix, buff loop, mute/pause/death/expiry cleanup and waveform checks passed.',flush=True)
+   assert not errors,(mode,errors);assert not external,(mode,external);(ART/(mode+'.json')).write_text(json.dumps(stats,indent=2));await ctx.close();await browser.close();print(mode+': Yi Q/R, louder deployment, basic/Q glass mix, 1.5-second non-repeating buff fade, mute/pause/death/expiry cleanup and waveform checks passed.',flush=True)
  await asyncio.to_thread(server.shutdown);server.server_close()
 if __name__=='__main__':asyncio.run(main())

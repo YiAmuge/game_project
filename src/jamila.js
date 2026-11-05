@@ -26,7 +26,7 @@ export function tickReload(g,e,dt){
  if(!reloading(e)&&(e.ammo<1||g.time-(e.state.lcaShotAt??-Infinity)>=idleDelay(e)-1e-8))beginReload(g,e);
  const r=e.state.lcaReload;if(!r)return;
  r.progress+=dt*Math.max(.2,1+1.5*(g.reloadMultiplier(e)-1));e.reloadProgress=reloadFraction(e)*reloadDuration(g,e);
- if(r.progress+1e-8>=JAMILA.reload){e.ammo=cap;delete e.state.lcaReload;e.reloadProgress=0;g.emitSound('reload',e,{phase:'lca-ready'});}
+ if(r.progress+1e-8>=JAMILA.reload){e.ammo=cap;delete e.state.lcaReload;e.reloadProgress=0;}
 }
 export function basic(g,e,p,d){
  if(e.key!=='jamila')return false;
@@ -34,6 +34,7 @@ export function basic(g,e,p,d){
  // Carry at most one simulation frame of timing debt instead of slowing sustained fire.
  const due=e.state.lcaNextShot,at=due!==undefined&&due<=g.time+1e-8&&g.time-due<=1/30+1e-8?due:g.time;e.state.lcaNextShot=at+JAMILA.interval;e.attackCd=Math.max(0,e.state.lcaNextShot-g.time);
  const special=!e.lcaTrooper&&e.ammo%JAMILA.shieldEvery===0;
+ g.emitSound('shot',e,{family:'rifle',phase:special?'lca-shield-round':'lca-rifle'});
  g.bullet(e,d,e.lcaTrooper?JAMILA.trooperDamage:JAMILA.damage+(special?JAMILA.shieldRoundBonus:0),g.attackRange(e),{speed:28,width:.11,color:special?'#59b8ff':'#e6cd77',theme:'jamila',lca:true,lcaShieldRound:special});
  if(special){const id=`udjat-${e.id}`,old=e.shields.find(s=>s.source===id&&s.until>g.time)?.value||0,increment=e.maxHp*JAMILA.shield,cap=e.maxHp*JAMILA.shieldCap,full=old>=cap-1e-8||g.shield(e)>=e.maxHp*.35-1e-8;g.addShield(e,Math.min(cap,old+increment),id,JAMILA.shieldTime);if(full)shareShield(g,e,increment,JAMILA.shieldTime,id);}
  if(e.ammo<1)beginReload(g,e);return true;
@@ -121,7 +122,7 @@ export function tickTrooper(g,e,dt,{moving=false}={}){
  if(target){
   if(distance(e,target)>g.attackRange(e)+target.radius||!g.clearLine(e,target)){if(!g.stat(e,'root'))g.moveToward(e,target,dt);}
   else if(e.ammo>0&&e.attackCd<=0&&!g.stat(e,'disarm')){
-   const d=direction(e,target);e.facing=e.attackFacing=Math.atan2(d.y,d.x);e.attackAt=e.lastAttackAt=g.time;e.attackSerial++;e.ammo--;e.attackCd=JAMILA.interval;g.emitSound('shot',e);
+   const d=direction(e,target);e.facing=e.attackFacing=Math.atan2(d.y,d.x);e.attackAt=e.lastAttackAt=g.time;e.attackSerial++;e.ammo--;e.attackCd=JAMILA.interval;
    g.action(e,'basic',()=>basic(g,e,target,d));
   }
  }else if(owner.alive&&!g.stat(e,'root')){

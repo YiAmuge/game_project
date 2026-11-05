@@ -29,7 +29,7 @@ async def main():
     await p.route('**/*',route)
    await p.goto(url,wait_until='networkidle',timeout=90000);await p.wait_for_function('window.__moba')
    await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"')
-   await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===9&&__moba.audio.synth.swings.failures.length===0')
+   await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===13&&__moba.audio.synth.swings.failures.length===0')
    # Actual combat emitters include blades, hammers, clubs/sacks, spears and fists.
    for key in ['ryoshu','marton','heathcliff','don','meursault','honglu']:
     await p.evaluate(SETUP,key);await p.evaluate('__moba.audio.synth.swings.history=[]');before=await p.evaluate('__moba.audio.synth.swings.played')
@@ -38,7 +38,7 @@ async def main():
     await p.wait_for_timeout(160)
    await p.wait_for_timeout(750);assert await p.evaluate('__moba.audio.synth.swings.active.size===0')
    # Real damage emitters preserve weapon category even when a shield absorbs it.
-   for key,expected in [('ryoshu','impactSlash'),('gubo','impactPierce'),('meursault','impactBlunt')]:
+   for key,expected in [('ryoshu','impactSlash'),('gubo','firearmImpact'),('meursault','impactBlunt')]:
     for shielded in [False,True]:
      await p.evaluate(SETUP,key)
      await p.evaluate('shielded=>{const g=__moba.game,t=target(41.3);__moba.audio.synth.swings.history=[];if(shielded)g.addShield(t,10000,"audio-test");g.deal(g.player,t,100,{damageKind:"basic"});}',shielded)
@@ -58,9 +58,9 @@ async def main():
    rendered=await p.evaluate('''async()=>{
     const Audio=__moba.audio.constructor,rate=24000,results=[];
     const families=['knife','katana','blade','axe','greatsword','scythe','glaive','claw','spear','hammer','club','mace','staff','branch','chain','shield','punch','organic','cloth','chime','glass','drill','needle','nail','coin','smoke'];
-    const cases=[...families.flatMap(family=>[0,3].map(variant=>({name:family+'-'+variant,family,variant,kind:'swing'}))),...[0,3].map(variant=>({name:'yan-base-'+variant,key:'yan',form:'base',kind:'swing',variant})),{name:'yan-cast',key:'yan',form:'base',kind:'cast',slot:'q'},{name:'yan-distorted',key:'yan',form:'distorted',kind:'swing'},{name:'blade-cast',family:'blade',kind:'cast'},{name:'blade-fire',family:'blade',kind:'swing',variant:0,element:'fire'},{name:'impact-cut-hit',family:'katana',kind:'hit',expected:'impactSlash'},{name:'impact-blunt-hit',family:'hammer',kind:'hit',expected:'impactBlunt'},{name:'impact-pierce-hit',family:'spear',kind:'hit',expected:'impactPierce'},{name:'impact-rifle-hit',family:'rifle',kind:'hit',expected:'impactPierce'},{name:'impact-cut-fire',family:'katana',kind:'hit',element:'fire',expected:'impactSlash'},{name:'impact-variant',family:'katana',kind:'hit',variant:3,expected:'impactSlash'},{name:'impact-blunt-variant',family:'hammer',kind:'hit',variant:3,expected:'impactBlunt'},{name:'impact-pierce-variant',family:'spear',kind:'hit',variant:3,expected:'impactPierce'},{name:'impact-rifle-shield',family:'rifle',kind:'hit',shielded:true,expected:'impactPierce'},{name:'impact-claw-hit',family:'claw',kind:'hit',expected:'impactSlash'},{name:'thrust-basic',key:'kromer',kind:'swing'},{name:'thrust-cast',key:'don',kind:'cast',slot:'q'},{name:'thrust-impale',key:'kromer',kind:'swing',slot:'r',phase:'kromer-impale'},{name:'original-rifle',family:'rifle',kind:'shot'},{name:'crowded',kind:'crowded'},{name:'muted',kind:'muted'}];
+    const cases=[...families.flatMap(family=>[0,3].map(variant=>({name:family+'-'+variant,family,variant,kind:'swing'}))),...[0,3].map(variant=>({name:'yan-base-'+variant,key:'yan',form:'base',kind:'swing',variant})),{name:'yan-cast',key:'yan',form:'base',kind:'cast',slot:'q'},{name:'yan-distorted',key:'yan',form:'distorted',kind:'swing'},{name:'blade-cast',family:'blade',kind:'cast'},{name:'blade-fire',family:'blade',kind:'swing',variant:0,element:'fire'},{name:'impact-cut-hit',family:'katana',kind:'hit',expected:'impactSlash'},{name:'impact-blunt-hit',family:'hammer',kind:'hit',expected:'impactBlunt'},{name:'impact-pierce-hit',family:'spear',kind:'hit',expected:'impactPierce'},{name:'impact-rifle-hit',family:'rifle',kind:'hit',expected:'firearmImpact'},{name:'impact-cut-fire',family:'katana',kind:'hit',element:'fire',expected:'impactSlash'},{name:'impact-variant',family:'katana',kind:'hit',variant:3,expected:'impactSlash'},{name:'impact-blunt-variant',family:'hammer',kind:'hit',variant:3,expected:'impactBlunt'},{name:'impact-pierce-variant',family:'spear',kind:'hit',variant:3,expected:'impactPierce'},{name:'impact-rifle-shield',family:'rifle',kind:'hit',shielded:true,expected:'firearmImpact'},{name:'impact-claw-hit',family:'claw',kind:'hit',expected:'impactSlash'},{name:'thrust-basic',key:'kromer',kind:'swing'},{name:'thrust-cast',key:'don',kind:'cast',slot:'q'},{name:'thrust-impale',key:'kromer',kind:'swing',slot:'r',phase:'kromer-impale'},{name:'original-rifle',family:'rifle',kind:'shot'},{name:'crowded',kind:'crowded'},{name:'muted',kind:'muted'}];
     for(const spec of cases){
-     const c=new OfflineAudioContext(2,rate*2.5,rate),a=new Audio({context:c,storage:false});await a.synth.swings.ready;if(a.synth.swings.buffers.size!==9)throw Error('Missing whoosh');
+     const c=new OfflineAudioContext(2,rate*2.5,rate),a=new Audio({context:c,storage:false});await a.synth.swings.ready;if(a.synth.swings.buffers.size!==13)throw Error('Missing whoosh');
      const sends=[],output=a.output.bind(a);a.output=(...args)=>{sends.push({gain:args[1],wet:args[3]});return output(...args);};
      let layers=0;for(const name of ['noise','tone','element']){const original=a.synth[name].bind(a.synth);a.synth[name]=(...args)=>{layers++;return original(...args);};}
      const play=(extra={})=>a.play({key:'ryoshu',element:'metal',sourceKind:'champion',sourceId:1,x:0,y:0,...spec,...extra},{x:0,y:0});
@@ -69,7 +69,7 @@ async def main():
      else if(!play())throw Error('Sound rejected');
      const sample=a.synth.swings.history[0];if(sample&&sample.duration>a.synth.swings.buffers.get(sample.id).duration/Math.max(...sample.rates)/(2**(sample.pitch/12))+.001)throw Error('Source ends before envelope');const out=await c.startRendering();if(a.synth.swings.active.size)throw Error('Leaked whoosh voices');
      if(sample&&!['crowded'].includes(spec.name)&&sends.some(send=>send.wet!==0))throw Error('Added reverb changed the original sound');
-     if(sample&&!sample.id.startsWith('impact')&&spec.name!=='crowded'&&sends[0].gain!==(sample.cue==='weapon'?.625:.5))throw Error('Movement was not halved');
+     if(sample&&['swing','thrust','yanGreatsword'].includes(sample.id)&&spec.name!=='crowded'&&sends[0].gain!==(sample.cue==='weapon'?.625:.5))throw Error('Movement was not halved');
      if(spec.name.startsWith('original-')){if(sample||!layers)throw Error('Firearm synthesis was replaced');}
      else if(!['crowded','muted'].includes(spec.name)&&(layers||a.synth.swings.played!==1))throw Error('Mixed additional sound layers');
      const bytes=new Uint8Array(out.getChannelData(0).buffer);let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));const preview=['knife-0','blade-0','hammer-0','greatsword-0','yan-base-0','spear-0','thrust-impale','impact-cut-hit','impact-blunt-hit','impact-variant','impact-pierce-hit','impact-pierce-variant','impact-blunt-variant'].includes(spec.name);let right='';if(preview){const channel=new Uint8Array(out.getChannelData(1).buffer);for(let i=0;i<channel.length;i+=8192)right+=String.fromCharCode(...channel.subarray(i,i+8192));}results.push({name:spec.name,expected:spec.expected,rate,sample,played:a.synth.swings.played,data:btoa(binary),right:preview?btoa(right):null});
@@ -88,6 +88,7 @@ async def main():
      expected='yanGreatsword'if entry['name'].startswith('yan-')and entry['name']!='yan-distorted'else entry['expected']if entry.get('expected')else 'thrust'if entry['sample']['family']=='spear'else 'swing'
      assert entry['sample']['id']==expected,(mode,entry['name'],entry['sample']);assert entry['sample']['dry'];assert entry['sample']['rates'][1]>max(entry['sample']['rates'][0],entry['sample']['rates'][2])
      if expected.startswith('impact'):assert abs(entry['sample']['pitch'])<=.300001 and all(.97<=n<=1.03 for n in entry['sample']['rates']) and (.95*({'impactSlash':.69,'impactPierce':1.2,'impactBlunt':.70}[expected]))<=entry['sample']['duration']<=1.21
+     if expected=='firearmImpact':assert abs(entry['sample']['pitch'])<=1.4 and all(.97<=n<=1.04 for n in entry['sample']['rates'])
     stats[entry['name']]={'peak':round(peak,5),'rms':round(rms,5),'sample':entry.get('sample')};waves[entry['name']]=data
     if entry.get('right'):stereo[entry['name']]=np.column_stack((data,np.frombuffer(base64.b64decode(entry['right']),dtype='<f4')))
    for name in [n for n in waves if n.endswith('-0')]:assert np.corrcoef(waves[name],waves[name[:-1]+'3'])[0,1]<.95,(mode,name)

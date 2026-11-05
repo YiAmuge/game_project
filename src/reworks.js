@@ -50,7 +50,7 @@ export function outis(g,e,d){
  const blast=()=>{
   if(finished)return;finished=true;
   g.emitSound?.('explosion',e,{phase:'outis-shotgun',family:'shotgun',element:'fire',slot:'r'});s.outisRecoilAt=g.time;s.outisRecoilFacing=Math.atan2(d.y,d.x);
-  const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,t=>{if(!t.alive&&e.alive){g.addBuff(e,'outisReload',3,{copy:false});e.rCd=Math.max(0,e.rCd-g.cooldown(e,'r')*.3);}},{exclude:new Set(victim?[victim.id]:[])});
+  const backward={x:-d.x,y:-d.y};g.cone(e,d,6.5,Math.PI*2/3,220,t=>{if(!t.alive&&e.alive){g.addBuff(e,'outisReload',3,{copy:false});e.rCd=Math.max(0,e.rCd-g.cooldown(e,'r')*.3);}},{exclude:new Set(victim?[victim.id]:[]),sound:{family:'shotgun',phase:'outis-shotgun-hit',slot:'r'}});
   g.effects.push({type:'outisShotgun',source:e.id,slot:'r',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),r:6.5,spread:Math.PI*2/3,theme:'outis',life:.5,maxLife:.5});
   if(victim){if(!g.startMotion(e,backward,2.5,{speed:18,maxSpeed:18,phaseEnemies:true,onComplete:finish}))finish();}else finish();
  };

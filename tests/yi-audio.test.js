@@ -32,21 +32,22 @@ test('only Yi basic/Q contacts and casts select the new recordings, with subtle 
 });
 function fakeAudio(){
  const param=()=>({value:0,events:[],setValueAtTime(v,t){this.value=v;this.events.push([v,t]);},setTargetAtTime(v,t){this.value=v;this.events.push([v,t]);},exponentialRampToValueAtTime(v,t){this.events.push([v,t]);},cancelScheduledValues(){},linearRampToValueAtTime(v,t){this.events.push([v,t]);}});
- const sources=[],retired=[];const audio={synth:{swings:{buffers:new Map([['yiShine',{duration:3.08}]])}},combat:{},context:{currentTime:0,createBufferSource(){const source={playbackRate:param(),detune:param(),connect(){},disconnect(){this.disconnected=true;},start(){this.started=true;},stop(t){this.stopAt=t;}};sources.push(source);return source;}},spatial(e,p){return{d:Math.hypot(e.x-p.x,e.y-p.y),gain:1,pan:(e.x-p.x)/22};},output(){return{out:{gain:param()},nodes:[{pan:param()}]};},retire(nodes,d){retired.push([nodes,d]);}};
+ const sources=[],retired=[];const audio={synth:{swings:{buffers:new Map([['yiShine',{duration:3.08}]])}},combat:{},context:{currentTime:0,createGain(){return{gain:param(),connect(){},disconnect(){}};},createBufferSource(){const source={playbackRate:param(),detune:param(),connect(){},disconnect(){this.disconnected=true;},start(){this.started=true;},stop(t){this.stopAt=t;}};sources.push(source);return source;}},spatial(e,p){return{d:Math.hypot(e.x-p.x,e.y-p.y),gain:1,pan:(e.x-p.x)/22};},output(){return{out:{gain:param()},nodes:[{pan:param(),disconnect(){}}]};},retire(nodes,d){retired.push([nodes,d]);}};
  return{audio,sources,retired};
 }
 const hero=(id,x=0)=>({id,kind:'champion',alive:true,x,y:0,buffs:{ogamdo:4}});
-test('multiple buffed allies use one positional loop and keep it as the nearest ally changes',()=>{
+test('multiple buffed allies share one fading sound as the nearest ally changes',()=>{
  const{audio,sources}=fakeAudio(),sound=new YiBuffAudio(audio),a=hero(1,1),b=hero(2,2),g={time:0,units:[a,b],hidden:()=>false},listener={x:0,y:0};
- sound.sync(g,listener,true);sound.sync(g,listener,true);assert.equal(sources.length,1);assert.ok(sources[0].loop);assert.equal(sound.field.targetId,a.id);
+ sound.sync(g,listener,true);sound.sync(g,listener,true);assert.equal(sources.length,1);assert.equal(sources[0].loop,false);assert.equal(sources[0].stopAt,1.5);assert.equal(sound.field.targetId,a.id);
  a.x=10;sound.sync(g,listener,true);assert.equal(sources.length,1);assert.equal(sound.field.targetId,b.id);assert.ok(sound.field.nodes[0].pan.events.length>=3);
  assert.ok(sources[0].playbackRate.events.every(([v])=>v>=.99&&v<=1.01));
+ sources[0].onended();sound.sync(g,listener,true);assert.equal(sources.length,1);assert.equal(sound.field,null);a.buffs.ogamdo=b.buffs.ogamdo=8;sound.sync(g,listener,true);assert.equal(sources.length,2);
 });
 test('shine stops on buff expiry, death, hidden/distant targets, pause or leaving play',()=>{
  for(const reason of ['expiry','death','hidden','distance','inactive']){
   const{audio,sources,retired}=fakeAudio(),sound=new YiBuffAudio(audio),unit=hero(1),g={time:0,units:[unit],hidden:()=>false};sound.sync(g,unit,true);assert.ok(sound.field);
   if(reason==='expiry')g.time=4;if(reason==='death')unit.alive=false;if(reason==='hidden')g.hidden=()=>true;if(reason==='distance')unit.x=50;
-  sound.sync(g,{x:0,y:0},reason!=='inactive');assert.equal(sound.field,null,reason);assert.equal(sources[0].stopAt,.13);assert.equal(retired.length,1);sources[0].onended();assert.ok(sources[0].disconnected);
+  sound.sync(g,{x:0,y:0},reason!=='inactive');assert.equal(sound.field,null,reason);assert.equal(sources[0].stopAt,.13);assert.equal(retired.length,0);sources[0].onended();assert.ok(sources[0].disconnected);
  }
 });
 test('missing shine buffer does not create a loop and can start after decoding finishes',()=>{
