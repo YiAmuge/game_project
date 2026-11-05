@@ -74,16 +74,19 @@ export function honglu(g,e,slot,p,d){
 }
 export function waterfallPulse(g,z,first=false){
  z.damage=first?120:60;z.heal=first?120+20*g.bonusHealthPercent(z.source):75+7*g.bonusHealthPercent(z.source);
+ let healed=0;
  if(first)g.effects.push({type:'hongluWaterfall',source:z.source.id,x:z.x,y:z.y,r:z.r,life:.7,maxLife:.7});
  for(const t of [...g.units].filter(t=>t.alive&&!g.hidden(t)&&distance(t,z)<=z.r&&g.clearLine(z,t))){
   if(t.team===z.source.team&&t.kind==='champion'){
-   g.heal(z.source,t,z.heal,true,{skillHeal:true,healingKey:z.healingEvent?.key,startedAt:z.healingEvent?.at});
+   healed+=g.heal(z.source,t,z.heal,true,{skillHeal:true,healingKey:z.healingEvent?.key,startedAt:z.healingEvent?.at});
    if(!z.cleansed.has(t.id)){t.status={};z.cleansed.add(t.id);}
   }else if(g.hostile(z.source,t)){
-   const shield=g.shield(t),dealt=g.deal(z.source,t,z.damage,{sound:{slot:'r',element:'water',phase:'waterfall-pulse'}});
+   // The single start splash represents both first damage and first healing.
+   const shield=g.shield(t),dealt=g.deal(z.source,t,z.damage,{sound:{slot:'r',element:'water',phase:'waterfall-pulse',silent:first}});
    if(first&&(dealt>0||g.shield(t)<shield))g.effects.push({type:'hongluSplash',source:z.source.id,x:t.x,y:t.y,r:1.2,life:.5,maxLife:.5});
   }
  }
+ if(!first&&healed>0)g.emitSound?.('water',z.source,{slot:'r',phase:'waterfall-heal',x:z.x,y:z.y});
 }
 export function tick(g,e){
  const s=e.state;

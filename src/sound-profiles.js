@@ -25,7 +25,7 @@ export const SKILL_VOICES={
  gregor:{q:['organic','organic'],r:['organic','organic']},ahab:{q:['chain','wind'],r:['spear','water']},starbuck:{q:['spear','wind'],r:['spear','water']},
  sora:{q:['punch','chain'],r:['chime','arcane']},yan:{q:['greatsword','metal'],r:['chime','shadow']},moses:{q:['smoke','smoke'],r:['smoke','smoke']},ezra:{q:['metal','metal'],r:['punch','arcane']},
 };
-export const soundAllowed=e=>Boolean(e)&&e.sourceKind!=='minion';
+export const soundAllowed=e=>Boolean(e)&&e.sourceKind!=='minion'&&!e.silent;
 export function soundVoice(e){
  let [family,element,weight]=WEAPON_VOICES[e.key]||['punch','metal',.8];const skill=e.slot&&e.damageKind!=='basic';
  if(skill&&SKILL_VOICES[e.key]?.[e.slot])[family,element]=SKILL_VOICES[e.key][e.slot];

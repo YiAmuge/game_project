@@ -8,8 +8,8 @@ import{HohenheimChargeAudio}from'../src/hohenheim-audio.js';
 const run=(g,s)=>{for(let n=0;n<Math.round(s*120);n++)g.step(1/120);};
 function arena(key){const g=new Game(key,'top',{mode:'training',seed:67}),p=g.player;g.units=[p];g.events=[];g.effects=[];g.projectiles=[];g.zones=[];g.pending=[];g.soundEvents=[];g.practice.lineStopped=true;g.map={bounds:{x:0,y:0,w:120,h:80},walls:[]};g.bounds=g.map.bounds;for(const k of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[k]=()=>{};Object.assign(p,{x:40,y:25,lastDamageAt:999,lastAttackAt:999});return{g,p};}
 function foe(g,x=44){const e=g.makeChampion('faust',1,g.nextId);Object.assign(e,{x,y:25,hp:10000,maxHp:10000,armor:0,lastDamageAt:999,lastAttackAt:999});return e;}
-test('Outis basic, Gregor Q and Marton ranged hits are piercing; Marton melee stays blunt',()=>{
- for(const[key,slot,x,id]of [['outis',null,45,'impactPierce'],['gregor','q',44,'impactPierce'],['marton',null,44,'impactPierce'],['marton',null,41,'impactBlunt']]){
+test('Outis/Gregor contacts are piercing; Marton ranged uses earth and melee stays blunt',()=>{
+ for(const[key,slot,x,id]of [['outis',null,45,'impactPierce'],['gregor','q',44,'impactPierce'],['marton',null,44,'earthImpact'],['marton',null,41,'impactBlunt']]){
   const{g,p}=arena(key),t=foe(g,x);if(slot)g.cast(p,slot,t);else g.attack(p,t);run(g,.4);const hits=g.soundEvents.filter(e=>e.kind==='hit');assert.ok(hits.length,key);assert.ok(hits.every(e=>recordingProfile(soundVoice(e)).id===id),key);
  }
 });

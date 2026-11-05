@@ -25,7 +25,7 @@ async def main():
      if r.request.url==url:await r.continue_()
      else:external.append(r.request.url);await r.abort()
     await p.route('**/*',route)
-   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===17&&__moba.audio.synth.swings.failures.length===0')
+   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===22&&__moba.audio.synth.swings.failures.length===0')
    await p.evaluate(SETUP,'hohenheim');await p.evaluate('__moba.game.attack(__moba.game.player,{x:48,y:20})');await p.wait_for_function('__moba.audio.hohenCharge.fields.size===1')
    await p.evaluate('__moba.audio.toggle()');await p.wait_for_function('__moba.audio.hohenCharge.fields.size===0');await p.evaluate('__moba.audio.toggle()');await p.wait_for_function('__moba.audio.hohenCharge.fields.size===1')
    await p.evaluate('()=>{const a=__moba.audio,g=__moba.game;window.chargeEnded=false;a.hohenCharge.fields.get(g.player.id).source.addEventListener("ended",()=>window.chargeEnded=true);a.synth.swings.history=[];g.player.state.hohenCharge.progress=1.5;__moba.mobile.api.releaseBasic(g,g.player,{x:48,y:20});advance(.25);}')
@@ -36,7 +36,7 @@ async def main():
    assert await p.evaluate('__moba.audio.synth.swings.history.filter(s=>s.id==="hohenUltimate"&&s.offset===0).length===7&&__moba.audio.synth.swings.history.filter(s=>s.id==="hohenUltimate"&&s.offset>=1).length===3')
    await p.evaluate(SETUP,'outis');await p.evaluate('__moba.audio.synth.swings.history=[];target(42.5);target(44);__moba.game.cast(__moba.game.player,"r",{x:47,y:20});advance(.8)');await p.wait_for_function('__moba.audio.synth.swings.history.filter(s=>s.id==="outisShotgun").length===1')
    for key,slot in [('outis',None),('gregor','q'),('marton',None)]:
-    await p.wait_for_timeout(180);await p.evaluate(SETUP,key);await p.evaluate('slot=>{const g=__moba.game;__moba.audio.synth.swings.history=[];const t=target(44);if(slot)g.cast(g.player,slot,t);else g.attack(g.player,t);advance(.4);}',slot);await p.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.cue==="impact"&&s.id==="impactPierce")')
+    await p.wait_for_timeout(180);await p.evaluate(SETUP,key);await p.evaluate('slot=>{const g=__moba.game;__moba.audio.synth.swings.history=[];const t=target(44);if(slot)g.cast(g.player,slot,t);else g.attack(g.player,t);advance(.4);}',slot);await p.wait_for_function('id=>__moba.audio.synth.swings.history.some(s=>s.cue==="impact"&&s.id===id)',arg='earthImpact'if key=='marton'else'impactPierce')
    rows=await p.evaluate('''async()=>{
     const Audio=__moba.audio.constructor,rate=24000,rows=[];
     const cases=[{name:'charge'},{name:'q',kind:'cast',slot:'q'},{name:'beam',phase:'electric-beam'},{name:'beam-reference',phase:'electric-beam'},{name:'grow',slot:'r',phase:'hohen-grow-hit'},{name:'full',slot:'r',phase:'hohen-full-hit'},{name:'shotgun',key:'outis',kind:'explosion',phase:'outis-shotgun',slot:'r'},{name:'firearm',key:'gubo',kind:'hit',family:'rifle'}];

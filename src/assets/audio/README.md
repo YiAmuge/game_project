@@ -1,4 +1,4 @@
-The game loads seventeen runtime recordings, with one fixed source per effect:
+The game loads twenty-two runtime recordings, with one fixed source per effect:
 
 - `floraphonic-swing-whoosh-weapon-3-189823.mp3`: general swings (0.030–0.235 s).
 - `daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3`: base-form Yan greatsword only (0.040–0.980 s).
@@ -17,6 +17,12 @@ The game loads seventeen runtime recordings, with one fixed source per effect:
 - `freesound_community-electrocute-6247.mp3`: Hohenheim basic charge and Q activation.
 - `daviddumaisaudio-electric-whoosh-01-204487.mp3`: Hohenheim R growing attacks use only 0–0.98 s; full-expansion attacks start at 1.08 s in the impact section.
 - `freesound_gamestudio-rpg-sword-attack-combo-11-388931.mp3`: Hohenheim beam, using 0.26–0.78 s of the source, pitched down about 4.5 semitones with a 3.6 kHz low-pass and controlled gain.
+- `universfield-water-splash-199583.mp3`: Hong Lu Q's healing ripple, R's first splash and subsequent successful healing pulses (0.15–2.25 s).
+- `universfield-body-hit-ground-250958.mp3`: actual landing shockwaves from Heathcliff Q, base Sora Q and Starbuck R (0.10–1.40 s).
+- `floraphonic-metal-whoosh-hit-2-201903.mp3`: Nelly's basic and Q throws, with separate pitch/rate profiles (0.045–0.580 s).
+- `yodguard-iced-magic-6-378606.mp3`: Rodion R ice-axe contacts (0.015–1.600 s).
+- `yodguard-earth-magic-5-378598.mp3`: Marton ranged-root contacts (0–2.050 s).
+
 
 
 
@@ -25,7 +31,7 @@ Swing/thrust movement uses a 0.5 mixer gain multiplier, including base Yan, phys
 
 The three impact WAVs retain their complete stereo recordings and native tails in the decoded buffers. Playback varies pitch by at most 0.30 semitones, speed by at most 3% and the requested duration by at most 0.6%. A conservative source-duration cap and a short edge fade prevent truncation clicks. Shield contacts keep the attacking weapon's impact category; transformed Yan's hands use blunt impacts. Other non-physical contacts use the blunt source. Periodic and special synthesized cues retain their existing classification.
 
-Original audio files are unchanged and decoded once per audio context. Stereo is preserved, with no added reverb or synthetic layers over recorded events. Hohenheim’s beam alone uses a low-pass to soften the high end. Decoder overshoot is attenuated, near-simultaneous copies share volume, and all seventeen sources are embedded in `weapon-swing-audio` for offline playback with their correct MP3/WAV MIME types.
+Original audio files are unchanged and decoded once per audio context. Stereo is preserved, with no added reverb or synthetic layers over recorded events. Hohenheim’s beam alone uses a low-pass to soften the high end. Decoder overshoot is attenuated, near-simultaneous copies share volume, and all twenty-two sources are embedded in `weapon-swing-audio` for offline playback with their correct MP3/WAV MIME types.
 
 Yi uses `yi-audio.js` for his skill and contact profiles (pitch at most 0.15 semitones, speed within 3%). Q deploys sound at the zone's actual position, R at its landing, and ongoing Q contacts keep Q metadata when later skills are used. Run `python tools/mix-yi-impact.py` with FFmpeg installed to rebuild the stereo glass contact; the complete recordings are aligned at time zero, peak-attenuated only if necessary and stored as one playback buffer. The source MP3 is retained for reproducibility and is not separately loaded or embedded.
 
@@ -35,8 +41,12 @@ Jamila emits one round per projectile at its actual firing time, with every four
 
 Run `python tools/mix-firearm-impact.py` to rebuild the firearm contact. The complete supplied impact and the existing piercing impact at 30% are aligned, mixed into one stereo WAV and attenuated only if needed for headroom. Firearm impact variants change pitch naturally (about -1.4 to +1.25 semitones depending on gun type) and vary playback rate within roughly 4%. Spear/harpoon/nail contacts keep their separate piercing source.
 
-Outis basic projectile contacts, Gregor Q and Marton ranged-root contacts carry explicit piercing metadata; Marton melee keeps blunt contacts. Projectile impact metadata stays attached to the projectile when subsequent actions change the caster state. Outis's shotgun firing recording is separate from the thrust and from its firearm-contact mix.
+Outis basic projectile contacts and Gregor Q carry explicit piercing metadata. Marton ranged-root contacts use the earth recording; his melee keeps blunt contacts. Projectile impact metadata stays attached to the projectile when subsequent actions change the caster state. Outis's shotgun firing recording is separate from the thrust and from its firearm-contact mix.
 
 Hohenheim charge audio follows replicated active charge, at most three nearby visible living champions, and stops on release/cancel, movement, control, death, mute, pause or leaving play. It uses a low-level electrocute loop with gentle pitch/rate changes as charging progresses. Q uses one short electrocute excerpt. R emits the windup section at each of its seven growth attacks and the impact section at each of its three full-expansion attacks, with fixed R metadata and zone position. Each basic beam uses the softened sample at the actual 120 ms beam intervals.
 
 Firearm contact playback uses 70% of its prior gain (0.476 before weight adjustment), lasts about 0.38 s, with a short final fade. Its original mix recipe remains the supplied bullet impact plus the old piercing recording at 30%; only playback level and envelope are shortened.
+
+Rudolph basic/ultimate sounds share the existing electrocute recording rather than decoding another copy. His ultimate cast and delayed detonation use lower pitch, longer envelopes and greater gain than his basic. Hong Lu Q plays at the healing ripple; R's louder first splash represents its simultaneous first attack/heal, so first-hit generic contacts are marked `silent` for the audio mixer only. Subsequent pulses emit one splash if any allied champion actually gains health, regardless of recipient count.
+
+Landing recordings play at the shockwave, never the start of airborne travel. Nelly basic and Q use the same fixed metal source with Q pitched higher and played faster; a five-knife fan is grouped into one throw and has no extra synthetic cast shot. Rodion's axe and its health-based bonus carry identical R/ice contact metadata, which merges them into one sound even after later casts. The ice and earth files omit their long silent tails. All effects use the same voice budget, spatial mixer and offline embedding as the other recordings.

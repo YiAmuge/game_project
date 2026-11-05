@@ -23,7 +23,7 @@ test('variants change processing without changing the assigned original recordin
 });
 test('runtime contains movement sources and exactly the three supplied impact recordings',async()=>{
  const files=(await readdir(new URL('../src/assets/audio/',import.meta.url))).filter(p=>/\.(mp3|wav)$/.test(p));
- assert.deepEqual(files.sort(),SWING_SAMPLES.map(s=>s.file).sort());assert.equal(SWING_SAMPLES.length,17);
+ assert.deepEqual(files.sort(),SWING_SAMPLES.map(s=>s.file).sort());assert.equal(SWING_SAMPLES.length,22);
  assert.deepEqual(SWING_SAMPLES.filter(s=>s.id.startsWith('impact')).map(({id,file,mime})=>[id,file,mime]),[['impactSlash','Sword_Hori.wav','audio/wav'],['impactPierce','Sword_Stab.wav','audio/wav'],['impactBlunt','Sword_Vert.wav','audio/wav']]);
 });
 test('only base-form Yan greatsword swings and casts select his dedicated recording',()=>{
@@ -53,10 +53,10 @@ test('decoded recordings preserve stereo, all samples and timing, with attenuati
  assert.ok(Math.abs(safe.getChannelData(0)[100]-input.getChannelData(0)[100]*(.95/1.5))<1e-7);
 });
 test('each source decodes once per audio context and is reused across matches',async()=>{
- const c=context();let loads=0,decodes=0;c.decodeAudioData=async()=>{decodes++;return buffer(2,48000,48000);};const loader=async()=>{loads++;return new ArrayBuffer(4);},a=new WeaponSwings(c,{loader}),b=new WeaponSwings(c,{loader});await Promise.all([a.ready,b.ready]);assert.equal(loads,17);assert.equal(decodes,17);assert.equal(a.buffers,b.buffers);assert.equal(a.buffers.size,17);assert.deepEqual(a.failures,[]);
+ const c=context();let loads=0,decodes=0;c.decodeAudioData=async()=>{decodes++;return buffer(2,48000,48000);};const loader=async()=>{loads++;return new ArrayBuffer(4);},a=new WeaponSwings(c,{loader}),b=new WeaponSwings(c,{loader});await Promise.all([a.ready,b.ready]);assert.equal(loads,22);assert.equal(decodes,22);assert.equal(a.buffers,b.buffers);assert.equal(a.buffers.size,22);assert.deepEqual(a.failures,[]);
 });
 test('a source loading failure resolves cleanly and retains a synthesized swing fallback',async()=>{
- const samples=new WeaponSwings(context(),{loader:async()=>{throw new Error('unavailable');}});await samples.ready;assert.equal(samples.buffers.size,0);assert.equal(samples.failures.length,17);assert.equal(samples.play({},soundVoice({key:'marton',kind:'swing'})),false);
+ const samples=new WeaponSwings(context(),{loader:async()=>{throw new Error('unavailable');}});await samples.ready;assert.equal(samples.buffers.size,0);assert.equal(samples.failures.length,22);assert.equal(samples.play({},soundVoice({key:'marton',kind:'swing'})),false);
  let noise=0;const synth={swings:samples,weapon:SoundSynth.prototype.weapon,element:()=>{},noise:()=>noise++,metal:()=>{},tone:()=>{},thud:()=>{}};SoundSynth.prototype.render.call(synth,{},soundVoice({key:'ryoshu',kind:'swing'}));assert.ok(noise>0);
 });
 test('recorded weapon movement uses one source and no additional weapon or elemental layers',()=>{

@@ -49,7 +49,7 @@ function endTransform(g,e){
 export function basicImpact(g,e,d){return {x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e),r:SORA.basicRadius};}
 function shockwave(g,p,r,cracks=false,owner){
  g.effects.push({source:owner?.id,type:'soraShockwave',theme:'sora',x:p.x,y:p.y,r,life:.38,maxLife:.38});
- if(cracks)g.effects.push({source:owner?.id,theme:'sora',type:'soraCracks',x:p.x,y:p.y,r,life:1.4,maxLife:1.4});
+ if(cracks){g.effects.push({source:owner?.id,theme:'sora',type:'soraCracks',x:p.x,y:p.y,r,life:1.4,maxLife:1.4});g.emitSound?.('slam',owner,{slot:'q',phase:'sora-landing',x:p.x,y:p.y});}
 }
 export function basic(g,e,p,d){
  if(e.key!=='sora')return false;
