@@ -1,10 +1,11 @@
 import{SoundSynth}from'./sound-synth.js';
-import{impactProfile,swingProfile}from'./weapon-swings.js';
+import{recordingProfile,swingProfile}from'./weapon-swings.js';
+import{YiBuffAudio}from'./yi-audio.js';
 import{soundVoice,mixSoundEvents,soundAllowed}from'./sound-profiles.js';
 export{soundAllowed}from'./sound-profiles.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export class GameAudio{
- constructor({context,storage=true}={}){this.enabled=true;this.played=0;this.seen=new WeakMap();this.fields=new Map();this.variants=new Map();this.gates=new Map();this.history=[];this.storage=storage;try{if(storage)this.enabled=localStorage.getItem('city-border-sound')!=='off';}catch{}if(context)this.init(context);}
+ constructor({context,storage=true}={}){this.enabled=true;this.played=0;this.seen=new WeakMap();this.fields=new Map();this.yiBuff=new YiBuffAudio(this);this.variants=new Map();this.gates=new Map();this.history=[];this.storage=storage;try{if(storage)this.enabled=localStorage.getItem('city-border-sound')!=='off';}catch{}if(context)this.init(context);}
  init(c){this.context=c;this.master=c.createGain();this.master.gain.value=.36;const limiter=c.createDynamicsCompressor();limiter.threshold.value=-16;limiter.knee.value=20;limiter.ratio.value=5;limiter.attack.value=.004;limiter.release.value=.18;this.master.connect(limiter);limiter.connect(c.destination);
   this.combat=c.createGain();this.ambience=c.createGain();this.ambience.gain.value=.18;this.signals=c.createGain();for(const bus of[this.combat,this.ambience,this.signals])bus.connect(this.master);
   this.synth=new SoundSynth(c,this.combat);this.reverb=c.createConvolver();const ir=c.createBuffer(2,Math.ceil(c.sampleRate*1.2),c.sampleRate);for(let ch=0;ch<2;ch++){const data=ir.getChannelData(ch);for(let i=0;i<data.length;i++)data[i]=(this.synth.random()*2-1)*Math.pow(1-i/data.length,3.6)*.35;}this.reverb.buffer=ir;this.reverb.connect(this.master);
@@ -19,17 +20,17 @@ export class GameAudio{
   this.voiceTimes=(this.voiceTimes||[]).filter(v=>t-v.at<.14);if(voice.priority>=4?this.voiceTimes.filter(v=>v.priority>=4).length>=6:this.voiceTimes.length>=(voice.priority>=3?16:voice.priority===1?8:11))return false;
   const gate=[event.sourceId??event.key,voice.cue,voice.family,event.phase].join('/'),last=this.gates.get(gate)??-100,gap=event.kind==='shot'?0:voice.cue==='tick'?.19:voice.cue==='impact'?.035:voice.priority>=4?0:.045;if(t-last<gap)return false;this.gates.set(gate,t);this.voiceTimes.push({at:t,priority:voice.priority});
   const signature=[voice.cue,voice.family,voice.element].join('/'),variant=this.variants.get(signature)||0;this.variants.set(signature,variant+1);voice.variant=event.variant??variant%4;
-  const movement=swingProfile(voice),important=event.kind==='ping',bus=important||['victory','defeat','shop','intro','spawn'].includes(event.kind)?this.signals:this.combat,impact=voice.cue==='impact'||voice.cue==='tick',strength=impact?clamp(.6+(event.strength||.5)*.32,.55,1.12):1,gain=(global?1:spatial.gain)*strength*(voice.cue==='tick'?.6:impact?1.5:voice.cue==='weapon'?1.25:1)*(movement?.5:1),recorded=this.synth.swings.buffers.has((impactProfile(voice)||movement)?.id),route=this.output(bus,gain,global?0:spatial.pan,important?.2:recorded?0:.035,important);
+  const movement=swingProfile(voice),important=event.kind==='ping',bus=important||['victory','defeat','shop','intro','spawn'].includes(event.kind)?this.signals:this.combat,impact=voice.cue==='impact'||voice.cue==='tick',strength=impact?clamp(.6+(event.strength||.5)*.32,.55,1.12):1,gain=(global?1:spatial.gain)*strength*(voice.cue==='tick'?.6:impact?1.5:voice.cue==='weapon'?1.25:1)*(movement?.5:1),recorded=this.synth.swings.buffers.has(recordingProfile(voice)?.id),route=this.output(bus,gain,global?0:spatial.pan,important?.2:recorded?0:.035,important);
   if(important){const p=this.combat.gain;p.cancelScheduledValues(t);p.setValueAtTime(p.value,t);p.linearRampToValueAtTime(.38,t+.025);p.setValueAtTime(.38,t+.4);p.linearRampToValueAtTime(1,t+1);}
   this.synth.render(route.out,voice,event);this.retire(route.nodes,Math.max(2.3,(event.duration||0)+.4));this.played++;this.history.push({kind:event.kind,key:event.key,phase:event.phase,cue:voice.cue,family:voice.family,element:voice.element,variant:voice.variant,at:t});if(this.history.length>96)this.history.shift();return true;
  }
- stopFields(){for(const field of this.fields.values())this.stopField(field);this.fields.clear();}
+ stopFields(){for(const field of this.fields.values())this.stopField(field);this.fields.clear();this.yiBuff.stop();}
  stopField(field){const c=this.context;if(!c)return;field.out.gain.cancelScheduledValues(c.currentTime);field.out.gain.setTargetAtTime(.0001,c.currentTime,.055);field.source.stop(c.currentTime+.3);this.retire(field.nodes,.4);}
  syncFields(g,listener,playing){if(!this.context)return;const live=playing?g.zones.filter(z=>z.kind==='waterfall'&&z.until>g.time&&this.spatial(z,listener).d<34).sort((a,b)=>this.spatial(a,listener).d-this.spatial(b,listener).d).slice(0,3):[];
   for(const[z,field]of this.fields)if(!live.includes(z)){this.stopField(field);this.fields.delete(z);}
   for(const z of live){const s=this.spatial(z,listener);let field=this.fields.get(z);if(!field){const route=this.output(this.ambience,0,s.pan,.02),source=this.synth.field(route.out);field={...route,source};this.fields.set(z,field);}field.out.gain.setTargetAtTime(s.gain*.95,this.context.currentTime,.12);const pan=field.nodes.find(n=>n.pan);if(pan)pan.pan.setTargetAtTime(s.pan,this.context.currentTime,.12);}
  }
- sync(g,{paused=false,playing=false}={}){if(this.context)this.master.gain.setTargetAtTime(this.enabled&&!paused?.36:0,this.context.currentTime,.05);if(this.game!==g){this.stopFields();this.game=g;this.gates.clear();}this.syncFields(g,g.player,playing);if(!playing)return;
+ sync(g,{paused=false,playing=false}={}){if(this.context)this.master.gain.setTargetAtTime(this.enabled&&!paused?.36:0,this.context.currentTime,.05);if(this.game!==g){this.stopFields();this.game=g;this.gates.clear();}this.syncFields(g,g.player,playing);this.yiBuff.sync(g,g.player,playing&&this.enabled&&!paused&&g.winner===null);if(!playing)return;
   const previous=this.seen.get(g)||0,events=(g.soundEvents||[]).filter(e=>e.id>previous);this.seen.set(g,g.soundSerial||0);for(const e of mixSoundEvents(events,g.player))if(!paused&&(e.kind!=='ping'||e.team===undefined||e.team===g.player.team))this.play(e,g.player);
  }
 }

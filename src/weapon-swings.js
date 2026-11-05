@@ -1,4 +1,5 @@
 // Fixed movement sources and gently varied slash, piercing and blunt impacts.
+import{YI_SAMPLES,yiSoundProfile}from'./yi-audio.js';
 export const SWING_SAMPLES=[
  {id:'swing',file:'floraphonic-swing-whoosh-weapon-3-189823.mp3',start:.03,end:.235},
  {id:'yanGreatsword',file:'daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3',start:.04,end:.98},
@@ -6,6 +7,7 @@ export const SWING_SAMPLES=[
  {id:'impactSlash',file:'Sword_Hori.wav',mime:'audio/wav'},
  {id:'impactPierce',file:'Sword_Stab.wav',mime:'audio/wav'},
  {id:'impactBlunt',file:'Sword_Vert.wav',mime:'audio/wav'},
+ ...YI_SAMPLES,
 ];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 // Pitch in semitones, envelope in seconds, then start/peak/end playback speed.
@@ -50,6 +52,7 @@ export function impactProfile(voice){
  const speed=1+[-.003,.003,0,.002][variant];
  return {id,pitch:(heavy?-.15:light?.10:0)+[-.15,.10,-.05,.15][variant],duration:impactLengths[id]*(1+[0,.006,-.006,.003][variant]),rates:[.98,1.025,.995].map(n=>n*speed),offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12),dry:true,fadeOut:.012};
 }
+export const recordingProfile=voice=>yiSoundProfile(voice)||impactProfile(voice)||swingProfile(voice);
 async function loadRecording(spec){
  const inline=globalThis.document?.getElementById('weapon-swing-audio');
  const embedded=inline&&JSON.parse(inline.textContent)[spec.id];
@@ -83,7 +86,7 @@ export class WeaponSwings{
   this.buffers=cache.buffers;this.failures=cache.failures;this.ready=cache.ready;
  }
  play(out,voice){
-  const profile=impactProfile(voice)||swingProfile(voice),buffer=profile&&this.buffers.get(profile.id);if(!buffer)return false;
+  const profile=recordingProfile(voice),buffer=profile&&this.buffers.get(profile.id);if(!buffer)return false;
   const c=this.context,t=c.currentTime,source=c.createBufferSource(),gain=c.createGain(),nodes=[source,gain],duration=Math.min(profile.duration,(buffer.duration-profile.offset)/Math.max(...profile.rates)/(2**(profile.pitch/12))*.995);
   if(duration<=.015){nodes.forEach(n=>n.disconnect());return false;}
   source.buffer=buffer;source.detune.setValueAtTime(profile.pitch*100,t);

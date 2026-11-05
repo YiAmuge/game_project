@@ -568,12 +568,12 @@ export class Game {
     this.cancelRecall(e);const c=CHAMPIONS[e.key],d=this.aim(e,point); if(!recast)e[slot+'Cd']=this.cooldown(e,slot);
     if(Skills.isOffensive(e,slot))e.lastAttackAt=this.time;
     if(!duringHarpoon){e.facing=Math.atan2(d.y,d.x);e.castAt=this.time;e.castSlot=slot;e.visualCast={slot,at:this.time,point:{...point},origin:{x:e.x,y:e.y},angle:e.facing,healthy:e.hp/e.maxHp>=.5};}e.healingEvent={key:`cast-${e.id}-${e.castSerial=(e.castSerial||0)+1}`,at:this.time};e.revealedUntil=this.time+1.25;
-    this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
+    if(e.key!=='yi')this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
     if(!(slot==='r'&&['ishmael','marton','ryoshu'].includes(e.key)))this.effects.push({type:'cast',x:e.x,y:e.y,angle:e.facing,r:slot==='r'?(e.key==='meursault'?8:5):3,theme:e.key,slot,life:slot==='r'?.9:.55,maxLife:slot==='r'?.9:.55});
     if(Skills.cast(this,e,slot,point,d,options))return true;
     const destination=(max)=>{const len=Math.min(max,distance(e,point));return {x:clamp(e.x+d.x*len,this.bounds.x+.6,this.bounds.x+this.bounds.w-.6),y:clamp(e.y+d.y*len,this.bounds.y+.6,this.bounds.y+this.bounds.h-.6)};};
     if(slot==='q') {
-      if(e.key==='yi') {const p=destination(7);this.zones.push({source:e,...p,r:3.2,until:this.time+3,nextTick:this.time+.5,nextControl:this.time,stays:{},hitIds:new Set(),slowStacks:{}});}
+      if(e.key==='yi') {const p=destination(7);this.zones.push({source:e,...p,r:3.2,until:this.time+3,nextTick:this.time+.5,nextControl:this.time,stays:{},hitIds:new Set(),slowStacks:{}});this.emitSound('cast',e,{...p,slot:'q',phase:'yi-deploy'});}
       if(e.key==='sinclair') {
         let marked=false;Skills.dash(this,e,d,3.2,180,t=>{if(t.kind==='champion'&&!marked){marked=true;this.addMark(e);}});
       }
@@ -581,6 +581,7 @@ export class Game {
     } else {
       if(e.key==='yi') {
         const landing=this.safeLanding(e,point,6.4);Object.assign(e,landing);
+        this.emitSound('ultimate',e,{slot:'r',phase:'yi-ultimate'});
         for(const a of this.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5.5)) {this.addBuff(a,'ogamdo',4);this.addShield(a,Math.min(180,a.maxHp*.18),`yi-ult-${e.id}`);}
         this.support(e);this.effects.push({type:'yiBuffRange',source:e.id,theme:'yi',x:e.x,y:e.y,r:5.5,color:'#cdbb87',life:.45,maxLife:.45});
       }
@@ -774,7 +775,7 @@ export class Game {
       const control=this.time+1e-8>=(z.nextControl??0);
       for(const t of this.units.filter(t=>this.hostile(z.source,t)&&distance(z,t)<=z.r&&this.clearLine(z,t))) {
         if(control&&t.kind==='champion'){this.status(t,'silence',1,.25,z.source);this.status(t,'reloadWeak',.1,.25,z.source);}
-        if(this.time>=z.nextTick){this.deal(z.source,t,45);z.hitIds??=new Set();z.slowStacks??={};if(t.kind==='champion'){if(!z.hitIds.has(t.id)){z.hitIds.add(t.id);t.ammo=Math.max(0,t.ammo-1);}z.slowStacks[t.id]=(z.slowStacks[t.id]||0)+1;this.status(t,'slow',Math.min(.9,z.slowStacks[t.id]*.035),.7,z.source);}}
+        if(this.time>=z.nextTick){this.deal(z.source,t,45,{sound:{slot:'q',phase:'yi-zone-hit'}});z.hitIds??=new Set();z.slowStacks??={};if(t.kind==='champion'){if(!z.hitIds.has(t.id)){z.hitIds.add(t.id);t.ammo=Math.max(0,t.ammo-1);}z.slowStacks[t.id]=(z.slowStacks[t.id]||0)+1;this.status(t,'slow',Math.min(.9,z.slowStacks[t.id]*.035),.7,z.source);}}
       }
       if(control)z.nextControl=this.time+.1;
       if(this.time>=z.nextTick)z.nextTick+=.5;
