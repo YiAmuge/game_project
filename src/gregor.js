@@ -7,7 +7,7 @@ export function cast(g,e,slot,d,onChampionHit=()=>{}){
   for(const t of [...g.units])if(g.hostile(e,t)&&g.clearLine(e,t)){
    const dx=t.x-e.x,dy=t.y-e.y,along=dx*d.x+dy*d.y,side=Math.abs(dy*d.x-dx*d.y);
    if(Math.hypot(Math.max(0,-along,along-range),Math.max(0,side-GREGOR.halfWidth))>t.radius)continue;
-   g.deal(e,t,GREGOR.pullDamage);
+   g.deal(e,t,GREGOR.pullDamage,{sound:{family:'spear',phase:'gregor-q-hit',slot:'q'}});
    const front=e.radius+t.radius+.15;
    if(g.startMotion(t,direction(t,e),Math.max(0,distance(t,e)-front),{kind:'knock',source:e,follow:e,stopDistance:front,speed:12,forcedMaxSpeed:12})){e.state.gregorPulls??=[];e.state.gregorPulls.push(t.id);}
   }

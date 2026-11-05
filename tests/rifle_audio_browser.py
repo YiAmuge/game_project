@@ -25,7 +25,7 @@ async def main():
      if r.request.url==url:await r.continue_()
      else:external.append(r.request.url);await r.abort()
     await p.route('**/*',route)
-   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===13')
+   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===17')
    await p.evaluate(SETUP,'jamila');await p.evaluate('__moba.audio.synth.swings.history=[]')
    for i in range(4):
     await p.evaluate('__moba.game.attack(__moba.game.player,{x:48,y:20});advance(.15)');await p.wait_for_timeout(155)
@@ -59,9 +59,10 @@ async def main():
     history=stats[name]['history'];assert len(history)==4
     assert all(abs(h['at']-i*interval)<.006 for i,h in enumerate(history)),history
    assert stats['gubo-basic']['history'][0]['pitch']>stats['gubo-q']['history'][0]['pitch']>stats['gubo-r']['history'][0]['pitch']
+   for i in range(4):assert np.max(np.abs(waves['impact-'+str(i)][int(.4*24000):]))<1e-7
    assert all(np.corrcoef(waves['impact-0'][:,0],waves['impact-'+str(i)][:,0])[0,1]<.99 for i in [1,2,3])
    if mode=='desktop':
-    previews={'jamila-rifle-preview.wav':waves['jamila'],'myo-rifle-preview.wav':waves['myo'],'rifle-reload-preview.wav':waves['reload'],'gubo-rifle-preview.wav':np.concatenate([waves['gubo-basic'],waves['gubo-q'],waves['gubo-r']]),'firearm-impact-preview.wav':np.concatenate([waves['impact-'+str(i)]for i in range(4)])}
+    previews={'jamila-rifle-preview.wav':waves['jamila'],'myo-rifle-preview.wav':waves['myo'],'rifle-reload-preview.wav':waves['reload'],'gubo-rifle-preview.wav':np.concatenate([waves['gubo-basic'],waves['gubo-q'],waves['gubo-r']]),'firearm-impact-short-preview.wav':np.concatenate([waves['impact-'+str(i)][:18000]for i in range(4)])}
     for name,x in previews.items():
      with wave.open(str(ROOT/'artifacts'/name),'wb')as f:f.setnchannels(2);f.setsampwidth(2);f.setframerate(24000);f.writeframes((np.clip(x,-1,1)*32767).astype('<i2').tobytes())
    assert not errors,(mode,errors);assert not external,(mode,external);(ART/(mode+'.json')).write_text(json.dumps(stats,indent=2));await ctx.close();await browser.close();print(mode+': exact round counts/timing, fourth-round pitch, one-shot reload, Gubo three levels and varied firearm impacts passed.',flush=True)

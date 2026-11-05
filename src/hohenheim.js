@@ -14,7 +14,7 @@ export function attackRange(g,e){return chargeShape(g,e,{x:e.x+1,y:e.y}).range;}
 function fire(g,e,point){
  const shape=chargeShape(g,e,point);cancelCharge(e);g.cancelRecall(e);
  e.attackCd=HOHENHEIM.interval;e.lastAttackAt=g.time;e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.attackFacing=e.facing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;
- g.action(e,'basic',()=>{const beam=(index)=>{g.emitSound?.('shot',e,{charge:shape.progress,phase:'electric-beam'});
+ g.action(e,'basic',()=>{const beam=(index)=>{g.emitSound?.('shot',e,{charge:shape.progress,phase:'electric-beam',family:'electric'});
   const targets=g.units.filter(t=>g.hostile(e,t)&&g.clearLine(e,t)&&distance(e,t)<=shape.range+t.radius).filter(t=>{const dx=t.x-e.x,dy=t.y-e.y;return dx*shape.d.x+dy*shape.d.y>=0&&Math.abs(dx*shape.d.y-dy*shape.d.x)<=shape.width+t.radius;}).sort((a,b)=>distance(e,a)-distance(e,b));
   targets.forEach((t,j)=>g.deal(e,t,(shape.damage+(index===shape.hits-1?shape.bonusDamage:0))*(j?.8:1)));
   g.effects.push({type:'line',source:e.id,x:e.x,y:e.y,to:{x:e.x+shape.d.x*shape.range,y:e.y+shape.d.y*shape.range},color:'#84edee',theme:'hohenheim',charge:shape.progress,life:.19,maxLife:.19});
@@ -44,7 +44,7 @@ export function cast(g,e,p){
 export function updateZone(g,z){
  z.r=4+3.5*clamp((g.time-z.createdAt)/1.75,0,1);
  const hit=(damage,stun=false)=>{for(const t of [...g.units])if(g.hostile(z.source,t)&&distance(z,t)<=z.r+t.radius&&g.clearLine(z,t)){g.deal(z.source,t,damage);if(stun)g.status(t,'stun',1,1,z.source);}};
- while(z.nextTick<=z.growUntil+1e-8&&z.nextTick<=g.time+1e-8){hit(15);z.nextTick+=.25;}
- while(z.burst<3&&g.time+1e-8>=z.growUntil+z.burst*.1){hit(150,true);z.burst++;g.effects.push({type:'burst',x:z.x,y:z.y,r:7.5,theme:'hohenheim',life:.28,maxLife:.28});}
+ while(z.nextTick<=z.growUntil+1e-8&&z.nextTick<=g.time+1e-8){hit(15);g.emitSound('shot',z.source,{slot:'r',damageKind:'skill',phase:'hohen-grow-hit',family:'electric',x:z.x,y:z.y});z.nextTick+=.25;}
+ while(z.burst<3&&g.time+1e-8>=z.growUntil+z.burst*.1){hit(150,true);g.emitSound('shot',z.source,{slot:'r',damageKind:'skill',phase:'hohen-full-hit',family:'electric',x:z.x,y:z.y});z.burst++;g.effects.push({type:'burst',x:z.x,y:z.y,r:7.5,theme:'hohenheim',life:.28,maxLife:.28});}
 }
 export function abilityInfo(){return {};}

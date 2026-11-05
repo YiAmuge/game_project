@@ -1,4 +1,4 @@
-The game loads thirteen runtime recordings, with one fixed source per effect:
+The game loads seventeen runtime recordings, with one fixed source per effect:
 
 - `floraphonic-swing-whoosh-weapon-3-189823.mp3`: general swings (0.030–0.235 s).
 - `daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3`: base-form Yan greatsword only (0.040–0.980 s).
@@ -13,6 +13,11 @@ The game loads thirteen runtime recordings, with one fixed source per effect:
 - `dragon-studio-gun-reload-2-511308.mp3`: Jamila reload start and Gubo Q; unchanged pitch, fixed 1x speed, full 1.512 s recording, no loop or completion replay.
 - `firearm-impact.wav`: the supplied `source/u_68csiaifb5-bulletimpact3-442719.mp3` plus the existing `Sword_Stab.wav` at 30% volume.
 - `freesound_community-sniper-rifle-5989.mp3`: Gubo normal / Q-enhanced / ultimate shots at 0 / -2 / -4.5 semitones, with progressively greater gain and longer tails.
+- `freesound_community-080902_shotgun-39753.mp3`: Outis R's second area attack, played once at the shotgun recoil.
+- `freesound_community-electrocute-6247.mp3`: Hohenheim basic charge and Q activation.
+- `daviddumaisaudio-electric-whoosh-01-204487.mp3`: Hohenheim R growing attacks use only 0–0.98 s; full-expansion attacks start at 1.08 s in the impact section.
+- `freesound_gamestudio-rpg-sword-attack-combo-11-388931.mp3`: Hohenheim beam, using 0.26–0.78 s of the source, pitched down about 4.5 semitones with a 3.6 kHz low-pass and controlled gain.
+
 
 
 
@@ -20,7 +25,7 @@ Swing/thrust movement uses a 0.5 mixer gain multiplier, including base Yan, phys
 
 The three impact WAVs retain their complete stereo recordings and native tails in the decoded buffers. Playback varies pitch by at most 0.30 semitones, speed by at most 3% and the requested duration by at most 0.6%. A conservative source-duration cap and a short edge fade prevent truncation clicks. Shield contacts keep the attacking weapon's impact category; transformed Yan's hands use blunt impacts. Other non-physical contacts use the blunt source. Periodic and special synthesized cues retain their existing classification.
 
-Original audio files are unchanged and decoded once per audio context. Stereo is preserved, with no filter, added reverb or synthetic layers over recorded events. Decoder overshoot is attenuated, near-simultaneous copies share volume, and all thirteen sources are embedded in `weapon-swing-audio` for offline playback with their correct MP3/WAV MIME types.
+Original audio files are unchanged and decoded once per audio context. Stereo is preserved, with no added reverb or synthetic layers over recorded events. Hohenheim’s beam alone uses a low-pass to soften the high end. Decoder overshoot is attenuated, near-simultaneous copies share volume, and all seventeen sources are embedded in `weapon-swing-audio` for offline playback with their correct MP3/WAV MIME types.
 
 Yi uses `yi-audio.js` for his skill and contact profiles (pitch at most 0.15 semitones, speed within 3%). Q deploys sound at the zone's actual position, R at its landing, and ongoing Q contacts keep Q metadata when later skills are used. Run `python tools/mix-yi-impact.py` with FFmpeg installed to rebuild the stereo glass contact; the complete recordings are aligned at time zero, peak-attenuated only if necessary and stored as one playback buffer. The source MP3 is retained for reproducibility and is not separately loaded or embedded.
 
@@ -29,3 +34,9 @@ The shine plays once per nearby Ogamdo application and fades linearly to zero ov
 Jamila emits one round per projectile at its actual firing time, with every fourth shield round pitched up two semitones. Her troopers use ordinary rounds. Myo Q emits four rounds at the scheduled 75 ms intervals, without an extra cast shot. Gubo Q plays the reload once; empowered basic shots use the middle profile, and the ultimate shot uses its strongest profile after the 1.2 s aim completes. Rejected/cancelled casts produce no shot.
 
 Run `python tools/mix-firearm-impact.py` to rebuild the firearm contact. The complete supplied impact and the existing piercing impact at 30% are aligned, mixed into one stereo WAV and attenuated only if needed for headroom. Firearm impact variants change pitch naturally (about -1.4 to +1.25 semitones depending on gun type) and vary playback rate within roughly 4%. Spear/harpoon/nail contacts keep their separate piercing source.
+
+Outis basic projectile contacts, Gregor Q and Marton ranged-root contacts carry explicit piercing metadata; Marton melee keeps blunt contacts. Projectile impact metadata stays attached to the projectile when subsequent actions change the caster state. Outis's shotgun firing recording is separate from the thrust and from its firearm-contact mix.
+
+Hohenheim charge audio follows replicated active charge, at most three nearby visible living champions, and stops on release/cancel, movement, control, death, mute, pause or leaving play. It uses a low-level electrocute loop with gentle pitch/rate changes as charging progresses. Q uses one short electrocute excerpt. R emits the windup section at each of its seven growth attacks and the impact section at each of its three full-expansion attacks, with fixed R metadata and zone position. Each basic beam uses the softened sample at the actual 120 ms beam intervals.
+
+Firearm contact playback uses 70% of its prior gain (0.476 before weight adjustment), lasts about 0.38 s, with a short final fade. Its original mix recipe remains the supplied bullet impact plus the old piercing recording at 30%; only playback level and envelope are shortened.

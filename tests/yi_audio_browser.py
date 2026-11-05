@@ -27,7 +27,7 @@ async def main():
      else:external.append(r.request.url);await r.abort()
     await page.route('**/*',route)
    await page.goto(url,wait_until='networkidle',timeout=90000);await page.click('#training-open');await page.click('#start');await page.wait_for_function('__moba.audio.context?.state==="running"');await page.evaluate('()=>__moba.audio.synth.swings.ready')
-   assert await page.evaluate('__moba.audio.synth.swings.buffers.size===13&&__moba.audio.synth.swings.failures.length===0')
+   assert await page.evaluate('__moba.audio.synth.swings.buffers.size===17&&__moba.audio.synth.swings.failures.length===0')
    await page.evaluate(SETUP,'yi')
    await page.evaluate('()=>{const g=__moba.game;__moba.audio.synth.swings.history=[];target(46);target(41,20,0);g.cast(g.player,"q",{x:46,y:20});}')
    await page.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="yiDeploy")')

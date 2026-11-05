@@ -504,7 +504,7 @@ export class Game {
   aim(e,point) {const d=direction(e,point);return Math.hypot(d.x,d.y)>.01?d:{x:e.team===0?1:-1,y:0};}
   bullet(e,dir,damage,range,options={}) {
     if(e.actionKind!=='basic')this.emitSound('shot',e,{slot:options.slot??e.castSlot});
-    this.projectiles.push({source:e,damageKind:e.actionKind||'skill',x:e.x,y:e.y,slot:e.actionKind==='skill'?e.castSlot:undefined,bornAt:this.time,origin:{x:e.x,y:e.y},dx:dir.x,dy:dir.y,damage,remaining:range,width:.18,speed:22,knock:0,color:e.key==='gubo'?'#a62c45':e.team===0?'#92d5dd':'#e6a097',theme:e.key,hitIds:new Set(),...options});
+    this.projectiles.push({source:e,damageKind:e.actionKind||'skill',x:e.x,y:e.y,slot:e.actionKind==='skill'?e.castSlot:undefined,bornAt:this.time,origin:{x:e.x,y:e.y},dx:dir.x,dy:dir.y,damage,remaining:range,width:.18,speed:22,knock:0,color:e.key==='gubo'?'#a62c45':e.team===0?'#92d5dd':'#e6a097',theme:e.key,hitIds:new Set(),...(e.key==='outis'&&e.actionKind==='basic'?{sound:{family:'spear',phase:'outis-basic-hit'}}:{}),...options});
   }
   cone(e,dir,range,angle,damage,onHit=()=>{},{exclude,sound}={}) {
     angle=angle>=Math.PI*2-1e-8?angle:e.actionKind==='basic'?basicFanAngle(e.key):FAN_ANGLE;
@@ -569,7 +569,7 @@ export class Game {
     if(Skills.isOffensive(e,slot))e.lastAttackAt=this.time;
     if(!duringHarpoon){e.facing=Math.atan2(d.y,d.x);e.castAt=this.time;e.castSlot=slot;e.visualCast={slot,at:this.time,point:{...point},origin:{x:e.x,y:e.y},angle:e.facing,healthy:e.hp/e.maxHp>=.5};}e.healingEvent={key:`cast-${e.id}-${e.castSerial=(e.castSerial||0)+1}`,at:this.time};e.revealedUntil=this.time+1.25;
     if(e.key==='gubo'&&slot==='q')this.emitSound('reload',e,{phase:'gubo-reload'});
-    else if(e.key!=='yi'&&!(e.key==='myo'&&slot==='q')&&!(e.key==='gubo'&&slot==='r'))this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
+    else if(e.key!=='yi'&&!(e.key==='myo'&&slot==='q')&&!(e.key==='gubo'&&slot==='r')&&!(e.key==='hohenheim'&&slot==='r'))this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
     if(!(slot==='r'&&['ishmael','marton','ryoshu'].includes(e.key)))this.effects.push({type:'cast',x:e.x,y:e.y,angle:e.facing,r:slot==='r'?(e.key==='meursault'?8:5):3,theme:e.key,slot,life:slot==='r'?.9:.55,maxLife:slot==='r'?.9:.55});
     if(Skills.cast(this,e,slot,point,d,options))return true;
     const destination=(max)=>{const len=Math.min(max,distance(e,point));return {x:clamp(e.x+d.x*len,this.bounds.x+.6,this.bounds.x+this.bounds.w-.6),y:clamp(e.y+d.y*len,this.bounds.y+.6,this.bounds.y+this.bounds.h-.6)};};
@@ -719,7 +719,7 @@ export class Game {
   updateProjectiles(dt) {
     for(const p of this.projectiles) {
       if(p.guboUltimate){GuboUltimate.flight(this,p,dt);continue;}
-      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius+projectileHitWidth(p)){const actual=this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});p.onHit?.(t,p,actual);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
+      if(p.homing){const t=p.target;p.remaining-=dt;if(!t.alive||this.hidden(t)){p.remaining=0;continue;}const d=direction(p,t),step=p.speed*dt;if(distance(p,t)<=step+t.radius+projectileHitWidth(p)){const actual=this.deal(p.source,t,p.damage,{allowFriendly:p.allowFriendly,damageKind:p.damageKind,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot,...p.sound}});p.onHit?.(t,p,actual);p.remaining=0;p.hit=true;}else{p.x+=d.x*step;p.y+=d.y*step;p.dx=d.x;p.dy=d.y;}continue;}
       const travel=Math.min(p.remaining,p.speed*dt),n=Math.max(1,Math.ceil(travel/.18));
       for(let i=0;i<n&&p.remaining>0;i++) {
         p.x+=p.dx*travel/n;p.y+=p.dy*travel/n;p.remaining-=travel/n;
@@ -727,7 +727,7 @@ export class Game {
         const t=this.units.find(t=>(this.hostile(p.source,t)||p.allowFriendly&&(this.canGuboHitAlly(p.source,t)||p.queenStar&&t!==p.source&&t.kind==='champion'&&t.team===p.source.team&&t.alive&&!this.hidden(t)))&&!p.hitIds.has(t.id)&&(!p.championsOnly||t.kind==='champion')&&projectileIntersects(p,t));
         if(t) {
           p.hitIds.add(t.id);p.lastHpRatio=t.hp/t.maxHp;
-          p.beforeHit?.(t,p);const friendly=Queen.projectileContact(this,p,t),actual=friendly?0:this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot}});
+          p.beforeHit?.(t,p);const friendly=Queen.projectileContact(this,p,t),actual=friendly?0:this.deal(p.source,t,p.damage*(p.bonusLowHp&&t.hp/t.maxHp<.5?1+p.bonusLowHp:1),{damageKind:p.damageKind,allowFriendly:p.allowFriendly,nonLethal:p.nonLethal,proc:p.proc??true,sound:{slot:p.slot,...p.sound}});
           p.onHit?.(t,p,actual);
           if(p.knock)this.startMotion(t,{x:p.dx,y:p.dy},p.knock,{kind:'knock',source:p.source});
           if(p.pierce>0){p.pierce--;p.damage*=p.decay??1;}else {p.remaining=0;p.hit=true;}
