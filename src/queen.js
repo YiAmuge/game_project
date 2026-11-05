@@ -36,11 +36,11 @@ function beam(g,e,state,spec,slot){
  }
  g.effects.push({type:'arcanaBeam',source:e.id,theme:'queen',slot,x:state.x,y:state.y,angle:state.angle,range:spec.range,width:spec.width,stage:slot==='r'?state.stage:0,life:spec.every+.12,maxLife:spec.every+.12});g.emitSound('shot',e,{slot,element:'arcane',phase:'arcana-beam',weight:slot==='r'?1.5:1});
 }
-function mark(g,e,t){if(!t.alive||t.hp<=0||g.debuffImmune(t)||t.ccImmuneUntil>g.time)return;(t.state.queenMarks??={})[e.id]={until:g.time+QUEEN.markTime};g.triggerDisrupt(e,t);}
+function mark(g,e,t){if(!t.alive||t.hp<=0||g.debuffImmune(t)||t.ccImmuneUntil>g.time)return;((t.state??={}).queenMarks??={})[e.id]={until:g.time+QUEEN.markTime};g.triggerDisrupt(e,t);}
 export function slow(g,e){const s=e.status?.slow;return s?.queenDecay&&s.until>g.time?s.amount*Math.max(0,(s.until-g.time)/(s.until-s.decayAt)):0;}
 export function afterDamage(g,e,t,actual,absorbed,{fixed,proc,damageKind}){
  if(e.key!=='queen'||e.kind!=='champion'||e.team===t.team||actual+absorbed<=0||!t.alive||t.hp<=0||fixed||!proc)return;
- const active=t.state.queenMarks?.[e.id]?.until>g.time;
+ const active=t.state?.queenMarks?.[e.id]?.until>g.time;
  if(active)g.deal(e,t,(actual+absorbed)*QUEEN.markRatio,{fixed:true,proc:false,damageKind,sound:{periodic:true}});
  if(damageKind==='basic')mark(g,e,t);
 }
