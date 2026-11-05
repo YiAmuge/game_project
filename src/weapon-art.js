@@ -176,7 +176,7 @@ function drawHeathSweep(r,e,g,lift,layer){
   if(!camera)return {x:pose.center.x+v.x,y:pose.center.y+v.y};
   const p=camera.worldToScreen({x:e.x+v.x,y:e.y+v.y},.075);
   return {x:pose.center.x+(p.x-origin.x)/camera.scale,y:pose.center.y+(p.y-origin.y)/camera.scale};
- },point=u=>project(heathSackPoint(pose,u)),hand=point(0),ahead=point(.001),angle=Math.atan2(ahead.y-hand.y,ahead.x-hand.x),handLayer=Math.sin(pose.angle)<0?'back':'front',disabled=Boolean(g.stat(e,'disarm'));
+ },point=u=>project(heathSackPoint(pose,u)),hand=point(0),ahead=point(.001),angle=Math.atan2(ahead.y-hand.y,ahead.x-hand.x),handLayer=Math.sin(pose.angle)<0?'back':'front',disabled=Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual);
  const grip=which=>{if(layer!==handLayer)return;c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);drawGripHands(c,e.key,key,m,pivot,which);c.restore();};
  grip('back');c.save();c.imageSmoothingEnabled=false;if(disabled)c.filter='grayscale(1) brightness(.7)';
  // Follow the original cloth texture along a curved centerline; the knot stays
@@ -249,9 +249,9 @@ export function drawBackEquipment(r,e,g,{lift=0}={}){
  if(e.state.kromerHeldBy)return;
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'back');return;}
  if(e.key==='nosferatu'&&g.buff(e,'bloodfiend')){drawBloodSweep(r,e,g,lift,'back');return;}
- if(e.key==='jamila'){if(e.lcaTrooper)return;const p=equipmentPose(g,e,lift),c=r.ctx,q=Boolean(e.state.jamilaQ&&e.state.jamilaQ.phase!=='retreat');c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,q?'jamilaRifle':'jamilaKopis',q?2.1:1.75,{x:q?.06:.32,rotation:q?.95:1.05,pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();return;}
+ if(e.key==='jamila'){if(e.lcaTrooper)return;const p=equipmentPose(g,e,lift),c=r.ctx,q=Boolean(e.state.jamilaQ&&e.state.jamilaQ.phase!=='retreat');c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,q?'jamilaRifle':'jamilaKopis',q?2.1:1.75,{x:q?.06:.32,rotation:q?.95:1.05,pivot:.5,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();return;}
  if(e.key!=='myo'||myoFiring(g,e))return;
- const p=equipmentPose(g,e,lift),c=r.ctx;c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,'myoRifle',2.1,{x:.06,rotation:.95,pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
+ const p=equipmentPose(g,e,lift),c=r.ctx;c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,'myoRifle',2.1,{x:.06,rotation:.95,pivot:.5,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();
 }
 export function weaponGeometry(key,length){
  const f=FRAMES[key];if(!f)return null;const angle=f.rotation||0,baseW=f.w,baseH=f.h;
@@ -308,7 +308,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm'))});c.restore();drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
+  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){const body=FRAMES.yanDistorted,height=2.1*body.heightScale,right=height*body.w/body.h*(1-body.foot[0]);c.save();c.translate(p.origin.x+right+1.72,p.origin.y-.6);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
@@ -348,7 +348,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='sora'&&!g.buff(e,'soraEgo')){
   // Keep the existing central cuff pivot and raised slam, following body Z.
   const slam=attacking?Math.sin(Math.min(1,age/.18)*Math.PI)*1.25:0;
-  c.save();c.translate(e.x,p.origin.y-.75-slam);orientWeapon(c,p.angle);c.translate(.18+(attacking?Math.sin(p.swing*Math.PI)*.22:0),0);drawWeapon(c,'soraFists',entry[1],{pivot:.5,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
+  c.save();c.translate(e.x,p.origin.y-.75-slam);orientWeapon(c,p.angle);c.translate(.18+(attacking?Math.sin(p.swing*Math.PI)*.22:0),0);drawWeapon(c,'soraFists',entry[1],{pivot:.5,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();
  }else if(e.key==='sora'){
   const orbit=soraOrbitPose(e,p),pivot=orbit.active?.5:.12;held('soraClawLeft',SORA_CLAW_LENGTH,orbit.left.hand,orbit.left.angle,pivot,{mode:'orbit',progress:p.swing,trail:orbit.active,part:'claw-left'});
   held('soraClawRight',SORA_CLAW_LENGTH,orbit.right.hand,orbit.right.angle,pivot,{mode:'orbit',progress:p.swing,trail:orbit.active,part:'claw-right'});
@@ -410,6 +410,6 @@ function drawBloodSweep(r,e,g,lift,layer){
  for(const pose of bloodClawPoses(g,e,p)){
   if((pose.ground.y<0?'back':'front')!==layer)continue;
   const project=v=>{if(!camera)return {x:p.origin.x+v.x,y:p.origin.y-.86+v.y};const at=camera.worldToScreen({x:e.x+v.x,y:e.y+v.y},.075);return {x:p.origin.x+(at.x-origin.x)/camera.scale,y:p.origin.y-.86+(at.y-origin.y)/camera.scale};},hand=project(pose.ground),tip=project({x:Math.cos(pose.angle)*(1.7),y:Math.sin(pose.angle)*1.7}),angle=Math.atan2(tip.y-hand.y,tip.x-hand.x);
-  c.save();c.translate(hand.x,hand.y);c.rotate(angle);c.shadowColor='#ed1643';c.shadowBlur=9;drawWeapon(c,pose.asset,pose.length,{pivot:.08,disabled:Boolean(g.stat(e,'disarm'))});r.weaponTrail(e,g,pose.asset,{x:.1,y:0},{x:pose.length*.92,y:0},true);c.restore();
+  c.save();c.translate(hand.x,hand.y);c.rotate(angle);c.shadowColor='#ed1643';c.shadowBlur=9;drawWeapon(c,pose.asset,pose.length,{pivot:.08,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});r.weaponTrail(e,g,pose.asset,{x:.1,y:0},{x:pose.length*.92,y:0},true);c.restore();
  }
 }

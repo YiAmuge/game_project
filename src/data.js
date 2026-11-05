@@ -1,7 +1,7 @@
 import{ARCANA_DATA}from'./arcana-data.js';
 export const FAN_ANGLE=165*Math.PI/180;
 export const BASIC_FAN_ANGLE=145*Math.PI/180;
-export const basicFanAngle=key=>key==='starbuck'?.975*1.2:key==='nosferatu'?Math.PI:BASIC_FAN_ANGLE;
+export const basicFanAngle=key=>key==='starbuck'?.975*1.2:key==='nosferatu'?Math.PI:key==='dongbaek'?BASIC_FAN_ANGLE-30*Math.PI/180:BASIC_FAN_ANGLE;
 import {KROMER_DATA} from './kromer-data.js';
 import {JAMILA_DATA} from './jamila-data.js';
 import { CHAMPION_TEXT } from './champion-text.js';
@@ -69,7 +69,12 @@ export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!NEW_CHAMPION_KEYS.includes(key)));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const ARMOR_GRADES={queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:3,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
+export const BASE_HEALTH={yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
+export const BASE_SPEED={yi:4.35,rudolph:3.25};
+export const championBaseHealth=key=>BASE_HEALTH[key]??RULES.health[RUNTIME_CHAMPIONS[key].health]*(RUNTIME_CHAMPIONS[key].healthMultiplier||1);
+export const championBaseSpeed=key=>BASE_SPEED[key]??RULES.speed[RUNTIME_CHAMPIONS[key].speed];
+
+export const ARMOR_GRADES={queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS))c.armor=ARMOR_GRADES[key]??2;
 export const GROWTH={
  queen:[.055,.045,.013],nosferatu:[.055,.055,.016],
@@ -82,10 +87,10 @@ for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,spee
 
 CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=5.2;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
 
-CHAMPIONS.gubo.damage=240;CHAMPIONS.rudolph.damage=57;CHAMPIONS.marton.color='#02ebf7';
+CHAMPIONS.queen.range=7.7;CHAMPIONS.queen.damage=195;CHAMPIONS.nosferatu.damage=90;CHAMPIONS.kromer.damage=175;CHAMPIONS.gubo.damage=240;CHAMPIONS.rudolph.damage=57;CHAMPIONS.marton.color='#02ebf7';
 CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
 
-CHAMPIONS.honglu.q=12;CHAMPIONS.don.q=8;CHAMPIONS.don.range=2.5;
+CHAMPIONS.honglu.q=10;CHAMPIONS.queequeg.q=.7;CHAMPIONS.don.q=8;CHAMPIONS.don.range=2.5;
 
 CHAMPIONS.marton.range=5;
 CHAMPIONS.queequeg.range=3;

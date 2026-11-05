@@ -59,9 +59,10 @@ export function impactProfile(voice){
  return {id,pitch:(heavy?-.15:light?.10:0)+[-.15,.10,-.05,.15][variant],duration:impactLengths[id]*(1+[0,.006,-.006,.003][variant]),rates:[.98,1.025,.995].map(n=>n*speed),offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12),dry:true,fadeOut:.012};
 }
 export const recordingProfile=voice=>championSkillSoundProfile(voice)||electricSoundProfile(voice)||rifleSoundProfile(voice)||yiSoundProfile(voice)||impactProfile(voice)||swingProfile(voice);
+const inlineRecordings=new WeakMap();
 async function loadRecording(spec){
  const inline=globalThis.document?.getElementById('weapon-swing-audio');
- const embedded=inline&&JSON.parse(inline.textContent)[spec.id];
+ let embedded;if(inline){let data=inlineRecordings.get(inline);if(!data){data=JSON.parse(inline.textContent);inlineRecordings.set(inline,data);}embedded=data[spec.id];}
  if(embedded){const raw=atob(embedded.slice(embedded.indexOf(',')+1));return Uint8Array.from(raw,c=>c.charCodeAt(0)).buffer;}
  const response=await fetch('./src/assets/audio/'+spec.file);if(!response.ok)throw new Error('Weapon swing audio '+response.status);return response.arrayBuffer();
 }

@@ -103,9 +103,10 @@ export function tick(g,e){
 export function finishInsight(g,e){
  const s=e.state;if(s.insightUntil===undefined)return;
  delete s.insightUntil;delete e.buffs.insight;e.shields=e.shields.filter(a=>a.source!==`insight-${e.id}`);e.phaseEnemiesUntil=0;settleBody(g,e,s.insightOrigin);delete s.insightOrigin;
- for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=5))g.heal(e,t,500+5*g.bonusHealthPercent(e),false,{skillHeal:true,healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
+ for(const t of g.champions(e.team).filter(t=>t.alive&&distance(t,e)<=6))g.heal(e,t,500+5*g.bonusHealthPercent(e),false,{skillHeal:true,healingKey:s.insightHealingEvent?.key,startedAt:s.insightHealingEvent?.at});
+ for(const t of g.units)if(g.hostile(e,t)&&distance(t,e)<=6+t.radius&&g.clearLine(e,t))g.deal(e,t,150,{damageKind:'skill',sound:{slot:'q',element:'water'}});
  g.emitSound?.('water',e,{slot:'q',phase:'healing-ripple'});
- g.effects.push({type:'hongluRipple',source:e.id,theme:'honglu',x:e.x,y:e.y,r:5,life:.8,maxLife:.8});
+ g.effects.push({type:'hongluRipple',source:e.id,theme:'honglu',x:e.x,y:e.y,r:6,life:.8,maxLife:.8});
 }
 export function easterEggs(g,dt){
  g.easterEggs??=new Set();const phrases={queequeg:'자, 막아내라!',starbuck:'엄호해라!',ishmael:'네 탓이군, 이스마엘!'};

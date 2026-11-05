@@ -141,8 +141,8 @@ export function basic(g,e,p,d,options={}){
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
  case 'don':dash(g,e,d,dashLength(e,2.5),230,()=>{},{hitWidth:.72});return true;
- case 'ryoshu':cone(g.attackRange(e),Math.PI,220);return true;
- case 'honglu':area(g,e,e,g.attackRange(e),190);g.effects.push({type:'hongluSweep',x:e.x,y:e.y,r:g.attackRange(e),life:.4,maxLife:.4});return true;
+ case 'ryoshu':{const step=e.state.ryoshuStep;delete e.state.ryoshuStep;if(step&&!g.stat(e,'root')&&!g.stat(e,'captured'))dash(g,e,d,.5,0,()=>{},{onComplete:()=>g.cone(e,d,g.attackRange(e),Math.PI,220)});else cone(g.attackRange(e),Math.PI,220);return true;}
+ case 'honglu':for(const ally of g.champions(e.team))if(ally.alive&&distance(e,ally)<=6.5)g.addBuff(ally,'hongluAttackStride',1.85,{copy:false});area(g,e,e,g.attackRange(e),190);g.effects.push({type:'hongluSweep',x:e.x,y:e.y,r:g.attackRange(e),life:.4,maxLife:.4});return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
  case 'ishmael':cone(g.attackRange(e),1.6,220,t=>{if(t.kind==='champion'&&t.alive&&!(t.invulnerableUntil>g.time)&&!(t.ccImmuneUntil>g.time)&&!g.debuffImmune(t)&&!(g.training&&t===g.player&&g.practice.invincible)){t.state.ishmaelWeak??={};const prior=t.state.ishmaelWeak[e.id],old=prior?.until>g.time?prior.stacks:0;t.state.ishmaelWeak[e.id]={stacks:Math.min(2,old+1),until:g.time+1.5};if(old<2)g.triggerDisrupt(e,t);}});return true;
  case 'rodya':{let hits=0;g.bullet(e,d,220,g.attackRange(e),{swordWave:true,pierce:Infinity,speed:13,width:.75,beforeHit:(t,b)=>b.damage=220*(1-Math.min(.5,hits*.1)),onHit:t=>{hits++;g.status(t,'slow',.03,2.2,e);g.status(t,'weak',.035,2.2,e);}});return true;}
@@ -199,7 +199,7 @@ export function cast(g,e,slot,p,d,options={}){
   else{e.qCd=0;g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false),{actionTag:'donR'});}
   return true;
  case 'ryoshu':
-  if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;const len=3.8;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
+  if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;e.state.ryoshuStep=true;const len=3.5;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
   else{
    const len=Math.min(7,distance(e,p)),rawDest={x:clamp(e.x+d.x*len,g.bounds.x+.6,g.bounds.x+g.bounds.w-.6),y:clamp(e.y+d.y*len,g.bounds.y+.6,g.bounds.y+g.bounds.h-.6)};
    const dest=trapPoint(g,e,rawDest);if(!g.blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
@@ -289,6 +289,7 @@ export function gregorStack(g,e,n=1){
 }
 export function takedown(g,e,victim,direct){
  if(!e||e.kind!=='champion')return;
+ if(e.key==='ahab'&&direct&&victim.kind==='champion'&&victim.team!==e.team)e.ammo=g.ammoCap(e);
  V06.takedown(g,e,victim,direct);
 
  if(e.key==='gubo'&&victim.kind==='champion')e.qCd=0;
@@ -343,7 +344,7 @@ export function tick(g,e,dt){
  if(e.key==='rudolph'){
   tickRudolphWeapon(g,e);
   if(s.exhaustedUntil){if(s.exhaustedUntil>g.time)return;delete s.exhaustedUntil;delete s.exhaustedAt;delete s.recoveryDuration;e.ammo=ammoCap(g,e);return;}
-  if(e.ammo<=0){const duration=s.recoveryDuration||2.5;s.exhaustedAt=g.time;s.recoveryDuration=duration;s.exhaustedUntil=g.time+duration;g.status(e,'silence',1,duration);g.status(e,'disarm',1,duration);return;}
+  if(e.ammo<=0){const duration=s.recoveryDuration||2.5;s.exhaustedAt=g.time;s.recoveryDuration=duration;s.exhaustedUntil=g.time+duration;g.status(e,'silence',1,duration,e);g.status(e,'disarm',1,duration,e);if(s.recoveryDuration===1.25){for(const key of ['silence','disarm'])if(e.status[key]?.theme==='rudolph')e.status[key].hideVisual=true;}return;}
   if(g.reloadRate(e)>0&&(g.time-e.lastAttackAt>.4||has(e,'wisdom')||has(e,'reloadStacks')&&e.state.augReloadStacks>=5))e.ammo=Math.min(ammoCap(g,e),e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt*g.reloadRate(e));
  }
 

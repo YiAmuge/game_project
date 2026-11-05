@@ -1,7 +1,7 @@
 import{has}from'./augments.js';
 import{RULES,RUNTIME_CHAMPIONS}from'./data.js';
 import{damageBonus}from'./skills.js';
-export const QUEEN={heal:.4,shieldCap:.15,shieldTime:2,basicDamage:180,basicRange:6.5,basicSpeed:13,basicWidth:.28,allySpeed:1.3,allyRange:1.2,allyDamage:15,qDelay:1.5,qRange:10.5,qWidth:4.2,qDamage:140,qHits:4,qEvery:.25,qSpeed:.17,qSpeedTime:1.8,stageTime:1.25,rTurnSpeed:Math.PI*2*.3,cameraMaxView:2.25,cameraHold:.6};
+export const QUEEN={heal:.4,shieldCap:.15,shieldTime:2,basicDamage:195,basicRange:7.7,basicSpeed:16.9,basicWidth:.28,markTime:3.5,markRatio:.30,qDelay:1.5,qRange:10.5,qWidth:4.2,qDamage:140,qHits:4,qEvery:.25,qSpeed:.17,qSpeedTime:1.8,stageTime:1.25,rTurnSpeed:Math.PI*2*.3,cameraMaxView:2.25,cameraHold:.6};
 export const ARCANA_STAGES=[{range:15,width:3.5,every:.33,damage:125,hits:2},{range:30,width:3.5,every:.33,damage:150,hits:3},{range:45,width:4.5,every:.25,damage:175,hits:4},{range:60,width:5,every:.2,damage:200,hits:5}];
 export const stage=(g,e)=>Math.min(3,Math.max(0,Math.floor((g.time-(e.state.queenR?.at??g.time)+1e-8)/QUEEN.stageTime)));
 export const recast=(g,e,slot)=>e.key==='queen'&&(slot==='q'?e.state.queenQ?.phase==='preparing'&&!e.state.queenQ.redirected:e.state.queenR?.phase==='charging');
@@ -18,7 +18,6 @@ export function healHit(g,e,t,base,kind='skill'){
 export function projectileContact(g,p,t){
  if(!p.queenStar||t.team!==p.source.team)return false;
  healHit(g,p.source,t,p.damage,'basic');
- if(!p.allyBoosted){p.allyBoosted=true;p.speed*=QUEEN.allySpeed;p.remaining+=QUEEN.allyRange;p.damage+=QUEEN.allyDamage;}
  return true;
 }
 export function basic(g,e,d){g.bullet(e,d,QUEEN.basicDamage,g.attackRange(e),{queenStar:true,allowFriendly:true,pierce:Infinity,width:QUEEN.basicWidth,speed:QUEEN.basicSpeed});}
@@ -27,9 +26,23 @@ function beam(g,e,state,spec,slot){
  const d={x:Math.cos(state.angle),y:Math.sin(state.angle)};
  for(const t of [...g.units]){if(!t.alive||g.hidden(t)||t===e)continue;const dx=t.x-state.x,dy=t.y-state.y,along=dx*d.x+dy*d.y,side=Math.abs(dx*d.y-dy*d.x);if(along<0||along>spec.range+t.radius||side>spec.width/2+t.radius)continue;
   if(t.team===e.team){if(t.kind==='champion')healHit(g,e,t,spec.damage);}
-  else if(g.hostile(e,t)&&(slot==='r'||g.clearLine(state,t)))g.deal(e,t,spec.damage*(slot==='r'&&['tower','core'].includes(t.kind)?.3:1),{damageKind:'skill',sound:{slot,element:'arcane'}});
+  else if(g.hostile(e,t)&&(slot==='r'||g.clearLine(state,t))){
+   const before=t.hp+g.shield(t);g.deal(e,t,spec.damage*(slot==='r'&&['tower','core'].includes(t.kind)?.3:1),{damageKind:'skill',sound:{slot,element:'arcane'}});
+   if(t.alive&&before>t.hp+g.shield(t)&&!g.debuffImmune(t)&&!(t.ccImmuneUntil>g.time)){
+    if(state.hits===0){const seconds=slot==='r'?1:.7;g.status(t,'slow',slot==='r'?.99:.70,seconds,e);if(t.status.slow?.theme==='queen'&&Math.abs(t.status.slow.until-g.time-seconds)<1e-8){t.status.slow.decayAt=g.time;t.status.slow.queenDecay=true;}}
+    if(slot==='r')mark(g,e,t);
+   }
+  }
  }
  g.effects.push({type:'arcanaBeam',source:e.id,theme:'queen',slot,x:state.x,y:state.y,angle:state.angle,range:spec.range,width:spec.width,stage:slot==='r'?state.stage:0,life:spec.every+.12,maxLife:spec.every+.12});g.emitSound('shot',e,{slot,element:'arcane',phase:'arcana-beam',weight:slot==='r'?1.5:1});
+}
+function mark(g,e,t){if(!t.alive||t.hp<=0||g.debuffImmune(t)||t.ccImmuneUntil>g.time)return;(t.state.queenMarks??={})[e.id]={until:g.time+QUEEN.markTime};g.triggerDisrupt(e,t);}
+export function slow(g,e){const s=e.status?.slow;return s?.queenDecay&&s.until>g.time?s.amount*Math.max(0,(s.until-g.time)/(s.until-s.decayAt)):0;}
+export function afterDamage(g,e,t,actual,absorbed,{fixed,proc,damageKind}){
+ if(e.key!=='queen'||e.kind!=='champion'||e.team===t.team||actual+absorbed<=0||!t.alive||t.hp<=0||fixed||!proc)return;
+ const active=t.state.queenMarks?.[e.id]?.until>g.time;
+ if(active)g.deal(e,t,(actual+absorbed)*QUEEN.markRatio,{fixed:true,proc:false,damageKind,sound:{periodic:true}});
+ if(damageKind==='basic')mark(g,e,t);
 }
 export function turn(g,e,aim){
  const s=e.state.queenR;if(s?.phase!=='charging')return;

@@ -1,7 +1,7 @@
 import{RULES,RUNTIME_CHAMPIONS,FOUNTAIN_AREAS,upgradeRate}from'./data.js';
 import{distance,direction,clamp}from'./geometry.js';
 import{settleBody,moveBody}from'./collision.js';
-export const NOSFERATU={lifesteal:.25,capacity:1200,cost:100,qWindow:2.5,qRecasts:2,qRange:6.8,qDamage:35,batDuration:5,bats:3,batDamage:35,batEvery:.5,batSpeed:1.25,batRange:2.5,leash:8,basicDamage:160,basicRange:1.7,bladeWidth:2*3.3*Math.sin(165*Math.PI/360)-2,bladeRange:6.8,bladeDamage:80,rRange:7.5,rDuration:10,rEvery:.5,rDrain:.05,rAttackEvery:.35,rLifesteal:.3,rDamage:130,rSize:1.15,rFeast:.3};
+export const NOSFERATU={lifesteal:.25,capacity:1200,cost:100,qWindow:2.5,qRecasts:2,qRange:6.8,qDamage:35,batDuration:5,bats:3,batDamage:35,batEvery:.5,batSpeed:1.25,batRange:2.5,leash:8,basicDamage:90,basicRange:1.7,bladeWidth:2*3.3*Math.sin(165*Math.PI/360)-2,bladeRange:6.8,bladeDamage:75,rRange:7.5,rDuration:5,rEvery:.5,rDrain:.10,rAttackEvery:.35,rLifesteal:.3,rDamage:180,rSize:1.15,rFeast:.3};
 export const bloodfiend=(g,e)=>e.key==='nosferatu'&&Boolean(e.state?.bloodfiend);
 export function healthRatio(g,e){return Math.max(1,(1+RUNTIME_CHAMPIONS.nosferatu.growth.health*(e.level-1))*(1+upgradeRate(e,'health'))*(1+g.nosHealthAugments(e)));}
 export const capacity=(g,e)=>NOSFERATU.capacity+Math.max(0,healthRatio(g,e)-1)*2000;
@@ -75,3 +75,9 @@ export function tickBat(g,b,dt){
  if(distance(b,owner)>NOSFERATU.leash+.01){const d=direction(owner,b),point={x:owner.x+d.x*(NOSFERATU.leash-.1),y:owner.y+d.y*(NOSFERATU.leash-.1)};if(validBatPoint(g,b,point)&&!g.blocked(point.x,point.y,b.radius))Object.assign(b,point);else Object.assign(b,{x:owner.x,y:owner.y});}ejectBat(g,b);
 }
 export function onDeath(g,e){if(e.key!=='nosferatu')return;for(const b of g.units)if(b.bloodBat&&b.owner===e.id){b.alive=false;b.hp=0;}}
+
+export function naturalHeal(g,e,dt,eligible){
+ if(!eligible||bloodfiend(g,e)){delete e.state.bloodRestAt;return;}
+ e.state.bloodRestAt??=g.time+.5;
+ while(g.time+1e-8>=e.state.bloodRestAt){e.state.bloodRestAt+=.5;const spent=(e.state.bloodFeast||0)*.01;e.state.bloodFeast=Math.max(0,(e.state.bloodFeast||0)-spent);if(spent>0)g.heal(null,e,spent,false,{natural:true});}
+}

@@ -1,7 +1,7 @@
 import{distance,direction,segmentDistance}from'./geometry.js';
 import{canOccupy,settleBody}from'./collision.js';
 import{carried}from'./attachments.js';
-export const KROMER={basicWidth:2,basicDamage:185,basicPen:.1,nailDuration:4.5,nailRatio:.025,qRange:9,qDamage:170,qDashDamage:210,qPen:.15,qMarkDuration:3.5,qStun:1.17,rRange:3,rDamage:120,rPen:.2,rEvery:.3,rHits:6,throwRange:3.5,turnSpeed:Math.PI,moveMultiplier:.75};
+export const KROMER={basicWidth:2,basicDamage:175,basicPen:.1,nailDuration:4.5,nailRatio:.025,qRange:9,qDamage:160,qDashDamage:210,qPen:.15,qMarkDuration:3.5,qStun:1.17,rRange:3,rDamage:120,rPen:.2,rEvery:.3,rHits:6,throwRange:3,turnSpeed:Math.PI,moveMultiplier:.75};
 export const qTarget=(g,e)=>e.state.kromerQMark?.until>g.time?g.units.find(t=>t.id===e.state.kromerQMark.targetId&&t.alive):null;
 export const recast=(g,e,slot)=>e.key==='kromer'&&slot==='q'&&Boolean(qTarget(g,e));
 export function validate(g,e,slot){if(e.state.kromerGrab)return false;return !(slot==='r'||slot==='q'&&recast(g,e,slot))||!g.stat(e,'root')&&!g.stat(e,'captured');}

@@ -29,12 +29,12 @@ export function championReferenceStats(key,transformed=false){const{g,e}=referen
 const degrees=r=>number(Number((r*180/Math.PI).toFixed(1)))+'°';
 function basicRanges(key,g,e,transformed){
  const range=g.attackRange(e),r=number(range);
- if(key==='queen')return[row('관통 투사체','사거리 6.5'),row('아군 통과 강화','추가 사거리 1.2')];
+ if(key==='queen')return[row('관통 투사체','사거리 '+r)];
  if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 전방 반원 180°'),row('피의 칼날','사거리 6.8 · 폭 4.54 · 관통 불가')];
  if(key==='yan')return transformed?[row('손 조작','조작 거리 '+YAN.handLeash+' · 손 공격 반경 '+YAN.handRadius)]:[row('미충전','사거리 '+YAN.basicRange+' · 폭 '+YAN.width),row('최대 충전','사거리 '+YAN.fullRange+' · 폭 '+YAN.width),row('충전 변화','사거리 최소 '+YAN.basicRange+' ~ 최대 '+YAN.fullRange)];
  if(key==='hohenheim')return[row('미충전','사거리 '+HOHENHEIM.minRange+' · 직선 폭 '+number(HOHENHEIM.width*2)),row('최대 충전','사거리 '+HOHENHEIM.maxRange+' · 직선 폭 '+number(HOHENHEIM.width*2)),row('충전 변화','사거리 최소 '+HOHENHEIM.minRange+' ~ 최대 '+HOHENHEIM.maxRange)];
  if(key==='sora')return transformed?[row('공격 범위','자신 중심 반경 '+SORA.egoRadius)]:[row('공격 범위','중심점 사거리 '+SORA.basicRange+' · 반경 '+SORA.basicRadius)];
- if(key==='marton')return[row('근접 조준: 거리 2.5 미만','사거리 2.5 · 부채꼴 165°'),row('원거리 조준: 거리 2.5 이상','중심점 사거리 '+r+' · 반경 2.2')];
+ if(key==='marton')return[row('근접 조준: 거리 2.5 미만','사거리 2.5 · 부채꼴 145°'),row('원거리 조준: 거리 2.5 이상','중심점 사거리 '+r+' · 반경 2.2')];
  if(key==='kim')return[row('발검','사거리 '+r+' · 부채꼴 '+degrees(basicFanAngle(key))),row('후속 베기','사거리 '+number(range*1.2*1.08)+' · 부채꼴 '+degrees(basicFanAngle(key)))];
  if(key==='gregor')return[row('기본','사거리 '+r+' · 부채꼴 '+degrees(basicFanAngle(key))),row('변이','사거리 '+number(range*1.3)+' · 부채꼴 '+degrees(basicFanAngle(key)))];
  if(key==='yi')return[row('기본','사거리 '+r+' · 관통 파편 3개'),row('오감도','사거리 '+number(range+1)+' · 관통 파편 7개')];
@@ -132,7 +132,7 @@ const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 export function skillTextHTML(text){
  const matches=[],atom='[+−-]?\\d+(?:\\.\\d+)?(?:%|/3)?',n='(?:최소\\s*)?'+atom+'(?:\\s*~\\s*(?:최대\\s*)?'+atom+')?',formula='\\([^)]*\\d[^)]*\\)%?',kinds=[['true','고정\\s*(?:피해|화상)'],['healing','(?:회복|치유)(?:량)?'],['damage','(?:추가\\s*)?피해(?:량)?']];
  for(const[kind,label]of kinds){
-  for(const pattern of [new RegExp('('+formula+')\\s*(?:를|만큼|의)?\\s*'+label,'gu'),new RegExp(label+'(?:는|은|가|이|의|를|:)?\\s*('+formula+')','gu'),new RegExp('('+n+')\\s*(?:의|를|만큼|의 체력을|에 해당하는)?\\s*'+label,'gu'),new RegExp(label+'(?:는|은|가|이|의|를|:)?\\s*('+n+')','gu')])for(const m of text.matchAll(pattern)){
+  for(const pattern of [new RegExp('('+formula+')\\s*(?:를|만큼|의)?\\s*(?:총\\s*\\d+\\s*회\\s*)?'+label,'gu'),new RegExp(label+'(?:는|은|가|이|의|를|:)?\\s*('+formula+')','gu'),new RegExp('('+n+')\\s*(?:의|를|만큼|의 체력을|에 해당하는)?\\s*'+label,'gu'),new RegExp(label+'(?:는|은|가|이|의|를|:)?\\s*('+n+')','gu')])for(const m of text.matchAll(pattern)){
    const start=m.index+m[0].indexOf(m[1]),end=start+m[1].length;if(!matches.some(p=>start<p.end&&end>p.start))matches.push({start,end,kind});
   }
  }

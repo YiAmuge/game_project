@@ -49,7 +49,7 @@ test('duel manual power follows actual bonus movement without recursive stat cal
  const {g,p}=arena();p.augments=['duelManual'];close(g.speed(p)/g.baseSpeed(p),1.05);close(g.powerScale(p),1.05);g.addBuff(p,'hohenheimStride',1);close(g.powerScale(p),1.35);p.upgrades.speed=3;close(g.powerScale(p),1.44);
 });
 test('antimatter adds health and ticks on half-second boundaries only inside range',()=>{
- const {g,p}=arena(),near=hero(g,21.5),far=hero(g,22.2);p.augments=['antimatter'];close(g.maxHp(p),3400*1.1);A.tick(g,p,0);run(g,.49);close(near.hp,100000);run(g,.02);close(near.hp,99980);close(far.hp,100000);run(g,.5);close(near.hp,99960);
+ const {g,p}=arena(),near=hero(g,21.5),far=hero(g,22.2);p.augments=['antimatter'];close(g.maxHp(p),2800*1.1);A.tick(g,p,0);run(g,.49);close(near.hp,100000);run(g,.02);close(near.hp,99980);close(far.hp,100000);run(g,.5);close(near.hp,99960);
 });
 test('written orders expire individually, grant armor and convert ten percent before armor',()=>{
  const {g,p}=arena(),t=hero(g);p.augments=['writtenOrder'];t.armor=100;
@@ -89,7 +89,7 @@ test('explicit partial-strength buffs retain their numerical potency without aut
  const {g,p}=arena('honglu'),ally=hero(g,24,20,0),own=g.powerScale(p),other=g.powerScale(ally);g.addBuff(p,'amplify',10);close(g.powerScale(p)/own,1.10);close(g.powerScale(ally)/other,1);g.addBuff(ally,'amplify',10,{strength:.5,copy:false});close(g.powerScale(ally)/other,1.05);g.addShield(p,350,'gift',2);close(g.shield(ally),0);g.addShield(ally,175,'partial-gift',2,false);close(g.shield(ally),175);
 });
 test('Honglu Q provides a breakable shield, can end on recast and emits its healing wave',()=>{
- const {g,p}=arena('honglu'),t=hero(g),ally=hero(g,24,20,0);p.hp-=1000;ally.hp-=1000;const hp=p.hp;g.cast(p,'q',p);close(g.cooldown(p,'q'),12);close(g.shield(p),350);assert.ok(!(p.invulnerableUntil>g.time));g.deal(t,p,100,{fixed:true,proc:false});close(p.hp,hp);g.deal(t,p,300,{fixed:true,proc:false});close(p.hp,hp-50);assert.ok(g.cast(p,'q',p));close(p.hp,hp+450);close(ally.hp,99500);assert.ok(!g.buff(p,'insight'));assert.equal(p.phaseEnemiesUntil,0);assert.equal(p.state.insightUntil,undefined);
+ const {g,p}=arena('honglu'),t=hero(g),ally=hero(g,24,20,0);p.hp-=1000;ally.hp-=1000;const hp=p.hp;g.cast(p,'q',p);close(g.cooldown(p,'q'),10);close(g.shield(p),350);assert.ok(!(p.invulnerableUntil>g.time));g.deal(t,p,100,{fixed:true,proc:false});close(p.hp,hp);g.deal(t,p,300,{fixed:true,proc:false});close(p.hp,hp-50);assert.ok(g.cast(p,'q',p));close(p.hp,hp+450);close(ally.hp,99500);assert.ok(!g.buff(p,'insight'));assert.equal(p.phaseEnemiesUntil,0);assert.equal(p.state.insightUntil,undefined);
 });
 test('Sora base Q follows a high arc over walls and settles on legal ground',()=>{
  const {g,p}=arena('sora');g.map.walls=[{x:22,y:18,w:1,h:4}];g.cast(p,'q',{x:27,y:20});assert.equal(p.motion.kind,'leap');assert.equal(p.motion.ignoreWalls,true);run(g,.4);assert.ok(leapLift(p)>2);run(g,.5);assert.ok(p.x>26);assert.ok(canOccupy(g,p,p));

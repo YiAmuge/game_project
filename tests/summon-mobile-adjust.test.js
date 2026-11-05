@@ -67,9 +67,9 @@ test('Queen charge tap requires a charge and manual ultimate aiming releases its
  const {g,p}=arena('queen'),t=hero(g);g.mobileInput=true;assert.equal(g.attack(p,t,{queenAim:true}),false);g.cast(p,'r',t);g.attack(p,t,{queenAim:true});
  g.mobileAim={slot:'r',point:{x:40,y:35}};g.input.aim=g.mobileAim.point;run(g,1/120);assert.equal(p.state.queenR.mobileTargetId,undefined);assert.ok(p.state.queenR.angle>0);
 });
-test('bloodfiend loses five percent every half second, deals 130 base damage and heals thirty percent',()=>{
- const {g,p}=arena('nosferatu');p.state.bloodFeast=0;g.cast(p,'r',p);p.state.bloodfiend.nextAttack=99;p.hp=2000;run(g,.5);near(p.hp,2000-p.maxHp*.05);
- const target=hero(g,1,41),before=p.hp;p.attackCd=0;assert.ok(g.attack(p,target));const actual=target.maxHp-target.hp;near(actual,130*1.008);near(p.hp-before,actual*.3);near(p.state.bloodFeast,actual*.3);
+test('bloodfiend loses ten percent every half second, deals 180 base damage and heals thirty percent',()=>{
+ const {g,p}=arena('nosferatu');p.state.bloodFeast=0;g.cast(p,'r',p);p.state.bloodfiend.nextAttack=99;p.hp=2000;run(g,.5);near(p.hp,2000-p.maxHp*.10);
+ const target=hero(g,1,41),before=p.hp;p.attackCd=0;assert.ok(g.attack(p,target));const actual=target.maxHp-target.hp;near(actual,180*1.008);near(p.hp-before,actual*.3);near(p.state.bloodFeast,actual*.3);
 });
 test('bat target search stays bounded with many enemies and immediately follows owner priority and target death',()=>{
  const {g,p}=arena('nosferatu');p.state.bloodFeast=1000;for(let i=0;i<3;i++)g.cast(p,'q',{x:42,y:25});

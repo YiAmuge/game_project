@@ -4,7 +4,7 @@ import { distance,direction,segmentDistance } from './geometry.js';
 // Local steering supplements wall paths. Lane convoys keep their queue; other bodies are passed on a stable side.
 export function steer(g,e,goal,step){
  const desired=direction(e,goal),horizon=Math.max(1,step+.45),look=Math.max(3,horizon+1);
- const bodies=g.units.filter(u=>solid(g,e,u)&&distance(e,u)<look+u.radius&&
+ const bodies=g.units.filter(u=>(e.x-u.x)**2+(e.y-u.y)**2<(look+u.radius)**2&&solid(g,e,u)&&
   !(e.kind==='minion'&&u.kind==='minion'&&u.team===e.team&&u.lane===e.lane&&u.wave===e.wave));
  if(!bodies.length){delete e.avoidance;return desired;}
  const probe=d=>({x:e.x+d.x*horizon,y:e.y+d.y*horizon});

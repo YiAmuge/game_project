@@ -18,14 +18,16 @@ export function carryFits(g,e,p){
  return g.clearLine(t,to,t.radius)&&canOccupy(g,t,to,{includeCarry:false,phaseEnemies:false})&&g.units.every(other=>
   !solid(g,t,other,{phaseEnemies:false})||segmentDistance(other,t,to)>=t.radius+other.radius-.001);
 }
+// Reject distant bodies before evaluating visibility, carrying and phasing rules.
 export function canOccupy(g,e,p,options={}){
- return (options.includeCarry===false||carryFits(g,e,p))&&(options.ignoreTrap||withinTrap(g,e,p))&&!g.blocked(p.x,p.y,e.radius)&&(e.bloodBat||g.units.every(t=>!solid(g,e,t,options)||distance(p,t)>=e.radius+t.radius+.006-1e-6));
+ return (options.includeCarry===false||carryFits(g,e,p))&&(options.ignoreTrap||withinTrap(g,e,p))&&!g.blocked(p.x,p.y,e.radius)&&(e.bloodBat||g.units.every(t=>{const gap=e.radius+t.radius+.006-1e-6,dx=p.x-t.x,dy=p.y-t.y;return dx*dx+dy*dy>=gap*gap||!solid(g,e,t,options);}));
 }
 export function moveBody(g,e,dx,dy,options={}){
  const n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.12));
  const safe=p=>carryFits(g,e,p)&&withinTrap(g,e,p)&&!g.blocked(p.x,p.y,e.radius)&&(e.bloodBat||g.units.every(t=>{
-  if(!solid(g,e,t,options))return true;
-  const before=distance(e,t),after=distance(p,t),gap=e.radius+t.radius+.006;
+  const gap=e.radius+t.radius+.006,dx=p.x-t.x,dy=p.y-t.y;
+  if(dx*dx+dy*dy>=(gap-1e-6)*(gap-1e-6)||!solid(g,e,t,options))return true;
+  const before=distance(e,t),after=Math.hypot(dx,dy);
   return after>=gap-1e-6||before<gap&&after>before+1e-7;
  }));
  for(let i=0;i<n;i++){
@@ -49,7 +51,6 @@ export function separate(g){
  const moved=e=>Boolean(e.bodyMoved)||e.bodyOrigin&&distance(e,e.bodyOrigin)>1e-6;
  for(const e of [...g.units].sort((a,b)=>Number(Boolean(moved(b)))-Number(Boolean(moved(a)))||b.id-a.id)){
   if(!e.alive||e.kind==='summon'||structure(e)||['boss','sewingKing'].includes(e.camp)||g.hidden(e)||e.state?.posthumous||e.motion?.phaseEnemies||e.phaseEnemiesUntil>g.time)continue;
-  if(!canOccupy(g,e,e))settleBody(g,e,e.bodySafe);
-  if(canOccupy(g,e,e))e.bodySafe={x:e.x,y:e.y};delete e.bodyMoved;
+  if(canOccupy(g,e,e)||settleBody(g,e,e.bodySafe))e.bodySafe={x:e.x,y:e.y};delete e.bodyMoved;
  }
 }

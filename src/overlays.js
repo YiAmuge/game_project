@@ -99,7 +99,7 @@ function directiveFlower(r,e,g,remaining,muted,offset){const c=r.ctx;
 }
 export function championEffects(r,e,g){
  const c=r.ctx,head=overheadY(e,g);c.save();orderMark(r,e,g);towerMark(r,e,g);drawDebuffBadges(r,e,g,head);drawKromerEffects(r,e,g);
- if(g.stat(e,'silence')){const x=e.x-.9,y=head-.1;r.circle(x,y,.25,'#242938','#c6c0df',.04);r.line([{x:x-.12,y:y-.06},{x:x+.12,y:y-.06},{x:x+.12,y:y+.07},{x:x+.03,y:y+.07},{x:x-.04,y:y+.14},{x:x-.04,y:y+.07},{x:x-.12,y:y+.07},{x:x-.12,y:y-.06}],'#e8def4',.035);r.line([{x:x-.18,y:y+.19},{x:x+.18,y:y-.19}],'#dfa8b8',.055);}
+ if(g.stat(e,'silence')&&!e.status.silence?.hideVisual){const x=e.x-.9,y=head-.1;r.circle(x,y,.25,'#242938','#c6c0df',.04);r.line([{x:x-.12,y:y-.06},{x:x+.12,y:y-.06},{x:x+.12,y:y+.07},{x:x+.03,y:y+.07},{x:x-.04,y:y+.14},{x:x-.04,y:y+.07},{x:x-.12,y:y+.07},{x:x-.12,y:y-.06}],'#e8def4',.035);r.line([{x:x-.18,y:y+.19},{x:x+.18,y:y-.19}],'#dfa8b8',.055);}
  const villain=g.champions(1-e.team).some(a=>a.alive&&a.key==='don'&&a.state.villain===e.id);
  if(villain){const y=head-.1;for(const color of ['#ffe258','#d82b39'])for(const side of [-1,1])r.line([{x:e.x-.25,y:y-side*.25},{x:e.x+.25,y:y+side*.25}],color,color==='#ffe258'?.2:.1);}
 
@@ -127,14 +127,14 @@ export function chargePreview(r,e,g){
 }
 
 export function championGroundEffects(r,e,g){
- const color='#c5d0d33b',outline=(radius)=>r.circle(e.x,e.y,radius,null,color,.025);
- if(e.key==='ahab'&&e.alive)r.circle(e.x,e.y,AHAB.orderRadius,null,e.state.order==='guard'?'#354eab':'#f19c40',.075);
+ const c=r.ctx,color='#c5d0d33b',outline=(radius)=>r.circle(e.x,e.y,radius,null,color,.025);
+ if(e.key==='ahab'&&e.alive){c.save();c.globalAlpha=.55;r.circle(e.x,e.y,AHAB.orderRadius,null,e.state.order==='guard'?'#354eab':'#f19c40',.035);c.restore();}
  if(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))outline(4.5);
  if(g.buff(e,'martonDrain'))r.circle(e.x,e.y,5.5,null,'#02ebf770',.035);
  if(g.buff(e,'heathUlt'))outline(HEATH.radius);
  if(e.state.detonatesAt>g.time)r.circle(e.x,e.y,4,'#d94e262e','#ff7957',.085);
  if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,2.5,null,'#d1dcb799',.035);
- if(e.key==='honglu'&&e.player&&e.alive&&g.buff(e,'insight'))r.circle(e.x,e.y,5,null,'#87d8c999',.045);
+ if(e.key==='honglu'&&e.player&&e.alive&&g.buff(e,'insight'))r.circle(e.x,e.y,6,null,'#87d8c999',.045);
  if(e.state.yanBarrage?.until>g.time){const q=e.state.yanBarrage,a=Math.atan2(q.d.y,q.d.x),c=r.ctx;c.beginPath();c.arc(e.x,e.y,5,a-Math.PI/2,a+Math.PI/2);c.strokeStyle=color;c.lineWidth=.025;c.stroke();}
 }
 

@@ -2,7 +2,7 @@
 const tau=Math.PI*2;
 const active=(g,records)=>Object.values(records||{}).filter(m=>(typeof m==='number'?m:m.until)>g.time);
 export function debuffBadges(g,e){
- const badges=[],state=e.state||{};
+ const badges=[],state=e.state||{};if(active(g,state.queenMarks).length)badges.push({kind:'queenHeart',size:.34,color:'#ff8bcf',border:'#b93380'});
  if(active(g,state.gaze).some(m=>m.n>0))badges.push({kind:'gaze',size:.30,color:'#f6cd48',border:'#080a0c'});
  if(active(g,state.contempt).length)badges.push({kind:'contempt',size:.42,color:'#ffd19a',border:'#e33b42'});
  if(Object.values(state.mentalWhip||{}).some(m=>m.stage>0))badges.push({kind:'whip',size:.32,color:'#ff9b32',border:'#21100a'});
@@ -12,7 +12,7 @@ export function drawDebuffBadges(r,e,g,head){
  const c=r.ctx,badges=debuffBadges(g,e);
  for(const [i,b]of badges.entries()){
   c.save();c.translate(e.x+.65+i*.85,head-.13);c.lineWidth=b.kind==='contempt'?.055:.03;c.strokeStyle=b.border;c.fillStyle=b.color;
-  if(b.kind==='whip'){
+  if(b.kind==='queenHeart'){const s=b.size;c.beginPath();c.moveTo(0,s*.8);c.bezierCurveTo(-s*1.8,-s*.2,-s*.7,-s*1.4,0,-s*.45);c.bezierCurveTo(s*.7,-s*1.4,s*1.8,-s*.2,0,s*.8);c.fill();c.stroke();}else if(b.kind==='whip'){
    c.beginPath();for(const [i,[x,y]]of [[-.02,-.34],[-.23,.05],[-.02,.01],[-.08,.33],[.25,-.09],[.05,-.04]].entries())i?c.lineTo(x,y):c.moveTo(x,y);c.closePath();c.fill();c.stroke();
   }else{
    c.beginPath();c.moveTo(-b.size,0);c.quadraticCurveTo(0,-b.size*.95,b.size,0);c.quadraticCurveTo(0,b.size*.95,-b.size,0);c.fill();c.stroke();

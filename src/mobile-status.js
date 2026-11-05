@@ -27,7 +27,7 @@ function passiveActive(g,e){
 export function mobileStatusEntries(g,e){
  if(!e.alive)return[];
  const entries=g.activeBuffs(e).map(b=>({kind:'buff',key:b.key,priority:augmentBuffs.has(b.key)?2:0,order:b.order,label:Number.isFinite(b.until)?String(Math.ceil(b.until-g.time)):'',name:BUFF_LABELS[b.key]||b.key,glyph:(BUFF_LABELS[b.key]||b.key).slice(0,2),ready:true}));
- for(const[key,s]of Object.entries(e.status).filter(([,s])=>s&&s.amount>0&&s.until>g.time)){
+ for(const[key,s]of Object.entries(e.status).filter(([,s])=>s&&s.amount>0&&s.until>g.time&&!s.hideVisual)){
   const history=e.statusHistory??={};if(history[key]?.until!==s.until)history[key]={until:s.until,order:++g.buffSequence};
   const name=debuffNames[key]||key;entries.push({kind:'debuff',key,priority:0,order:history[key].order,label:String(Math.ceil(s.until-g.time)),name,glyph:name.slice(0,2),ready:false});
  }
