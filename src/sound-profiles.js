@@ -45,8 +45,9 @@ export function soundVoice(e){
  if(e.phase==='kromer-impale'){cue='impale';family='spear';element='blood';weight=1.7;}
  if(e.phase==='kromer-nail-break'){cue='nailBreak';family='nail';element='blood';weight=1.5;}
  if(e.kind==='explosion'&&e.phase==='outis-shotgun'){cue='shotgun';family='shotgun';element='fire';}
+ const impactFamily=family;
  if(e.shielded&&cue==='impact'){family='shield';weight*=.7;}
- return{key:e.key,form:e.form||'base',cue,family,element,weight,variant:e.variant||0,priority:e.kind==='ping'?5:['explosion','waterfall','victory','defeat'].includes(e.kind)?4:['cast','ultimate','slam','detonation'].includes(e.kind)?3:e.kind==='hit'?1:2};
+ return{key:e.key,form:e.form||'base',cue,family,impactFamily,element,weight,variant:e.variant||0,priority:e.kind==='ping'?5:['explosion','waterfall','victory','defeat'].includes(e.kind)?4:['cast','ultimate','slam','detonation'].includes(e.kind)?3:e.kind==='hit'?1:2};
 }
 // Area contacts and simultaneous projectiles in one volley share a sound; timed shots stay separate.
 export function mixSoundEvents(events,listener){const result=[],groups=new Map();for(const e of events){if(!soundAllowed(e))continue;if(!['hit','shot'].includes(e.kind)){result.push({...e});continue;}const id=[e.sourceId,e.kind,e.slot,e.phase,e.damageKind,e.periodic,Math.round(e.at*1000)].join('/'),old=groups.get(id);if(!old){const entry={...e,contacts:1};groups.set(id,entry);result.push(entry);}else{old.contacts++;old.strength=Math.min(1.5,Math.max(old.strength||.5,e.strength||.5)+.07);if(listener&&Math.hypot(e.x-listener.x,e.y-listener.y)<Math.hypot(old.x-listener.x,old.y-listener.y)){old.x=e.x;old.y=e.y;}}}return result.sort((a,b)=>soundVoice(b).priority-soundVoice(a).priority);}

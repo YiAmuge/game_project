@@ -1,9 +1,11 @@
-// Fixed sources for swings, base Yan, thrusts and gently varied flesh impacts.
+// Fixed movement sources and gently varied slash, piercing and blunt impacts.
 export const SWING_SAMPLES=[
  {id:'swing',file:'floraphonic-swing-whoosh-weapon-3-189823.mp3',start:.03,end:.235},
  {id:'yanGreatsword',file:'daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3',start:.04,end:.98},
- {id:'impact',file:'ragecore29-sword-stabbing-flesh-with-splatter-2-4x-604103.mp3',start:.13,end:.85},
  {id:'thrust',file:'yodguard-spear_thrust-1-382402.mp3',start:.06,end:.68},
+ {id:'impactSlash',file:'Sword_Hori.wav',mime:'audio/wav'},
+ {id:'impactPierce',file:'Sword_Stab.wav',mime:'audio/wav'},
+ {id:'impactBlunt',file:'Sword_Vert.wav',mime:'audio/wav'},
 ];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 // Pitch in semitones, envelope in seconds, then start/peak/end playback speed.
@@ -37,12 +39,16 @@ export function thrustProfile(voice){
  const variant=((Math.trunc(voice.variant)||0)%4+4)%4,weight=voice.weight||1,speed=1+[0,.02,-.015,.01][variant];
  return {id:'thrust',pitch:.5-(weight-1)*1.5+[-.5,.25,-.20,.55][variant],duration:(voice.cue==='impale'?.26:voice.cue==='cast'?.28:.34+clamp(weight-.9,0,.8)*.06)*(1+[0,.04,-.03,.02][variant]),rates:[.95,1.40,.86].map(n=>n*speed),offset:0,gain:(voice.cue==='cast'?.50:.76)*clamp(.85+weight*.15,.85,1.12),dry:true,fadeOut:.024};
 }
+const slashImpacts=new Set(['knife','katana','blade','axe','greatsword','scythe','glaive','claw','organic']);
+const piercingImpacts=new Set(['spear','needle','nail','rifle','pistol','shotgun','cannon','drill']);
+const impactLengths={impactSlash:.69,impactPierce:1.20,impactBlunt:.70};
 export function impactProfile(voice){
  if(voice.cue!=='impact')return null;
- const heavy=['axe','greatsword','scythe','hammer','club','mace','cannon'].includes(voice.family),light=['knife','katana','needle','nail'].includes(voice.family),variant=((Math.trunc(voice.variant)||0)%4+4)%4;
- // Keep the first complete strike recognisable: <=0.3 semitones, <=3% speed.
+ const family=voice.impactFamily||voice.family,id=voice.key==='yan'&&voice.form==='distorted'&&family==='organic'?'impactBlunt':slashImpacts.has(family)?'impactSlash':piercingImpacts.has(family)?'impactPierce':'impactBlunt';
+ const heavy=['axe','greatsword','scythe','hammer','club','mace','cannon'].includes(family),light=['knife','katana','needle','nail'].includes(family),variant=((Math.trunc(voice.variant)||0)%4+4)%4;
+ // Preserve each recording's attack and tail with only small playback changes.
  const speed=1+[-.003,.003,0,.002][variant];
- return {id:'impact',pitch:(heavy?-.15:light?.10:0)+[-.15,.10,-.05,.15][variant],duration:(heavy?.72:light?.68:.70)*(1+[0,.01,-.01,.005][variant]),rates:[.98,1.025,.995].map(n=>n*speed),offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12),dry:true,fadeOut:.012};
+ return {id,pitch:(heavy?-.15:light?.10:0)+[-.15,.10,-.05,.15][variant],duration:impactLengths[id]*(1+[0,.006,-.006,.003][variant]),rates:[.98,1.025,.995].map(n=>n*speed),offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12),dry:true,fadeOut:.012};
 }
 async function loadRecording(spec){
  const inline=globalThis.document?.getElementById('weapon-swing-audio');
