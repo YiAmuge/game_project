@@ -17,7 +17,7 @@ function quiet(key='faust'){
 function ally(g,key='yi'){const a=g.makeChampion(key,0,5,'support');a.x=41;a.y=7;return a;}
 
 test('all ordinary and experimental champions have individual positive growth and defined attack animation',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,33);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,35);
+ assert.equal(Object.keys(CHAMPIONS).length,34);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,35);
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);if(key==='nosferatu')close(p.maxHp,baseHp);else assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);if(key==='dongrang')close(g.powerScale(p),basePower);else assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
@@ -103,7 +103,7 @@ test('Ahab execution snapshots below ten percent and grants only one ultimate re
 
 test('charge cooldown reduction and extra ultimate ammunition apply to special resource users',()=>{
  const {g,p,t}=quiet('nelly');p.augments=['cooldown15'];g.cast(p,'q',t);close(p.state.knifeReady-g.time,4.25);
- const a=quiet('ezra');a.p.augments=['magazine2'];a.g.cast(a.p,'r',a.p);assert.equal(a.p.ammo,6);assert.equal(a.g.ammoCap(a.p),6);
+ const a=quiet('ezra');a.p.augments=['magazine2'];a.g.cast(a.p,'r',a.p);assert.equal(a.p.ammo,4);assert.equal(a.g.ammoCap(a.p),4);
 });
 test('central creep leash clocks use the displayed shared camp boundary',()=>{
  const {g,p}=quiet();g.aiNeutral=Game.prototype.aiNeutral;

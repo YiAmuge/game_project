@@ -1,3 +1,4 @@
+import{EZRA_DATA}from'./ezra-data.js';
 export const EXTRA_CHAMPIONS = {
   "don": {
     "id": 4,
@@ -275,27 +276,5 @@ export const EXTRA_CHAMPIONS = {
     "ultimate": "붉은 점",
     "brief": "방향으로 선택하는 네 곰방대"
   },
-  "ezra": {
-    "id": 20,
-    "name": "에즈라",
-    "tag": "EZRA",
-    "role": "돌격",
-    "color": "#b9c9c0",
-    "icon": "E",
-    "power": 2,
-    "health": 4,
-    "speed": 3,
-    "ammo": 1,
-    "reload": 3,
-    "range": 2.2,
-    "damage": 280,
-    "attackTime": 0.5,
-    "q": 1,
-    "r": 50,
-    "passive": "차원가방",
-    "basic": "무기 공격",
-    "tactical": "무기 교체",
-    "ultimate": "유리아 공방 - 총공 모드, 마크 17!",
-    "brief": "네 가지 무기를 골라 교체"
-  }
+  "ezra": EZRA_DATA
 };

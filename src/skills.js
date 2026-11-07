@@ -1,5 +1,7 @@
 import{FAN_ANGLE}from'./data.js';
 import*as Queen from'./queen.js';
+import*as Ezra from'./ezra.js';
+export{EZRA_WEAPONS}from'./ezra-data.js';
 import*as Nosferatu from'./nosferatu.js';
 import * as Kromer from './kromer.js';
 import * as Ppui from './ppui.js';
@@ -26,17 +28,10 @@ import { startRudolphWeapon,tickRudolphWeapon } from './rudolph-weapon.js';
 
 function pushTarget(g,t,dx,dy,options={}){const length=Math.hypot(dx,dy);return g.startMotion(t,{x:dx/(length||1),y:dy/(length||1)},length,{kind:'knock',...options});}
 
-export const EXPERIMENTAL_KEYS=['moses','ezra'];
-export const DRAG_KEYS=['moses','ezra'];
-export const EZRA_WEAPONS=[
- {name:'알라스 장갑',ammo:1,reload:3,range:2.2,damage:280},
- {name:'네스터 망치',ammo:3,reload:2,range:2.8,damage:240},
- {name:'드릴 망치',ammo:2,reload:3,range:3.2,damage:100},
- {name:'나미르 건틀릿',ammo:1,reload:1,range:2.5,damage:230},
-];
+export const EXPERIMENTAL_KEYS=['moses'];
+export const DRAG_KEYS=['moses'];
 export function dragChoice(key,dx,dy,min=18){
  if(Math.hypot(dx,dy)<min)return null;
- if(key==='ezra')return Math.abs(dx)>=min?(dx<0?'left':'right'):null;
  return Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');
 }
 export function area(g,e,p,r,damage,hit=()=>{},options={}){
@@ -47,7 +42,7 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
  }
  return hits;
 }
-export const dashBasic=(g,e)=>['don','myo','starbuck'].includes(e.key)||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0));
+export const dashBasic=(g,e)=>['don','myo','starbuck'].includes(e.key)||e.key==='ezra'&&Ezra.movementWeapon(g,e);
 export const dashLength=(e,n)=>n+(e.key==='don'?rangeBonus(e):0);
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set();
@@ -71,7 +66,7 @@ function guboTarget(g,e,p,allyOnly=false){
  const ally=targetAt(g,e,p,12,e.team,t=>g.canGuboHitAlly(e,t));if(allyOnly)return ally;
  return [ally,targetAt(g,e,p,12)].filter(Boolean).sort((a,b)=>distance(p,a)-distance(p,b))[0];
 }
-export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','ezra','gubo','rodya'].includes(e.key)&&slot==='q'));}
+export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
  if(Queen.recast(g,e,slot)||Nosferatu.recast(g,e,slot))return true;
  if(Kromer.recast(g,e,slot))return true;
@@ -81,15 +76,16 @@ export function canRecast(g,e,slot){
  if(slot==='r'&&(Sora.ready(g,e)||Yan.ready(g,e)))return true;
  if(V12.recast(g,e,slot))return true;
  if(New.recast(g,e,slot))return true;
- return slot==='q'&&((e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')))||slot==='r'&&e.key==='ezra'&&g.buff(e,'ezraUlt');
+ return slot==='q'&&((e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')));
 }
-export function init(g,e){Ppui.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
-export function onRespawn(g,e){if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
+export function init(g,e){Ezra.init(g,e);Ppui.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
+export function onRespawn(g,e){Ezra.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
 export const coverMultiplier=New.coverMultiplier;
 export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.key==='ezra')return Ezra.validate(g,e,slot);
  if(e.key==='queen')return Queen.validate(g,e,slot);
  if(e.key==='nosferatu')return Nosferatu.validate(g,e,slot,p);
  if(e.key==='kromer')return Kromer.validate(g,e,slot);
@@ -104,7 +100,6 @@ export function validateSkill(g,e,slot,p,options={}){
  if(g.stat(e,'root')&&(['outis','sinclair'].includes(e.key)||e.key==='don'&&slot==='r'||(['ryoshu','heathcliff'].includes(e.key)||e.key==='alisa'&&!g.buff(e,'alisaReload'))&&slot==='q'))return false;
  if(e.key==='rudolph'&&slot==='r')return e.ammo>=ammoCap(g,e)*.5&&(g.training?!g.blocked(p.x,p.y,.05):terrainContains(p.x,p.y));
  if(e.key==='moses'&&slot==='q')return ['up','down','left','right'].includes(options.direction);
- if(e.key==='ezra'&&slot==='q')return ['left','right'].includes(options.direction)&&!g.buff(e,'ezraUlt');
  if(e.key==='alisa'&&slot==='r')return e.state.heat>=5;
  if(e.key==='gubo'&&slot==='r'){
   return Boolean(guboTarget(g,e,p,options.executeAlly));
@@ -114,25 +109,22 @@ export function validateSkill(g,e,slot,p,options={}){
 export function ammoCap(g,e){
  if(e.lcaTrooper)return 16;if(e.key==='jamila')return 16+(has(e,'magazine2')?8:0);
  const extra=(has(e,'magazine2')?2:0)+(e.key==='faust'&&e.level===RULES.maxLevel?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
- if(e.key==='ezra')return (g.buff(e,'ezraUlt')?4:EZRA_WEAPONS[e.state.weapon||0].ammo)+extra;
+ if(e.key==='ezra')return Ezra.EZRA.ammo;
  return CHAMPIONS[e.key].ammo+extra*(e.key==='rudolph'?15:1);
 }
-export function reloadGrade(e){return e.key==='ezra'?EZRA_WEAPONS[e.state.weapon||0].reload:CHAMPIONS[e.key].reload;}
-export function switchWeapon(g,e,step,shield=false){
- e.state.weapon=((e.state.weapon||0)+step+4)%4;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon].range;e.reloadProgress=0;
- if(shield)g.addShield(e,Math.min(360,120*(1+Math.floor((1-e.hp/e.maxHp)/.3)*.3)),`bag-${e.id}`);
-}
+export function reloadGrade(e){return CHAMPIONS[e.key].reload;}
 export function beforeBasic(g,e,point,options={}){
+ if(e.key==='ezra')return Ezra.validateBasic(g,e);
  if(e.state.kromerGrab)return false;
  if(e.key==='starbuck'&&(g.stat(e,'root')||g.stat(e,'captured')))return false;
- if(g.stat(e,'captured')&&(['don','rodya','myo'].includes(e.key)||e.key==='ezra'))return false;
+ if(g.stat(e,'captured')&&['don','rodya','myo'].includes(e.key))return false;
  if(!V12.beforeBasic(g,e,point)||!V06.beforeBasic(g,e,point,options))return false;
- if(g.stat(e,'root')&&(['don','rodya'].includes(e.key)||e.key==='ezra'&&(g.buff(e,'ezraUlt')||[0,3].includes(e.state.weapon||0))))return false;
+ if(g.stat(e,'root')&&(['don','rodya'].includes(e.key)||e.key==='ezra'&&Ezra.movementWeapon(g,e)))return false;
  if(e.key==='rudolph'){if(e.state.exhaustedUntil>g.time)return false;if(g.time-e.lastAttackAt>.5)e.state.whipChainAt=undefined;if(e.state.whipChainAt!==undefined&&g.time-e.state.whipChainAt>=3)return false;}
- if(e.key==='ezra'&&e.ammo<1&&!g.buff(e,'ezraUlt')){switchWeapon(g,e,1,true);e.attackCd=.2;return false;}
  return true;
 }
 export function basic(g,e,p,d,options={}){
+ if(e.key==='ezra'){Ezra.basic(g,e,p,d);return true;}
  if(e.key==='queen'){Queen.basic(g,e,d);return true;}
  if(e.key==='nosferatu'){Nosferatu.basic(g,e,d);return true;}
  if(e.key==='kromer'){Kromer.basic(g,e,d);return true;}
@@ -162,15 +154,6 @@ export function basic(g,e,p,d,options={}){
   if(['up','right'].includes(color))for(const a of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5)){const toward=direction(e,a);if(toward.x*d.x+toward.y*d.y<.4&&a!==e)continue;if(color==='up')g.addBuff(a,'mosesWhite',4);else {g.addShield(a,200,`smoke-${e.id}`);g.addBuff(a,'mosesHeal',2);}g.support(e);}
   return true;
  }
- case 'ezra':{
-  if(g.buff(e,'ezraUlt')){e.state.ultAttacks=(e.state.ultAttacks||0)+1;const fourth=e.state.ultAttacks===4;dash(g,e,d,1.2,0,()=>{},{offensive:true,onComplete:()=>{area(g,e,e,fourth?3:2.2,fourth?320:250,t=>{g.status(t,'slow',.2,1.2,e);g.status(t,fourth?'stun':'root',1,fourth?.8:.6,e);});if(e.ammo<1)endEzra(g,e);}});return true;}
-  const w=e.state.weapon||0;
-  if(w===0)dash(g,e,d,g.attackRange(e),280);
-  if(w===1)cone(g.attackRange(e),1.7,240,t=>g.status(t,'slow',.2,1.2,e));
-  if(w===2)for(let i=0;i<3;i++)g.schedule(e,i*.12,()=>g.cone(e,d,g.attackRange(e),.7,100,t=>{if(g.stat(t,'root')||g.stat(t,'stun'))g.deal(e,t,35);}));
-  if(w===3)dash(g,e,d,g.attackRange(e),0,()=>{},{offensive:true,onComplete:()=>area(g,e,e,2.5,230,t=>{const toward=direction(t,e);pushTarget(g,t,toward.x,toward.y);g.status(t,'slow',.2,1.5,e);})});
-  return true;
- }
  default:return false;
  }
 }
@@ -184,8 +167,8 @@ function shockIshmael(g,e){
  g.emitSound?.('detonation',e,{slot:'q',phase:'shield-shock',family:'shield',element:'metal'});
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
-function endEzra(g,e){e.state.ultMode=false;delete e.buffs.ezraUlt;e.state.ultAttacks=0;e.ammo=ammoCap(g,e);e.range=EZRA_WEAPONS[e.state.weapon||0].range;e.reloadProgress=0;}
 export function cast(g,e,slot,p,d,options={}){
+ if(e.key==='ezra'){Ezra.cast(g,e,slot,p,d);return true;}
  if(e.key==='queen'){Queen.cast(g,e,slot,p,d,options);return true;}
  if(e.key==='nosferatu'){Nosferatu.cast(g,e,slot,p);return true;}
  if(e.key==='kromer'){Kromer.cast(g,e,slot,p,d);return true;}
@@ -239,10 +222,6 @@ export function cast(g,e,slot,p,d,options={}){
  case 'moses':
   if(slot==='q'){state.smoke=options.direction;if(state.smoke==='down')e.hp=Math.max(1,e.hp*.94);}
   else g.bullet(e,d,550,9,{width:.6,onHit:t=>{g.status(t,'stun',1,.75,e);g.status(t,'vulnerable',.18,3,e);}});
-  return true;
- case 'ezra':
-  if(slot==='q')switchWeapon(g,e,options.direction==='left'?-1:1);
-  else if(g.buff(e,'ezraUlt'))endEzra(g,e);else {g.addBuff(e,'ezraUlt',6);state.ultMode=true;state.ultAttacks=0;e.ammo=ammoCap(g,e);}
   return true;
  case 'alisa':
   if(slot==='q'){if(g.buff(e,'alisaReload'))endAlisaReload(g,e);else dash(g,e,d,3,0,()=>{},{onComplete:()=>{state.heat=Math.min(5,(state.heat||0)+3);state.alisaReloadActive=true;g.addBuff(e,'alisaReload',5,{copy:false});}});}
@@ -315,7 +294,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
- Queen.tick(g,e);Nosferatu.tick(g,e);
+ Queen.tick(g,e);Nosferatu.tick(g,e);Ezra.tick(g,e,dt);
  Ppui.tick(g,e);Kromer.tick(g,e,dt);
  const s=e.state;
  if(s.ishmaelWeak)for(const [id,mark]of Object.entries(s.ishmaelWeak))if(mark.until<=g.time)delete s.ishmaelWeak[id];
@@ -340,7 +319,6 @@ export function tick(g,e,dt){
   if(s.transformed&&!g.buff(e,'mutant')){s.transformed=false;e.maxHp=g.maxHp(e);e.hp=Math.min(e.hp,e.maxHp);e.radius=.48;}
   if(g.buff(e,'mutant')&&s.mutantTick<=g.time){s.mutantTick+=.5;let dealt=0;area(g,e,e,5.5,0,t=>{const actual=g.deal(e,t,35,{proc:false});dealt+=actual;if(actual>0){Infestation.apply(g,t,e);if(t.kind==='champion'&&(s.mutantExtension||0)<15){s.mutantExtension=(s.mutantExtension||0)+1;e.buffs.mutant+=1;}}});g.heal(e,e,dealt*.35,false);}
  }
- if(e.key==='ezra'&&s.ultMode&&!g.buff(e,'ezraUlt'))endEzra(g,e);
  if(e.key==='rudolph'){
   tickRudolphWeapon(g,e);
   if(s.exhaustedUntil){if(s.exhaustedUntil>g.time)return;delete s.exhaustedUntil;delete s.exhaustedAt;delete s.recoveryDuration;e.ammo=ammoCap(g,e);return;}

@@ -84,7 +84,7 @@ export function onDebuff(g,e,target){
  if(!e||e.kind!=='champion'||!e.alive||e.team===target.team||!has(e,'maskDeLu')||(e.state.maskReady||0)>g.time)return;
  e.state.maskReady=g.time+10;g.effects.push({type:'maskSplash',source:e.id,x:e.x,y:e.y,life:.65,maxLife:.65});e.qCd*=.8;e.rCd*=.8;
  for(const key of ['knifeReady','treeReady','ryoshuReady','egoQReady','ppuiReady','qDelayUntil'])if(Number.isFinite(e.state[key])&&e.state[key]>g.time)e.state[key]=g.time+(e.state[key]-g.time)*.8;
- e.ammo=Math.min(g.ammoCap(e),e.ammo+(e.key==='rudolph'?15:1));
+ g.changeAmmo(e,e.key==='rudolph'?15:1);
 }
 export function convertedShield(g,e,amount){
  if(!has(e,'writtenOrder')||amount<=0||!e.alive)return;
@@ -94,7 +94,7 @@ export function convertedShield(g,e,amount){
 const CC=new Set(['stun','root','silence','slow','disarm','taunt','captured','netCapture','yanLock','knock']);
 export function interceptCC(g,e,key,amount,seconds){
  if(!has(e,'traumaGuard')||!CC.has(key)||!(amount>0&&seconds>0)||(e.state.traumaReady||0)>g.time)return false;
- e.state.traumaReady=g.time+16;e.ammo=Math.min(g.ammoCap(e),e.ammo+(e.key==='rudolph'?15:1));
+ e.state.traumaReady=g.time+16;g.changeAmmo(e,e.key==='rudolph'?15:1);
  g.effects.push({type:'traumaField',source:e.id,x:e.x,y:e.y,r:1,color:'#ffffff',life:.6,maxLife:.6});return true;
 }
 export function cleanup(e){for(const k of ['maskStacks','orderStacks','antimatterNext'])delete e.state[k];}

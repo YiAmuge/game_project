@@ -1,3 +1,4 @@
+import*as Ezra from'./ezra.js';
 import { setupDistribution } from './distribution.js';
 import{MobileControls}from'./mobile-controls.js';
 import{MatchChat}from'./chat.js';
@@ -32,7 +33,7 @@ import { Game } from './game.js';
 import { CHAMPIONS, RUNTIME_CHAMPIONS, RULES, UPGRADES, upgradeRate, POSITIONS, WORLD } from './data.js';
 import { Renderer } from './render.js';
 import { portrait,visualForm } from './art.js';
-import { dragChoice, DRAG_KEYS, EZRA_WEAPONS } from './skills.js';
+import { dragChoice, DRAG_KEYS } from './skills.js';
 import { BUFF_LABELS } from './catalog.js';
 
 const $=id=>document.getElementById(id);
@@ -228,7 +229,7 @@ function updatePointer(e){if(!inMatch()||mobile?.enabled&&e.pointerType==='touch
 function updateDrag(e){
  if(!drag)return;drag.choice=dragChoice(drag.key,e.clientX-drag.x,e.clientY-drag.y);
  $('drag-wheel').querySelectorAll('[data-dir]').forEach(el=>el.classList.toggle('selected',el.dataset.dir===drag.choice));
- $('drag-title').textContent=drag.choice?({up:'흰 곰방대',down:'파란 곰방대',left:drag.key==='ezra'?'이전 무기':'보라 곰방대',right:drag.key==='ezra'?'다음 무기':'붉은 곰방대'}[drag.choice]):'선택 취소';
+ $('drag-title').textContent=drag.choice?({up:'흰 곰방대',down:'파란 곰방대',left:'보라 곰방대',right:'붉은 곰방대'}[drag.choice]):'선택 취소';
 }
 $('arena').addEventListener('pointermove',updatePointer);window.addEventListener('pointermove',updateDrag);
 $('arena').addEventListener('pointerdown',e=>{
@@ -241,7 +242,7 @@ $('arena').addEventListener('pointerdown',e=>{
   if(game.targeting){delete game.targeting;toast('스킬 조준 취소');return;}
   if(DRAG_KEYS.includes(game.player.key)){
    drag={key:game.player.key,x:e.clientX,y:e.clientY,choice:null,owner:game.player.id};game.input.fire=false;
-   const w=$('drag-wheel');w.classList.remove('hidden');w.classList.toggle('ezra-wheel',drag.key==='ezra');w.style.left=`${Math.max(120,Math.min(innerWidth-120,e.clientX))}px`;w.style.top=`${Math.max(110,Math.min(innerHeight-110,e.clientY))}px`;updateDrag(e);
+   const w=$('drag-wheel');w.classList.remove('hidden');w.style.left=`${Math.max(120,Math.min(innerWidth-120,e.clientX))}px`;w.style.top=`${Math.max(110,Math.min(innerHeight-110,e.clientY))}px`;updateDrag(e);
   }else skill('q');
  }
 });
@@ -302,8 +303,8 @@ function updateHud(){
  $('jamila-ammo').classList.toggle('hidden',p.key!=='jamila');if(p.key==='jamila'){$('jamila-ammo').innerHTML=`<span class="fps-ammo-numbers">${Math.floor(p.ammo)} | ${game.ammoCap(p)}</span><span class="fps-shield-rounds" aria-label="보호막 탄환 ${shieldRounds(p)}개">${Array.from({length:Math.ceil(game.ammoCap(p)/4)},(_,i)=>`<i class="shield-round${i<shieldRounds(p)?' ready':''}"></i>`).join('')}</span>`;}$('jamila-ammo').classList.toggle('empty',p.ammo<1);
  recallChoice.update();$('recall-btn').title=Infiltration.replacesRecall(game,p)?'버튼을 누른 채 왼쪽: 귀환 / 오른쪽: 침투 · 침투 대기 중에도 귀환 가능 · B: 침투 또는 귀환 · 1.75초 집중 → WASD 위치 이동 · 우클릭 유지로 정밀 이동 · 좌클릭 확정 → 0.5초 후 등장 · B로 취소':'B · 3초 정신집중 후 부활소로 귀환';$('recall-btn').querySelector('span').textContent=p.state.jamilaSummon?'선봉 투하 중':Infiltration.absent(p)?(Infiltration.selecting(p)?'침투 위치 선택':'침투 중'):p.recall?`${p.recall.infiltration?'침투 ':''}${Math.max(0,p.recall.until-game.time).toFixed(1)}s`:Infiltration.replacesRecall(game,p)?`귀환 / 침투${(p.state.infiltrationReady||0)>game.time?' '+Math.ceil(p.state.infiltrationReady-game.time)+'s':''}`:'귀환';$('recall-btn').classList.toggle('recalling',Boolean(p.recall)||Infiltration.absent(p));$('infiltration-help').classList.toggle('hidden',!Infiltration.absent(p)||!inMatch());$('infiltration-help').textContent=Infiltration.selecting(p)?'WASD 위치 이동 · 우클릭 / 전술기 버튼 유지: 정밀 이동 · 좌클릭 / 기본공격: 착지 확정'+(p.key==='jamila'&&p.rCd<=0?' · 궁극기: 0.25초 후 선봉 투입':'')+' · B: 취소':'침투 중';
  $('basic-btn').disabled=p.key==='heathcliff'&&game.buff(p,'heathUlt')&&!Infiltration.selecting(p);
- $('basic-btn').querySelector('span').textContent=p.key==='ezra'?(game.buff(p,'ezraUlt')?'총공 모드':EZRA_WEAPONS[p.state.weapon||0].name):c.basic;
- for(const [slot,name,description] of [['q',c.tactical,c.qText],['r',c.ultimate,c.rText]]){const b=$(slot+'-btn');b.querySelector('span').textContent=name;b.title=description;b.disabled=slot==='r'&&(Yan.distorted(game,p)||Sora.ego(game,p));const cd=p.key==='yan'&&slot==='r'?(Yan.distorted(game,p)?p.buffs.yanDistorted-game.time:Yan.ready(game,p)?0:p.rCd):p.key==='sora'&&slot==='r'?(Sora.ego(game,p)?p.buffs.soraEgo-game.time:Sora.ready(game,p)?0:p.rCd):p[slot+'Cd'];const charges=skillCharges(game,p,slot),displayCd=Math.max(cd,charges?.remaining||0);b.querySelector('small').textContent=charges?`전술기 · ${charges.current}/${charges.max}`:slot==='q'?'전술기':'궁극기';const recasting=canRecast(game,p,slot);const tracking=slot==='r'&&((p.key==='honglu'&&game.zones.find(z=>z.kind==='waterfall'&&z.source===p&&z.until>game.time)));b.querySelector('.cooldown').textContent=tracking?Math.ceil(tracking.until-game.time):displayCd>0?Math.ceil(displayCd):'';b.classList.toggle('on-cooldown',cd>0&&!tracking&&!recasting);b.classList.toggle('can-recast',Boolean(tracking||recasting));if(p.key==='heathcliff'&&slot==='q'&&p.state.chargeAt!==undefined)b.querySelector('span').textContent=`충전 ${Math.round(Math.min(1,(game.time-p.state.chargeAt)/1.5)*100)}% · 놓기`;if(p.key==='don'&&slot==='q'&&p.state.donCharge)b.querySelector('span').textContent=`충전 ${Math.round(Don.chargeShape(game,p,game.input.aim).progress*100)}% · 놓기`;if(p.key==='sora'&&slot==='q'&&Sora.ego(game,p))b.querySelector('span').textContent=`대행: 말살 · ${p.state.egoQCharges}/2`;}
+ $('basic-btn').querySelector('span').textContent=p.key==='ezra'?Ezra.weapon(game,p).name:c.basic;
+ for(const [slot,name,description] of [['q',c.tactical,c.qText],['r',c.ultimate,c.rText]]){const b=$(slot+'-btn');b.querySelector('span').textContent=name;b.title=description;b.disabled=slot==='r'&&(Yan.distorted(game,p)||Sora.ego(game,p))||p.key==='ezra'&&slot==='q'&&(Ezra.ultimate(game,p)||p.state.ezraLastWeapon==null);const cd=p.key==='yan'&&slot==='r'?(Yan.distorted(game,p)?p.buffs.yanDistorted-game.time:Yan.ready(game,p)?0:p.rCd):p.key==='sora'&&slot==='r'?(Sora.ego(game,p)?p.buffs.soraEgo-game.time:Sora.ready(game,p)?0:p.rCd):p[slot+'Cd'];const charges=skillCharges(game,p,slot),displayCd=Math.max(cd,charges?.remaining||0);b.querySelector('small').textContent=charges?`전술기 · ${charges.current}/${charges.max}`:slot==='q'?'전술기':'궁극기';const recasting=canRecast(game,p,slot);const tracking=slot==='r'&&((p.key==='honglu'&&game.zones.find(z=>z.kind==='waterfall'&&z.source===p&&z.until>game.time)));b.querySelector('.cooldown').textContent=tracking?Math.ceil(tracking.until-game.time):displayCd>0?Math.ceil(displayCd):'';b.classList.toggle('on-cooldown',cd>0&&!tracking&&!recasting);b.classList.toggle('can-recast',Boolean(tracking||recasting));if(p.key==='heathcliff'&&slot==='q'&&p.state.chargeAt!==undefined)b.querySelector('span').textContent=`충전 ${Math.round(Math.min(1,(game.time-p.state.chargeAt)/1.5)*100)}% · 놓기`;if(p.key==='don'&&slot==='q'&&p.state.donCharge)b.querySelector('span').textContent=`충전 ${Math.round(Don.chargeShape(game,p,game.input.aim).progress*100)}% · 놓기`;if(p.key==='sora'&&slot==='q'&&Sora.ego(game,p))b.querySelector('span').textContent=`대행: 말살 · ${p.state.egoQCharges}/2`;}
  $('passive-slot').querySelector('span').textContent=c.passive;$('passive-slot').title=(c.passiveText||c.brief)+(absorbedOrder(p)?'\n'+augmentName(p,AUGMENTS.find(a=>a.key==='writtenOrder'))+': '+augmentText(p,AUGMENTS.find(a=>a.key==='writtenOrder')):'');const passiveCd=game.passiveCooldown(p);$('passive-slot').querySelector('.cooldown').textContent=passiveCd>0?passiveCd.toFixed(1):'';$('passive-slot').classList.toggle('on-cooldown',passiveCd>0);$('basic-btn').title=c.basicText;const shownRange=p.key==='yan'&&!Yan.distorted(game,p)?Yan.chargeShape(game,p,game.input.aim).range:game.attackRange(p)*(p.key==='kim'&&p.state.followSlashUntil>game.time?1.2*1.08:1);$('basic-btn').querySelector('small').textContent=`사거리 ${Number(shownRange.toFixed(2))}`;
  document.querySelector('.match-clock>span').textContent=game.training?'자유 연습':`${game.champions(0).length} VS ${game.champions(1).length} · 두 개의 전선`;$('gold').textContent=Math.floor(p.gold).toLocaleString();updateAnnouncement();updateTeamPortraits();
  $('shop-status').textContent=game.training?'연습장 · 모든 장소·사망 중 이용 가능 · 강화 시술/증강 무료':game.canUpgrade(p)?(p.alive?'구매 가능 · 부활소 보급':'부활 대기 중 · 능력치 / 증강 변경 가능'):'부활 대기 중 또는 부활소에서 3초 비전투 시 구매 가능합니다.';

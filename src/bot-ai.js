@@ -1,3 +1,4 @@
+import*as Ezra from'./ezra.js';
 import{CHAMPIONS,CORE_POSITIONS,FOUNTAIN_AREAS,UPGRADE_STEPS}from'./data.js';
 import{distance,direction}from'./geometry.js';
 import{DRAG_KEYS}from'./skills.js';
@@ -12,7 +13,7 @@ export function frame(g){
  frames.set(g,f);return f;
 }
 const enemyTowers=(g,e)=>frame(g).towers[1-e.team];
-export const basicReach=(g,e)=>g.attackRange(e)+(e.key==='marton'?2.2:e.key==='rudolph'?2.1675:0);
+export const basicReach=(g,e)=>e.key==='ezra'?Ezra.attackReach(g,e):g.attackRange(e)+(e.key==='marton'?2.2:e.key==='rudolph'?2.1675:0);
 export function canSiege(g,e,tower){
  if(e.hp/e.maxHp<.55||tower.aggro===e.id||tower.targetId===e.id)return false;
  const f=frame(g);let memo=f.cover.get(e.id);if(!memo){memo=new Map();f.cover.set(e.id,memo);}if(memo.has(tower.id))return memo.get(tower.id);
@@ -32,7 +33,7 @@ export function canDive(g,e,t,tower){
  const others=frame(g).champions[1-e.team].filter(c=>c!==t&&c.alive&&c.hp/c.maxHp>.3&&distance(c,t)<7&&g.visibleTo(e.team,c)).length;
  return others<=(covered?1:0);
 }
-const moving={yi:['r'],dongrang:['r'],don:['q','r'],ryoshu:['q','r'],sinclair:['q','r'],myo:['basic'],heathcliff:['q'],sora:['q'],yan:['q'],outis:['q','r'],nelly:['r'],nosferatu:['r'],hohenheim:['q'],jamila:['q'],ahab:['r'],starbuck:['r'],kim:['q'],alisa:['q']};
+const moving={ezra:['basic','q'],yi:['r'],dongrang:['r'],don:['q','r'],ryoshu:['q','r'],sinclair:['q','r'],myo:['basic'],heathcliff:['q'],sora:['q'],yan:['q'],outis:['q','r'],nelly:['r'],nosferatu:['r'],hohenheim:['q'],jamila:['q'],ahab:['r'],starbuck:['r'],kim:['q'],alisa:['q']};
 function skillReach(g,e,slot){const s=skillTargeting(g,e,slot);return moving[e.key]?.includes(slot)||['self','ally','quick'].includes(s.kind)?0:s.range+(['circle','global'].includes(s.kind)?s.radius:s.impact||0);}
 function pokeReach(g,e){const f=frame(g);if(f.reach.has(e.id))return f.reach.get(e.id);const reach=Math.max(['don','starbuck','myo'].includes(e.key)?0:basicReach(g,e),skillReach(g,e,'q'),skillReach(g,e,'r'));f.reach.set(e.id,reach);return reach;}
 export function safeTowerPoint(g,e,p){return baseSafe(g,e,p)&&enemyTowers(g,e).every(t=>!t.alive||distance(t,p)>t.range+e.radius+.9||canSiege(g,e,t));}
@@ -106,6 +107,7 @@ export function basicTarget(g,e,enemy){
 }
 export function combatSkills(g,e,target){
  if(!target||!safeTowerTarget(g,e,target)||g.time<(e.aiSkillAt||0))return;e.aiSkillAt=g.time+.15;supportSkills(g,e,target);const d=distance(e,target);
+ if(e.key==='ezra'){if(!Ezra.ultimate(g,e)){if(e.state.ezraLastWeapon!=null&&d<=Ezra.attackReach(g,e,e.state.ezraLastWeapon))g.cast(e,'q',target);if(target.kind==='champion'&&d<=5.5)g.cast(e,'r',target);}return;}
  if(e.key==='queen'){const ally=healTarget(g,e,8),urgent=ally?.hp/ally?.maxHp<.25&&!(target.hp/target.maxHp<.3),aim=jointAim(g,e,target,urgent?ally:null,10.5,2.1);if(!e.state.queenQ)g.cast(e,'q',aim);if(!e.state.queenR)g.cast(e,'r',aim);return;}
  if(e.key==='nosferatu'){if((e.state.bloodFeast||0)>=100&&d<=6.8)g.cast(e,'q',target);if(!e.state.bloodfiend&&d<=7.5)g.cast(e,'r',target);return;}
  if(e.state.hohenCharge||e.state.donCharge)return;

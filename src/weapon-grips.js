@@ -2,7 +2,7 @@ import { loadAtlas } from './art.js';
 
 export const UNCHANGED_HANDS=new Set(['meursault','sora','ppui','queequeg','gregor']);
 export const TWO_HANDED_GRIPS=new Set(['sinclair','marton','honglu','dongrang','hohenheim','rudolph']);
-const BLACK_GLOVES=new Set(['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila']);
+const BLACK_GLOVES=new Set(['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra']);
 const BROWN_GLOVES=new Set(['alisa','dongrang']);
 // Midtones sampled from the latest body faces, independent of team tint.
 export const BARE_HAND_COLORS={queen:'#f8dfdc',nosferatu:'#eee0e5',yi:'#f8d8c0',faust:'#f0e0d8',don:'#f8d8c0',ryoshu:'#f8d0c0',honglu:'#f8d8c8',heathcliff:'#d09880',ishmael:'#f8d0c0',rodya:'#f8d8c8',outis:'#e0a880',nelly:'#f0a888',dongbaek:'#f8d8b8',marton:'#c89878',starbuck:'#d88848'};
@@ -22,6 +22,7 @@ export function gripAppearance(key){
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
 export const GRIP_PATHS={
+ ezraHammer:[[.09,.43],[.27,.43]],ezraDrill:[[.08,.31],[.34,.31]],ezraAxe:[[.25,.68],[.25,.83]],
  queenWand:[[.5,.53],[.5,.67]],nosWine:[[.5,.76],[.5,.85]],
  donBloodLance:[[.055,.5],[.18,.5]],heathBloodSack:[[.03,.5],[.065,.5]],
  kromerNail:[[.065,.5],[.16,.5]],

@@ -8,14 +8,14 @@ import { decodePNG } from '../tools/png.mjs';
 
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 test('all held weapons have the requested glove or body skin tone, with the five existing hand styles excluded',()=>{
- const black=['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila'],brown=['alisa','dongrang'];
+ const black=['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra'],brown=['alisa','dongrang'];
  assert.deepEqual([...UNCHANGED_HANDS].sort(),['meursault','sora','ppui','queequeg','gregor'].sort());
  for(const key of Object.keys(CHAMPIONS)){const p=gripAppearance(key);if(UNCHANGED_HANDS.has(key)){assert.equal(p,null,key);continue;}assert.ok(p,key);assert.equal(p.material,black.includes(key)?'black':brown.includes(key)?'brown':key==='ahab'?'white':key==='kromer'?'gray':'skin',key);if(p.material==='skin')assert.equal(p.base,BARE_HAND_COLORS[key]);}
  assert.equal(Object.keys(BARE_HAND_COLORS).length,15);
 });
 test('two-handed weapons include middle staff and rifle barrel support hands',()=>{
  assert.deepEqual([...TWO_HANDED_GRIPS].sort(),['sinclair','marton','honglu','dongrang','hohenheim','rudolph'].sort());
- for(const key of Object.keys(CHAMPIONS)){const [asset,length]=WEAPON_ART[key],points=gripLayout(key,asset,weaponGeometry(asset,length),gripPivot(key));assert.equal(points.length,UNCHANGED_HANDS.has(key)?0:TWO_HANDED_GRIPS.has(key)||['jamila','gubo'].includes(key)?2:1,key);if(points.length===2){if(key==='rudolph')close(points[1].x,(.5-gripPivot(key))*weaponGeometry(asset,length).span);else if(['jamila','gubo'].includes(key)){close(points[1].source[0],.70);close(points[1].source[1],key==='gubo'?.44:.60);}else close(points[1].x-points[0].x,.27);assert.equal(points[1].offHand,true);}for(const p of points){assert.ok(Math.abs(p.x)<(key==='gubo'?1.5:key==='jamila'?1.1:key==='rudolph'?.9:.5)&&Math.abs(p.y)<.35,key);}}
+ for(const key of Object.keys(CHAMPIONS)){const [asset,length]=WEAPON_ART[key],points=gripLayout(key,asset,weaponGeometry(asset,length),gripPivot(key));assert.equal(points.length,UNCHANGED_HANDS.has(key)||key==='ezra'?0:TWO_HANDED_GRIPS.has(key)||['jamila','gubo'].includes(key)?2:1,key);if(points.length===2){if(key==='rudolph')close(points[1].x,(.5-gripPivot(key))*weaponGeometry(asset,length).span);else if(['jamila','gubo'].includes(key)){close(points[1].source[0],.70);close(points[1].source[1],key==='gubo'?.44:.60);}else close(points[1].x-points[0].x,.27);assert.equal(points[1].offHand,true);}for(const p of points){assert.ok(Math.abs(p.x)<(key==='gubo'?1.5:key==='jamila'?1.1:key==='rudolph'?.9:.5)&&Math.abs(p.y)<.35,key);}}
 });
 test('every chosen grip touches opaque handle pixels in the latest independent weapon source',async()=>{
  const original=decodePNG(await readFile(new URL('../src/assets/weapons-v36.png',import.meta.url))),jamila=decodePNG(await readFile(new URL('../src/assets/jamila-v62.png',import.meta.url))),kromer=decodePNG(await readFile(new URL('../src/assets/kromer-v102.png',import.meta.url))),arcana=decodePNG(await readFile(new URL('../src/assets/arcana-v102.png',import.meta.url)));

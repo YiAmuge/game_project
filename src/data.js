@@ -1,4 +1,5 @@
 import{ARCANA_DATA}from'./arcana-data.js';
+import{EZRA_DATA}from'./ezra-data.js';
 export const FAN_ANGLE=165*Math.PI/180;
 export const BASIC_FAN_ANGLE=145*Math.PI/180;
 export const basicFanAngle=key=>key==='starbuck'?.975*1.2:key==='nosferatu'?Math.PI:key==='dongbaek'?BASIC_FAN_ANGLE-30*Math.PI/180:BASIC_FAN_ANGLE;
@@ -48,6 +49,7 @@ export const CHAMPIONS = {
   ...ARCANA_DATA,
   kromer:KROMER_DATA,
   jamila:JAMILA_DATA,
+  ezra:EZRA_DATA,
   faust: { id: 2, name: '파우스트', tag: 'FAUST', role: '저격', color: '#c9d8df', icon: 'F', power: 4, health: 3, speed: 2, ammo: 3, reload: 3, range: 7.5, damage: 180, attackTime: .46, q: 11, r: 48,
     passive: '게젤샤프트', basic: '대상 분석', tactical: '탐구', ultimate: '표상방출기',
     brief: '검파로 전선을 압박하는 분석가',
@@ -67,14 +69,14 @@ export const CHAMPIONS = {
 };
 export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','rodya','outis','gregor','gubo','gahwan','nelly','ahab','rudolph','myo','dongbaek','dongrang','hohenheim','alisa','marton','queequeg','starbuck','kim','ppui','sora','yan'];
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
-export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!NEW_CHAMPION_KEYS.includes(key)));
+export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!CHAMPIONS[key]));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const BASE_HEALTH={yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
-export const BASE_SPEED={yi:4.35,rudolph:3.25};
+export const BASE_HEALTH={ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
+export const BASE_SPEED={ezra:3.6,yi:4.35,rudolph:3.25};
 export const championBaseHealth=key=>BASE_HEALTH[key]??RULES.health[RUNTIME_CHAMPIONS[key].health]*(RUNTIME_CHAMPIONS[key].healthMultiplier||1);
 export const championBaseSpeed=key=>BASE_SPEED[key]??RULES.speed[RUNTIME_CHAMPIONS[key].speed];
 
-export const ARMOR_GRADES={queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
+export const ARMOR_GRADES={ezra:3,queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS))c.armor=ARMOR_GRADES[key]??2;
 export const GROWTH={
  queen:[.055,.045,.013],nosferatu:[.055,.055,.016],
@@ -155,6 +157,7 @@ export const lanePath = (team, lane) => {
   return team===0?points:points.reverse();
 };
 export const CHAMPION_ROLES={
+ ezra:['돌격','top'],
  queen:['저격','지원','bottom'],nosferatu:['암살','저격','jungle'],
  kromer:['돌격','암살','top'],
  jamila:['저격','보호','bottom'],

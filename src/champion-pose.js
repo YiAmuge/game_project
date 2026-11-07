@@ -7,7 +7,7 @@ export const STANCE_ANGLES={kromer:15*degree,jamila:-11*degree,rudolph:-11*degre
 export function restingStance(g,e,facing=0){const key=e.key==='sora'&&g.buff?.(e,'soraEgo')?'soraEgo':e.key,angle=STANCE_ANGLES[key]||0;return{bodyFacing:facing,weaponFacing:Math.cos(facing)<0?Math.PI-angle:angle};}
 export function combatPoseActive(g,e){
  const s=e.state||{},attackAge=g.time-(e.attackAt??-99),castAge=g.time-(e.visualCast?.at??-99);
- const control=e!==g.player&&e.networkControl;return Boolean((control?control.aiming:g.mobileAim)||(control?control.fire:g.input?.fire)||attackAge>=0&&attackAge<.3||castAge>=0&&castAge<.5||e.motion?.actionKind||e.channelUntil>g.time||s.donCharge||s.hohenCharge||s.yanCharge||s.chargeAt!==undefined||s.jamilaQ||s.swordGrab||s.kromerGrab||s.ahabUlt||rudolphWeaponProgress(g,e)>.001);
+ const control=e!==g.player&&e.networkControl;return Boolean((control?control.aiming:g.mobileAim)||(control?control.fire:g.input?.fire)||attackAge>=0&&attackAge<.3||castAge>=0&&castAge<.5||s.ezraAttack?.until>g.time||e.motion?.actionKind||e.channelUntil>g.time||s.donCharge||s.hohenCharge||s.yanCharge||s.chargeAt!==undefined||s.jamilaQ||s.swordGrab||s.kromerGrab||s.ahabUlt||rudolphWeaponProgress(g,e)>.001);
 }
 export function basicStance(g,e){
  if(e.previewStance)return restingStance(g,e);

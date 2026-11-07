@@ -1,6 +1,7 @@
 import{stage as queenStage}from'./queen.js';
 import{capacity as bloodCapacity}from'./nosferatu.js';
 import{HEATH}from'./heathcliff.js';
+import{EZRA}from'./ezra-data.js';
 import{drawDebuffBadges}from'./champion-update-effects.js';
 import{drawKromerEffects}from'./kromer-vfx.js';
 import{drawLevelBadge}from'./level-badge.js';
@@ -67,8 +68,9 @@ export function championHud(r,e,g){
   const count=Math.ceil(cap/4),ready=shieldRounds(e),gap=1.15/Math.max(1,count);for(let i=0;i<count;i++){const px=e.x+.15+i*gap;c.fillStyle=i<ready?'#63bcff':'#24415a';c.beginPath();c.moveTo(px,resourceY+.23);c.lineTo(px,resourceY+.085);c.quadraticCurveTo(px+.04,resourceY-.005,px+.08,resourceY+.085);c.lineTo(px+.08,resourceY+.23);c.closePath();c.fill();}
  }else{
   const gap=.075,w=(width-gap*(cap-1))/cap;
-  for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
+  for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)&&e.key!=='ezra'?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
  }
+ if(e.key==='ezra'&&e.state.ezraReloading){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*Math.min(1,e.reloadProgress/EZRA.reload),.10);}
  if(e.key==='jamila'&&e.state.lcaReload){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*reloadFraction(e),.10);}
  if(e.key==='gubo'&&g.buff(e,'guboReload')){const left=e.buffs.guboReload-g.time;c.fillStyle='#2c1019';c.fillRect(x,resourceY+.32,width,.13);c.fillStyle='#a72b47';c.fillRect(x,resourceY+.32,width*Math.min(1,left/4),.13);r.text(`흉탄 ${left.toFixed(1)}s · 아군 ≤35%`,e.x,resourceY+.64,'#ec93a4',.22);}
  if(gauge){const gy=resourceY+.36+(e.key==='gubo'&&g.buff(e,'guboReload')?.55:0);c.fillStyle='#111e26';c.fillRect(x,gy,width,.17);c.fillStyle=gauge.color;c.fillRect(x,gy,width*gauge.ratio,.17);c.strokeStyle=gauge.color;c.lineWidth=.025;c.strokeRect(x,gy,width,.17);if(!gauge.timer&&gauge.max>1&&gauge.max<=12)for(let i=1;i<gauge.max;i++){c.fillStyle='#13202c';c.fillRect(x+width*i/gauge.max-.015,gy,.03,.17);}r.text(gauge.label,e.x,gy+.36,gauge.color,.205);}

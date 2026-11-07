@@ -15,7 +15,7 @@ function quiet(key='faust'){
 }
 
 test('twenty ordinary champions retain four named abilities, and every team has four positions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,33);
+ assert.equal(Object.keys(CHAMPIONS).length,34);
  for(const key of Object.keys(CHAMPIONS))for(const position of Object.keys(POSITIONS)){
   const g=new Game(key,position);assert.equal(g.champions().length,8);assert.equal(g.player.position,position);
   for(const team of [0,1])assert.deepEqual(g.champions(team).map(c=>c.position).sort(),['bottom','jungle','support','top']);
@@ -26,7 +26,7 @@ test('all 32 catalog champions and all runtime champions share the cumulative re
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){
   const {g,p}=quiet(key);p.lastCombat=g.time;
   if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
-  close(g.reloadInterval(p),key==='jamila'?1.5:RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1));
+  close(g.reloadInterval(p),['jamila','ezra'].includes(key)?1.5:RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1));
  }
 });
 test('natural healing waits three seconds after attacks including missed attacks',()=>{
@@ -48,18 +48,16 @@ test('Gubo manually aimed normal bullets permit allied health at 21 percent but 
  g.units=[p,ally];assert.ok(g.attack(p,ally));run(g,.1);assert.equal(ally.hp,211);
  p.attackCd=0;p.ammo=3;ally.hp=210;g.attack(p,ally);assert.equal(ally.alive,true);run(g,1/30);assert.ok(ally.alive&&ally.hp<210);p.attackCd=0;g.attack(p,ally);run(g,1/30);assert.equal(ally.alive,false);close(ally.respawnAt-g.time,3.5);assert.equal(g.kills[0],0);
 });
-test('dragging needs distance; Moses supports four directions and Ezra only left/right',()=>{
+test('Moses directional selection requires a deliberate drag',()=>{
  assert.equal(dragChoice('moses',0,0),null);assert.equal(dragChoice('moses',4,3),null);
  assert.equal(dragChoice('moses',0,-40),'up');assert.equal(dragChoice('moses',0,40),'down');assert.equal(dragChoice('moses',-40,0),'left');assert.equal(dragChoice('moses',40,0),'right');
- assert.equal(dragChoice('ezra',0,-40),null);assert.equal(dragChoice('ezra',-40,2),'left');
  for(const key of ['moses','ezra']){const {g,p}=quiet(key);const ammo=p.ammo;assert.equal(g.cast(p,'q',{x:34,y:5.5}),false);assert.equal(p.qCd,0);assert.equal(p.ammo,ammo);}
 });
 test('Moses choice is committed only with a direction and consumed by next attack',()=>{
  const {g,p}=quiet('moses');assert.ok(g.cast(p,'q',{x:34,y:5.5},{direction:'left'}));assert.equal(p.state.smoke,'left');assert.ok(p.qCd>0);g.attack(p,{x:34,y:5.5});assert.equal(p.state.smoke,null);
 });
-test('Ezra changes and reloads weapons on left/right drag and restores from ultimate',()=>{
- const {g,p}=quiet('ezra');assert.equal(ammoCap(g,p),1);assert.ok(g.cast(p,'q',p,{direction:'right'}));assert.equal(p.state.weapon,1);assert.equal(p.ammo,3);
- assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,4);assert.equal(g.cast(p,'q',p,{direction:'right'}),false);assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,3);assert.equal(g.buff(p,'ezraUlt'),false);
+test('Ezra uses a fixed four-round cycle and returns from her timed ultimate',()=>{
+ const {g,p}=quiet('ezra');assert.equal(ammoCap(g,p),4);assert.equal(g.cast(p,'q',p),false);assert.ok(g.attack(p,{x:p.x+8,y:p.y}));run(g,.7);assert.equal(p.state.weapon,1);assert.equal(p.ammo,3);assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,4);assert.equal(g.cast(p,'q',p),false);run(g,10.1);assert.equal(p.ammo,3);assert.equal(p.state.weapon,0);assert.equal(g.buff(p,'ezraUlt'),false);
 });
 test('Rudolph ultimate is ranged, delayed, spends SP at commitment and recharges',()=>{
  const {g,p,t}=quiet('rudolph');t.x=p.x+8;t.y=p.y;t.hp=t.maxHp=5000;

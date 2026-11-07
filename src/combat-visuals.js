@@ -1,4 +1,5 @@
 import{basicFanAngle}from'./data.js';
+import*as Ezra from'./ezra.js';
 import { dashLength,dashBasic } from './skills.js';
 import * as Hohenheim from './hohenheim.js';
 import { FAUST_WAVE_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
@@ -9,6 +10,14 @@ export function front(){}
 export function preview(r,e,g){
  const angle=Math.atan2(g.input.aim.y-e.y,g.input.aim.x-e.x),d={x:Math.cos(angle),y:Math.sin(angle)},ctx=r.ctx;
  const polygon=(range,width)=>{const s={x:-d.y*width/2,y:d.x*width/2},to={x:e.x+d.x*range,y:e.y+d.y*range};r.polygon([[e.x+s.x,e.y+s.y],[to.x+s.x,to.y+s.y],[to.x-s.x,to.y-s.y],[e.x-s.x,e.y-s.y]],'#b8d8d313','#c3e8df66');};
+ if(e.key==='ezra'){
+  const index=Ezra.currentIndex(g,e),w=Ezra.weapon(g,e),range=g.attackRange(e),arc=(p,spread)=>{ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.arc(p.x,p.y,range,angle-spread/2,angle+spread/2);ctx.closePath();ctx.fillStyle='#f2dda510';ctx.fill();ctx.strokeStyle='#e8d5a477';ctx.lineWidth=.035;ctx.stroke();};
+  if(index===0)polygon(range,1.2);
+  else if(index===1)arc(e,w.angle);
+  else if(index===2)polygon(range,w.width);
+  else{const len=index===3?Math.min(w.dash,Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y)):w.dash,at={x:e.x+d.x*len,y:e.y+d.y*len};if(index===3||e.state.ultAttacks===3)r.circle(at.x,at.y,range,'#f2dda510','#e8d5a477',.035);else arc(at,Math.PI);}
+  return;
+ }
  if(e.key==='nosferatu'&&e.state.bloodfiend)r.circle(e.x,e.y,g.attackRange(e),null,'#ff456d88',.045);
  if(e.key==='kromer')polygon(g.attackRange(e),2);
  if(e.key==='gahwan'||e.key==='rodya')polygon(g.attackRange(e),1.5);

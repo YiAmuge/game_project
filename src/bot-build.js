@@ -1,14 +1,15 @@
 import{AUGMENTS,RULES,UPGRADE_STEPS}from'./data.js';
 import*as Augments from'./augments.js';
 import{distance,direction}from'./geometry.js';
-const healthUsers=new Set(['nosferatu','marton','kim','yi','honglu','ppui','alisa','queequeg','meursault','sora']);
+const healthUsers=new Set(['ezra','nosferatu','marton','kim','yi','honglu','ppui','alisa','queequeg','meursault','sora']);
 const skillUsers=new Set(['queen','yi','rudolph','hohenheim','gahwan','dongbaek','honglu','ppui','queequeg','kromer','nelly','yan']);
-const magazineUsers=new Set(['rudolph','hohenheim','jamila','yan']);
+const magazineUsers=new Set(['ezra','rudolph','hohenheim','jamila','yan']);
 const priorities={combat:['power15','range7','blackOrb','reloadStacks','wisdom','finalBullet','duelManual'],survival:['glaive','forceBattery','traumaGuard','writtenOrder','resentment','kAmpule','antimatter'],tech:['cooldown15','maskDeLu','magazine2','battleHaste','carrier','adaptiveSpeed','highRisk']};
 export function buildPlan(e){
  let categories=e.position==='top'?['survival','combat','tech']:e.position==='support'?['survival','tech','combat']:['combat','tech','survival'];
  if(healthUsers.has(e.key))categories=['survival','tech','combat'];if(skillUsers.has(e.key))categories=['tech','survival','combat'];if(e.key==='nosferatu')categories=['survival','combat','tech'];if(['dongrang','kim'].includes(e.key))categories=['combat','survival','tech'];
- const stats=e.key==='dongrang'?['power','health','haste','reload','speed']:magazineUsers.has(e.key)?['reload','haste','power','health','speed']:healthUsers.has(e.key)?['health','haste','power','speed','reload']:skillUsers.has(e.key)?['haste','reload','power','health','speed']:['power','reload','health','speed','haste'];
+ const stats=e.key==='ezra'?['health','reload','haste','power','speed']:e.key==='dongrang'?['power','health','haste','reload','speed']:magazineUsers.has(e.key)?['reload','haste','power','health','speed']:healthUsers.has(e.key)?['health','haste','power','speed','reload']:skillUsers.has(e.key)?['haste','reload','power','health','speed']:['power','reload','health','speed','haste'];
+ if(e.key==='ezra')categories=['survival','combat','tech'];
  return{categories,stats};
 }
 function itemScore(e,a,plan){

@@ -1,3 +1,4 @@
+import*as Ezra from'./ezra.js';
 import{distance,direction}from'./geometry.js';
 import{skillTargeting,castPoint}from'./targeting.js';
 import{YAN,distorted}from'./yan.js';
@@ -7,16 +8,18 @@ export const ATTACK_CATEGORIES={champion:'챔피언',minion:'미니언',structur
 export const autoAimReach=spec=>(spec.range||0)+(spec.kind==='circle'||spec.kind==='self'?(spec.radius||0):spec.kind==='line'?(spec.impact||0):0);
 export const attackCategory=t=>t.kind==='champion'?'champion':['minion','trooper'].includes(t.kind)?'minion':['tower','core'].includes(t.kind)?'structure':t.kind==='neutral'?'creep':null;
 // Endpoint areas extend target acquisition, never the actual cast/projectile range.
-export const basicAimReach=(g,e)=>e.key==='nosferatu'&&!e.state?.bloodfiend?6.8+g.attackRange(e)-1.7:distorted(g,e)?YAN.handLeash:g.attackRange(e)+(e.key==='rudolph'?2.1675:e.key==='marton'?2.2:0);
+export const basicAimReach=(g,e)=>e.key==='ezra'?Ezra.attackReach(g,e):e.key==='nosferatu'&&!e.state?.bloodfiend?6.8+g.attackRange(e)-1.7:distorted(g,e)?YAN.handLeash:g.attackRange(e)+(e.key==='rudolph'?2.1675:e.key==='marton'?2.2:0);
 export function mobileAttackTargets(g,e,range=basicAimReach(g,e),{ignoreWalls=false}={}){
  return g.units.filter(t=>t.alive&&g.hostile(e,t)&&!g.hidden(t)&&g.visibleTo(e.team,t)&&(ignoreWalls||g.clearLine(e,t))&&!g.locked(t)&&!t.returning&&!t.state?.posthumous&&!(t.invulnerableUntil>g.time)&&distance(e,t)<=range+(t.radius||0)+1e-8).sort((a,b)=>(b.kind==='champion')-(a.kind==='champion')||(a.kind==='champion'&&b.kind==='champion'?a.hp-b.hp:0)||distance(e,a)-distance(e,b)||a.id-b.id);
 }
 export function nearestMovementAim(g,e,slot){
+ if(e.key==='ezra')return slot==='basic'?Ezra.movementWeapon(g,e):slot==='q'&&e.state.ezraLastWeapon!=null&&Ezra.movementWeapon(g,e,e.state.ezraLastWeapon);
  const moves={nosferatu:['r'],kromer:['r'],don:['basic','r'],myo:['basic'],starbuck:['basic','r'],jamila:['q'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q','r'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],kim:['q'],sora:['q']};
  return Boolean(moves[e.key]?.includes(slot));
 }
 export const movementAim=(g,e,slot)=>nearestMovementAim(g,e,slot)||e.key==='yi'&&slot==='r';
 export function dashSlidePriority(g,e,slot){
+ if(e.key==='ezra')return nearestMovementAim(g,e,slot);
  if(slot==='basic')return ['don','myo','starbuck'].includes(e.key);
  return slot==='q'&&['sinclair','ryoshu','outis','jamila','heathcliff','hohenheim','kim','sora','alisa'].includes(e.key)||slot==='r'&&['kromer','don','outis','alisa'].includes(e.key);
 }
