@@ -25,7 +25,7 @@ async def main():
      if r.request.url==url:await r.continue_()
      else:external.append(r.request.url);await r.abort()
     await p.route('**/*',route)
-   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===22')
+   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===24')
    await p.evaluate(SETUP,'jamila');await p.evaluate('__moba.audio.synth.swings.history=[]')
    for i in range(4):
     await p.evaluate('__moba.game.attack(__moba.game.player,{x:48,y:20});advance(.15)');await p.wait_for_timeout(155)

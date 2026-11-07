@@ -25,7 +25,7 @@ async def main():
      if r.request.url==url:await r.continue_()
      else:external.append(r.request.url);await r.abort()
     await p.route('**/*',route)
-   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===22&&__moba.audio.synth.swings.failures.length===0')
+   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===24&&__moba.audio.synth.swings.failures.length===0')
    await p.evaluate(SETUP,'hohenheim');await p.evaluate('__moba.game.attack(__moba.game.player,{x:48,y:20})');await p.wait_for_function('__moba.audio.hohenCharge.fields.size===1')
    await p.evaluate('__moba.audio.toggle()');await p.wait_for_function('__moba.audio.hohenCharge.fields.size===0');await p.evaluate('__moba.audio.toggle()');await p.wait_for_function('__moba.audio.hohenCharge.fields.size===1')
    await p.evaluate('()=>{const a=__moba.audio,g=__moba.game;window.chargeEnded=false;a.hohenCharge.fields.get(g.player.id).source.addEventListener("ended",()=>window.chargeEnded=true);a.synth.swings.history=[];g.player.state.hohenCharge.progress=1.5;__moba.mobile.api.releaseBasic(g,g.player,{x:48,y:20});advance(.25);}')

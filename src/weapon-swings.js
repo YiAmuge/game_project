@@ -56,7 +56,7 @@ export function impactProfile(voice){
  const heavy=['axe','greatsword','scythe','hammer','club','mace','cannon'].includes(family),light=['knife','katana','needle','nail'].includes(family),variant=((Math.trunc(voice.variant)||0)%4+4)%4;
  // Preserve each recording's attack and tail with only small playback changes.
  const speed=1+[-.003,.003,0,.002][variant];
- return {id,pitch:(heavy?-.15:light?.10:0)+[-.15,.10,-.05,.15][variant],duration:impactLengths[id]*(1+[0,.006,-.006,.003][variant]),rates:[.98,1.025,.995].map(n=>n*speed),offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12),dry:true,fadeOut:.012};
+ return {id,pitch:(heavy?-.15:light?.10:0)+[-.15,.10,-.05,.15][variant],duration:impactLengths[id]*(1+[0,.006,-.006,.003][variant]),rates:[.98,1.025,.995].map(n=>n*speed),offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12)*(voice.key==='dongbaek'?.8:1),dry:true,fadeOut:.012};
 }
 export const recordingProfile=voice=>championSkillSoundProfile(voice)||electricSoundProfile(voice)||rifleSoundProfile(voice)||yiSoundProfile(voice)||impactProfile(voice)||swingProfile(voice);
 const inlineRecordings=new WeakMap();
@@ -99,8 +99,8 @@ export class WeaponSwings{
   source.buffer=buffer;source.detune.setValueAtTime(profile.pitch*100,t);
   source.playbackRate.setValueAtTime(profile.rates[0],t);source.playbackRate.exponentialRampToValueAtTime(profile.rates[1],t+duration*.4);source.playbackRate.exponentialRampToValueAtTime(profile.rates[2],t+duration);
   // Near-simultaneous copies share volume to keep crowded combat clear.
-  const entry={id:profile.id,at:t,gain,level:profile.gain,end:t+duration,fade:Math.min(profile.fadeOut,duration*.25)},group=[...this.voices.values()].filter(v=>v.id===profile.id&&t-v.at<.02);group.push(entry);
-  for(const v of group){const p=v.gain.gain,level=v.level/group.length;p.cancelScheduledValues(t);p.setValueAtTime(v===entry?0:level,t);if(v===entry)p.linearRampToValueAtTime(level,t+.002);p.setValueAtTime(level,Math.max(t+.002,v.end-v.fade));p.linearRampToValueAtTime(0,v.end);}
+  const entry={id:profile.id,at:t,gain,level:profile.gain,end:t+duration,attack:Math.min(profile.attack??.002,duration*.1),fade:profile.fadeStart===undefined?Math.min(profile.fadeOut,duration*.25):duration*(1-clamp(profile.fadeStart,0,1))},group=[...this.voices.values()].filter(v=>v.id===profile.id&&t-v.at<.02);group.push(entry);
+  for(const v of group){const p=v.gain.gain,level=v.level/group.length;p.cancelScheduledValues(t);p.setValueAtTime(v===entry?0:level,t);if(v===entry)p.linearRampToValueAtTime(level,t+v.attack);p.setValueAtTime(level,Math.max(t+v.attack,v.end-v.fade));p.linearRampToValueAtTime(0,v.end);}
   let end=source;if(profile.lowpass){const filter=c.createBiquadFilter();filter.type='lowpass';filter.frequency.value=profile.lowpass;filter.Q.value=.5;end.connect(filter);end=filter;nodes.push(filter);}end.connect(gain);gain.connect(out);this.active.add(source);this.voices.set(source,entry);
   source.onended=()=>{nodes.forEach(n=>n.disconnect());this.active.delete(source);this.voices.delete(source);};
   source.start(t,profile.offset);source.stop(t+duration+.002);this.played++;

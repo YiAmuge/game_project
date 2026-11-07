@@ -47,6 +47,7 @@ export class SoundSynth{
   if(v.cue==='impale'||v.cue==='nailBreak'){const impale=v.cue==='impale';this.noise(out,{d:.055,v:.44,filter:'highpass',freq:4100,end:1700});this.noise(out,{d:impale?.16:.11,v:.35,color:'pink',filter:'bandpass',freq:1300,end:220,q:1.5});this.thud(out,impale?1.7:1.4,.75,1.1);this.metal(out,impale?760:2100,.045,.23,.018);this.tone(out,{freq:impale?142:205,end:42,d:.16,v:.13,type:'triangle'});this.element(out,'blood',.9,v.variant);}
   else if(v.cue==='weapon'||v.cue==='impact'){this.weapon(out,v,v.cue==='impact');if(!['metal','mirror'].includes(v.element)||v.family!=='glass')this.element(out,v.element,v.cue==='impact'?.5:.65,v.variant);}
   else if(v.cue==='tick'){this.element(out,v.element,.2,v.variant);}
+  else if(v.cue==='petal'){this.element(out,'petal',v.slot==='r'?1.4:.8,v.variant);}
   else if(v.cue==='slam'){this.thud(out,1.6,1,1.4);this.noise(out,{d:.4,v:.38,color:'brown',freq:900,end:110});this.element(out,v.element,.7,v.variant);}
   else if(v.cue==='explosion'||v.cue==='shotgun')this.explosion(out,v,{shotgun:v.cue==='shotgun'});
   else if(v.cue==='burst'){this.thud(out,1.4,1,1);this.element(out,v.element,1.3,v.variant);this.noise(out,{d:.35,v:.26,color:'pink',freq:2200,end:400});}

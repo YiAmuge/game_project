@@ -1,4 +1,6 @@
 export const CHAMPION_SKILL_SAMPLES=[
+ {id:'dongbaekWind',file:'yodguard-wind-magic-6-378626.mp3',start:.25,end:1.5},
+ {id:'dongbaekChimes',file:'dongbaek-wind-chimes.wav',mime:'audio/wav'},
  {id:'waterSplash',file:'universfield-water-splash-199583.mp3',start:.15,end:2.25},
  {id:'groundImpact',file:'universfield-body-hit-ground-250958.mp3',start:.10,end:1.40},
  {id:'nellyMetal',file:'floraphonic-metal-whoosh-hit-2-201903.mp3',start:.045,end:.58},
@@ -9,6 +11,13 @@ const landings=new Set(['heath-landing','sora-landing','starbuck-landing']);
 export function championSkillSoundProfile(v){
  const variant=((Math.trunc(v.variant)||0)%4+4)%4,tint=[-.25,.15,-.1,.25][variant];
  const profile=(id,pitch,duration,gain,offset=0,fadeOut=.10,rates=[.98,1.04,.96])=>({id,pitch,duration,gain,offset,fadeOut,rates,dry:true});
+ if(v.key==='dongbaek'){
+  if(v.cue==='weapon'&&!v.slot)return profile('dongbaekWind',.25+tint,.55,.72,0,.11,[1.02,1.18,.96]);
+  if(v.cue==='cast'&&v.slot==='r')return profile('dongbaekWind',-.75+tint,.75,.90,0,.15,[.94,1.10,.88]);
+  if(v.cue==='petal'&&v.phase==='dongbaek-bloom')return v.slot==='r'
+   ?{...profile('dongbaekChimes',-.9+tint,2.60,1.05,0,.5,[.94,1.01,.94]),attack:.035,fadeStart:.08}
+   :{...profile('dongbaekChimes',.6+tint,1.05,.48,.04,.25,[1.03,1.07,1]),attack:.02,fadeStart:.12};
+ }
  if(v.cue==='slam'&&landings.has(v.phase))return profile('groundImpact',-1+tint,.75,.82,0,.16);
  if(v.key==='rudolph'){
   if(v.cue==='weapon'&&!v.slot)return profile('hohenElectrocute',.5+tint,.24,.55,.055,.065);

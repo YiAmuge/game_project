@@ -1,4 +1,4 @@
-The game loads twenty-two runtime recordings, with one fixed source per effect:
+The game loads twenty-four runtime recordings, with one fixed source per effect:
 
 - `floraphonic-swing-whoosh-weapon-3-189823.mp3`: general swings (0.030–0.235 s).
 - `daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3`: base-form Yan greatsword only (0.040–0.980 s).
@@ -22,6 +22,8 @@ The game loads twenty-two runtime recordings, with one fixed source per effect:
 - `floraphonic-metal-whoosh-hit-2-201903.mp3`: Nelly's basic and Q throws, with separate pitch/rate profiles (0.045–0.580 s).
 - `yodguard-iced-magic-6-378606.mp3`: Rodion R ice-axe contacts (0.015–1.600 s).
 - `yodguard-earth-magic-5-378598.mp3`: Marton ranged-root contacts (0–2.050 s).
+- `yodguard-wind-magic-6-378626.mp3`: Dongbaek basic/ultimate weapon movement (0.250–1.500 s). The uploaded MP3 remains unchanged.
+- `dongbaek-wind-chimes.wav`: a 3.9 s stereo phrase from the supplied 105 s rain/wind-chime ambience. The complete original is preserved in `source/designerschoice-ambdsgn-cu_rain-wind-chimes-magic-ambience_nicholas-judy_tdc-475656.mp3`. Rebuild with `python3 tools/import-dongbaek-audio.py`.
 
 
 
@@ -50,3 +52,5 @@ Firearm contact playback uses 70% of its prior gain (0.476 before weight adjustm
 Rudolph basic/ultimate sounds share the existing electrocute recording rather than decoding another copy. His ultimate cast and delayed detonation use lower pitch, longer envelopes and greater gain than his basic. Hong Lu Q plays at the healing ripple; R's louder first splash represents its simultaneous first attack/heal, so first-hit generic contacts are marked `silent` for the audio mixer only. Subsequent pulses emit one splash if any allied champion actually gains health, regardless of recipient count.
 
 Landing recordings play at the shockwave, never the start of airborne travel. Nelly basic and Q use the same fixed metal source with Q pitched higher and played faster; a five-knife fan is grouped into one throw and has no extra synthetic cast shot. Rodion's axe and its health-based bonus carry identical R/ice contact metadata, which merges them into one sound even after later casts. The ice and earth files omit their long silent tails. All effects use the same voice budget, spatial mixer and offline embedding as the other recordings.
+
+Dongbaek emits a separate petal bloom once per basic attack and once for the whole ultimate, including misses. Ultimate chimes play from the designated bloom location. The same extracted recording uses a short 1.05 s basic envelope and a louder, lower, 2.6 s ultimate envelope; both fade from near the start. The ultimate event retains its duration so mixer cleanup preserves the complete fade. Existing impact recordings, pitch, speed and duration stay intact, with only Dongbaek impact gain multiplied by 0.8. Other champion impacts retain their levels.

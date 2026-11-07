@@ -25,6 +25,7 @@ export function basic(g,e,p,d){
  }
  if(e.key==='dongbaek'){
   e.state.flowerHits??={};
+  g.emitSound('petal',e,{damageKind:'basic',phase:'dongbaek-bloom'});
   for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t)){
    const td=direction(e,t);if(td.x*d.x+td.y*d.y<Math.cos(basicFanAngle(e.key)/2))continue;
    let hits=e.state.flowerHits[t.id];if(!hits||hits.at<g.time-4)hits=e.state.flowerHits[t.id]={n:0,at:g.time};
@@ -46,7 +47,7 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='dongbaek'){
   if(slot==='q'){g.addShield(e,e.maxHp*.08,`petals-${e.id}`,3);g.addBuff(e,'flowerStride',3);}
-  else{const point={...p};area(g,e,point,4.2,105);for(let i=1;i<4;i++)g.schedule(e,i*.25,()=>area(g,e,point,4.2,105),{autonomous:true});g.addBuff(e,'flowerReload',3,{copy:false});g.effects.push({type:'burst',source:e.id,...point,r:4.2,theme:e.key,life:.65,maxLife:.65});}
+  else{const point={...p};g.emitSound('petal',e,{...point,slot:'r',phase:'dongbaek-bloom',duration:2.6});area(g,e,point,4.2,105);for(let i=1;i<4;i++)g.schedule(e,i*.25,()=>area(g,e,point,4.2,105),{autonomous:true});g.addBuff(e,'flowerReload',3,{copy:false});g.effects.push({type:'burst',source:e.id,...point,r:4.2,theme:e.key,life:.65,maxLife:.65});}
   return true;
  }
  if(e.key==='dongrang'){
