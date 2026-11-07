@@ -39,7 +39,7 @@ function strike(g,e,w,index,d,kind,slot,{circle=false,fourth=false}={}){
  if(index===1){d=liveAim(g,e);a.angle=Math.atan2(d.y,d.x);a.spinDirection=e.state.ezraHammerDirection=-(e.state.ezraHammerDirection??-1);circle=true;}
  const range=w.range+rangeBonus(e),angle=[1,2].includes(index)?w.angle:circle?Math.PI*2:Math.PI,shape=circle?{kind:'circle',range}:{kind:'cone',range,spread:angle,angle:a.angle};
  // Drill's three damage ticks belong to one visible swing and one swing sound.
- if(index!==2||!a.sounded){g.emitSound('swing',e,{damageKind:kind,slot,stance:index,family:w.family,weight:index===4?1.6:1.1});a.sounded=true;}
+ if(index!==2||!a.sounded){g.emitSound('swing',e,{damageKind:kind,slot,stance:index,family:w.family,phase:index===3?'ezra-gauntlet':undefined,weight:index===4?1.6:1.1});a.sounded=true;}
  for(const t of[...g.units]){
   if(!g.hostile(e,t)||!g.clearLine(e,t))continue;
   const dx=t.x-e.x,dy=t.y-e.y,len=Math.hypot(dx,dy),along=dx*d.x+dy*d.y;

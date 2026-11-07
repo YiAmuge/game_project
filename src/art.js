@@ -1,6 +1,6 @@
 import{ARCANA_FRAMES}from'./arcana-sprites.js';
 import{EZRA_FRAMES}from'./ezra-sprites.js';
-import{PORTRAIT_CROPS}from'./portrait-framing.js';
+import{PORTRAIT_CROPS,PORTRAIT_SCALES}from'./portrait-framing.js';
 import{ULTIMATE_WEAPON_FRAMES}from'./ultimate-weapon-sprites.js';
 import{KROMER_FRAMES}from'./kromer-sprites.js';
 import{WORLD_FRAMES}from'./world-sprites.js';
@@ -101,4 +101,4 @@ export function portrait(canvas,key,image,extraImage,v05Image,v06Image,v08Image,
   if(!f){c.fillStyle='#cad3bf';c.font='34px Georgia';c.textAlign='center';c.fillText(key[0].toUpperCase(),canvas.width/2,canvas.height*.7);return;}
   drawFace(c,key,image,0,0,canvas.width,canvas.height);
 }
-export function drawFace(c,key,image,x,y,w,h=w){const f=FRAMES[key];if(!f||!image?.complete||!image.naturalWidth)return;const side=Math.min(f.w,f.h*.48),face=f.face||[(f.w-side)/2,f.h*.025,side,side],scale=Math.min(w/face[2],h/face[3]),dw=face[2]*scale,dh=face[3]*scale;c.save();c.imageSmoothingEnabled=false;if(f.mirror){c.translate(x+w,y);c.scale(-1,1);x=0;y=0;}c.drawImage(image,f.x+face[0],f.y+face[1],face[2],face[3],x+(w-dw)/2,y+(h-dh)/2,dw,dh);c.restore();}
+export function drawFace(c,key,image,x,y,w,h=w){const f=FRAMES[key];if(!f||!image?.complete||!image.naturalWidth)return;const side=Math.min(f.w,f.h*.48),face=f.face||[(f.w-side)/2,f.h*.025,side,side],scale=Math.min(w/face[2],h/face[3])*(PORTRAIT_SCALES[key]||1),dw=face[2]*scale,dh=face[3]*scale;c.save();c.imageSmoothingEnabled=false;if(f.mirror){c.translate(x+w,y);c.scale(-1,1);x=0;y=0;}c.drawImage(image,f.x+face[0],f.y+face[1],face[2],face[3],x+(w-dw)/2,y+(h-dh)/2,dw,dh);c.restore();}

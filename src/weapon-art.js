@@ -308,6 +308,7 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
  const fistLift=.105; // Five percent of crown-to-sole champion height, excluding hair.
  let hand=[0,3].includes(index)?{x:p.right.x,y:p.right.y-fistLift}:index===4?{x:p.origin.x+HAND_ANCHORS.rudolph[0]*p.flip,y:p.origin.y+HAND_ANCHORS.rudolph[1]}:p.right,angle=facing,mode=null,thrust=0,trail=false,gripY=0;
  if(index===4||index===1){const w=Ezra.weapon(g,e,index),m=weaponGeometry(w.asset,w.length),primary=gripLayout('ezra',w.asset,m,w.pivot)[0];gripY=primary.y/(m.height*m.scale);}
+ if(index===2&&!active&&!combatPoseActive(g,e)){hand={x:hand.x,y:hand.y+.16};angle=Math.cos(facing)<0?Math.PI+Math.PI/12:-Math.PI/12;}
  if(active){
   if(index===0){
    const t=Math.min(1,age/.24),smooth=v=>v*v*(3-2*v),reach=.85*(t<.35?smooth(t/.35):t<.55?1:1-smooth((t-.55)/.45));
@@ -325,7 +326,7 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
    else{const point=frontGroundPoint(e,p,camera,{distance:.6,angle:facing}),t=Math.min(1,age/.10),recover=Math.max(0,(age-.10)/.18),height=Ezra.EZRA_WEAPONS[3].length*.88;hand={x:hand.x+(point.x-hand.x)*t,y:hand.y+(point.y-height-hand.y)*t-.25*recover};}
   }
  }
- return{weapon:index,hand,angle,mode,progress,thrust,trail,gripY,part:active&&a.fourth?'ezra-axe-orbit':index===1?'ezra-hammer-'+(a?.spinDirection||1):'ezra-'+index};
+ return{weapon:index,hand,angle,mode,progress,thrust,trail,gripY,flipY:index===0?-1:1,part:active&&a.fourth?'ezra-axe-orbit':index===1?'ezra-hammer-'+(a?.spinDirection||1):'ezra-'+index};
 }
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
@@ -346,7 +347,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   if(claw){c.save();c.globalAlpha*=.64;c.shadowColor='#ff1646';c.shadowBlur=22;held(claw.asset,claw.length,claw.hand,claw.angle,.08,{mode:null,trail:true,part:'blood-claw'});c.restore();}
   else held('nosWine',.43,{x:p.origin.x+p.flip*.53,y:p.origin.y-.64},0,.5,{mode:null,trail:false});return true;
  }
- if(e.key==='ezra'){const pose=ezraWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,gripY:pose.gripY,part:pose.part});return true;}
+ if(e.key==='ezra'){const pose=ezraWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,gripY:pose.gripY,flipY:pose.flipY,part:pose.part});return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}
  if(e.key==='kromer'){
   const pose=kromerWeaponPose(g,e,p,camera);if(!pose.hidden)held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:false,centerGrip:pose.centerGrip});return true;

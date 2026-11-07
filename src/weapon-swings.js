@@ -40,7 +40,7 @@ export function swingProfile(voice){
   id:yan?'yanGreatsword':'swing',pitch:base[0]+[-.45,.25,-.15,.55][variant],
   duration:base[1]*(preparing?.8:1)*(1+[0,.04,-.03,.02][variant]),
   rates:base[2].map(n=>n),offset:0,
-  gain:(preparing?.50:.76)*clamp(.85+weight*.15,.85,1.12),
+  gain:(preparing?.50:.76)*clamp(.85+weight*.15,.85,1.12)*(voice.key==='ezra'&&voice.phase==='ezra-gauntlet'?.5:1),
   dry:true,fadeOut:.025,
  };
 }
