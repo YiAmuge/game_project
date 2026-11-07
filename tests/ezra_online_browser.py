@@ -26,9 +26,12 @@ async def main():
    await host.evaluate('()=>{const g=__moba.game,p=g.champions(1)[0];p.state.weapon=2;p.ammo=4;p.attackCd=0;delete p.state.ezraReloading;delete p.state.ezraAttack;}');await guest.wait_for_function('__moba.game.player.state.weapon===2&&__moba.game.player.attackCd<=.01');await guest.locator('#basic-btn').tap()
    for page in[host,guest]:await page.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="ezraDrillMotor")');assert await page.evaluate('__moba.audio.synth.swings.history.filter(s=>s.id==="ezraDrillMotor").length===1')
    await host.wait_for_function('__moba.game.champions(1)[0].attackCd<=.01')
-   await host.evaluate('()=>{const g=__moba.game,p=g.champions(1)[0];p.state.weapon=3;p.ammo=1;p.attackCd=0;delete p.state.ezraAttack;}');await guest.wait_for_function('__moba.game.player.state.weapon===3&&__moba.game.player.attackCd<=.01');await guest.locator('#basic-btn').tap()
+   await host.evaluate('()=>{const g=__moba.game,p=g.champions(1)[0];p.state.weapon=3;p.ammo=1;p.attackCd=0;p.qCd=0;delete p.state.ezraAttack;const t=g.makeChampion("faust",0,g.nextId+20);Object.assign(t,{x:p.x+1,y:p.y,hp:100000,maxHp:100000,attackCd:999,lastDamageAt:999,lastAttackAt:999});window.ezraComboTargetId=t.id;}');await guest.wait_for_function('__moba.game.player.state.weapon===3&&__moba.game.player.attackCd<=.01');await guest.locator('#basic-btn').tap()
    for page in[host,guest]:await page.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="groundImpact")');assert await page.evaluate('__moba.audio.synth.swings.history.filter(s=>s.id==="groundImpact").length===1')
-   assert not errors,errors;print('PC host/mobile guest: Ezra selection, authoritative four-round cycle, repeat, four axe attacks, normal ammo restoration, immunity and remote drill/landing audio passed.',flush=True)
+   await guest.wait_for_function('__moba.game.player.qCd<=.01&&!__moba.game.player.motion');await guest.locator('#q-btn').tap()
+   await host.wait_for_function('()=>{const g=__moba.game,t=g.units.find(e=>e.id===ezraComboTargetId);return g.stat(t,"root")>0;}');root_id=await host.evaluate('ezraComboTargetId');await guest.wait_for_function('(id)=>{const g=__moba.game,t=g.units.find(e=>e.id===id);return t&&g.stat(t,"root")>0;}',arg=root_id)
+   assert await host.evaluate('__moba.game.champions(1)[0].state.ezraLastBasicWeapon===3');assert await guest.evaluate('__moba.game.player.state.ezraLastBasicWeapon===3')
+   assert not errors,errors;print('PC host/mobile guest: Ezra selection, authoritative four-round cycle, repeat, four axe attacks, normal ammo restoration, immunity and remote drill/landing audio and authoritative repeat root passed.',flush=True)
   finally:
    try:await host.evaluate('__moba.online.leave()')
    except Exception:pass
