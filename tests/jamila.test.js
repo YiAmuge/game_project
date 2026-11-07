@@ -18,7 +18,7 @@ function arena(key='jamila'){
 function enemy(g,x=45,y=25){const e=g.makeChampion('faust',1,g.nextId+20);Object.assign(e,{x,y,maxHp:100000,hp:100000,armor:0,lastDamageAt:999,lastAttackAt:999});return e;}
 test('Jamila is a bottom marksman/protector with the specified stats, ammo and cadence',()=>{
  const {g,p}=arena();assert.deepEqual(CHAMPIONS.jamila.roles,['저격','보호']);assert.equal(CHAMPIONS.jamila.recommendedPosition,'bottom');
- near(p.maxHp,3400);near(g.armor(p),40);near(g.speed(p),3.45);near(g.attackInterval(p),.2);near(g.reloadInterval(p),1.5);near(g.ammoCap(p),16);near(g.bonusStats(p).reload,0);
+ near(p.maxHp,3000);near(g.armor(p),40);near(g.speed(p),3.45);near(g.attackInterval(p),.2);near(g.reloadInterval(p),1.5);near(g.ammoCap(p),16);near(g.bonusStats(p).reload,0);
 });
 test('one rifle round uses range 6.6 and 55 percent of power correction',()=>{
  const {g,p}=arena(),e=enemy(g);assert.ok(g.attack(p,e));assert.equal(g.projectiles.length,1);near(g.projectiles[0].remaining,6.6);assert.equal(p.ammo,15);run(g,.2);

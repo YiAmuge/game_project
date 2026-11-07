@@ -2,7 +2,7 @@ import * as Don from '../src/don.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, respawnTime } from '../src/game.js';
-import { CHAMPIONS, RULES } from '../src/data.js';
+import { CHAMPIONS, RULES, championBaseSpeed } from '../src/data.js';
 import { mentalWhip } from '../src/skills.js';
 import { ultGrowth } from '../src/v06-champions.js';
 import { skillTargeting } from '../src/targeting.js';
@@ -22,7 +22,7 @@ test('Gubo normal shot pierces all three enemies',()=>{
 });
 test('Gubo allied execution has a long uncapped cone, halves respawn and grants return haste',()=>{
  const {g,p,t}=quiet('gubo');t.x=48;const a=g.makeChampion('yi',0,9);Object.assign(a,{x:41,y:7,maxHp:1000,hp:200,lastDamageAt:20});const near=enemy(g,43),back=enemy(g,38),b=enemy(g,49);g.time=20;
- g.attack(p,a);run(g,.05);assert.equal(a.alive,false);close(a.respawnAt-g.time,respawnTime(20,1)*.5-.05,.04);const blast=.2*(g.combatPower(p)+10000);close(10000-t.hp,blast);close(10000-near.hp,blast);close(back.hp,10000);close(10000-b.hp,blast);g.time=a.respawnAt;g.step(.001);assert.ok(a.alive);assert.ok(g.buff(a,'executedHaste'));close(g.speed(a)/RULES.speed[CHAMPIONS.yi.speed],1.4);
+ g.attack(p,a);run(g,.05);assert.equal(a.alive,false);close(a.respawnAt-g.time,respawnTime(20,1)*.5-.05,.04);const blast=.2*(g.combatPower(p)+10000);close(10000-t.hp,blast);close(10000-near.hp,blast);close(back.hp,10000);close(10000-b.hp,blast);g.time=a.respawnAt;g.step(.001);assert.ok(a.alive);assert.ok(g.buff(a,'executedHaste'));close(g.speed(a)/championBaseSpeed(a.key),1.4);
 });
 test('Gubo shot and ultimate respect the inclusive live ally health threshold and its temporary increase',()=>{
  const {g,p}=quiet('gubo'),a=g.makeChampion('faust',0,8);Object.assign(a,{x:42,y:7,maxHp:1000,hp:211});close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);a.hp=210;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=350;g.cast(p,'q',p);close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=351;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);
@@ -58,7 +58,7 @@ test('Dongbaek ultimate delivers four 105-damage pulses, gives only a timed relo
  const {g,p,t}=quiet('dongbaek');const gap=g.reloadInterval(p);g.cast(p,'r',t);close(10000-t.hp,105*.9);run(g,.76);close(10000-t.hp,420*.9);assert.ok(!p.channelUntil);assert.equal(g.pending.length,0);assert.equal(p.state.fragranceStacks,undefined);assert.ok(g.reloadInterval(p)<gap);run(g,3.05);close(g.reloadInterval(p),gap);
 });
 test('Dongrang converts bonus power into health and armor, never damage or incoming healing',()=>{
- const {g,p,t}=quiet('dongrang');close(p.maxHp,RULES.health[5]);close(g.armor(p),30);p.hp-=100;close(g.heal(null,p,50,false),50);p.upgrades.power=3;g.refreshEquipment(p);assert.ok(g.armor(p)>13);assert.ok(p.maxHp>RULES.health[5]);t.x=41;g.attack(p,t);close(10000-t.hp,260);
+ const {g,p,t}=quiet('dongrang');close(p.maxHp,3000);close(g.armor(p),20);p.hp-=100;close(g.heal(null,p,50,false),50);p.upgrades.power=3;g.refreshEquipment(p);close(g.armor(p),20*1.02);close(p.maxHp,3000*1.06);p.hp-=100;close(g.heal(null,p,50,false),50);t.x=41;g.attack(p,t);close(10000-t.hp,260);
 });
 test('Dongrang passive power purchases apply health immediately and augment removal refreshes converted stats',()=>{
  const {g,p}=quiet('dongrang');p.alive=false;p.hp=0;p.gold=10000;const hp=p.maxHp;assert.ok(g.buy(p,'power'));assert.ok(p.maxHp>hp);close(p.hp,0);p.upgrades.power=3;const before=g.maxHp(p);assert.ok(g.buyAugment(p,'power15'));assert.ok(p.maxHp>before);assert.ok(g.sellAugment(p,'power15'));close(p.maxHp,before);

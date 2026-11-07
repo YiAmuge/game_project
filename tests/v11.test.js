@@ -92,7 +92,7 @@ test('Queequeg relink, range break, owner death and target death remove the righ
  for(const action of ['relink','range','owner-death','target-death']){const {g,p,t}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);if(action==='relink'){p.qCd=0;g.cast(p,'q',ally(g,'faust',41,9));}if(action==='range'){a.x=60;run(g,1.7);}if(action==='owner-death')g.kill(p,t);if(action==='target-death')g.kill(a,t);assert.equal(g.buff(a,'tetherArmor'),false,action);assert.equal(g.buff(a,'tetherGuard'),false,action);if(action!=='relink')assert.equal(g.buff(p,'tetherGuard'),false,action);}
 });
 test('Queequeg ultimate preserves infinite link and still shares a four-second movement buff',()=>{
- const {g,p}=quiet('queequeg'),a=ally(g);g.cast(p,'q',a);run(g,4);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);assert.equal(a.state.tetherResistance,4);close(a.buffs.queequegUlt-g.time,4);run(g,4.1);assert.ok(p.state.tether);assert.equal(g.buff(a,'queequegUlt'),false);assert.ok(g.buff(a,'tetherGuard'));
+ const {g,p}=quiet('queequeg'),a=ally(g);g.cast(p,'q',a);run(g,4);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);assert.equal(a.state.tetherResistance,4);close(a.buffs.queequegLinkedUlt-g.time,4);assert.equal(a.buffs.queequegUlt,undefined);run(g,4.1);assert.ok(p.state.tether);assert.equal(g.buff(a,'queequegUlt'),false);assert.ok(g.buff(a,'tetherGuard'));
 });
 function shieldHealing(){const f=quiet('yi');f.a=ally(f.g,'meursault');for(const e of [f.p,f.a]){e.hp-=1000;e.lastAttackAt=100;e.lastDamageAt=100;}return f;}
 test('Yi passive grants a shield without healing its recipient',()=>{
@@ -101,8 +101,8 @@ test('Yi passive grants a shield without healing its recipient',()=>{
 test('Yi shield healing stops immediately on depletion and after expiry, even during combat',()=>{
  for(const action of ['deplete','expire']){const {g,p,t,a}=shieldHealing();g.deal(p,t,1,{fixed:true});if(action==='deplete')g.deal(t,a,300,{fixed:true});else g.time=3.01;const hp=a.hp;run(g,1);close(a.hp,hp);assert.equal(g.yiShield(a),undefined);}
 });
-test('Yi ultimate shields alone do not enable the passive heal',()=>{
- const {g,p,a}=shieldHealing();g.cast(p,'r',p);assert.ok(g.shield(a)>0);assert.equal(g.yiShield(a),undefined);const hp=a.hp;run(g,1);close(a.hp,hp);
+test('Yi ultimate shields do not heal, and only a landing hit also triggers the passive shield',()=>{
+ for(const hit of [false,true]){const {g,p,t,a}=shieldHealing();if(!hit)t.x=p.x+12;const hp=a.hp;assert.ok(g.cast(p,'r',p));assert.ok(g.shield(a)>=a.maxHp*.2);assert.equal(Boolean(g.yiShield(a)),hit);run(g,1);close(a.hp,hp);}
 });
 test('multiple Yi passive shields grant no healing and survive source death',()=>{
  const {g,p,t,a}=shieldHealing(),second=ally(g,'yi',41,9);g.deal(p,t,1,{fixed:true});g.deal(second,t,1,{fixed:true});g.kill(p,p);const hp=a.hp;run(g,1);close(a.hp-hp,0);assert.ok(g.yiShield(a));

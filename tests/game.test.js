@@ -120,7 +120,7 @@ test('shop requires spawn and peace, charges progressive costs, enforces caps',(
 });
 test('experience is personal, caps at level ten and increases max HP',()=>{
   const g=isolated(),p=g.player,other=g.champions(0)[1];g.award(p,10000,0);
-  assert.equal(p.level,10);close(p.maxHp,3400*1.405);assert.equal(other.level,1);assert.equal(other.xp,0);
+  assert.equal(p.level,10);close(p.maxHp,2800*1.405);assert.equal(other.level,1);assert.equal(other.xp,0);
 });
 test('death grants kill/assist rewards and respawns with full health and ammo',()=>{
   const g=isolated(),p=g.player,t=opponent(g),ally=g.champions(0)[1];t.hp=100;
