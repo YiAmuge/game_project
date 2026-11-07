@@ -23,7 +23,7 @@ async def main():
      if r.request.url==url:await r.continue_()
      else:external.append(r.request.url);await r.abort()
     await p.route('**/*',route)
-   await p.goto(url,wait_until='networkidle',timeout=120000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===26&&__moba.audio.synth.swings.failures.length===0')
+   await p.goto(url,wait_until='networkidle',timeout=120000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===27&&__moba.audio.synth.swings.failures.length===0')
    await p.evaluate(SETUP,'dongbaek');await p.evaluate('()=>{const g=__moba.game,t=target(43);target(44);__moba.audio.synth.swings.history=[];g.attack(g.player,t);}')
    await p.wait_for_function("__moba.audio.synth.swings.history.some(s=>s.id==='dongbaekWind')&&__moba.audio.synth.swings.history.some(s=>s.id==='dongbaekChimes')&&__moba.audio.synth.swings.history.some(s=>s.id==='impactBlunt')")
    await p.wait_for_timeout(170);await p.evaluate(SETUP,'dongbaek');await p.evaluate('()=>{const g=__moba.game;__moba.audio.synth.swings.history=[];g.cast(g.player,"r",{x:45,y:20});advance(.8);}')

@@ -31,7 +31,7 @@ async def main():
     assert await p.evaluate('i=>__moba.game.player.state.weapon===i',index)
     await p.evaluate('()=>{const g=__moba.game,p=g.player;target(p.x+2.8,p.y);if(!g.attack(p,{x:p.x+8,y:p.y}))throw new Error("workshop attack rejected");}')
     await p.evaluate('s=>advance(s)',span);await p.wait_for_timeout(100);await p.screenshot(path=str(ART/f'{mode}-weapon-{index}.png'));await p.evaluate('s=>advance(s)',.85-span)
-   await p.evaluate('advance(1.5)');assert await p.evaluate('__moba.game.player.ammo===4&&__moba.game.player.state.weapon===0')
+   await p.evaluate('advance(2.0)');assert await p.evaluate('__moba.game.player.ammo===4&&__moba.game.player.state.weapon===0')
    before=await p.evaluate('()=>{const g=__moba.game,p=g.player;return{ammo:p.ammo,weapon:p.state.weapon,last:p.state.ezraLastWeapon};}')
    if mobile:await p.locator('#q-btn').tap()
    else:await p.evaluate('__moba.game.cast(__moba.game.player,"q",{x:__moba.game.player.x+1,y:20})')

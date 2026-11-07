@@ -2,10 +2,14 @@ import{EZRA_WEAPONS}from'./ezra-data.js';
 // Ground-space fields retain round silhouettes under the 2.5D camera transform.
 export function drawEzraGround(c,camera,g){
  for(const f of g.effects){
-  if(!['ezraElectric','ezraGravity'].includes(f.type)||f.life<=0)continue;
+  if(!['ezraElectric','ezraGravity','ezraHammerGlow'].includes(f.type)||f.life<=0)continue;
   const age=f.maxLife-f.life,t=Math.min(1,age/f.maxLife),fade=Math.sin(Math.PI*Math.min(1,t*1.4))*(1-t),at=camera.worldToScreen(f,.09),x=camera.worldToScreen({x:f.x+1,y:f.y},.09),y=camera.worldToScreen({x:f.x,y:f.y+1},.09);
   c.save();c.translate(at.x,at.y);c.transform(x.x-at.x,x.y-at.y,y.x-at.x,y.y-at.y,0,0);c.beginPath();
-  if(f.type==='ezraElectric'){
+  if(f.type==='ezraHammerGlow'){
+   c.globalCompositeOperation='lighter';c.shadowColor='#fff45c';c.shadowBlur=14;c.lineCap='round';
+   const spin=f.angle+(f.spinDirection||1)*t*Math.PI*2;
+   for(let i=0;i<3;i++){c.beginPath();c.arc(0,0,f.r*(.82+i*.06),spin-i*.24,spin+.9-i*.24);c.strokeStyle=i?'#ffe83c':'#fffac7';c.lineWidth=i?.025:.045;c.globalAlpha=fade*(1-i*.23);c.stroke();}
+  }else if(f.type==='ezraElectric'){
    c.rotate(f.angle);c.moveTo(0,0);c.arc(0,0,f.r,-f.spread/2,f.spread/2);c.closePath();c.clip();
    const glow=c.createRadialGradient(0,0,.1,0,0,f.r);glow.addColorStop(0,'#c8ffff88');glow.addColorStop(.65,'#00bfffa0');glow.addColorStop(1,'#0066ff00');c.globalAlpha=fade*.7;c.fillStyle=glow;c.fillRect(-f.r,-f.r,f.r*2,f.r*2);
    c.globalCompositeOperation='lighter';c.shadowColor='#00cfff';c.shadowBlur=11;c.lineCap='round';

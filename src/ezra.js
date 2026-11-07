@@ -17,7 +17,7 @@ export function ammoSlots(g,e){
  return Array.from({length:4},(_,i)=>({color:(index===4?EZRA_AXE:EZRA_WEAPONS[i]).color,loaded:index===4?i>=start:(i-start+4)%4<count,active:i===(index===4?Math.min(3,4-count):index)}));
 }
 export function init(g,e){
- if(e.key!=='ezra')return;delete e.buffs.ezraUlt;Object.assign(e.state,{weapon:0,ezraLastWeapon:null,ultAttacks:0,ezraBusyUntil:0});
+ if(e.key!=='ezra')return;delete e.buffs.ezraUlt;Object.assign(e.state,{weapon:0,ezraLastWeapon:null,ultAttacks:0,ezraBusyUntil:0,ezraHammerDirection:-1});
  for(const k of['ezraNormal','ezraReloading','ezraAttack'])delete e.state[k];e.ammo=EZRA.ammo;e.reloadProgress=0;e.range=EZRA_WEAPONS[0].range;
 }
 export function beginReload(g,e){if(e.state.ezraReloading||ultimate(g,e))return;e.state.ezraReloading=true;e.reloadProgress=0;g.addShield(e,e.maxHp*EZRA.emptyShield,`ezra-bag-${e.id}`,EZRA.shieldTime);}
@@ -36,7 +36,7 @@ function liveAim(g,e){return e.player?g.aim(e,g.input.aim):{x:Math.cos(e.facing|
 function strike(g,e,w,index,d,kind,slot,{circle=false,fourth=false}={}){
  const a=e.state.ezraAttack;if(index!==2||a.phase!=='strike')a.at=g.time;a.phase='strike';
  if(fourth)a.until=g.time+.3;
- if(index===1){d=liveAim(g,e);a.angle=Math.atan2(d.y,d.x);}
+ if(index===1){d=liveAim(g,e);a.angle=Math.atan2(d.y,d.x);a.spinDirection=e.state.ezraHammerDirection=-(e.state.ezraHammerDirection??-1);circle=true;}
  const range=w.range+rangeBonus(e),angle=[1,2].includes(index)?w.angle:circle?Math.PI*2:Math.PI,shape=circle?{kind:'circle',range}:{kind:'cone',range,spread:angle,angle:a.angle};
  // Drill's three damage ticks belong to one visible swing and one swing sound.
  if(index!==2||!a.sounded){g.emitSound('swing',e,{damageKind:kind,slot,stance:index,family:w.family,weight:index===4?1.6:1.1});a.sounded=true;}
@@ -46,8 +46,9 @@ function strike(g,e,w,index,d,kind,slot,{circle=false,fourth=false}={}){
   if(len<=range+t.radius&&(circle||len<1e-8||along/len>=Math.cos(angle/2))){hit(g,e,t,w,index,kind,slot);if(fourth&&t.alive)g.status(t,'stun',1,1.3,e);}
  }
  if(index!==2||!a.drawn){g.effects.push({type:'slash',source:e.id,theme:'ezra',weaponIndex:index,damageKind:kind,slot,x:e.x,y:e.y,r:range,spread:angle,angle:a.angle,shape,life:index===2?.55:.28,maxLife:index===2?.55:.28});a.drawn=true;}
- if(index===2&&!a.electric){a.electric=true;g.effects.push({type:'ezraElectric',source:e.id,theme:'ezra',weaponIndex:index,x:e.x,y:e.y,r:range,angle:a.angle,spread:angle,life:.55,maxLife:.55});}
- if(index===3)g.effects.push({type:'ezraGravity',source:e.id,theme:'ezra',weaponIndex:index,x:e.x,y:e.y,r:range,life:.8,maxLife:.8});
+ if(index===1)g.effects.push({type:'ezraHammerGlow',source:e.id,theme:'ezra',weaponIndex:index,x:e.x,y:e.y,r:range,angle:a.angle,spinDirection:a.spinDirection,life:.28,maxLife:.28});
+ if(index===2&&!a.electric){a.electric=true;g.emitSound('drill',e,{cue:'drillMotor',phase:'ezra-drill',family:'drill',damageKind:kind,slot,duration:.54});g.effects.push({type:'ezraElectric',source:e.id,theme:'ezra',weaponIndex:index,x:e.x,y:e.y,r:range,angle:a.angle,spread:angle,life:.55,maxLife:.55});}
+ if(index===3){g.emitSound('slam',e,{phase:'ezra-landing',family:'punch',damageKind:kind,slot});g.effects.push({type:'ezraGravity',source:e.id,theme:'ezra',weaponIndex:index,x:e.x,y:e.y,r:range,life:.8,maxLife:.8});}
 }
 function perform(g,e,index,p,d,kind,slot){
  const w=weapon(g,e,index),serial=(e.state.ezraSerial||0)+1,fourth=index===4&&e.state.ultAttacks===4;

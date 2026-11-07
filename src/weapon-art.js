@@ -2,7 +2,8 @@ import{RULES}from'./data.js';
 import*as Ezra from'./ezra.js';
 import { FRAMES,loadAtlas,visualForm } from './art.js';
 import { leapLift,levitationLift,feetOffset } from './projection-25d.js';
-import { drawGripHands,gripSourcePoint } from './weapon-grips.js';
+import { drawGripHands,gripSourcePoint,gripLayout } from './weapon-grips.js';
+import{drawEzraDrillEffect}from'./ezra-weapon-vfx.js';
 import { carried } from './attachments.js';
 import { rudolphWeaponProgress,RUDOLPH_WEAPON } from './rudolph-weapon.js';
 import{basicStance,bodyFacing,restingStance,combatPoseActive}from'./champion-pose.js';
@@ -17,7 +18,7 @@ export const HANDLE_EXTENSIONS={
  hongluGlaive:{from:.025,to:.45,scale:1.25},
 };
 export const WEAPON_ART={
- ezra:['ezraGlove',.42],
+ ezra:['ezraGlove',.483],
  queen:['queenWand',2.1],nosferatu:['nosWine',.43],
  kromer:['kromerNail',2.45],
  jamila:['jamilaRifle',2.25],
@@ -303,22 +304,28 @@ export function jamilaWeaponPose(g,e,p=equipmentPose(g,e)){
  const age=g.time-(e.attackAt??-99),active=age>=0&&age<.14,pulse=active?1-age/.14:0,shake=Math.sin(age*155)*.018*pulse;return {asset:'jamilaRifle',length:2.25,hand:{x:p.right.x+shake,y:p.right.y+Math.cos(age*133)*.012*pulse},angle:(active?e.attackFacing:p.facing)??p.facing,mode:null,thrust:(.09-Math.sin(age*90)*.045)*pulse,trail:false,dim:e.state.lcaReload?.5:1,gripY:.3};
 }
 export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
- const a=e.state.ezraAttack,active=a?.until>g.time,index=active?a.weapon:Ezra.currentIndex(g,e),age=g.time-(a?.at??-99),progress=Math.max(0,Math.min(1,age/(index===2?.5:a?.fourth?.3:.28))),facing=active?a.angle:p.facing,side=weaponOrientation(facing).flip;
- let hand=p.right,angle=facing,mode=null,thrust=0,trail=false;
+ const a=e.state.ezraAttack,active=a?.until>g.time,index=active?a.weapon:Ezra.currentIndex(g,e),age=g.time-(a?.at??-99),duration=index===2?.5:a?.fourth?.3:.28,progress=Math.max(0,Math.min(1,age/duration)),facing=active?a.angle:p.facing,side=weaponOrientation(facing).flip;
+ const fistLift=.105; // Five percent of crown-to-sole champion height, excluding hair.
+ let hand=[0,3].includes(index)?{x:p.right.x,y:p.right.y-fistLift}:index===4?{x:p.origin.x+HAND_ANCHORS.rudolph[0]*p.flip,y:p.origin.y+HAND_ANCHORS.rudolph[1]}:p.right,angle=facing,mode=null,thrust=0,trail=false,gripY=0;
+ if(index===4||index===1){const w=Ezra.weapon(g,e,index),m=weaponGeometry(w.asset,w.length),primary=gripLayout('ezra',w.asset,m,w.pivot)[0];gripY=primary.y/(m.height*m.scale);}
  if(active){
-  const pulse=Math.sin(progress*Math.PI);
-  if(index===4&&a.fourth){
+  if(index===0){
+   const t=Math.min(1,age/.24),smooth=v=>v*v*(3-2*v),reach=.85*(t<.35?smooth(t/.35):t<.55?1:1-smooth((t-.55)/.45));
+   hand={x:hand.x+Math.cos(facing)*reach,y:hand.y+Math.sin(facing)*reach};trail=t<1;
+  }else if(index===1){
+   angle=facing+(a.spinDirection||1)*swingProgress(progress)*Math.PI*2;hand={x:p.origin.x,y:p.origin.y-.65};mode='orbit';trail=progress<1;
+  }else if(index===4&&a.fourth){
    // Hong Lu's full-turn timing, with the axe grip centered on Ezra's torso.
    // Keep the axe forward during the approach; begin the single turn on impact.
    if(a.phase==='strike'){angle=facing+swingProgress(progress)*Math.PI*2;hand={x:p.origin.x,y:p.origin.y-.65};mode='orbit';trail=progress<1;}
-  }else if(index===1||index===2||index===4){const arc=index===1?Ezra.EZRA_WEAPONS[1].angle:index===2?Ezra.EZRA_WEAPONS[2].angle:Math.PI;angle=facing+(swingProgress(progress)-.5)*arc*side;mode='swing';trail=a.phase==='strike'&&progress<1;}
+  }else if(index===2||index===4){const arc=index===2?Ezra.EZRA_WEAPONS[2].angle:Math.PI;angle=facing+(swingProgress(progress)-.5)*arc*side;mode='swing';trail=a.phase==='strike'&&progress<1;}
   else if(index===3){
    angle=Math.PI/2;
-   if(a.phase==='leap')hand={x:p.right.x,y:p.origin.y-1.5};
-   else{const point=frontGroundPoint(e,p,camera,{distance:.6,angle:facing}),t=Math.min(1,age/.10),recover=Math.max(0,(age-.10)/.18),height=Ezra.EZRA_WEAPONS[3].length*.88;hand={x:p.right.x+(point.x-p.right.x)*t,y:p.right.y+(point.y-height-p.right.y)*t-.25*recover};}
-  }else thrust=.2*pulse;
+   if(a.phase==='leap')hand={x:p.right.x,y:p.origin.y-1.5-fistLift};
+   else{const point=frontGroundPoint(e,p,camera,{distance:.6,angle:facing}),t=Math.min(1,age/.10),recover=Math.max(0,(age-.10)/.18),height=Ezra.EZRA_WEAPONS[3].length*.88;hand={x:hand.x+(point.x-hand.x)*t,y:hand.y+(point.y-height-hand.y)*t-.25*recover};}
+  }
  }
- return{weapon:index,hand,angle,mode,progress,thrust,trail,part:active&&a.fourth?'ezra-axe-orbit':'ezra-'+index};
+ return{weapon:index,hand,angle,mode,progress,thrust,trail,gripY,part:active&&a.fourth?'ezra-axe-orbit':index===1?'ezra-hammer-'+(a?.spinDirection||1):'ezra-'+index};
 }
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
@@ -329,7 +336,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
+  c.save();c.translate(hand.x,hand.y);orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();if(key==='ezraDrill')drawEzraDrillEffect(c,g,e,m,pivot);drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){const body=FRAMES.yanDistorted,height=2.1*body.heightScale,right=height*body.w/body.h*(1-body.foot[0]);c.save();c.translate(p.origin.x+right+1.72,p.origin.y-.6);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
@@ -339,7 +346,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   if(claw){c.save();c.globalAlpha*=.64;c.shadowColor='#ff1646';c.shadowBlur=22;held(claw.asset,claw.length,claw.hand,claw.angle,.08,{mode:null,trail:true,part:'blood-claw'});c.restore();}
   else held('nosWine',.43,{x:p.origin.x+p.flip*.53,y:p.origin.y-.64},0,.5,{mode:null,trail:false});return true;
  }
- if(e.key==='ezra'){const pose=ezraWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,part:pose.part});return true;}
+ if(e.key==='ezra'){const pose=ezraWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,gripY:pose.gripY,part:pose.part});return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}
  if(e.key==='kromer'){
   const pose=kromerWeaponPose(g,e,p,camera);if(!pose.hidden)held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:false,centerGrip:pose.centerGrip});return true;

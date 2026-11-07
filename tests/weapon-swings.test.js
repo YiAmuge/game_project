@@ -23,7 +23,7 @@ test('variants change processing without changing the assigned original recordin
 });
 test('runtime contains movement sources and exactly the three supplied impact recordings',async()=>{
  const files=(await readdir(new URL('../src/assets/audio/',import.meta.url))).filter(p=>/\.(mp3|wav)$/.test(p));
- assert.deepEqual(files.sort(),SWING_SAMPLES.map(s=>s.file).sort());assert.equal(SWING_SAMPLES.length,26);
+ assert.deepEqual(files.sort(),SWING_SAMPLES.map(s=>s.file).sort());assert.equal(SWING_SAMPLES.length,27);
  assert.deepEqual(SWING_SAMPLES.filter(s=>s.id.startsWith('impact')).map(({id,file,mime})=>[id,file,mime]),[['impactSlash','Sword_Hori.wav','audio/wav'],['impactPierce','Sword_Stab.wav','audio/wav'],['impactBlunt','Sword_Vert.wav','audio/wav']]);
 });
 test('only base-form Yan greatsword swings and casts select his dedicated recording',()=>{

@@ -20,7 +20,7 @@ export const CHAMPION_STYLES={
 };
 export function combatStyle(key,g,e,{kind='basic',slot,type,weaponIndex}={}){
  let s={...(CHAMPION_STYLES[key]||NEUTRAL)};
- if(key==='ezra'){const index=weaponIndex??(e?.state?.ezraAttack?.until>g.time?e.state.ezraAttack.weapon:e&&g.buff(e,'ezraUlt')?4:e?.state?.weapon??0),w=index===4?EZRA_AXE:EZRA_WEAPONS[index];s=style(w.color,index===2?'electric':'metal',index===2?'#d7ffff':w.color,index===3?'#21152a':'#34313d');}
+ if(key==='ezra'){const index=weaponIndex??(e?.state?.ezraAttack?.until>g.time?e.state.ezraAttack.weapon:e&&g.buff(e,'ezraUlt')?4:e?.state?.weapon??0),w=index===4?EZRA_AXE:EZRA_WEAPONS[index];s=style(w.color,index===2?'electric':'metal',index===2?'#d7ffff':index===1?'#fff58c':w.color,index===3?'#21152a':'#34313d');}
  if(key==='sora'&&e&&g.buff(e,'soraEgo'))s=style('#171820','metal','#59606a','#050609');
  if(key==='marton'&&kind==='basic'&&e&&e.state.martonGroundStrike!==e.attackSerial)s=style('#8d6e46','wood','#c6ae7a','#302218');
  if(key==='yan'&&e&&g.buff(e,'yanDistorted'))s=style('#13141b','liquid','#454853','#030407');

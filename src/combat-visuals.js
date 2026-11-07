@@ -13,9 +13,9 @@ export function preview(r,e,g){
  if(e.key==='ezra'){
   const index=Ezra.currentIndex(g,e),w=Ezra.weapon(g,e),range=g.attackRange(e),arc=(p,spread)=>{ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.arc(p.x,p.y,range,angle-spread/2,angle+spread/2);ctx.closePath();ctx.fillStyle='#f2dda510';ctx.fill();ctx.strokeStyle='#e8d5a477';ctx.lineWidth=.035;ctx.stroke();};
   if(index===0)polygon(range,1.2);
-  else if(index===1)arc(e,w.angle);
-  else if(index===2)polygon(range,w.width);
-  else{const len=index===3?Math.min(w.dash,Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y)):w.dash,at={x:e.x+d.x*len,y:e.y+d.y*len};if(index===3||e.state.ultAttacks===3)r.circle(at.x,at.y,range,'#f2dda510','#e8d5a477',.035);else arc(at,Math.PI);}
+  else if(index===1)r.circle(e.x,e.y,range,'#b66cef10','#dfc5ff77',.035);
+  else if(index===2)arc(e,w.angle);
+  else{const len=Math.min(w.dash,Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y)),at={x:e.x+d.x*len,y:e.y+d.y*len};if(index===3||e.state.ultAttacks===3)r.circle(at.x,at.y,range,'#f2dda510','#e8d5a477',.035);else arc(at,Math.PI);}
   return;
  }
  if(e.key==='nosferatu'&&e.state.bloodfiend)r.circle(e.x,e.y,g.attackRange(e),null,'#ff456d88',.045);
