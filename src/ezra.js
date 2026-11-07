@@ -13,8 +13,8 @@ export const currentIndex=(g,e)=>ultimate(g,e)?4:e.state.weapon??0;
 export const attackReach=(g,e,index=currentIndex(g,e))=>{const w=weapon(g,e,index);return w.range+rangeBonus(e)+(w.rangeGrowth||0)*((w.hits||1)-1)+(index===3?EZRA_WEAPONS[3].dash:index===4?EZRA_AXE.dash:0);};
 export const movementWeapon=(g,e,index=currentIndex(g,e))=>[0,3,4].includes(index);
 export function ammoSlots(g,e){
- const index=currentIndex(g,e),count=Math.floor(e.ammo),start=index===4?4-count:index;
- return Array.from({length:4},(_,i)=>({color:(index===4?EZRA_AXE:EZRA_WEAPONS[i]).color,loaded:index===4?i>=start:(i-start+4)%4<count,active:i===(index===4?Math.min(3,4-count):index)}));
+ const index=currentIndex(g,e),count=Math.floor(e.ammo),start=EZRA.ammo-count;
+ return Array.from({length:EZRA.ammo},(_,i)=>({color:(index===4?EZRA_AXE:EZRA_WEAPONS[i]).color,loaded:i>=start,active:i===(index===4?Math.min(3,start):index)}));
 }
 export function init(g,e){
  if(e.key!=='ezra')return;delete e.buffs.ezraUlt;Object.assign(e.state,{weapon:0,ezraLastWeapon:null,ezraLastBasicWeapon:null,ultAttacks:0,ezraBusyUntil:0,ezraHammerDirection:-1});
@@ -75,10 +75,11 @@ export function basic(g,e,p,d){
  const index=currentIndex(g,e);if(index===4){e.state.ultAttacks=(e.state.ultAttacks||0)+1;perform(g,e,index,p,d,'basic');}
  else{e.state.ezraLastBasicWeapon=e.state.ezraLastWeapon=index;perform(g,e,index,p,d,'basic');if(e.ammo<1)beginReload(g,e);else e.state.weapon=(index+1)%4;}e.range=weapon(g,e).range;
 }
-export function endUltimate(g,e){const saved=e.state.ezraNormal;if(!saved)return;delete e.buffs.ezraUlt;delete e.state.ezraNormal;e.state.ultAttacks=0;e.state.weapon=saved.returnWeapon??saved.weapon;e.ammo=saved.ammo;e.reloadProgress=saved.progress;e.state.ezraReloading=saved.reloading;e.range=weapon(g,e).range;if(e.ammo<1&&!e.state.ezraReloading)beginReload(g,e);}
+export function endUltimate(g,e){const saved=e.state.ezraNormal;if(!saved)return;delete e.buffs.ezraUlt;delete e.state.ezraNormal;e.state.ultAttacks=0;e.state.weapon=saved.weapon;e.ammo=saved.ammo;e.reloadProgress=saved.progress;e.state.ezraReloading=saved.reloading;e.range=weapon(g,e).range;if(e.ammo<1&&!e.state.ezraReloading)beginReload(g,e);}
 export function cast(g,e,slot,p,d){
  if(slot==='q'){perform(g,e,e.state.ezraLastWeapon,p,d,'skill','q');return;}
- delete e.state.ezraAttack;e.state.ezraSerial=(e.state.ezraSerial||0)+1;e.state.ezraNormal={ammo:e.ammo,weapon:e.state.weapon,returnWeapon:e.state.ezraLastBasicWeapon??e.state.ezraLastWeapon??e.state.weapon,progress:e.reloadProgress,reloading:Boolean(e.state.ezraReloading)};delete e.state.ezraReloading;e.reloadProgress=0;e.state.ultAttacks=0;g.addBuff(e,'ezraUlt',EZRA.rDuration,{copy:false});e.ammo=EZRA.ammo;e.range=EZRA_AXE.range;
+ // Resume the pending magazine slot; the last basic is only the tactical repeat history.
+ delete e.state.ezraAttack;e.state.ezraSerial=(e.state.ezraSerial||0)+1;e.state.ezraNormal={ammo:e.ammo,weapon:e.state.weapon,progress:e.reloadProgress,reloading:Boolean(e.state.ezraReloading)};delete e.state.ezraReloading;e.reloadProgress=0;e.state.ultAttacks=0;g.addBuff(e,'ezraUlt',EZRA.rDuration,{copy:false});e.ammo=EZRA.ammo;e.range=EZRA_AXE.range;
 }
 export function tick(g,e,dt){
  if(e.key!=='ezra')return;if(e.state.ezraNormal&&!ultimate(g,e))endUltimate(g,e);

@@ -58,7 +58,7 @@ test('Moses choice is committed only with a direction and consumed by next attac
  const {g,p}=quiet('moses');assert.ok(g.cast(p,'q',{x:34,y:5.5},{direction:'left'}));assert.equal(p.state.smoke,'left');assert.ok(p.qCd>0);g.attack(p,{x:34,y:5.5});assert.equal(p.state.smoke,null);
 });
 test('Ezra uses a fixed four-round cycle and returns from her timed ultimate',()=>{
- const {g,p}=quiet('ezra');assert.equal(ammoCap(g,p),4);assert.equal(g.cast(p,'q',p),false);assert.ok(g.attack(p,{x:p.x+8,y:p.y}));run(g,.7);assert.equal(p.state.weapon,1);assert.equal(p.ammo,3);assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,4);assert.equal(g.cast(p,'q',p),false);run(g,10.1);assert.equal(p.ammo,3);assert.equal(p.state.weapon,0);assert.equal(g.buff(p,'ezraUlt'),false);
+ const {g,p}=quiet('ezra');assert.equal(ammoCap(g,p),4);assert.equal(g.cast(p,'q',p),false);assert.ok(g.attack(p,{x:p.x+8,y:p.y}));run(g,.7);assert.equal(p.state.weapon,1);assert.equal(p.ammo,3);assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,4);assert.equal(g.cast(p,'q',p),false);run(g,10.1);assert.equal(p.ammo,3);assert.equal(p.state.weapon,1);assert.equal(g.buff(p,'ezraUlt'),false);
 });
 test('Rudolph ultimate is ranged, delayed, spends SP at commitment and recharges',()=>{
  const {g,p,t}=quiet('rudolph');t.x=p.x+8;t.y=p.y;t.hp=t.maxHp=5000;

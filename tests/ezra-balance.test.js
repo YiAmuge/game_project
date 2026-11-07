@@ -27,9 +27,27 @@ test('Namir roots a repeated gauntlet hit within one second, and the one-second 
 test('Namir repeat tracking belongs to each caster and does not trigger from an Alas hit',()=>{
  const{g,p}=arena();select(p,3);const t=enemy(g,42);g.attack(p,p);run(g,.46);select(p,0);p.attackCd=0;g.attack(p,{x:43,y:20});run(g,.1);near(g.stat(t,'root'),0);const other=g.makeChampion('ezra',0,20,'top');Object.assign(other,{x:t.x,y:t.y,lastDamageAt:100,lastAttackAt:100});select(other,3);g.attack(other,other);run(g,.46);near(g.stat(t,'root'),0);
 });
-test('ultimate stores the last normal basic weapon independently of tactical history and restores it on both exits',()=>{
- for(const index of[0,1,2,3])for(const exit of['expiry','empty']){const{g,p}=arena();select(p,index);g.attack(p,g.input.aim);run(g,.85);assert.equal(p.state.ezraLastBasicWeapon,index);assert.ok(g.cast(p,'q',g.input.aim));run(g,.85);assert.equal(p.state.ezraLastBasicWeapon,index);const ammo=p.ammo;g.cast(p,'r',g.input.aim);assert.equal(p.state.ezraNormal.returnWeapon,index);p.state.ezraLastWeapon=(index+1)%4;if(exit==='expiry'){g.time+=10;Ezra.tick(g,p,0);}else for(let n=0;n<4;n++){p.attackCd=0;g.attack(p,p);}assert.equal(Ezra.ultimate(g,p),false);assert.equal(p.state.weapon,index);assert.equal(p.ammo,ammo);}
+test('ultimate preserves every pending magazine slot, reload and repeat history on both exits',()=>{
+ for(const spent of[0,1,2,3,4])for(const exit of['expiry','empty'])for(const repeat of[false,true]){
+  const{g,p}=arena();for(let i=0;i<spent;i++){assert.ok(g.attack(p,g.input.aim));run(g,.85);}
+  if(repeat&&spent){assert.ok(g.cast(p,'q',g.input.aim));run(g,.85);}
+  const saved={weapon:p.state.weapon,ammo:p.ammo,slots:Ezra.ammoSlots(g,p),last:p.state.ezraLastWeapon,basic:p.state.ezraLastBasicWeapon,reloading:Boolean(p.state.ezraReloading),progress:p.reloadProgress};
+  assert.ok(g.cast(p,'r',p));assert.equal(p.state.ezraNormal.weapon,saved.weapon);
+  if(exit==='expiry')run(g,10.01);else for(let n=0;n<4;n++){assert.ok(g.attack(p,p));if(n<3)run(g,.75);}
+  assert.equal(Ezra.ultimate(g,p),false);assert.equal(p.state.weapon,saved.weapon);assert.equal(p.ammo,saved.ammo);assert.deepEqual(Ezra.ammoSlots(g,p),saved.slots);assert.equal(p.state.ezraLastWeapon,saved.last);assert.equal(p.state.ezraLastBasicWeapon,saved.basic);assert.equal(Boolean(p.state.ezraReloading),saved.reloading);assert.ok(p.reloadProgress>=saved.progress&&p.reloadProgress<=saved.progress+.02);
+  run(g,.75);for(let i=spent;i<4;i++){assert.ok(g.attack(p,g.input.aim));assert.equal(p.state.ezraAttack.weapon,i);run(g,.85);}
+  assert.equal(p.ammo,0);assert.ok(p.state.ezraReloading);run(g,2.51);assert.equal(p.ammo,4);assert.equal(p.state.weapon,0);
+ }
 });
-test('snapshots preserve shield expiry, hammer strike number and the saved basic return weapon',()=>{
- const{g,p}=arena();g.attack(p,g.input.aim);run(g,.7);g.attack(p,g.input.aim);run(g,.31);const client=arena().g;assert.ok(applySnapshot(client,new SnapshotWriter().capture(g,true),p.id));assert.equal(client.player.state.ezraAttack.hammerStrike,2);assert.equal(client.player.state.ezraLastBasicWeapon,1);near(client.shield(client.player),p.maxHp*.12);run(g,.4);g.cast(p,'r',g.input.aim);assert.ok(applySnapshot(client,new SnapshotWriter().capture(g,true),p.id));assert.equal(client.player.state.ezraNormal.returnWeapon,1);
+test('snapshots preserve shield expiry, hammer strike number and the pending return slot',()=>{
+ const{g,p}=arena();g.attack(p,g.input.aim);run(g,.7);g.attack(p,g.input.aim);run(g,.31);const client=arena().g;assert.ok(applySnapshot(client,new SnapshotWriter().capture(g,true),p.id));assert.equal(client.player.state.ezraAttack.hammerStrike,2);assert.equal(client.player.state.ezraLastBasicWeapon,1);near(client.shield(client.player),p.maxHp*.12);run(g,.4);g.cast(p,'r',g.input.aim);assert.ok(applySnapshot(client,new SnapshotWriter().capture(g,true),p.id));assert.equal(client.player.state.ezraNormal.weapon,2);
+});
+test('Namir keeps the last golden round through repeated ultimates and host snapshots',()=>{
+ const{g,p}=arena(),client=arena().g,writer=new SnapshotWriter();for(let i=0;i<3;i++){assert.ok(g.attack(p,g.input.aim));run(g,.85);}
+ for(let cycle=0;cycle<3;cycle++){
+  assert.equal(p.ammo,1);assert.equal(p.state.weapon,3);p.rCd=0;assert.ok(g.cast(p,'r',p));assert.ok(applySnapshot(client,JSON.parse(JSON.stringify(writer.capture(g,true))),p.id));assert.equal(client.player.state.ezraNormal.weapon,3);
+  for(let n=0;n<4;n++){assert.ok(g.attack(p,p));if(n<3)run(g,.75);}
+  assert.ok(applySnapshot(client,JSON.parse(JSON.stringify(writer.capture(g,true))),p.id));assert.equal(client.player.state.weapon,3);assert.equal(client.player.ammo,1);assert.deepEqual(Ezra.ammoSlots(client,client.player).map(s=>[s.loaded,s.active]),[[false,false],[false,false],[false,false],[true,true]]);run(g,.75);
+ }
+ const t=enemy(g,p.x+1,p.y);assert.ok(g.attack(p,p));assert.equal(p.state.ezraAttack.weapon,3);run(g,.46);near(t.maxHp-t.hp,damage(220));assert.equal(p.ammo,0);assert.ok(p.state.ezraReloading);
 });

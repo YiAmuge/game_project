@@ -18,7 +18,7 @@ async def main():
    for n in range(4):
     await guest.wait_for_function('!__moba.game.player.motion&&__moba.game.player.attackCd<=.01');await guest.locator('#basic-btn').tap()
     if n<3:await guest.wait_for_function('(n)=>__moba.game.player.ammo===3-n',arg=n)
-    else:await guest.wait_for_function('!__moba.game.buff(__moba.game.player,"ezraUlt")&&__moba.game.player.ammo===3&&__moba.game.player.state.weapon===0')
+    else:await guest.wait_for_function('!__moba.game.buff(__moba.game.player,"ezraUlt")&&__moba.game.player.ammo===3&&__moba.game.player.state.weapon===1')
    assert await host.evaluate('()=>{const g=__moba.game,p=g.champions(1)[0];g.changeAmmo(p,1);g.changeAmmo(p,-1);return p.ammo===3;}')
    assert await host.evaluate('()=>{const g=__moba.game,p=g.player;return g.cast(p,"r",{x:p.x+1,y:p.y});}')
    await guest.wait_for_function('__moba.game.champions(0).some(e=>e.buffs.ezraUlt>__moba.game.time)')
