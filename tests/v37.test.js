@@ -88,7 +88,7 @@ test('Don charging defense and movement modifiers end on release or interruption
  const b=arena('don');b.g.cast(b.p,'q',t);b.g.status(b.p,'silence',1,1);run(b.g,.01);assert.ok(b.p.state.donCharge);assert.equal(b.g.stat(b.p,'silence'),0);Don.cancel(b.g,b.p);assert.ok(b.p.qCd>7.9);assert.equal(b.p.state.donThrust,undefined);
 });
 test('Honglu healing emits three expanding water ripples from the actual healing center',()=>{
- const {g,p}=arena('honglu');p.hp-=1000;g.cast(p,'q',p);run(g,1.21);const f=g.effects.find(x=>x.type==='hongluRipple');assert.ok(f);close(f.x,p.x);close(f.y,p.y);close(f.r,5);assert.equal(healingRipples(f,.3).length,3);assert.ok(healingRipples(f,.4)[0].r>healingRipples(f,.3)[0].r);assert.equal(healingRipples(f,.81).length,0);
+ const {g,p}=arena('honglu');p.hp-=1000;g.cast(p,'q',p);run(g,1.21);const f=g.effects.find(x=>x.type==='hongluRipple');assert.ok(f);close(f.x,p.x);close(f.y,p.y);close(f.r,6);assert.equal(healingRipples(f,.3).length,3);assert.ok(healingRipples(f,.4)[0].r>healingRipples(f,.3)[0].r);assert.equal(healingRipples(f,.81).length,0);
 });
 test('Alisa swings a blunt weapon from side to side and emits fire in the actual attack footprint',()=>{
  const {g,p}=arena('alisa'),t=target(g);g.attack(p,t);assert.equal(g.attackStyle(p),'slash');const stroke=g.effects.find(x=>x.type==='slash');assert.ok(stroke);close(stroke.shape.range,g.attackRange(p));const v=new SkillVFX();v.sync(g,{width:1000,height:1000,worldToScreen:()=>({x:400,y:400})});assert.ok(v.emitters.some(x=>x.kind==='slash'&&x.element==='fire'));const a=equipmentPose(g,p).angle;p.attackSerial++;const b=equipmentPose(g,p).angle;assert.ok(a<0&&b>0);

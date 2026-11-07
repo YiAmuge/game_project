@@ -1,4 +1,4 @@
-The game loads twenty-four runtime recordings, with one fixed source per effect:
+The game loads twenty-six runtime recordings, with one fixed source per effect:
 
 - `floraphonic-swing-whoosh-weapon-3-189823.mp3`: general swings (0.030–0.235 s).
 - `daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3`: base-form Yan greatsword only (0.040–0.980 s).
@@ -54,3 +54,7 @@ Rudolph basic/ultimate sounds share the existing electrocute recording rather th
 Landing recordings play at the shockwave, never the start of airborne travel. Nelly basic and Q use the same fixed metal source with Q pitched higher and played faster; a five-knife fan is grouped into one throw and has no extra synthetic cast shot. Rodion's axe and its health-based bonus carry identical R/ice contact metadata, which merges them into one sound even after later casts. The ice and earth files omit their long silent tails. All effects use the same voice budget, spatial mixer and offline embedding as the other recordings.
 
 Dongbaek emits a separate petal bloom once per basic attack and once for the whole ultimate, including misses. Ultimate chimes play from the designated bloom location. The same extracted recording uses a short 1.05 s basic envelope and a louder, lower, 2.6 s ultimate envelope; both fade from near the start. The ultimate event retains its duration so mixer cleanup preserves the complete fade. Existing impact recordings, pitch, speed and duration stay intact, with only Dongbaek impact gain multiplied by 0.8. Other champion impacts retain their levels.
+
+Queen of Hatred uses `humordome-fairy-sparkle-451414.mp3` (0.015–1.500 s) for each basic projectile launch. Q/R charging and firing reuse the existing `yiShine` buffer from `koiroylers-shine-02-355934.mp3`, whose bytes match the new upload. `QueenChargeAudio` follows replicated preparing/charging states with one nonlooping source per spell, spatialized at its casting seal, with a maximum of four nearby visible charge voices. Release, cancellation, death, range/vision loss, mute, pause and match changes clean up these sources. Charge pitch/gain is lower than firing; each complete beam gets one brighter louder firing recording while gameplay keeps every damage pulse. Yi playback is unchanged.
+
+Alisa basic and tactical activation share the supplied `yodguard-fire-magic-5-378639.mp3` at 0.040–1.050 s. Basic playback is slightly lower-pitched and shorter; Q is roughly 2.75 semitones brighter and 0.12 s longer. Existing impact/burn/detonation recordings remain in their original roles.

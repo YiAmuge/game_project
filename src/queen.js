@@ -20,7 +20,7 @@ export function projectileContact(g,p,t){
  healHit(g,p.source,t,p.damage,'basic');
  return true;
 }
-export function basic(g,e,d){g.bullet(e,d,QUEEN.basicDamage,g.attackRange(e),{queenStar:true,allowFriendly:true,pierce:Infinity,width:QUEEN.basicWidth,speed:QUEEN.basicSpeed});}
+export function basic(g,e,d){g.emitSound('shot',e,{phase:'queen-star-fire',family:'arcane'});g.bullet(e,d,QUEEN.basicDamage,g.attackRange(e),{queenStar:true,allowFriendly:true,pierce:Infinity,width:QUEEN.basicWidth,speed:QUEEN.basicSpeed});}
 function angleFrom(g,e,origin,aim){const d=g.aim(origin,aim||{x:origin.x+Math.cos(e.facing||0),y:origin.y+Math.sin(e.facing||0)});return Math.atan2(d.y,d.x);}
 function beam(g,e,state,spec,slot){
  const d={x:Math.cos(state.angle),y:Math.sin(state.angle)};
@@ -34,7 +34,7 @@ function beam(g,e,state,spec,slot){
    }
   }
  }
- g.effects.push({type:'arcanaBeam',source:e.id,theme:'queen',slot,x:state.x,y:state.y,angle:state.angle,range:spec.range,width:spec.width,stage:slot==='r'?state.stage:0,life:spec.every+.12,maxLife:spec.every+.12});g.emitSound('shot',e,{slot,element:'arcane',phase:'arcana-beam',weight:slot==='r'?1.5:1});
+ g.effects.push({type:'arcanaBeam',source:e.id,theme:'queen',slot,x:state.x,y:state.y,angle:state.angle,range:spec.range,width:spec.width,stage:slot==='r'?state.stage:0,life:spec.every+.12,maxLife:spec.every+.12});if(state.hits===0)g.emitSound('shot',e,{slot,x:state.x,y:state.y,element:'arcane',phase:'arcana-beam',weight:slot==='r'?1.5:1,duration:1.2});
 }
 function mark(g,e,t){if(!t.alive||t.hp<=0||g.debuffImmune(t)||t.ccImmuneUntil>g.time)return;((t.state??={}).queenMarks??={})[e.id]={until:g.time+QUEEN.markTime};g.triggerDisrupt(e,t);}
 export function slow(g,e){const s=e.status?.slow;return s?.queenDecay&&s.until>g.time?s.amount*Math.max(0,(s.until-g.time)/(s.until-s.decayAt)):0;}

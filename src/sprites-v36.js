@@ -367,12 +367,12 @@ export const SPRITE_FRAMES={
     "h": 432,
     "sheet": 9,
     "rotation": 0,
-    "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+    "source": "honglu-jade.png",
     "sourceRect": [
-      400,
       0,
-      510,
-      635
+      0,
+      1113,
+      1414
     ],
     "removedFragments": 0,
     "heightBasis": "crown",

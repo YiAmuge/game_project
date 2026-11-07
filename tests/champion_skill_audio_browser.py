@@ -25,7 +25,7 @@ async def main():
      if r.request.url==url:await r.continue_()
      else:external.append(r.request.url);await r.abort()
     await p.route('**/*',route)
-   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===24&&__moba.audio.synth.swings.failures.length===0')
+   await p.goto(url,wait_until='networkidle',timeout=90000);await p.click('#training-open');await p.click('#start');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===26&&__moba.audio.synth.swings.failures.length===0')
    await p.evaluate(SETUP,'rudolph');await p.evaluate('__moba.audio.synth.swings.history=[];__moba.game.attack(__moba.game.player,{x:44,y:20})');await p.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="hohenElectrocute"&&s.cue==="weapon")')
    await p.evaluate('__moba.game.cast(__moba.game.player,"r",{x:45,y:20});advance(1.26)');await p.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="hohenElectrocute"&&s.cue==="burst")')
    await p.wait_for_timeout(180);await p.evaluate(SETUP,'honglu');await p.evaluate('()=>{const g=__moba.game;g.player.hp=100;const a=target(41,20,0);a.hp=100;target(42,20,0).hp=100;target(45);__moba.audio.synth.swings.history=[];g.cast(g.player,"r",{x:44,y:20});g.zones[0].moving=false;}');await p.wait_for_function('__moba.audio.synth.swings.history.some(s=>s.id==="waterSplash"&&s.cue==="waterfall")')

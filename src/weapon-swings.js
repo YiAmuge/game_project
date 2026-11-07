@@ -3,6 +3,7 @@ import{YI_SAMPLES,yiSoundProfile}from'./yi-audio.js';
 import{RIFLE_SAMPLES,rifleSoundProfile}from'./rifle-audio.js';
 import{ELECTRIC_SAMPLES,electricSoundProfile}from'./hohenheim-audio.js';
 import{CHAMPION_SKILL_SAMPLES,championSkillSoundProfile}from'./champion-skill-audio.js';
+import{QUEEN_SAMPLES,queenSoundProfile}from'./queen-audio.js';
 export const SWING_SAMPLES=[
  {id:'swing',file:'floraphonic-swing-whoosh-weapon-3-189823.mp3',start:.03,end:.235},
  {id:'yanGreatsword',file:'daviddumaisaudio-sword-slash-with-metallic-impact-185435.mp3',start:.04,end:.98},
@@ -14,6 +15,7 @@ export const SWING_SAMPLES=[
  ...RIFLE_SAMPLES,
  ...ELECTRIC_SAMPLES,
  ...CHAMPION_SKILL_SAMPLES,
+ ...QUEEN_SAMPLES,
 ];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 // Pitch in semitones, envelope in seconds, then start/peak/end playback speed.
@@ -58,7 +60,7 @@ export function impactProfile(voice){
  const speed=1+[-.003,.003,0,.002][variant];
  return {id,pitch:(heavy?-.15:light?.10:0)+[-.15,.10,-.05,.15][variant],duration:impactLengths[id]*(1+[0,.006,-.006,.003][variant]),rates:[.98,1.025,.995].map(n=>n*speed),offset:0,gain:.68*clamp(.85+(voice.weight||1)*.15,.85,1.12)*(voice.key==='dongbaek'?.8:1),dry:true,fadeOut:.012};
 }
-export const recordingProfile=voice=>championSkillSoundProfile(voice)||electricSoundProfile(voice)||rifleSoundProfile(voice)||yiSoundProfile(voice)||impactProfile(voice)||swingProfile(voice);
+export const recordingProfile=voice=>queenSoundProfile(voice)||championSkillSoundProfile(voice)||electricSoundProfile(voice)||rifleSoundProfile(voice)||yiSoundProfile(voice)||impactProfile(voice)||swingProfile(voice);
 const inlineRecordings=new WeakMap();
 async function loadRecording(spec){
  const inline=globalThis.document?.getElementById('weapon-swing-audio');

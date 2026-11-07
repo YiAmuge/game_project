@@ -1,4 +1,5 @@
 export const CHAMPION_SKILL_SAMPLES=[
+ {id:'alisaFire',file:'yodguard-fire-magic-5-378639.mp3',start:.04,end:1.05},
  {id:'dongbaekWind',file:'yodguard-wind-magic-6-378626.mp3',start:.25,end:1.5},
  {id:'dongbaekChimes',file:'dongbaek-wind-chimes.wav',mime:'audio/wav'},
  {id:'waterSplash',file:'universfield-water-splash-199583.mp3',start:.15,end:2.25},
@@ -11,6 +12,10 @@ const landings=new Set(['heath-landing','sora-landing','starbuck-landing']);
 export function championSkillSoundProfile(v){
  const variant=((Math.trunc(v.variant)||0)%4+4)%4,tint=[-.25,.15,-.1,.25][variant];
  const profile=(id,pitch,duration,gain,offset=0,fadeOut=.10,rates=[.98,1.04,.96])=>({id,pitch,duration,gain,offset,fadeOut,rates,dry:true});
+ if(v.key==='alisa'){
+  if(v.cue==='weapon'&&!v.slot)return profile('alisaFire',-.35+tint,.60,.72,0,.12,[.98,1.03,.96]);
+  if(v.cue==='cast'&&v.slot==='q')return profile('alisaFire',2.4+tint,.72,.82,0,.16,[1.04,1.10,1.02]);
+ }
  if(v.key==='dongbaek'){
   if(v.cue==='weapon'&&!v.slot)return profile('dongbaekWind',.25+tint,.55,.72,0,.11,[1.02,1.18,.96]);
   if(v.cue==='cast'&&v.slot==='r')return profile('dongbaekWind',-.75+tint,.75,.90,0,.15,[.94,1.10,.88]);

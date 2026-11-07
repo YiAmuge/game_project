@@ -64,6 +64,10 @@
     "outisFalcata44": {
       "file": "exec-b33e7a4c-81a3-4a3b-a5a9-dc35ffeea2f3.png",
       "sha256": "b03dbd8068edfa180e2be1a200798659fe03e84b1ab357872575ba359070271c"
+    },
+    "hongluJade": {
+      "file": "honglu-jade.png",
+      "sha256": "fdb941410a5e7c04c83a4ce2d813891c2c46fe74a215bb7fb1b7618b20fc1f97"
     }
   },
   "frames": {
@@ -434,12 +438,12 @@
       "h": 432,
       "sheet": 9,
       "rotation": 0,
-      "source": "exec-46a3c371-3f6b-41ae-b76f-122e3427ae27.png",
+      "source": "honglu-jade.png",
       "sourceRect": [
-        400,
         0,
-        510,
-        635
+        0,
+        1113,
+        1414
       ],
       "removedFragments": 0,
       "heightBasis": "crown",
