@@ -24,8 +24,8 @@ export function beginReload(g,e){if(e.state.ezraReloading||ultimate(g,e))return;
 export function validateBasic(g,e){return e.ammo>=1&&!e.state.ezraReloading&&!(movementWeapon(g,e)&&(g.stat(e,'root')||g.stat(e,'captured')));}
 export function validate(g,e,slot){if(e.state.ezraBusyUntil>g.time)return false;if(slot==='r')return !ultimate(g,e);const index=e.state.ezraLastWeapon;return index!=null&&!ultimate(g,e)&&!(movementWeapon(g,e,index)&&(g.stat(e,'root')||g.stat(e,'captured')));}
 const controlled=(g,t)=>Boolean(t.motion?.forced||['stun','root','slow','captured','netCapture','taunt','fear','silence','disarm'].some(k=>g.stat(t,k)>0));
-function hit(g,e,t,w,index,kind,slot){
- const cc=index===2&&controlled(g,t),shield=g.shield(t),actual=g.deal(e,t,w.damage,{damageKind:kind,weaponIndex:index,sound:{family:w.family,slot}}),absorbed=Math.max(0,shield-g.shield(t));
+function hit(g,e,t,w,index,kind,slot,damage=w.damage){
+ const cc=index===2&&controlled(g,t),shield=g.shield(t),actual=g.deal(e,t,damage,{damageKind:kind,weaponIndex:index,sound:{family:w.family,slot}}),absorbed=Math.max(0,shield-g.shield(t));
  if(cc&&actual+absorbed>0&&t.alive)g.deal(e,t,(actual+absorbed)*w.ccBonus,{fixed:true,proc:false,damageKind:kind,weaponIndex:index,sound:{family:'drill',slot}});
  if(!t.alive)return;
  if(index===1)g.status(t,'slow',.12,w.slowTime,e);
@@ -46,7 +46,7 @@ function strike(g,e,w,index,d,kind,slot,{circle=false,fourth=false}={}){
  for(const t of[...g.units]){
   if(!g.hostile(e,t)||!g.clearLine(e,t))continue;
   const dx=t.x-e.x,dy=t.y-e.y,len=Math.hypot(dx,dy),along=dx*d.x+dy*d.y;
-  if(len<=range+t.radius&&(circle||len<1e-8||along/len>=Math.cos(angle/2))){hit(g,e,t,w,index,kind,slot);if(fourth&&t.alive)g.status(t,'stun',1,1.3,e);}
+  if(len<=range+t.radius&&(circle||len<1e-8||along/len>=Math.cos(angle/2))){hit(g,e,t,w,index,kind,slot,fourth?w.finalDamage:w.damage);if(fourth&&t.alive)g.status(t,'stun',1,1.3,e);}
  }
  if(index!==2||!a.drawn){g.effects.push({type:'slash',source:e.id,theme:'ezra',weaponIndex:index,damageKind:kind,slot,x:e.x,y:e.y,r:range,spread:angle,angle:a.angle,shape,life:index===2?.55:.28,maxLife:index===2?.55:.28});a.drawn=true;}
  if(index===1)g.effects.push({type:'ezraHammerGlow',source:e.id,theme:'ezra',weaponIndex:index,x:e.x,y:e.y,r:range,angle:a.angle,spinDirection:a.spinDirection,life:.28,maxLife:.28});
