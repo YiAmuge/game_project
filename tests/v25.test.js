@@ -48,10 +48,10 @@ test('category limits allow two combat and two survival augments',()=>{
  assert.ok(A.AUGMENTS.every(a=>!['armorHealth','emergencyHeal','health15','reloadRetaliation'].includes(a.key)));
 });
 test('range augment distinguishes single-projectile and area attacks without a separate movement bonus',()=>{
- for(const key of ['faust','don','rodya','myo','starbuck','gregor']){const {g,p,t}=arena(key);if(key==='gregor')g.addBuff(p,'mutant',10);const range=g.attackRange(p);p.augments=['range7'];close(g.attackRange(p)-range,key==='faust'?2.5:1.3);if(S.dashBasic(g,p)){g.attack(p,t);assert.ok(p.motion);const baseline={don:2.5,rodya:2.4,myo:2.4,starbuck:2.75,gregor:2.5}[key];close(p.motion.total,baseline+(['don','myo'].includes(key)?1.3:0));}}
+ for(const key of ['faust','don','rodya','myo','starbuck','gregor']){const {g,p,t}=arena(key);if(key==='gregor')g.addBuff(p,'mutant',10);const range=g.attackRange(p);p.augments=['range7'];close(g.attackRange(p)-range,key==='faust'?2.5:1.3);if(S.dashBasic(g,p)){g.attack(p,t);assert.ok(p.motion);const baseline={don:3.5,rodya:2.4,myo:2.4,starbuck:3.75,gregor:2.5}[key];close(p.motion.total,baseline+(['don','myo','starbuck'].includes(key)?1.3:0));}}
 });
 test('resentment changes power, armor and reload in real time with current health',()=>{
- const {g,p}=arena();const power=g.powerScale(p),reload=g.reloadInterval(p);p.augments=['resentment'];p.hp=p.maxHp*.51;close(A.resentment(p),.2);close(g.powerScale(p),power*1.2);close(g.armor(p),44);close(g.reloadInterval(p),reload/1.2);p.hp=1;close(A.resentment(p),.4);p.hp=p.maxHp;close(g.powerScale(p),power);
+ const {g,p}=arena();const power=g.powerScale(p),reload=g.reloadInterval(p);p.augments=['resentment'];p.hp=p.maxHp*.51;close(A.resentment(p),.2);close(g.powerScale(p),power*1.2);close(g.armor(p),44);close(g.reloadMultiplier(p),1.2);close(g.reloadInterval(p),.9);p.hp=1;close(A.resentment(p),.4);p.hp=p.maxHp;close(g.powerScale(p),power);
 });
 test('K ampule stops a fatal hit, purges crowd control and returns on its cooldown',()=>{
  const {g,p,t}=arena();p.augments=['kAmpule'];g.status(p,'root',1,10,t);g.status(p,'captured',1,10,t);p.hp=100;g.deal(t,p,1000,{fixed:true});assert.ok(p.alive);close(p.hp,p.maxHp*.5);close(g.stat(p,'root'),0);close(g.stat(p,'captured'),0);close(p.state.ampuleReady,60);g.status(p,'stun',1,2,t);close(g.stat(p,'stun'),0);g.time=60;p.hp=1;g.deal(t,p,100,{fixed:true});assert.ok(p.alive);close(p.state.ampuleReady,120);
@@ -66,7 +66,7 @@ test('reload stacks cap at five, refresh on hit and expire one at a time',()=>{
  const {g,p,t}=arena();p.augments=['reloadStacks'];for(let i=0;i<6;i++)g.deal(p,t,1);assert.equal(p.state.augReloadStacks,5);g.time=2;g.deal(p,t,1);close(p.state.augReloadDecay,5);g.time=4.99;A.tick(g,p);assert.equal(p.state.augReloadStacks,5);g.time=5;A.tick(g,p);assert.equal(p.state.augReloadStacks,4);
 });
 test('dash basic width hits a target inside the widened side corridor only once',()=>{
- const {g,p,t}=arena('don');Object.assign(t,{x:21,y:21.3,radius:.48});const hp=t.hp;g.attack(p,{x:25,y:20});run(g,.4);assert.ok(t.hp<hp);assert.ok(t.hp>hp-500);assert.ok(distance(p,t)>=p.radius+t.radius);
+ const {g,p,t}=arena('don');Object.assign(t,{x:21,y:21.2,radius:.48});const hp=t.hp;g.attack(p,{x:25,y:20});run(g,.4);assert.ok(t.hp<hp);assert.ok(t.hp>hp-500);assert.ok(distance(p,t)>=p.radius+t.radius);
 });
 test('Yi teleports at most 6.4 and shields allies without granting passive healing',()=>{
  const {g,p,t}=arena('yi'),ally=g.makeChampion('meursault',0,10);Object.assign(ally,{x:26,y:21});ally.hp-=1000;ally.lastDamageAt=100;g.cast(p,'r',{x:40,y:20});assert.ok(p.x<=26.4&&p.x>25);assert.ok(g.shield(ally)>0);p.passiveReady=0;g.deal(p,t,1,{fixed:true});const hp=ally.hp;run(g,1);close(ally.hp,hp);assert.ok(g.passiveCooldown(p)>0);

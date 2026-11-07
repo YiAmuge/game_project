@@ -7,9 +7,9 @@ import{recordingProfile,SWING_SAMPLES}from'../src/weapon-swings.js';
 const run=(g,s)=>{for(let n=0;n<Math.round(s*120);n++)g.step(1/120);};
 function arena(key){const g=new Game(key,'top',{mode:'training',seed:66}),p=g.player;g.units=[p];g.events=[];g.effects=[];g.projectiles=[];g.zones=[];g.pending=[];g.soundEvents=[];g.practice.lineStopped=true;g.map={bounds:{x:0,y:0,w:120,h:80},walls:[]};g.bounds=g.map.bounds;for(const k of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[k]=()=>{};Object.assign(p,{x:40,y:25,lastDamageAt:999,lastAttackAt:999});return{g,p};}
 test('Jamila emits one round per bullet and every fourth shield round has a distinct pitch',()=>{
- const{g,p}=arena('jamila');for(let i=0;i<16;i++){assert.ok(g.attack(p,{x:48,y:25}));run(g,.15);}
+ const{g,p}=arena('jamila');for(let i=0;i<16;i++){assert.ok(g.attack(p,{x:48,y:25}));run(g,.2);}
  const rounds=g.soundEvents.filter(e=>e.kind==='shot');assert.equal(rounds.length,16);
- rounds.forEach((event,i)=>{const profile=recordingProfile(soundVoice(event));assert.equal(profile.id,'rifleRound');assert.equal(profile.pitch,(i+1)%4===0?2:0);assert.ok(Math.abs(event.at-i*.15)<1/120);});
+ rounds.forEach((event,i)=>{const profile=recordingProfile(soundVoice(event));assert.equal(profile.id,'rifleRound');assert.equal(profile.pitch,(i+1)%4===0?2:0);assert.ok(Math.abs(event.at-i*.2)<1/120);});
  assert.equal(g.soundEvents.filter(e=>e.kind==='reload').length,1);
 });
 test('Myo Q emits exactly four single-round samples at the projectile times without a cast shot',()=>{

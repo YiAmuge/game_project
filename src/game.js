@@ -1,5 +1,6 @@
 import*as Yi from'./yi.js';
 import*as Ezra from'./ezra.js';
+import{combatSeconds}from'./combat-timing.js';
 import{championBaseHealth,championBaseSpeed}from'./data.js';
 import*as Queen from'./queen.js';
 import*as Nosferatu from'./nosferatu.js';
@@ -228,7 +229,7 @@ export class Game {
     return Math.max(0,ready-this.time);
   }
   cooldown(e,slot){if(e.key==='yan'&&slot==='q'&&Yan.distorted(this,e))return 5*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e));return (e.key==='sora'&&slot==='q'&&Sora.ego(this,e)?Sora.SORA.egoQCooldown:CHAMPIONS[e.key][slot])*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e))*(1-rivalBonus(e,'cooldown'));}
-  attackInterval(e){if(Nosferatu.bloodfiend(this,e))return Nosferatu.NOSFERATU.rAttackEvery;const c=CHAMPIONS[e.key];return c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier);}
+  attackInterval(e){if(Nosferatu.bloodfiend(this,e))return combatSeconds(Nosferatu.NOSFERATU.rAttackEvery);const c=CHAMPIONS[e.key];return combatSeconds(c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier));}
   reloadPaused(e){if(e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(e.key==='dongbaek'&&e.state.usedPetal&&e.attackCd>0)return false;if(Sora.ego(this,e)||e.key==='alisa'&&this.buff(e,'alisaReload'))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||Boolean(e.state.donCharge)||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
   ammoCap(e){return Skills.ammoCap(this,e);}
   attackRange(e){if(e.key==='ezra')return Ezra.weapon(this,e).range+Augments.rangeBonus(e);if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)+Augments.rangeBonus(e);}
@@ -283,7 +284,7 @@ export class Game {
   haste(e) { return Math.max(0,upgradeRate(e,'haste')+(Augments.has(e,'carrier')?.03:0)+this.extraRate(e)+(this.discipline(e)?.12:0)+this.buffValue(e,'augBattleHaste',.25)+(Augments.has(e,'forceBattery')&&this.shield(e)>=e.maxHp*.1-1e-8?.1:0)-this.stat(e,'hasteWeak')); }
   extraRate(e){return (e.key==='ryoshu'&&this.time-e.lastCombat>=2?.2:0)+this.buffValue(e,'ishmaelSurvive',.2)+(this.buff(e,'coins')?(e.state.coinHeads||0)*.08:0)+this.buffValue(e,'mosesWhite',.15)+(e.key==='moses'?upgradeRate(e,'power')*.5*.6:0);}
   reloadMultiplier(e){if(e.lcaTrooper)return Math.max(.2,e.snapshot.reload-this.stat(e,'reloadWeak'));return Math.max(e.key==='moses'?.85:.2,1+upgradeRate(e,'reload')+Augments.resentment(e)+Augments.reloadRate(this,e)+(Augments.has(e,'blackOrb')?.1:0)+(Sora.ego(this,e)?Sora.SORA.egoReload:0)+(e.key==='ahab'?.15:0)+this.buffValue(e,'queequegUlt',.4)+this.buffValue(e,'explore',.2)+this.buffValue(e,'marks',.2)+this.buffValue(e,'guboReload',.35)+this.extraRate(e)+(this.discipline(e)?.12:0)+(this.buff(e,'rabbitHunt')?(e.state.rabbitStacks||0)*.2:0)+this.buffValue(e,'rabbitFrenzy',.6)+this.buffValue(e,'alisaReload',.3)+(e.key==='dongbaek'&&e.qCd<=0?.2:0)+this.buffValue(e,'flowerReload',.4)+this.buffValue(e,'outisReload',.3)+(Augments.has(e,'reloadStacks')?(e.state.augReloadStacks||0)*.05:0)+(e.key==='ahab'&&this.buff(e,'ahabCover')?(e.state.coverStacks||0)*.2:0)-this.stat(e,'reloadWeak'));}
-  reloadInterval(e){if(e.key==='ezra')return Ezra.reloadDuration(this,e);return e.key==='jamila'?Jamila.reloadDuration(this,e):RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*this.reloadMultiplier(e));}
+  reloadInterval(e){if(e.key==='ezra')return Ezra.reloadDuration(this,e);return e.key==='jamila'?Jamila.reloadDuration(this,e):combatSeconds(RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*this.reloadMultiplier(e)));}
   changeAmmo(e,amount,{external=true}={}){if(!Number.isFinite(e.ammo)||external&&e.key==='ezra')return 0;const old=e.ammo;e.ammo=Math.max(0,Math.min(this.ammoCap(e),e.ammo+amount));return e.ammo-old;}
   support() {}
   addShield(target,value,source,seconds=3,copy=true) {
@@ -322,7 +323,7 @@ export class Game {
       this.effects.push({type:'ring',x:e.x,y:e.y,r:2,color:'#d9be78',life:1,maxLife:1});
     }
   }
-  deal(source,target,base,{fixed=false,proc=true,allowFriendly=false,damageKind=source.actionKind||'skill',nonLethal=false,transferred=false,campBonus=true,rawPower=false,armorPen=0,sound={}}={}) {
+  deal(source,target,base,{fixed=false,proc=true,allowFriendly=false,damageKind=source.actionKind||'skill',nonLethal=false,transferred=false,campBonus=true,rawPower=false,armorPen=0,sound={},weaponIndex}={}) {
     const alliedAllowed=allowFriendly&&this.canGuboHitAlly(source,target);
     if(!target.alive||GuboUltimate.guarded(this,target)||target.state?.posthumous||target.returning||(source.team===target.team&&!alliedAllowed)||this.hidden(target)||this.training&&target===this.player&&this.practice.invincible||target.invulnerableUntil>this.time||this.locked(target)||this.winner!==null) return 0;
     const pulsing=source.kind==='champion'&&this.buff(source,'amplify');
@@ -390,7 +391,7 @@ export class Game {
     V08.afterDamage(this,source,target,actual,proc,damageKind);
     Augments.afterHit(this,source,target,actual,proc,absorbed);
     target.hitFlashUntil=this.time+.1;target.hitFrom=Math.atan2(target.y-source.y,target.x-source.x);
-    this.effects.push({type:'impact',x:target.x,y:target.y,angle:target.hitFrom,source:source.id,target:target.id,damageKind,slot:damageKind==='skill'?source.castSlot:undefined,theme:source.key,color:source.key==='gregor'?'#c49a73':source.team===0?'#e9f7df':'#f3b9a3',life:.24,maxLife:.24});
+    this.effects.push({type:'impact',weaponIndex,x:target.x,y:target.y,angle:target.hitFrom,source:source.id,target:target.id,damageKind,slot:damageKind==='skill'?source.castSlot:undefined,theme:source.key,color:source.key==='gregor'?'#c49a73':source.team===0?'#e9f7df':'#f3b9a3',life:.24,maxLife:.24});
     if(source.kind==='champion') {source.totalDamage+=actual;if(source.player)this.damageDone+=actual;}
     combatNumber(this,target,actual+absorbed,{fixed,source});
     if(proc&&source.key==='yi'&&target.kind==='champion'&&source.passiveReady<=this.time) {

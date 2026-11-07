@@ -1,3 +1,4 @@
+import{drawEzraGround}from'./ezra-vfx.js';
 import{FAN_ANGLE,basicFanAngle}from'./data.js';
 import{drawArcanaEffects}from'./arcana-vfx.js';
 import{drawBodyAdditions}from'./champion-update-effects.js';
@@ -245,6 +246,7 @@ export class ChampionVFX {
   c.restore();
  }
  ground(c,camera,g){
+  drawEzraGround(c,camera,g);
   v58Ground(c,camera,g);drawAugmentGround(c,camera,g);drawPassiveAugmentGround(c,camera,g);
   const world=(p,h=0)=>camera.worldToScreen(p,h),sprite=(form,color,p,h,size,alpha=.5,angle=0)=>{const at=world(p,h);this.mote(c,form,color,at.x,at.y,size*camera.scale,angle,alpha);};
   for(const f of g.effects)if(f.type==='yiBuffRange'&&f.life>0)this.vfx.groundDisc(c,camera,f,f.r,()=>{
@@ -266,7 +268,7 @@ export class ChampionVFX {
    for(const wave of healingRipples(f,f.maxLife-f.life)){c.globalAlpha=wave.alpha;c.strokeStyle='#c2fff4';c.shadowColor='#74d5d5';c.shadowBlur=7;c.lineWidth=.11;c.beginPath();c.arc(0,0,wave.r,0,Math.PI*2);c.stroke();c.strokeStyle='#417d79';c.lineWidth=.035;c.beginPath();c.arc(0,0,Math.max(0,wave.r-.12),0,Math.PI*2);c.stroke();}c.restore();
   }
   for(const f of g.effects)if(f.type==='yanSwordWarning'){
-   const progress=clamp(1-f.life/f.maxLife);this.rangeField(c,camera,f,f.r,'#384759',.5,'#b2c7d6');
+   const progress=clamp(1-f.life/f.maxLife);this.rangeField(c,camera,f,f.r,'#384759',.5,'#b2c7d6');this.rangeField(c,camera,f,f.innerR||3,'#7b507b',.48,'#f2bbec');
    for(let i=0;i<12;i++){const a=i*Math.PI/6,p={x:f.x+Math.cos(a)*f.r*(1-progress*.05),y:f.y+Math.sin(a)*f.r*(1-progress*.05)};sprite('spark','#64717d',p,.1,.06,.25);}
   }
   for(const h of g.units.filter(e=>e.alive&&e.key==='yanHand')){

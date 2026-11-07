@@ -40,8 +40,8 @@ test('Gubo bullets retain their dark red firing state and boosted aura after the
 });
 test('Rudolph visual pulses run on their own timeline without changing attack hits, SP or random state',()=>{
  const {g,p,t}=arena('rudolph'),v=new ProjectileVFX(new SkillVFX()),pulses=new Set(),hits=[];g.input.fire=true;g.input.aim={x:t.x,y:t.y};const deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)hits.push(n);return deal(a,b,n,o);};const ammo=p.ammo;
- close(whipVisualInterval(g,p),.4);run(g,2.85,()=>{const state=g.randomState;v.syncWhips(g);assert.equal(g.randomState,state);for(const pulse of v.whipPulses)pulses.add(pulse.bornAt);});
- assert.equal(hits.length,9);close(ammo-p.ammo,30);assert.equal(pulses.size,8);const at=[...pulses];for(let i=1;i<at.length;i++)close(at[i]-at[i-1],.4);
+ close(whipVisualInterval(g,p),.36);run(g,2.85,()=>{const state=g.randomState;v.syncWhips(g);assert.equal(g.randomState,state);for(const pulse of v.whipPulses)pulses.add(pulse.bornAt);});
+ assert.equal(hits.length,10);close(ammo-p.ammo,30);assert.equal(pulses.size,8);const at=[...pulses];for(let i=1;i<at.length;i++)close(at[i]-at[i-1],.36);
  const count=v.whipPulses.length;v.syncWhips(g);assert.equal(v.whipPulses.length,count);g.time=1;g.effects=[];v.syncWhips(g);assert.equal(v.whipPulses.length,0);
 });
 test('Ahab opening ultimate strikes emit exactly two water spins at their actual strike moments',()=>{

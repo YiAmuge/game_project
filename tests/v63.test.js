@@ -15,8 +15,8 @@ function arena(key='jamila'){
  const g=new Game(key,'bottom',{mode:'training',seed:63}),p=g.player;g.units=[p];g.events=[];g.effects=[];g.projectiles=[];g.pending=[];g.zones=[];g.practice.lineStopped=true;g.map={bounds:{x:0,y:0,w:120,h:80},walls:[]};g.bounds=g.map.bounds;for(const k of['aiChampion','aiMinion','aiNeutral','aiStructure'])g[k]=()=>{};Object.assign(p,{x:40,y:25,lastDamageAt:999,lastAttackAt:999});return{g,p};
 }
 function hero(g,team=1,x=46,y=25){const e=g.makeChampion('faust',team,g.nextId+20);Object.assign(e,{x,y,hp:10000,maxHp:10000,armor:0,lastDamageAt:999,lastAttackAt:999});return e;}
-test('Jamila sustained fire keeps the 0.15-second average even at the real 30-Hz game step',()=>{
- const{g,p}=arena();g.input.fire=true;g.input.aim={x:47,y:25};for(let i=0;i<45;i++)g.step(1/30);const shots=g.soundEvents.filter(s=>s.kind==='shot'&&s.sourceId===p.id);assert.equal(shots.length,10);assert.ok(Math.abs(shots.at(-1).at-shots[0].at-(shots.length-1)*.15)<1/30);assert.equal(p.ammo,6);
+test('Jamila sustained fire keeps the 0.2-second average even at the real 30-Hz game step',()=>{
+ const{g,p}=arena();g.input.fire=true;g.input.aim={x:47,y:25};for(let i=0;i<45;i++)g.step(1/30);const shots=g.soundEvents.filter(s=>s.kind==='shot'&&s.sourceId===p.id);assert.equal(shots.length,8);assert.ok(Math.abs(shots.at(-1).at-shots[0].at-(shots.length-1)*.2)<1/30);assert.equal(p.ammo,8);
 });
 test('tactical cancels an empty reload immediately and restores exactly six rounds after hitting multiple enemies',()=>{
  const{g,p}=arena();hero(g,1,45);hero(g,1,45,26);p.ammo=0;Jamila.beginReload(g,p);run(g,.5);assert.ok(Jamila.reloadFraction(p)>.3);assert.ok(g.cast(p,'q',{x:50,y:25}));assert.equal(Jamila.reloading(p),false);run(g,.1);assert.equal(p.ammo,0);assert.equal(Jamila.reloading(p),false);run(g,.1);assert.equal(p.state.jamilaQ.phase,'slash');assert.equal(p.ammo,6);assert.equal(Jamila.reloading(p),false);run(g,.6);assert.ok(g.attack(p,{x:50,y:25}));assert.equal(p.ammo,5);

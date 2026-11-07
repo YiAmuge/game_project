@@ -43,11 +43,16 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
  return hits;
 }
 export const dashBasic=(g,e)=>['don','myo','starbuck'].includes(e.key)||e.key==='ezra'&&Ezra.movementWeapon(g,e);
-export const dashLength=(e,n)=>n+(e.key==='don'?rangeBonus(e):0);
+export const dashLength=(e,n)=>n+(['don','starbuck'].includes(e.key)?rangeBonus(e):0);
+function dashRectangleHit(t,origin,to,d,halfWidth){
+ const dx=t.x-origin.x,dy=t.y-origin.y,along=dx*d.x+dy*d.y,side=Math.abs(dx*d.y-dy*d.x),covered=(to.x-origin.x)*d.x+(to.y-origin.y)*d.y;
+ return Math.hypot(Math.max(0,-along,along-covered),Math.max(0,side-halfWidth))<=t.radius;
+}
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
- const hitIds=new Set();
+ const hitIds=new Set(),origin={x:e.x,y:e.y};
+ if(options.exactWidth)g.effects.push({type:'thrust',source:e.id,theme:e.key,damageKind:e.actionKind||'basic',x:e.x,y:e.y,r:len,angle:Math.atan2(d.y,d.x),shape:{kind:'rect',range:len,width:(options.hitWidth??.6)*2,angle:Math.atan2(d.y,d.x)},life:.25,maxLife:.25});
  return g.startMotion(e,d,len,{phaseEnemies:typeof damage==='function'||damage>0||Boolean(options.offensive),...options,onComplete:result=>options.onComplete?.({...result,hitIds}),onStep:(from,to)=>{
-  if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&segmentDistance(t,from,to)<t.radius+(options.hitWidth??.6)*(e.actionKind==='basic'?1.2:1)&&g.clearLine(e,t)){hitIds.add(t.id);const shield=g.shield(t),actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual,Math.max(0,shield-g.shield(t)));}
+  if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&(options.exactWidth?dashRectangleHit(t,origin,to,d,options.hitWidth??.6):segmentDistance(t,from,to)<t.radius+(options.hitWidth??.6)*(e.actionKind==='basic'?1.2:1))&&g.clearLine(e,t)){hitIds.add(t.id);const shield=g.shield(t),actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual,Math.max(0,shield-g.shield(t)));}
   g.effects.push({type:options.swordTrail?'ryoshuTrail':'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});
  }});
 }
@@ -132,7 +137,7 @@ export function basic(g,e,p,d,options={}){
  if(Sora.basic(g,e,p,d)||V12.basic(g,e,p,d,options)||V10.basic(g,e,p,d,options)||V08.basic(g,e,p,d,options)||New.basic(g,e,p,d,options)||V06.basic(g,e,p,d,options))return true;
  const cone=(r,a,v,h)=>g.cone(e,d,r,a,v,h);
  switch(e.key){
- case 'don':dash(g,e,d,dashLength(e,2.5),230,()=>{},{hitWidth:.72});return true;
+ case 'don':dash(g,e,d,dashLength(e,3.5),230,()=>{},{hitWidth:.75,exactWidth:true});return true;
  case 'ryoshu':{const step=e.state.ryoshuStep;delete e.state.ryoshuStep;if(step&&!g.stat(e,'root')&&!g.stat(e,'captured'))dash(g,e,d,.5,0,()=>{},{onComplete:()=>g.cone(e,d,g.attackRange(e),Math.PI,220)});else cone(g.attackRange(e),Math.PI,220);return true;}
  case 'honglu':for(const ally of g.champions(e.team))if(ally.alive&&distance(e,ally)<=6.5)g.addBuff(ally,'hongluAttackStride',1.85,{copy:false});area(g,e,e,g.attackRange(e),190);g.effects.push({type:'hongluSweep',x:e.x,y:e.y,r:g.attackRange(e),life:.4,maxLife:.4});return true;
  case 'heathcliff':cone(g.attackRange(e),1.7,200);return true;
@@ -146,9 +151,9 @@ export function basic(g,e,p,d,options={}){
  }
  case 'alisa':e.state.heat=Math.min(5,(e.state.heat||0)+1);cone(g.attackRange(e),1.1,100*(1+.1*e.state.heat),t=>applyBurn(g,e,t));return true;
  case 'rudolph':
-  // 3 hits/s and 10 SP/s; top up basic's 1 SP charge to 10/3 per tick.
+  // Preserve 10 SP/s after rounding the attack clock; basic already spends 1 SP.
   startRudolphWeapon(g,e);
-  e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(10/3-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'whipArc',source:e.id,x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:2.1675,color:'#ed883d',life:.2,maxLife:.2});g.effects.push({type:'rudolphField',source:e.id,theme:'rudolph',...whipPoint,r:2.1675,life:.3,maxLife:.3});area(g,e,whipPoint,2.1675,t=>{decayMentalWhip(g,t);return 57*(1+.15*(t.state?.mentalWhip?.[e.id]?.stage||0));},t=>mentalWhip(g,e,t));return true;
+  e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(g.attackInterval(e)*10-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'whipArc',source:e.id,x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:2.1675,color:'#ed883d',life:.2,maxLife:.2});g.effects.push({type:'rudolphField',source:e.id,theme:'rudolph',...whipPoint,r:2.1675,life:.3,maxLife:.3});area(g,e,whipPoint,2.1675,t=>{decayMentalWhip(g,t);return 57*(1+.15*(t.state?.mentalWhip?.[e.id]?.stage||0));},t=>mentalWhip(g,e,t));return true;
  case 'moses':{
   const color=e.state.smoke;e.state.smoke=null;cone(g.attackRange(e),1.1,180,t=>{if(color==='down')g.status(t,'stun',1,.7,e);if(color==='left'){g.status(t,'slow',.2,3,e);g.status(t,'vulnerable',.12,3,e);}});
   if(['up','right'].includes(color))for(const a of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5)){const toward=direction(e,a);if(toward.x*d.x+toward.y*d.y<.4&&a!==e)continue;if(color==='up')g.addBuff(a,'mosesWhite',4);else {g.addShield(a,200,`smoke-${e.id}`);g.addBuff(a,'mosesHeal',2);}g.support(e);}

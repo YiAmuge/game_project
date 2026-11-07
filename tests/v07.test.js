@@ -49,7 +49,7 @@ test('Myo kill refill, one-ammo Q and 4.5-second expanded magazine clamp correct
  const {g,p,t}=quiet('myo');assert.equal(g.ammoCap(p),4);p.ammo=0;g.kill(t,p);assert.equal(p.ammo,2);g.cast(p,'q',{x:45,y:7});assert.equal(p.ammo,1);g.cast(p,'r',p);assert.equal(p.ammo,2);assert.equal(g.ammoCap(p),6);close(p.buffs.rabbitFrenzy,4.5);p.ammo=6;g.time=5.99;g.step(.02);assert.equal(g.ammoCap(p),4);assert.equal(p.ammo,4);
 });
 test('Rudolph consumes ten SP per second and caps the new damage debuff at three stacks',()=>{
- const {g,p,t}=quiet('rudolph');g.attack(p,t);close(p.ammo,100-10/3);const ammo=t.ammo;t.qCd=4;t.rCd=10;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);close(g.stat(t,'slow'),0);assert.equal(t.ammo,ammo);close(t.qCd,4);close(t.rCd,10);
+ const {g,p,t}=quiet('rudolph');g.attack(p,t);close(p.ammo,100-10*.3);const ammo=t.ammo;t.qCd=4;t.rCd=10;for(let i=0;i<20;i++){g.time+=.1;mentalWhip(g,p,t);}assert.equal(t.state.mentalWhip[p.id].stage,3);close(g.stat(t,'slow'),0);assert.equal(t.ammo,ammo);close(t.qCd,4);close(t.rCd,10);
 });
 test('Rudolph cooldown reversal also delays ready charged skills and running charge regeneration',()=>{
  for(const key of ['nelly','dongrang']){const {g,p}=quiet(key);const s=p.state,field=key==='nelly'?'knifeReady':'treeReady',charges=key==='nelly'?'knifeCharges':'treeCharges';s[field]=g.time+3;s[charges]=1;g.rewindCooldowns(p,1.5);g.step(.01);assert.ok(p.qCd>1.4);close(s[field],4.5);assert.equal(g.cast(p,'q',{x:42,y:7}),false);run(g,1.6);assert.ok(g.cast(p,'q',{x:42,y:7}));}

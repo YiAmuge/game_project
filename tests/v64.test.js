@@ -33,8 +33,8 @@ test('fixed damage is always purple, positive allied healing green, normal hits 
 test('combat numbers render upright on screen with a black border before the colored fill',()=>{
  const{g,p}=arena('faust'),t=hero(g);g.deal(p,t,20);const calls=[],c=context();c.strokeText=(...a)=>calls.push(['stroke',c.strokeStyle,...a]);c.fillText=(...a)=>calls.push(['fill',c.fillStyle,...a]);const camera=new Camera25D();camera.update(1440,950,p);drawCombatNumbers(c,camera,g);assert.equal(calls[0][0],'stroke');assert.equal(calls[0][1],'#05070c');assert.equal(calls[1][0],'fill');
 });
-test('Don names, 2.5 range and eight-second tactical cooldown match the current rules',()=>{
- const{g,p}=arena('don');assert.equal(CHAMPIONS.don.passive,'정의를 위해!');assert.equal(CHAMPIONS.don.basic,'렌스 돌격');assert.equal(CHAMPIONS.don.tactical,'모아 찌르기');near(g.attackRange(p),2.5);near(g.cooldown(p,'q'),8);g.attack(p,{x:50,y:25});near(p.motion.remaining,2.5);
+test('Don names, 3.5 range and eight-second tactical cooldown match the current rules',()=>{
+ const{g,p}=arena('don');assert.equal(CHAMPIONS.don.passive,'정의를 위해!');assert.equal(CHAMPIONS.don.basic,'렌스 돌격');assert.equal(CHAMPIONS.don.tactical,'모아 찌르기');near(g.attackRange(p),3.5);near(g.cooldown(p,'q'),8);g.attack(p,{x:50,y:25});near(p.motion.remaining,3.5);
 });
 test('all Don attacks, including non-proccing damage, consume the marked-target window and use victim combat power',()=>{
  const{g,p}=arena('don'),t=hero(g,{key:'heathcliff'});p.state.villain=t.id;const bonus=15+g.combatPower(t)*.1;g.deal(p,t,1,{fixed:true,proc:false});near(10000-t.hp,1+bonus);near(g.stat(t,'root'),1);const hp=t.hp;g.deal(p,t,1,{fixed:true,proc:false});near(hp-t.hp,1);
@@ -54,8 +54,8 @@ test('Myo tactical has a real 0.15-second minimum cooldown and retains all four 
 test('Hong Lu waterfall lasts three seconds and care uses his old mist presentation',()=>{
  const{g,p}=arena('honglu'),a=hero(g,{team:0,x:41,hp:100});g.cast(p,'r',p);near(g.zones[0].until-g.time,3);assert.ok(g.buff(a,'hongluCare'));assert.equal(championPresentation(g,a).aura.form,'mist');run(g,3.01);assert.equal(g.zones.some(z=>z.kind==='waterfall'),false);
 });
-test('Marton ranged impacts are full circles and Sinclair previews the actual two-range 145-degree sector',()=>{
- const{g,p}=arena('marton');g.attack(p,{x:45,y:25});const fx=g.effects.find(f=>f.type==='burst');assert.deepEqual(visualShape(fx),{kind:'circle',range:2.2});const b=arena('sinclair'),arcs=[],c=context();c.arc=(...args)=>arcs.push(args);preview({ctx:c,circle(){},polygon(){},text(){}},b.p,b.g);near(arcs[0][2],2);near(arcs[0][4]-arcs[0][3],BASIC_FAN_ANGLE);
+test('Marton ranged impacts are full circles and Sinclair previews the actual 2.5-range 150-degree sector',()=>{
+ const{g,p}=arena('marton');g.attack(p,{x:45,y:25});const fx=g.effects.find(f=>f.type==='burst');assert.deepEqual(visualShape(fx),{kind:'circle',range:2.2});const b=arena('sinclair'),arcs=[],c=context();c.arc=(...args)=>arcs.push(args);preview({ctx:c,circle(){},polygon(){},text(){}},b.p,b.g);near(arcs[0][2],2.5);near(arcs[0][4]-arcs[0][3],150*Math.PI/180);
 });
 test('north needles spawn beyond the center timer and the king appears at exactly 3:30',()=>{
  const g=new Game('faust','top',{seed:64});g.time=90;Sewing.tick(g);const needles=g.units.filter(e=>e.camp==='needle');assert.equal(needles.length,2);assert.ok(needles.every(n=>Math.hypot(n.x-MAP_CENTER.x,n.y-Sewing.NORTH_CAMP.y)>2));const timer=g.campTimers({upcoming:true}).find(t=>t.upcoming);near(timer.seconds,120);g.time=209.999;Sewing.tick(g);assert.equal(g.sewingKingSpawned,false);g.time=210;Sewing.tick(g);assert.ok(g.sewingKingSpawned);assert.equal(g.campTimers({upcoming:true}).some(t=>t.upcoming),false);

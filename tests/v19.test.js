@@ -79,7 +79,7 @@ test('Ahab third-hit damage counts direct impact and explosion once per attack a
 test('Ahab cover buffs real projectiles, linked proc-free damage and periodic ally damage without stacking within 1.6 seconds',()=>{
  const {g,p}=quiet('ahab'),t=target(g,43),ally=target(g,41,9,0);g.attack(p,t);run(g,.25);assert.ok(t.state.harpoon);
  const hp=t.hp;g.deal(ally,t,100,{fixed:true,proc:false});close(hp-t.hp,130);close(p.state.coverStacks,1);const interval=g.reloadInterval(p);
- g.deal(ally,t,100,{fixed:true});close(p.state.coverStacks,1);g.time=1.86;g.deal(ally,t,100,{fixed:true,proc:false});close(p.state.coverStacks,2);assert.ok(g.reloadInterval(p)<interval);
+ g.deal(ally,t,100,{fixed:true});close(p.state.coverStacks,1);g.time=1.86;g.deal(ally,t,100,{fixed:true,proc:false});close(p.state.coverStacks,2);assert.ok(g.reloadInterval(p)<=interval);close(g.reloadMultiplier(p),1.15+.4);
  p.qCd=0;g.cast(p,'q',p);const h=t.hp;g.deal(ally,t,100,{fixed:true,proc:false});close(h-t.hp,100);
 });
 test('one captains mark does not overwrite another captains cover eligibility',()=>{

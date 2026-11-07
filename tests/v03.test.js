@@ -1,3 +1,4 @@
+import {combatSeconds} from '../src/combat-timing.js';
 import * as Don from '../src/don.js';
 import { releaseHeath } from '../src/skills.js';
 import test from 'node:test';
@@ -26,7 +27,7 @@ test('all 32 catalog champions and all runtime champions share the cumulative re
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){
   const {g,p}=quiet(key);p.lastCombat=g.time;
   if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
-  close(g.reloadInterval(p),['jamila','ezra'].includes(key)?1.5:RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1));
+  close(g.reloadInterval(p),key==='ezra'?2.2:key==='jamila'?1.5:combatSeconds(RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1)));
  }
 });
 test('natural healing waits three seconds after attacks including missed attacks',()=>{
@@ -90,7 +91,7 @@ test('Hong Lu and nearby allies receive Yi Sang ultimate within its own area',()
  assert.ok(g.cast(yi,'r',p));assert.ok(g.buff(p,'ogamdo'));assert.ok(g.buff(ally,'ogamdo'));assert.ok(g.shield(ally)>0);
 });
 test('Don Quixote lethal marked hit records positive actual damage and only one takedown',()=>{
- const {g,p,t}=quiet('don');t.hp=100;p.state.villain=t.id;g.attack(p,t);run(g,.4);
+ const {g,p,t}=quiet('don');t.hp=100;t.lastDamageAt=t.lastAttackAt=100;p.state.villain=t.id;g.attack(p,t);run(g,.4);
  assert.equal(t.alive,false);assert.equal(p.kills,1);assert.equal(p.totalDamage,100);assert.equal(g.damageDone,100);
 });
 test('Gregor transforms at 12 hits and restores max health after five seconds',()=>{

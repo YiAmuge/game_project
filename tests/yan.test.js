@@ -39,9 +39,9 @@ test('ultimate applies to all nearby champions and refreshes existing marks desp
 test('normal clicks charge without instant damage and a tap releases the 50 damage rectangular strike',()=>{
  const {g,p}=quiet(),t=target(g,42.5),miss=target(g,44),side=target(g,42,8.4);g.attack(p,t);close(t.hp,10000);Yan.release(g,p,t);close(10000-t.hp,damageFormula(50,2,1));close(miss.hp,10000);close(side.hp,10000);close(p.ammo,0);assert.equal(p.state.yanCharge,undefined);
 });
-test('uncharged taps cannot repeat faster than .85 seconds; charged time counts toward the floor',()=>{
- const {g,p}=quiet(),t=target(g);p.upgrades.reload=3;g.attack(p,t);Yan.release(g,p,t);close(p.attackCd,.85);run(g,.84);assert.equal(g.attack(p,t),false);run(g,.02);assert.ok(g.attack(p,t));run(g,.5);Yan.release(g,p,t);close(p.attackCd,.65);
- transform(g,p);p.attackCd=0;g.attack(p,p);close(p.attackCd,.15);
+test('uncharged taps cannot repeat faster than .9 seconds; charged time counts toward the floor',()=>{
+ const {g,p}=quiet(),t=target(g);p.upgrades.reload=3;g.attack(p,t);Yan.release(g,p,t);close(p.attackCd,.9);run(g,.89);assert.equal(g.attack(p,t),false);run(g,.02);assert.ok(g.attack(p,t));run(g,.5);Yan.release(g,p,t);close(p.attackCd,.7);
+ transform(g,p);p.attackCd=0;g.attack(p,p);close(p.attackCd,.2);
 });
 test('full charge reaches seven, uses 200 maximum damage, slows movement ten percent, and never autofires for players',()=>{
  const {g,p}=quiet(),t=target(g,47),base=g.speed(p);g.attack(p,t);close(g.speed(p),base*.9);run(g,1.6);close(t.hp,10000);close(Yan.chargeShape(g,p,t).progress,1);Yan.release(g,p,t);close(10000-t.hp,damageFormula(200,2,1));close(g.speed(p),base);

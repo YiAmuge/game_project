@@ -1,7 +1,7 @@
 import{RULES,RUNTIME_CHAMPIONS,FOUNTAIN_AREAS,upgradeRate}from'./data.js';
 import{distance,direction,clamp}from'./geometry.js';
 import{settleBody,moveBody}from'./collision.js';
-export const NOSFERATU={lifesteal:.25,capacity:1200,cost:100,qWindow:2.5,qRecasts:2,qRange:6.8,qDamage:35,batDuration:5,bats:3,batDamage:35,batEvery:.5,batSpeed:1.25,batRange:2.5,leash:8,basicDamage:90,basicRange:1.7,bladeWidth:2*3.3*Math.sin(165*Math.PI/360)-2,bladeRange:6.8,bladeDamage:75,rRange:7.5,rDuration:5,rEvery:.5,rDrain:.10,rAttackEvery:.35,rLifesteal:.3,rDamage:180,rSize:1.15,rFeast:.3};
+export const NOSFERATU={lifesteal:.25,capacity:1200,cost:100,qWindow:2.5,qRecasts:2,qRange:6.8,qDamage:35,batDuration:5,bats:3,batDamage:35,batEvery:.5,batSpeed:1.25,batRange:2.5,leash:8,basicDamage:90,basicRange:1.7,bladeWidth:2*3.3*Math.sin(165*Math.PI/360)-2,bladeRange:6.8,bladeDamage:75,rRange:7.5,rDuration:5,rEvery:.5,rDrain:.10,rAttackEvery:.4,rLifesteal:.3,rDamage:180,rSize:1.15,rFeast:.3};
 export const bloodfiend=(g,e)=>e.key==='nosferatu'&&Boolean(e.state?.bloodfiend);
 export function healthRatio(g,e){return Math.max(1,(1+RUNTIME_CHAMPIONS.nosferatu.growth.health*(e.level-1))*(1+upgradeRate(e,'health'))*(1+g.nosHealthAugments(e)));}
 export const capacity=(g,e)=>NOSFERATU.capacity+Math.max(0,healthRatio(g,e)-1)*2000;

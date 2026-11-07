@@ -1,3 +1,4 @@
+import {combatSeconds} from '../src/combat-timing.js';
 import { releaseHeath } from '../src/skills.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -22,7 +23,7 @@ test('battlefield uses compressed horizontal geometry and preserves entity sizes
 });
 test('35 percent additional reload reduction applies to all runtime and future roster champions',()=>{
  close(RULES.reloadEfficiency,.8*.65);const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));assert.ok(roster.every(c=>c.reloadEfficiency===RULES.reloadEfficiency));
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),['jamila','ezra'].includes(key)?1.5:RULES.reload[grade]/.8/.65/(key==='ahab'?1.15:1));}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p}=quiet(key);p.lastCombat=g.time;if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;close(g.reloadInterval(p),key==='ezra'?2.2:key==='jamila'?1.5:combatSeconds(RULES.reload[grade]/.8/.65/(key==='ahab'?1.15:1)));}
 });
 test('growth reaches level ten, caps there, and updates health and score growth',()=>{
  const {g,p}=quiet('meursault');g.award(p,RULES.xp[9],0);assert.equal(p.level,10);close(p.maxHp,4600*1.675);assert.equal(g.bonusStats(p).health,68);g.award(p,1e6,0);assert.equal(p.level,10);assert.ok(Number.isFinite(g.bonusStats(p).power));
@@ -36,7 +37,7 @@ test('waves are faster, base health is higher, and minion scaling stops at twelv
  const mid=spawn(120);assert.ok(mid[0].hp>680);const capped=spawn(720),late=spawn(36000);close(capped[0].hp,680*1.36);close(capped[0].damage,58*1.3);close(late[0].hp,capped[0].hp);close(late[0].damage,capped[0].damage);assert.equal(MINIONS.maxGrowth,6);
 });
 test('Don Quixote moves gradually and damages each target only when the path reaches it',()=>{
- const {g,p,t}=quiet('don');t.x=42.5;t.hp=t.maxHp=10000;const initial=t.hp;assert.ok(g.attack(p,t));close(p.x,40);close(t.hp,initial);g.step(.05);assert.ok(p.x>40&&p.x<41);close(t.hp,initial);run(g,.3);assert.ok(p.x>41.5&&p.x<=40+2.5+p.radius+t.radius+.15);assert.ok(distance(p,t)>=p.radius+t.radius-.01);assert.ok(t.hp<initial);const hp=t.hp;run(g,.1);close(t.hp,hp);
+ const {g,p,t}=quiet('don');t.x=42.5;t.hp=t.maxHp=10000;const initial=t.hp;assert.ok(g.attack(p,t));close(p.x,40);close(t.hp,initial);g.step(.05);assert.ok(p.x>40&&p.x<41);close(t.hp,initial);run(g,.3);assert.ok(p.x>41.5&&p.x<=40+3.5+p.radius+t.radius+.15);run(g,.2);assert.ok(distance(p,t)>=p.radius+t.radius-.01);assert.ok(t.hp<initial);const hp=t.hp;run(g,.1);close(t.hp,hp);
 });
 test('dashes respect a visible speed cap even with movement input, and stun interrupts them',()=>{
  const {g,p,t}=quiet('don');t.x=50;g.input.x=1;g.attack(p,t);let x=p.x;

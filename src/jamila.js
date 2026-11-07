@@ -1,14 +1,15 @@
+import{combatSeconds}from'./combat-timing.js';
 import {RULES} from './data.js';
 import {distance,direction} from './geometry.js';
 import {canOccupy} from './collision.js';
 import * as Infiltration from './infiltration.js';
 
-export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.15,idle:3,idlePerRound:.12,idleReductionCap:1.2,reload:1.5,powerRatio:.55,shield:.015,shieldEvery:4,shieldRoundBonus:10,shieldCap:.075,shieldTime:3,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15,summonTime:.25,dropHeight:8,releaseTime:.35};
+export const JAMILA={ammo:16,range:6.6,damage:50,trooperDamage:15,interval:.2,idle:3,idlePerRound:.12,idleReductionCap:1.2,reload:1.5,powerRatio:.55,shield:.015,shieldEvery:4,shieldRoundBonus:10,shieldCap:.075,shieldTime:3,bonusDamage:.15,qRange:3.5,qDamage:225,qRetreat:4,qSpeed:20,qSlash:.2,qDebuff:.07,qDebuffTime:3,qAmmo:6,duration:10,infiltrationDuration:15,summonTime:.25,dropHeight:8,releaseTime:.35};
 export const isTrooper=e=>Boolean(e.lcaTrooper);
 export const army=(g,e)=>g.units.filter(t=>t.lcaTrooper&&t.owner===e.id&&t.alive&&t.until>g.time);
 export const commander=(g,e)=>e.lcaTrooper?g.units.find(t=>t.id===e.owner):e;
 export const squadBonus=(g,e)=>{const owner=commander(g,e);return owner?.key==='jamila'?army(g,owner).length*.05:0;};
-export const reloadDuration=(g,e)=>JAMILA.reload/Math.max(.2,1+1.5*(g.reloadMultiplier(e)-1));
+export const reloadDuration=(g,e)=>combatSeconds(JAMILA.reload/Math.max(.2,1+1.5*(g.reloadMultiplier(e)-1)));
 export const reloading=e=>Boolean(e.state?.lcaReload);
 export const reloadFraction=e=>Math.min(1,(e.state?.lcaReload?.progress||0)/JAMILA.reload);
 export const idleDelay=e=>JAMILA.idle-Math.min(JAMILA.idleReductionCap,Math.max(0,e.ammo)*JAMILA.idlePerRound);
@@ -25,7 +26,7 @@ export function tickReload(g,e,dt){
  if(e.ammo<1&&e.state.jamilaQ&&!reloading(e))return;
  if(!reloading(e)&&(e.ammo<1||g.time-(e.state.lcaShotAt??-Infinity)>=idleDelay(e)-1e-8))beginReload(g,e);
  const r=e.state.lcaReload;if(!r)return;
- r.progress+=dt*Math.max(.2,1+1.5*(g.reloadMultiplier(e)-1));e.reloadProgress=reloadFraction(e)*reloadDuration(g,e);
+ r.progress+=dt*JAMILA.reload/reloadDuration(g,e);e.reloadProgress=reloadFraction(e)*reloadDuration(g,e);
  if(r.progress+1e-8>=JAMILA.reload){e.ammo=cap;delete e.state.lcaReload;e.reloadProgress=0;}
 }
 export function basic(g,e,p,d){

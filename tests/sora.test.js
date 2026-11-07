@@ -1,3 +1,4 @@
+import {combatSeconds} from '../src/combat-timing.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.js';
@@ -12,7 +13,7 @@ function enemy(g,x=42,y=7,key='faust'){const t=g.makeChampion(key,1,9);Object.as
 function creep(g,x=42,y=7,camp='side'){const t=g.makeNeutral(x,y,camp);t.maxHp=t.hp=1000;return t;}
 function transform(g,p){p.state.unlock=5;assert.ok(g.cast(p,'r',p));}
 test('Sora is an ordinary assassin with requested grades and default two-ammo reload rules',()=>{
- const {g,p}=quiet(),c=CHAMPIONS.sora;assert.equal(Object.keys(CHAMPIONS).length,34);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,35);assert.deepEqual([c.role,c.power,c.health,c.speed,c.ammo,c.reload],['암살',3,2,3,2,3]);close(g.reloadInterval(p),.56/.52);assert.ok(c.growth.power>0);
+ const {g,p}=quiet(),c=CHAMPIONS.sora;assert.equal(Object.keys(CHAMPIONS).length,34);assert.equal(Object.keys(RUNTIME_CHAMPIONS).length,35);assert.deepEqual([c.role,c.power,c.health,c.speed,c.ammo,c.reload],['암살',3,2,3,2,3]);close(g.reloadInterval(p),combatSeconds(.56/.52));assert.ok(c.growth.power>0);
 });
 test('passive marks every three seconds, includes bosses and maintains two expiring six-second marks',()=>{
  const {g,p}=quiet(),a=creep(g,42,7),b=creep(g,43,8),boss=creep(g,41,7,'boss');run(g,2.99);assert.equal(Sora.orders(g,p).length,0);run(g,.02);assert.ok(Sora.marked(g,p,boss));assert.equal(boss.hostile,undefined);boss.x=70;run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.marked(g,p,a));run(g,3);assert.equal(Sora.orders(g,p).length,2);assert.ok(Sora.marked(g,p,b));assert.equal(Sora.marked(g,p,boss),false);
@@ -47,7 +48,7 @@ test('five unlocks override an existing normal-ultimate cooldown and consume exa
  const {g,p}=quiet();p.state.unlock=5;p.rCd=8;assert.equal(skillTargeting(g,p,'r').confirm,false);assert.equal(Sora.abilityInfo(g,p).ultimate,'개화 E.G.O::대행');assert.ok(g.cast(p,'r',p));assert.equal(Sora.ego(g,p),true);close(p.state.unlock,0);close(p.rCd,0);assert.equal(g.cast(p,'r',p),false);
 });
 test('transformation lasts twelve seconds, applies requested stats and restores original HP ratio and names',()=>{
- const {g,p}=quiet();p.hp=p.maxHp*.4;const hp=p.maxHp,power=g.powerScale(p),reload=g.reloadInterval(p),speed=g.speed(p);transform(g,p);close(p.maxHp,hp*.8);close(p.hp/p.maxHp,.4);close(g.powerScale(p)/power,1.12);close(g.reloadInterval(p),reload/1.15);close(g.speed(p)/speed,1.1);assert.equal(Sora.abilityInfo(g,p).basic,'대행: 새기기');run(g,11.9);assert.equal(Sora.ego(g,p),true);run(g,.12);assert.equal(Sora.ego(g,p),false);close(p.maxHp,hp);close(p.hp/p.maxHp,.4);assert.equal(Sora.abilityInfo(g,p).ultimate,'단말기로 정해진 지령');close(g.powerScale(p),power);
+ const {g,p}=quiet();p.hp=p.maxHp*.4;const hp=p.maxHp,power=g.powerScale(p),reload=g.reloadInterval(p),speed=g.speed(p);transform(g,p);close(p.maxHp,hp*.8);close(p.hp/p.maxHp,.4);close(g.powerScale(p)/power,1.12);close(g.reloadInterval(p),combatSeconds(.56/.52/1.15));close(g.speed(p)/speed,1.1);assert.equal(Sora.abilityInfo(g,p).basic,'대행: 새기기');run(g,11.9);assert.equal(Sora.ego(g,p),true);run(g,.12);assert.equal(Sora.ego(g,p),false);close(p.maxHp,hp);close(p.hp/p.maxHp,.4);assert.equal(Sora.abilityInfo(g,p).ultimate,'단말기로 정해진 지령');close(g.powerScale(p),power);
 });
 test('EGO basic hits in all directions, permits reload during attacking, and grants temporary five percent stride',()=>{
  const {g,p}=quiet(),front=enemy(g,42,7),back=enemy(g,38,7);transform(g,p);const speed=g.speed(p);g.attack(p,front);assert.ok(front.hp<10000&&back.hp<10000);close(10000-front.hp,110*.9*1.12);close(g.speed(p)-speed,3.8*.05);assert.equal(g.reloadPaused(p),false);p.ammo=0;p.reloadProgress=0;g.input.fire=true;run(g,.15);assert.ok(p.reloadProgress>0);g.input.fire=false;run(g,.25);close(g.speed(p),speed);

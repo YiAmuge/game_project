@@ -31,11 +31,11 @@ async def main():
     assert await p.evaluate('i=>__moba.game.player.state.weapon===i',index)
     await p.evaluate('()=>{const g=__moba.game,p=g.player;target(p.x+2.8,p.y);if(!g.attack(p,{x:p.x+8,y:p.y}))throw new Error("workshop attack rejected");}')
     await p.evaluate('s=>advance(s)',span);await p.wait_for_timeout(100);await p.screenshot(path=str(ART/f'{mode}-weapon-{index}.png'));await p.evaluate('s=>advance(s)',.85-span)
-   await p.evaluate('advance(.8)');assert await p.evaluate('__moba.game.player.ammo===4&&__moba.game.player.state.weapon===0')
+   await p.evaluate('advance(1.5)');assert await p.evaluate('__moba.game.player.ammo===4&&__moba.game.player.state.weapon===0')
    before=await p.evaluate('()=>{const g=__moba.game,p=g.player;return{ammo:p.ammo,weapon:p.state.weapon,last:p.state.ezraLastWeapon};}')
    if mobile:await p.locator('#q-btn').tap()
    else:await p.evaluate('__moba.game.cast(__moba.game.player,"q",{x:__moba.game.player.x+1,y:20})')
-   await p.evaluate('advance(.3)');assert await p.evaluate('(before)=>{const p=__moba.game.player;return p.ammo===before.ammo&&p.state.weapon===before.weapon&&p.qCd>0;}',before)
+   await p.evaluate('advance(.55)');assert await p.evaluate('(before)=>{const p=__moba.game.player;return p.ammo===before.ammo&&p.state.weapon===before.weapon&&p.qCd>0;}',before)
    await p.evaluate('()=>{const g=__moba.game,p=g.player;p.ammo=2;if(!g.cast(p,"r",{x:p.x+4,y:p.y}))throw new Error("axe start rejected");}');await p.wait_for_function('document.querySelector("#q-btn").disabled',timeout=5000)
    for index in range(4):
     await p.evaluate('()=>{const g=__moba.game,p=g.player;target(p.x+4,p.y);target(p.x+1,p.y);if(!g.attack(p,{x:p.x+8,y:p.y}))throw new Error("axe attack rejected");advance(.22);}')

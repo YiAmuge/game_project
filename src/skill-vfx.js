@@ -88,13 +88,15 @@ export class SkillVFX {
    }
    if(key==='ppui'&&fx.damageKind==='basic'&&['slash','thrust'].includes(fx.type)){observed.add(key);continue;}
    if(key==='dongbaek'&&fx.type==='burst')continue;
+   // The slam's dark inward field is drawn by ezra-vfx, without an opaque gold sweep.
+   if(key==='ezra'&&fx.weaponIndex===3&&fx.type==='slash')continue;
    if(['ppui','outis'].includes(key)&&fx.slot==='r'&&['slash','thrust'].includes(fx.type))continue;
-   const pressure=fx.type==='yanCleave',hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type});
+   const pressure=fx.type==='yanCleave',hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type,weaponIndex:fx.weaponIndex});
    const angle=fx.angle??(fx.to?Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x):0),shape=hit?null:visualShape(fx),kind=hit?s.shape:fx.type==='yanCleave'?'impact':['ishmael','meursault','heathcliff'].includes(key)?'impact':key==='yan'&&fx.type==='yanWave'?'slash':recipe.kind;
    if(key==='kim'&&fx.spread>2)s.color='#a0cce8';
    observed.add(key);
    if(hit){const id='hit/'+(target?.id??[fx.x,fx.y].join('/'));this.lastHits??=new Map();if(game.time-(this.lastHits.get(id)??-99)<.065)continue;this.lastHits.set(id,game.time);if(this.lastHits.size>300)this.lastHits.clear();}
-   this.emit(kind,fx.type==='whipArc'?fx.to:fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.78:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',beam:fx.type==='guboLaser',body:hit,shape,pressure,count:pressure?0:hit?12:undefined,light:pressure?0:undefined,life:hit?.3:undefined});
+   this.emit(kind,fx.type==='whipArc'?fx.to:fx,game.time-Math.max(0,fx.maxLife-fx.life),{...s,radius:hit?.78:shape.range,angle,height:hit?bodyHeight(target||{kind:'champion'}):0,ownerId:hit?target?.id:fx.type==='ishmaelShock'?source?.id:undefined,follow:fx.type==='ishmaelShock',beam:fx.type==='guboLaser',body:hit,shape,pressure,count:pressure?0:hit?12:undefined,light:pressure?0:key==='ezra'&&fx.weaponIndex===2?.4:undefined,life:hit?.3:undefined});
    if(key==='gahwan'&&hit)this.emit('impact',fx,game.time,{color:'#8a3039',accent:'#a9555d',dark:'#38171f',element:'blood',height:bodyHeight(target||{kind:'champion'}),body:true,ownerId:target?.id,count:3,life:.2,radius:.2});
   }
   for(const p of game.projectiles){
@@ -107,7 +109,7 @@ export class SkillVFX {
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
-   if(!e.attackSerial||e.trainingDummy||['dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
+   if(!e.attackSerial||e.trainingDummy||['ezra','dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
    const attack=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'impact'})[attack];if(!kind)continue;
    const s=combatStyle(e.key,game,e,{kind:'basic'}),angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),shape={kind:attack==='sweep'?'circle':attack==='punch'?'rect':'cone',range:radius,width:radius,spread:basicFanAngle(e.key),angle};
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});

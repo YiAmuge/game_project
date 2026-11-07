@@ -27,7 +27,7 @@ test('range bag grants 1.3 to every area/piercing basic and 2.5 to single projec
 });
 test('charged ranges and actual dash damage follow the adjusted area range',()=>{
  const h=arena('hohenheim');h.p.augments=['range7'];h.g.attack(h.p,{x:51,y:25});h.p.state.hohenCharge.progress=1.5;near(Hohenheim.chargeShape(h.g,h.p,{x:51,y:25}).range,10.3);
- const d=arena('don'),t=foe(d.g,43.65);d.p.augments=['range7'];d.g.attack(d.p,{x:50,y:25});near(d.p.motion.total,3.8);run(d.g,.5);assert.ok(t.hp<100000);
+ const d=arena('don'),t=foe(d.g,43.65);d.p.augments=['range7'];d.g.attack(d.p,{x:50,y:25});near(d.p.motion.total,4.8);run(d.g,.5);assert.ok(t.hp<100000);
 });
 test('Yan alone buys Written Order for 250 without procedure prerequisites and refunds the discounted purchase proportionally',()=>{
  const{g,p}=arena();g.training=false;g.canUpgrade=()=>true;p.gold=249;assert.ok(A.unlockedItem(p,'writtenOrder'));assert.equal(g.buyAugment(p,'writtenOrder'),false);p.gold=250;assert.ok(g.buyAugment(p,'writtenOrder'));near(p.gold,0);assert.ok(p.augments.includes('writtenOrder'));assert.ok(g.sellAugment(p,'writtenOrder'));near(p.gold,175);

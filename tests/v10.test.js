@@ -1,3 +1,4 @@
+import {combatSeconds} from '../src/combat-timing.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -98,7 +99,7 @@ test('Queequeg ultimate preserves the infinite link and shares four seconds of m
  const {g,p}=quiet('queequeg'),a=ally(g,'faust');g.cast(p,'q',a);run(g,2);const speed=g.speed(a);g.cast(p,'r',p);assert.equal(p.state.tether.until,Infinity);close(a.buffs.queequegUlt-g.time,4);close(g.speed(a)/speed,1.25);run(g,4.1);assert.equal(g.buff(a,'queequegUlt'),false);
 });
 test('Ahab starts and respawns with cover, is sniper and gains range plus baseline reload',()=>{
- const {g,p,t}=quiet('ahab');assert.equal(CHAMPIONS.ahab.role,'저격');assert.equal(p.state.order,'cover');close(p.range,10.8);close(g.reloadInterval(p),RULES.reload[CHAMPIONS.ahab.reload]/(RULES.reloadEfficiency*1.15));g.kill(p,t);g.time=p.respawnAt;g.step(.01);assert.equal(p.state.order,'cover');assert.ok(g.buff(p,'ahabOrder'));
+ const {g,p,t}=quiet('ahab');assert.equal(CHAMPIONS.ahab.role,'저격');assert.equal(p.state.order,'cover');close(p.range,10.8);close(g.reloadInterval(p),combatSeconds(RULES.reload[CHAMPIONS.ahab.reload]/(RULES.reloadEfficiency*1.15)));g.kill(p,t);g.time=p.respawnAt;g.step(.01);assert.equal(p.state.order,'cover');assert.ok(g.buff(p,'ahabOrder'));
 });
 test('Ahab cover gives allies thirty percent damage while granting only the captain three gated reload stacks',()=>{
  const {g,p,t}=quiet('ahab'),a=ally(g,'meursault',41,8);const baseline=g.deal(a,t,100);t.state.harpoon={source:p.id,team:0,until:20};close(g.deal(a,t,100),baseline*1.3);assert.equal(p.state.coverStacks,1);assert.equal(a.state.coverStacks,undefined);g.deal(a,t,100);assert.equal(p.state.coverStacks,1);for(let i=1;i<=4;i++){g.time=i*1.61;g.deal(a,t,100);}assert.equal(p.state.coverStacks,3);close(p.buffs.ahabCover-g.time,5);a.x=60;close(g.deal(a,t,100),baseline);
@@ -115,8 +116,8 @@ test('consumables have no live module, champion resource, purchase, use or codex
 test('Starbuck joins ordinary drafts with requested grades, harpoon damage and jungle rewards',()=>{
  const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,34);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,55*1.1);
 });
-test('Starbuck every basic stabs once then advances 2.75 with either full or partial ammo',()=>{
- const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,200*.9);close(p.motion.total,2.75);run(g,.4);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.ok(p.motion);close(p.motion.total,2.75);
+test('Starbuck every basic hits along a 3.75 dash with either full or partial ammo',()=>{
+ const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,0);close(p.motion.total,3.75);run(g,.5);close(hp-t.hp,200*.9);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.ok(p.motion);close(p.motion.total,3.75);
 });
 test('Starbuck tactical hits five times at .3 intervals with increasing damage and stops after a miss',()=>{
  const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p)hits.push({at:g.time,n});return deal(e,t,n,o);};g.cast(p,'q',t);run(g,1.9);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.3*i,.02);close(hits[i].n,150*1.045**i);}close(g.stat(t,'slow'),.13);p.qCd=0;t.y=14;hits.length=0;g.cast(p,'q',{x:45,y:7});run(g,2);assert.equal(hits.length,0);

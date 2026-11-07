@@ -1,3 +1,4 @@
+import{EZRA_WEAPONS,EZRA_AXE}from'./ezra-data.js';
 import{FAN_ANGLE,basicFanAngle}from'./data.js';
 // Rendering palettes are intentional per attack, independent of team/skin tint.
 export const NEUTRAL={color:'#e6e7e9',accent:'#ffffff',dark:'#45484f',element:'metal'};
@@ -17,8 +18,9 @@ export const CHAMPION_STYLES={
  ahab:style('#3e7170','water','#9fcac2','#193437'),starbuck:style('#3d7270','water','#abd1c5','#1c363d'),
  sora:style('#d9e7f3','metal','#ffffff','#627487'),yan:style('#7dadda','metal','#c6e2f7','#2b4767'),
 };
-export function combatStyle(key,g,e,{kind='basic',slot,type}={}){
+export function combatStyle(key,g,e,{kind='basic',slot,type,weaponIndex}={}){
  let s={...(CHAMPION_STYLES[key]||NEUTRAL)};
+ if(key==='ezra'){const index=weaponIndex??(e?.state?.ezraAttack?.until>g.time?e.state.ezraAttack.weapon:e&&g.buff(e,'ezraUlt')?4:e?.state?.weapon??0),w=index===4?EZRA_AXE:EZRA_WEAPONS[index];s=style(w.color,index===2?'electric':'metal',index===2?'#d7ffff':w.color,index===3?'#21152a':'#34313d');}
  if(key==='sora'&&e&&g.buff(e,'soraEgo'))s=style('#171820','metal','#59606a','#050609');
  if(key==='marton'&&kind==='basic'&&e&&e.state.martonGroundStrike!==e.attackSerial)s=style('#8d6e46','wood','#c6ae7a','#302218');
  if(key==='yan'&&e&&g.buff(e,'yanDistorted'))s=style('#13141b','liquid','#454853','#030407');
@@ -44,14 +46,14 @@ export function combatStyle(key,g,e,{kind='basic',slot,type}={}){
  return s;
 }
 export function hitStyle(g,source,fx){
- const s=combatStyle(source?.key||fx.theme,g,source,{kind:'hit',slot:fx.slot,type:fx.variant||fx.type});
+ const s=combatStyle(source?.key||fx.theme,g,source,{kind:'hit',slot:fx.slot,type:fx.variant||fx.type,weaponIndex:fx.weaponIndex});
  if(source?.key==='sinclair'&&fx.slot==='q')return {...NEUTRAL,shape:'pierce'};
  if(source?.key==='ryoshu'&&fx.slot==='q')return {...NEUTRAL,shape:'slash'};
  return {...s,shape:(fx.variant||fx.type)==='nellyProc'?'slash':'impact'};
 }
 export function bodyHeight(e){return (e.kind==='champion'||e.lcaTrooper)?1.25:e.kind==='tower'?2.1:e.kind==='core'?1.6:e.camp==='boss'?1.1:e.kind==='neutral'?.65:e.kind==='summon'?.9:.35;}
 export function visualShape(fx){
- if(fx.shape)return fx.shape.kind==='cone'?{...fx.shape,spread:fx.shape.spread>=Math.PI*2?fx.shape.spread:fx.damageKind==='basic'?(fx.shape.spread??basicFanAngle(fx.theme)):FAN_ANGLE,angle:fx.shape.angle??fx.angle??0}:fx.shape.kind==='rect'?{...fx.shape,angle:fx.shape.angle??fx.angle??0}:fx.shape;
+ if(fx.shape)return fx.shape.kind==='cone'?{...fx.shape,spread:fx.theme==='ezra'?fx.shape.spread:fx.shape.spread>=Math.PI*2?fx.shape.spread:fx.damageKind==='basic'?(fx.shape.spread??basicFanAngle(fx.theme)):FAN_ANGLE,angle:fx.shape.angle??fx.angle??0}:fx.shape.kind==='rect'?{...fx.shape,angle:fx.shape.angle??fx.angle??0}:fx.shape;
  const angle=fx.angle||0,r=fx.r||1;
  if(fx.type==='yanWave')return {kind:'cone',range:r,spread:FAN_ANGLE,angle};
  if(fx.type==='yanCleave')return {kind:'rect',range:Math.hypot(fx.to.x-fx.x,fx.to.y-fx.y),width:fx.width,angle:Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x)};

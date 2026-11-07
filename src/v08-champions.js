@@ -32,7 +32,7 @@ export function cast(g,e,slot,p,d){
  if(e.key==='hohenheim'){
   Hohenheim.cancelCharge(e);
   if(slot==='q'){
-   g.addBuff(e,'hohenheimStride',1);{let hit=false;g.startMotion(e,d,2.5,{phaseEnemies:true,onStep:(from,to)=>{
+   g.addBuff(e,'hohenheimStride',1);{let hit=false;g.startMotion(e,d,3.5,{phaseEnemies:true,onStep:(from,to)=>{
     if(hit)return;const t=g.units.filter(t=>g.hostile(e,t)&&segmentDistance(t,from,to)<=t.radius+.6&&g.clearLine(e,t)).sort((a,b)=>distance(from,a)-distance(from,b))[0];if(!t)return;
     hit=true;g.deal(e,t,180);if(t.kind==='champion'){g.status(t,'stun',1,.6,e);g.addBuff(e,'hohenheimHitStride',1);}delete e.motion;g.startMotion(e,{x:-d.x,y:-d.y},2,{phaseEnemies:true});
    }});}

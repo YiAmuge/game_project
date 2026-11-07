@@ -1,3 +1,4 @@
+import {combatSeconds} from '../src/combat-timing.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game,damageFormula} from '../src/game.js';
@@ -17,17 +18,17 @@ function arena(key='jamila'){
 function enemy(g,x=45,y=25){const e=g.makeChampion('faust',1,g.nextId+20);Object.assign(e,{x,y,maxHp:100000,hp:100000,armor:0,lastDamageAt:999,lastAttackAt:999});return e;}
 test('Jamila is a bottom marksman/protector with the specified stats, ammo and cadence',()=>{
  const {g,p}=arena();assert.deepEqual(CHAMPIONS.jamila.roles,['저격','보호']);assert.equal(CHAMPIONS.jamila.recommendedPosition,'bottom');
- near(p.maxHp,3400);near(g.armor(p),40);near(g.speed(p),3.45);near(g.attackInterval(p),.15);near(g.reloadInterval(p),1.5);near(g.ammoCap(p),16);near(g.bonusStats(p).reload,0);
+ near(p.maxHp,3400);near(g.armor(p),40);near(g.speed(p),3.45);near(g.attackInterval(p),.2);near(g.reloadInterval(p),1.5);near(g.ammoCap(p),16);near(g.bonusStats(p).reload,0);
 });
 test('one rifle round uses range 6.6 and 55 percent of power correction',()=>{
  const {g,p}=arena(),e=enemy(g);assert.ok(g.attack(p,e));assert.equal(g.projectiles.length,1);near(g.projectiles[0].remaining,6.6);assert.equal(p.ammo,15);run(g,.2);
  const normal=damageFormula(1,1,1)*g.powerScale(p);near(100000-e.hp,50*(1+(normal-1)*.55)*1.15);near(g.shield(p),0);
 });
 test('one-point reload upgrades gain 1.5 times their percentage and extra magazines are quadrupled',()=>{
- const {g,p}=arena();g.buy(p,'reload');near(g.reloadInterval(p),1.5/1.09);p.augments=['magazine2'];near(g.ammoCap(p),24);
+ const {g,p}=arena();g.buy(p,'reload');near(g.reloadInterval(p),combatSeconds(1.5/1.09));p.augments=['magazine2'];near(g.ammoCap(p),24);
 });
-test('holding fire produces actual shots every 0.15 seconds without accumulating an extra frame',()=>{
- const {g,p}=arena();g.input.fire=true;g.input.aim={x:27,y:25};run(g,1.05);const shots=g.soundEvents.filter(e=>e.kind==='shot'&&e.sourceId===p.id);assert.equal(shots.length,7);for(let i=1;i<shots.length;i++)near(shots[i].at-shots[i-1].at,.15);
+test('holding fire produces actual shots every 0.2 seconds without accumulating an extra frame',()=>{
+ const {g,p}=arena();g.input.fire=true;g.input.aim={x:27,y:25};run(g,1.05);const shots=g.soundEvents.filter(e=>e.kind==='shot'&&e.sourceId===p.id);assert.equal(shots.length,6);for(let i=1;i<shots.length;i++)near(shots[i].at-shots[i-1].at,.2);
 });
 test('a partial magazine starts early according to remaining rounds and fills after a complete 1.5 second reload',()=>{
  const {g,p}=arena();g.attack(p,{x:47,y:25});run(g,1.79);assert.equal(p.ammo,15);assert.equal(Jamila.reloading(p),false);

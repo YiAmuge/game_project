@@ -2,7 +2,7 @@ import{ARCANA_DATA}from'./arcana-data.js';
 import{EZRA_DATA}from'./ezra-data.js';
 export const FAN_ANGLE=165*Math.PI/180;
 export const BASIC_FAN_ANGLE=145*Math.PI/180;
-export const basicFanAngle=key=>key==='starbuck'?.975*1.2:key==='nosferatu'?Math.PI:key==='dongbaek'?BASIC_FAN_ANGLE-30*Math.PI/180:BASIC_FAN_ANGLE;
+export const basicFanAngle=key=>key==='sinclair'?150*Math.PI/180:key==='starbuck'?.975*1.2:key==='nosferatu'?Math.PI:key==='dongbaek'?BASIC_FAN_ANGLE-30*Math.PI/180:BASIC_FAN_ANGLE;
 import {KROMER_DATA} from './kromer-data.js';
 import {JAMILA_DATA} from './jamila-data.js';
 import { CHAMPION_TEXT } from './champion-text.js';
@@ -92,7 +92,7 @@ CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=5.2;CHAMPIONS.rodya.brief='검기로 
 CHAMPIONS.queen.range=7.7;CHAMPIONS.queen.damage=195;CHAMPIONS.nosferatu.damage=90;CHAMPIONS.kromer.damage=175;CHAMPIONS.gubo.damage=240;CHAMPIONS.rudolph.damage=57;CHAMPIONS.marton.color='#02ebf7';
 CHAMPIONS.outis.damage=215;CHAMPIONS.alisa.damage=100;
 
-CHAMPIONS.honglu.q=10;CHAMPIONS.queequeg.q=.7;CHAMPIONS.don.q=8;CHAMPIONS.don.range=2.5;
+CHAMPIONS.honglu.q=10;CHAMPIONS.queequeg.q=.7;CHAMPIONS.don.q=8;CHAMPIONS.don.range=3.5;CHAMPIONS.starbuck.range=3.75;CHAMPIONS.sinclair.range=2.5;
 
 CHAMPIONS.marton.range=5;
 CHAMPIONS.queequeg.range=3;

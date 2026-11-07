@@ -1,6 +1,7 @@
+import{combatSeconds}from'./combat-timing.js';
 import{championDescription}from'./champion-reference.js';
 import { settleBody } from './collision.js';
-import { RULES, WORLD, FOUNTAIN_AREAS } from './data.js';
+import { WORLD, FOUNTAIN_AREAS } from './data.js';
 import { clamp,distance,direction } from './geometry.js';
 
 // Unspecified tuning is documented in the codex: Q 9s, R radius 7.5, distorted Q 360 damage.
@@ -9,7 +10,7 @@ export const distorted=(g,e)=>e.key==='yan'&&g.buff(e,'yanDistorted');
 export const barraging=(g,e)=>e.key==='yan'&&e.state?.yanBarrage?.until>g.time;
 export const ready=(g,e)=>e.key==='yan'&&!distorted(g,e)&&(e.state.ominous||0)>=YAN.maxPower;
 export const form=(g,e)=>distorted(g,e)?'yanDistorted':e.key;
-export const reloadRate=(g,e)=>(RULES.reload[2]/RULES.reloadEfficiency)/g.reloadInterval(e);
+export const reloadRate=(g,e)=>g.reloadMultiplier(e);
 export const ammoBonus=(g,e)=>1+.1*g.ammoCap(e);
 export function init(g,e){if(e.key==='yan'){e.state.ominous=0;e.state.falseOrders={};e.state.orderLocks={};}}
 export function marked(g,e,t){return e.key==='yan'&&e.state.falseOrders?.[t.id]?.until>g.time;}
@@ -41,7 +42,7 @@ export function chargeShape(g,e,p){
 }
 export function attack(g,e,p){
  g.cancelRecall(e);e.lastAttackAt=g.time;e.facing=Math.atan2(p.y-e.y,p.x-e.x);
- if(distorted(g,e)){command(g,e,p);e.attackCd=.15;return true;}
+ if(distorted(g,e)){command(g,e,p);e.attackCd=.2;return true;}
  if(e.state.yanCharge){e.state.yanCharge.aim={...p};return false;}
  e.state.yanCharge={progress:0,startedAt:g.time,aim:{...p}};if(e.state.yanInstantUntil>g.time){delete e.state.yanInstantUntil;e.state.yanCharge.progress=YAN.chargeTime;return release(g,e,p);}return true;
 }
@@ -49,7 +50,7 @@ export function release(g,e,p){
  if(e.key!=='yan'||!e.state.yanCharge)return false;
  if(!e.alive||distorted(g,e)||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall){cancelCharge(e);return false;}
  const shape=chargeShape(g,e,p||e.state.yanCharge.aim),elapsed=Math.max(0,g.time-e.state.yanCharge.startedAt);cancelCharge(e);
- g.emitSound?.('swing',e);e.attackCd=Math.max(g.attackInterval(e),.85-elapsed);e.lastAttackAt=g.time;e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.facing=e.attackFacing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;
+ g.emitSound?.('swing',e);e.attackCd=combatSeconds(Math.max(g.attackInterval(e),.9-elapsed));e.lastAttackAt=g.time;e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.facing=e.attackFacing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;
  g.action(e,'basic',()=>{
   for(const t of [...g.units])if(g.hostile(e,t)&&g.clearLine(e,t)){
    const dx=t.x-e.x,dy=t.y-e.y,along=dx*shape.d.x+dy*shape.d.y,side=Math.abs(dy*shape.d.x-dx*shape.d.y);
@@ -105,7 +106,7 @@ export function cast(g,e,slot,p){
   if(ready(g,e))transform(g,e);
   else{for(const m of orders(g,e))m.until=g.time+6;for(const t of g.champions(1-e.team).filter(t=>g.hostile(e,t)&&distance(e,t)<=YAN.radius+t.radius&&g.visibleTo(e.team,t)&&g.clearLine(e,t)))mark(g,e,t,{ultimate:true});}
  }else if(distorted(g,e)){
-  const point={...p};g.effects.push({source:e.id,theme:'yan',slot:'q',type:'yanSwordWarning',...point,r:YAN.distortedQRadius,life:YAN.distortedQDelay,maxLife:YAN.distortedQDelay});
+  const point={...p};g.effects.push({source:e.id,theme:'yan',slot:'q',type:'yanSwordWarning',...point,r:YAN.distortedQRadius,innerR:YAN.distortedQInner,life:YAN.distortedQDelay,maxLife:YAN.distortedQDelay});
   g.schedule(e,YAN.distortedQDelay,()=>{
    for(const t of [...g.units])if(g.hostile(e,t)&&distance(point,t)<=YAN.distortedQRadius+t.radius&&g.clearLine(point,t)){const inner=distance(point,t)<=YAN.distortedQInner+t.radius;g.deal(e,t,YAN.distortedQDamage+(inner?YAN.distortedQBonus:0));g.status(t,'slow',.8,1.5,e);if(inner)g.status(t,'stun',1,YAN.distortedQStun,e);}
    g.effects.push({source:e.id,theme:'yan',type:'yanGreatsword',...point,r:YAN.distortedQRadius,life:.7,maxLife:.7});
@@ -132,7 +133,7 @@ export function tickHand(g,h,dt){
  if(g.blocked(h.x,h.y,h.radius)||distance(h,e)>YAN.handLeash)Object.assign(h,safeHandPoint(g,e,desired));
  h.facing=target?Math.atan2(target.y-h.y,target.x-h.x):e.facing||0;
  if(g.time+1e-8>=h.nextStrike){
-  h.nextStrike=g.time+YAN.handEvery/reloadRate(g,e);h.struckAt=g.time;
+  h.nextStrike=g.time+combatSeconds(YAN.handEvery/reloadRate(g,e));h.struckAt=g.time;
   g.action(e,'skill',()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(h,t)<=YAN.handRadius+t.radius&&g.clearLine(h,t)){
    g.deal(e,t,YAN.handDamage*ammoBonus(g,e));if(t.id===h.targetId)g.status(t,'yanLock',.3,YAN.lockDuration,e);
   }});

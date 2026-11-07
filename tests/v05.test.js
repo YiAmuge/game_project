@@ -1,3 +1,4 @@
+import {combatSeconds} from '../src/combat-timing.js';
 import * as Don from '../src/don.js';
 import test from 'node:test';
 import { release as releaseYan } from '../src/yan.js';
@@ -21,7 +22,7 @@ test('all ordinary and experimental champions have individual positive growth an
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);if(key==='nosferatu')close(p.maxHp,baseHp);else assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);if(key==='dongrang')close(g.powerScale(p),basePower);else assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));if(key==='yan')releaseYan(g,p,t);if(key==='hohenheim')releaseHohenheim(g,p,t);close(p.attackCd,key==='yan'?.85:c.attackTime*(c.attackTime<=.4?1:1.3));}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));if(key==='yan')releaseYan(g,p,t);if(key==='hohenheim')releaseHohenheim(g,p,t);close(p.attackCd,key==='yan'?.9:combatSeconds(c.attackTime*(c.attackTime<=.4?1:1.3)));}
 });
 test('reload pauses throughout ammo consumption, preserving partial progress, and resumes after firing',()=>{
  const {g,p,t}=quiet();p.ammo=2;p.reloadProgress=.25;g.attack(p,t);run(g,.2);close(p.reloadProgress,.25);run(g,.7);assert.ok(p.reloadProgress>.25);
@@ -78,7 +79,7 @@ test('final damage augment procs once per 7 seconds and respects final post-armo
  const {g,p,t}=quiet();p.augments=['finalBullet'];t.armor=100;let hp=t.hp;const hit=g.deal(p,t,100);close(hp-t.hp,hit*1.07);hp=t.hp;g.deal(p,t,100);close(hp-t.hp,hit);g.time=7.1;hp=t.hp;g.deal(p,t,100);close(hp-t.hp,hit*1.07);
 });
 test('reload augment stacks to five and decays one every three seconds',()=>{
- const {g,p,t}=quiet();p.augments=['reloadStacks'];const base=g.reloadInterval(p);for(let i=0;i<5;i++)g.deal(p,t,1);assert.equal(p.state.augReloadStacks,5);close(g.reloadInterval(p),base/1.25);run(g,3.1);assert.equal(p.state.augReloadStacks,4);run(g,3);assert.equal(p.state.augReloadStacks,3);run(g,9);assert.equal(p.state.augReloadStacks,0);
+ const {g,p,t}=quiet();p.augments=['reloadStacks'];const base=g.reloadInterval(p);for(let i=0;i<5;i++)g.deal(p,t,1);assert.equal(p.state.augReloadStacks,5);close(g.reloadMultiplier(p),1.25);close(g.reloadInterval(p),combatSeconds(RULES.reload[CHAMPIONS[p.key].reload]/RULES.reloadEfficiency/1.25));run(g,3.1);assert.equal(p.state.augReloadStacks,4);run(g,3);assert.equal(p.state.augReloadStacks,3);run(g,9);assert.equal(p.state.augReloadStacks,0);
 });
 test('K ampule restores fatal damage once per sixty seconds and clears control',()=>{
  const {g,p,t}=quiet();p.augments=['kAmpule'];p.hp=1;g.status(p,'stun',1,5,t);g.deal(t,p,99999,{fixed:true});assert.ok(p.alive);close(p.hp,p.maxHp*.5);close(g.stat(p,'stun'),0);close(p.state.ampuleReady,60);assert.ok(p.ccImmuneUntil>g.time);g.time=1.1;g.deal(t,p,99999,{fixed:true});assert.equal(p.alive,false);

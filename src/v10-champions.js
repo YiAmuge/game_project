@@ -3,11 +3,11 @@ import { dash,area,dashLength } from './skills.js';
 import { canOccupy,settleBody } from './collision.js';
 import { trapPoint } from './confinement.js';
 
-export const STARBUCK={basicRange:3.38,basicDash:2.75,qDamage:150,qRange:2.782,qAngle:1.6478,qInterval:.3,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320,trapDuration:2.5};
+export const STARBUCK={basicRange:3.75,basicDash:3.75,qDamage:150,qRange:2.782,qAngle:1.6478,qInterval:.3,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320,trapDuration:2.5};
 export function validate(g,e,slot,p){return e.key!=='starbuck'||slot!=='r'||!g.blocked(p.x,p.y,e.radius)&&canOccupy(g,e,trapPoint(g,e,p),{phaseEnemies:true});}
 export function basic(g,e,p,d){
  if(e.key!=='starbuck')return false;
- g.cone(e,d,g.attackRange(e),.975*1.2,200);dash(g,e,d,dashLength(e,STARBUCK.basicDash),0,()=>{},{offensive:true});return true;
+ dash(g,e,d,dashLength(e,STARBUCK.basicDash),200,()=>{},{hitWidth:.75,exactWidth:true});return true;
 }
 export function cast(g,e,slot,p,d){
  if(e.key!=='starbuck')return false;

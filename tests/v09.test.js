@@ -44,7 +44,7 @@ test('Marton maximum attack range is five without changing its ground effect rad
  const {g,p,t}=quiet('marton');close(g.attackRange(p),5);t.x=47.8;g.attack(p,{x:50,y:7});close(t.hp,100000);p.attackCd=0;t.x=46.8;g.attack(p,{x:50,y:7});assert.ok(t.hp<100000);
 });
 test('Myo frenzy reloads during basic attacks, grants sixty percent reload and removes boosted dash length',()=>{
- const {g,p,t}=quiet('myo');const reload=g.reloadInterval(p);g.cast(p,'r',p);close(g.reloadInterval(p),reload/1.6);close(g.attackRange(p),2.4);g.attack(p,t);close(p.motion.total,2.4);assert.equal(p.motion.actionKind,'basic');p.ammo=0;p.reloadProgress=0;g.input.fire=true;run(g,.15);assert.ok(p.reloadProgress>0);
+ const {g,p,t}=quiet('myo');const reload=g.reloadInterval(p);g.cast(p,'r',p);close(g.reloadMultiplier(p),1.6);close(g.reloadInterval(p),.7);close(g.attackRange(p),2.4);g.attack(p,t);close(p.motion.total,2.4);assert.equal(p.motion.actionKind,'basic');p.ammo=0;p.reloadProgress=0;g.input.fire=true;run(g,.15);assert.ok(p.reloadProgress>0);
 });
 test('Myo fifty percent reduction applies only during an active frenzy basic dash',()=>{
  const {g,p,t}=quiet('myo');const plain=g.deal(t,p,100);g.cast(p,'r',p);g.attack(p,{x:47,y:7});close(g.deal(t,p,100)/plain,.5);run(g,.4);close(g.deal(t,p,100),plain);p.attackCd=0;g.attack(p,t);delete p.buffs.rabbitFrenzy;close(g.deal(t,p,100),plain);

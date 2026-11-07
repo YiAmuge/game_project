@@ -24,13 +24,14 @@ export function basic(g,e,p,d){
   dash(g,e,d,g.attackRange(e),t=>220*(g.buff(e,'rabbitFrenzy')?1.3:1)*(t.state?.rabbitMark?.[e.id]>g.time?1.25:1),()=>{},{speed:10.4,maxSpeed:10.4});return true;
  }
  if(e.key==='dongbaek'){
-  e.state.flowerHits??={};
+  let chain=e.state.flowerChain;if(!chain||chain.at<g.time-4)chain=e.state.flowerChain={n:0,at:g.time};
+  const damage=165*(e.state.usedPetal?1.1:1)*(1+.12*chain.n);let hit=false;
   g.emitSound('petal',e,{damageKind:'basic',phase:'dongbaek-bloom'});
   for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t)){
    const td=direction(e,t);if(td.x*d.x+td.y*d.y<Math.cos(basicFanAngle(e.key)/2))continue;
-   let hits=e.state.flowerHits[t.id];if(!hits||hits.at<g.time-4)hits=e.state.flowerHits[t.id]={n:0,at:g.time};
-   g.deal(e,t,165*(e.state.usedPetal?1.1:1)*(1+.12*Math.min(4,hits.n)));hits.n++;hits.at=g.time;
+   const shield=g.shield(t),actual=g.deal(e,t,damage);if(actual>0||g.shield(t)<shield)hit=true;
   }
+  if(hit){chain.n=Math.min(4,chain.n+1);chain.at=g.time;}
   if(e.state.usedPetal&&e.state.petals===0)e.status.disarm={amount:1,until:g.time+2.85,theme:e.key};
   g.effects.push({source:e.id,damageKind:'basic',type:'petalFan',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),spread:basicFanAngle(e.key),r:g.attackRange(e),shape:{kind:'cone',range:g.attackRange(e),spread:basicFanAngle(e.key),angle:Math.atan2(d.y,d.x)},theme:e.key,life:.48,maxLife:.48});return true;
  }

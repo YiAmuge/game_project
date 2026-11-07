@@ -2,6 +2,7 @@ import{stage as queenStage}from'./queen.js';
 import{capacity as bloodCapacity}from'./nosferatu.js';
 import{HEATH}from'./heathcliff.js';
 import{EZRA}from'./ezra-data.js';
+import{ammoSlots}from'./ezra.js';
 import{drawDebuffBadges}from'./champion-update-effects.js';
 import{drawKromerEffects}from'./kromer-vfx.js';
 import{drawLevelBadge}from'./level-badge.js';
@@ -63,6 +64,8 @@ export function championHud(r,e,g){
  }else if(e.key==='rudolph'){
   c.fillStyle='#322018';c.fillRect(x,resourceY,width,.24);c.fillStyle=e.state.exhaustedUntil>g.time?'#866347':'#f5a34e';c.fillRect(x,resourceY,width*(e.state.exhaustedUntil>g.time?Math.min(1,(g.time-e.state.exhaustedAt)/e.state.recoveryDuration):Math.min(1,Math.max(0,e.ammo/cap))),.24);if(!(e.state.exhaustedUntil>g.time))r.text(`SP ${Math.floor(e.ammo)} / ${cap}`,e.x,resourceY+.12,'#fff2da',.205);
  }else if(e.key==='nosferatu'&&e.state.bloodfiend){r.text('∞',e.x,resourceY+.12,'#ff8fa8',.30);
+ }else if(e.key==='ezra'){
+  const slots=ammoSlots(g,e),gap=.075,w=(width-gap*3)/4;for(const [i,s]of slots.entries()){const px=x+i*(w+gap);c.fillStyle=s.color+'33';c.fillRect(px,resourceY,w,.20);if(s.loaded){c.fillStyle=s.color;c.fillRect(px+.015,resourceY+.015,w-.03,.17);}c.save();c.strokeStyle=s.active?s.color:s.color+'88';c.lineWidth=s.active?.055:.02;if(s.active){c.shadowColor=s.color;c.shadowBlur=7;}c.strokeRect(px-.01,resourceY-.01,w+.02,.22);c.restore();}
  }else if(e.key==='jamila'){
   c.fillStyle='#0d1822db';c.fillRect(x,resourceY,width,.27);r.text(`${Math.floor(e.ammo)} | ${cap}`,x+.59,resourceY+.14,e.ammo>0?'#f2d89b':'#e39383',.25);
   const count=Math.ceil(cap/4),ready=shieldRounds(e),gap=1.15/Math.max(1,count);for(let i=0;i<count;i++){const px=e.x+.15+i*gap;c.fillStyle=i<ready?'#63bcff':'#24415a';c.beginPath();c.moveTo(px,resourceY+.23);c.lineTo(px,resourceY+.085);c.quadraticCurveTo(px+.04,resourceY-.005,px+.08,resourceY+.085);c.lineTo(px+.08,resourceY+.23);c.closePath();c.fill();}
