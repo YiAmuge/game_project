@@ -30,6 +30,7 @@ const degrees=r=>number(Number((r*180/Math.PI).toFixed(1)))+'°';
 function basicRanges(key,g,e,transformed){
  const range=g.attackRange(e),r=number(range);
  if(key==='don'||key==='starbuck')return[row('공격 범위','돌진 거리 '+r+' · 직선 폭 1.5')];
+ if(key==='moses')return[row('기본 숨결','사거리 4 · 부채꼴 160°'),row('하얀 숨','사거리 4 · 전방 반원 180°'),row('푸른 숨','사거리 6.6 · 부채꼴 166°')];
  if(key==='ezra')return[row('알라스 공방 장갑','돌진 거리 3.8'),row('네스터 공방 망치','1타 반경 2.6 · 2타 반경 2.9 · 3타 반경 3.2'),row('스크류 아틀리에제 드릴 망치','사거리 3.3 · 부채꼴 150°'),row('나미르 공방 건틀릿','지정 도약 거리 2.5 · 착지 반경 3.5')];
  if(key==='queen')return[row('관통 투사체','사거리 '+r)];
  if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 전방 반원 180°'),row('피의 칼날','사거리 6.8 · 폭 4.54 · 관통 불가')];
@@ -54,6 +55,7 @@ function basicRanges(key,g,e,transformed){
 }
 function skillRanges(key,index,g,e,transformed,variant){
  if(key==='ezra'&&index===2)return basicRanges(key,g,e,transformed);
+ if(key==='moses'&&index===3)return[row('붉은 점','사거리 무제한 · 폭 2 · 길이 3.7')];
  if(key==='ezra'&&index===3)return[row('도끼 돌진','거리 2.5'),row('1~3번째 공격','사거리 3 · 전방 반원 180°'),row('4번째 공격','자신 중심 반경 3')];
  if(key==='queen'&&index===3)return ARCANA_STAGES.map((s,i)=>row(i+'단계','사거리 '+s.range+' · 폭 '+s.width));
  if(key==='nosferatu'&&index===2)return[row('소환','사거리 6.8 · 최대 3마리'),row('박쥐 활동','주인 중심 거리 8 · 공격 사거리 2.5')];
@@ -110,7 +112,7 @@ function cooldownLabel(key,index,g,e,transformed,variant){
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return '변신 재사용 대기 없음';
  if(key==='nosferatu'&&index===2)return '쿨타임 '+number(g.cooldown(e,'q'))+'초 · 2.5초 내 최대 2회 재사용';
- const charges=index===2&&(key==='ppui'||key==='nelly'||key==='ryoshu'||key==='sora'&&transformed)?2:1;
+ const charges=index===2&&(key==='moses'||key==='ppui'||key==='nelly'||key==='ryoshu'||key==='sora'&&transformed)?2:1;
  return (charges>1?'충전당 ':'쿨타임 ')+number(key==='myo'&&index===2?.15:g.cooldown(e,index===2?'q':'r'))+'초'+(charges>1?' · 최대 '+charges+'회 충전':'');
 }
 export function cleanSkillDetails(text){

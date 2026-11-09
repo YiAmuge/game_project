@@ -749,3 +749,11 @@ a.menu-action{text-decoration:none;cursor:pointer;color:inherit}
 .offline-link{display:block;text-align:center;color:#adc5d8;font-size:12px;padding:8px 4px;text-decoration:underline}
 
 #recall-choice{position:fixed;z-index:130;display:flex;gap:8px;width:240px;padding:8px;border:1px solid #7195a8;border-radius:8px;background:#0b1829f2;box-shadow:0 4px 24px #0009;pointer-events:none}#recall-choice>span{flex:1;padding:9px 4px;text-align:center;border:1px solid #4b6574;border-radius:5px;color:#cad6db}#recall-choice b{display:block;font-size:13px}#recall-choice small{display:block;font-size:10px;margin-top:5px}#recall-choice .selected{border-color:#f1d58b;background:#8e774b66;box-shadow:0 0 12px #ffdc7860}#recall-choice .unavailable{opacity:.45}.infiltration-description p{margin:6px 0!important;line-height:1.6!important}
+
+/* Each Moses direction retains its own breath color, including inactive slots. */
+.drag-wheel{background:#101b21ed;border-color:#617178}
+.drag-wheel [data-dir]{border:1px solid color-mix(in srgb,var(--breath-color) 70%,transparent);border-radius:10px;color:var(--breath-color);background:color-mix(in srgb,var(--breath-color) 17%,#121b21);text-shadow:0 1px 2px #0009}
+.drag-wheel [data-dir=up]{--breath-color:#e8eee7}.drag-wheel [data-dir=down]{--breath-color:#6ca9e8}.drag-wheel [data-dir=left]{--breath-color:#b78cdb}.drag-wheel [data-dir=right]{--breath-color:#ca515a}
+.drag-wheel [data-dir].selected{color:var(--breath-color);background:color-mix(in srgb,var(--breath-color) 38%,#18222a);border-color:var(--breath-color);box-shadow:0 0 14px color-mix(in srgb,var(--breath-color) 55%,transparent),inset 0 0 9px color-mix(in srgb,var(--breath-color) 20%,transparent)}
+.drag-wheel [data-dir].unavailable{opacity:.3;filter:saturate(.5);box-shadow:none}
+.mobile-ui .drag-wheel{width:218px;height:190px}.mobile-ui .drag-wheel [data-dir]{font-size:9px}

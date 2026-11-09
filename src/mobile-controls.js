@@ -1,3 +1,6 @@
+import{showBreathWheel,updateBreathWheel,hideBreathWheel}from'./moses-ui.js';
+import*as Moses from'./moses.js';
+import{dragChoice}from'./skills.js';
 import{weakestTarget}from'./queen.js';
 import{mobileAutoAim,mobileManualAim,mobileAttackTargets,attackCategory,ATTACK_CATEGORIES,rememberManualAim,dashSlidePriority}from'./mobile-aim.js';
 import{gestureMode,targetButtonPositions}from'./mobile-gestures.js';
@@ -45,6 +48,7 @@ export class MobileControls{
   if(!this.enabled||e.pointerType!=='touch')return;e.preventDefault();e.stopImmediatePropagation();if(!this.api.allowed())return;
   if(slot==='basic'&&[...this.gestures.values()].some(s=>s.slot==='basic'))return;
   button.setPointerCapture(e.pointerId);if(slot==='move'){this.beginMove(e);return;}const g=this.api.game(),p=g.player,box=button.getBoundingClientRect(),gesture={slot,category,id:e.pointerId,at:performance.now(),cx:box.x+box.width/2,cy:box.y+box.height/2,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,manual:false,started:false,owner:p.id,game:g};this.gestures.set(e.pointerId,gesture);this.api.takeAim();
+  if(p.key==='moses'&&slot==='q'){gesture.moses=true;Moses.selectInput(g,p,true);showBreathWheel(p,gesture.cx,gesture.cy);return;}
   if(p.key==='kromer'&&p.state.kromerGrab&&['basic','r'].includes(slot)){gesture.kromerSteering=true;return;}
   if(p.key==='queen'&&p.state.queenR?.phase==='charging'&&slot==='basic'){gesture.queenTargeting=true;return;}
   gesture.autoTarget=mobileAutoAim(g,p,slot,{category,movement:this.axes}).target?.id;
@@ -53,6 +57,7 @@ export class MobileControls{
  },true);}
  move(e){const s=this.gestures.get(e.pointerId);if(!s)return;e.preventDefault();if(s.slot==='map'){if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>12)s.cancel=true;return;}s.x=e.clientX;s.y=e.clientY;
   if(s.slot==='move'){const dx=s.x-s.cx,dy=s.y-s.cy,n=Math.hypot(dx,dy),scale=Math.min(1,n/44);this.axes={x:n>7?dx/(n||1)*scale:0,y:n>7?dy/(n||1)*scale:0};if(n>7)this.api.game().player.mobileMoveDirection={x:dx/n,y:dy/n};$('mobile-stick').style.setProperty('--stick-x',Math.max(-44,Math.min(44,dx))+'px');$('mobile-stick').style.setProperty('--stick-y',Math.max(-44,Math.min(44,dy))+'px');return;}
+  if(s.moses){s.choice=dragChoice('moses',s.x-s.startX,s.y-s.startY);Moses.selectInput(this.api.game(),this.api.game().player,true,s.choice);updateBreathWheel(this.api.game().player,s.choice);return;}
   if(s.queenTargeting)return;
   if(s.kromerSteering){this.steerGrab(s);return;}
   if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&(s.autoHeld||s.autoLocked)){this.holdAttack(s);return;}
@@ -73,6 +78,7 @@ export class MobileControls{
  }
  end(e,canceled=false){const ui=this.uiTouches.get(e.pointerId);this.uiTouches.delete(e.pointerId);const s=this.gestures.get(e.pointerId);if(!s){if(ui&&!canceled&&!ui.button.disabled&&Math.hypot(e.clientX-ui.x,e.clientY-ui.y)<=12){e.preventDefault();this.uiClick={button:ui.button,x:e.clientX,y:e.clientY,until:performance.now()+500};ui.button.click();}return;}e.preventDefault();e.stopImmediatePropagation();this.gestures.delete(e.pointerId);const g=this.api.game(),p=g.player;
   if(s.slot==='map'){if(!canceled&&!s.cancel){this.api.score(!this.api.scoreOpen());this.fitMap();this.updateSkillHelp();}return;}if(s.slot==='move'){this.axes={x:0,y:0};$('mobile-stick').style.setProperty('--stick-x','0px');$('mobile-stick').style.setProperty('--stick-y','0px');this.layout.applyPart('stick');return;}
+  if(s.moses){if(!canceled&&this.api.allowed()&&s.game===g&&s.owner===p.id){const direction=dragChoice('moses',e.clientX-s.startX,e.clientY-s.startY);if(direction)this.api.skill('q',{direction,point:g.input.aim,confirm:true});}Moses.selectInput(g,p,false);hideBreathWheel();this.finishAim(g);return;}
   if(s.queenTargeting){if(!canceled&&this.api.allowed()&&s.game===g&&s.owner===p.id&&performance.now()-s.at<280&&Math.hypot(e.clientX-s.startX,e.clientY-s.startY)<14){const t=weakestTarget(g,p);if(t){g.input.aim={x:t.x,y:t.y};g.attack(p,g.input.aim,{queenAim:true});}}this.finishAim(g);return;}
   if(s.kromerSteering){g.input.fire=false;this.finishAim(g);return;}
   g.input.fire=false;if(s.precision){g.input.precision=false;return;}
@@ -90,7 +96,7 @@ export class MobileControls{
   this.finishAim(g);
  }
  finishAim(g){delete g.mobileAim;document.body.classList.remove('mobile-aiming','mobile-canceling');}
- cancel(){this.axes={x:0,y:0};const g=this.api.game();g.input.fire=false;g.input.precision=false;this.api.cancelCharge(g.player);delete g.mobileAim;this.gestures.clear();this.uiTouches?.clear();if($('mobile-stick')){$('mobile-stick').style.setProperty('--stick-x','0px');$('mobile-stick').style.setProperty('--stick-y','0px');this.layout?.applyPart('stick');}document.body.classList.remove('mobile-aiming','mobile-canceling');}
+ cancel(){hideBreathWheel();this.axes={x:0,y:0};const g=this.api.game();g.input.fire=false;g.input.precision=false;this.api.cancelCharge(g.player);delete g.mobileAim;this.gestures.clear();this.uiTouches?.clear();if($('mobile-stick')){$('mobile-stick').style.setProperty('--stick-x','0px');$('mobile-stick').style.setProperty('--stick-y','0px');this.layout?.applyPart('stick');}document.body.classList.remove('mobile-aiming','mobile-canceling');}
  holdAttack(s){
   const g=this.api.game(),p=g.player;if(!this.api.allowed()||s.owner!==p.id||s.game!==g){g.input.fire=false;return;}
   s.autoHeld=true;const auto=this.autoAim(s);g.input.fire=Boolean(auto.target||auto.manualFallback);

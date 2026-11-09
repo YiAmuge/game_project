@@ -101,7 +101,7 @@ export class SkillVFX {
   }
   for(const p of game.projectiles){
    if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);const origin=p.origin||p.source;if(!origin||!visible(origin))continue;
-   const key=p.theme||p.source?.key;if(key==='jamila'&&p.source.state.jamilaQ&&p.source.state.jamilaQ.phase!=='retreat')continue;const s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
+   const key=p.theme||p.source?.key;if(key==='moses')continue;if(key==='jamila'&&p.source.state.jamilaQ&&p.source.state.jamilaQ.phase!=='retreat')continue;const s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
    let shotOrigin=origin;
    const myo=key==='myo'&&p.slot==='q'&&myoFiring(game,p.source),lca=key==='jamila'&&p.lca,muzzle=key==='gubo'&&p.damageKind==='basic'||myo||lca;
    if((key==='gubo'||myo||lca)&&camera.screenToWorld){const tip=myo||lca?weaponEmissionScreen(game,p.source,camera,origin):guboEffectAxis(game,p.source,camera,origin,{angle:Math.atan2(p.dy,p.dx)}).start,ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
@@ -109,7 +109,7 @@ export class SkillVFX {
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
-   if(!e.attackSerial||e.trainingDummy||['ezra','dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
+   if(!e.attackSerial||e.trainingDummy||['moses','ezra','dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
    const attack=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'impact'})[attack];if(!kind)continue;
    const s=combatStyle(e.key,game,e,{kind:'basic'}),angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),shape={kind:attack==='sweep'?'circle':attack==='punch'?'rect':'cone',range:radius,width:radius,spread:basicFanAngle(e.key),angle};
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});

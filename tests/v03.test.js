@@ -16,7 +16,7 @@ function quiet(key='faust'){
 }
 
 test('twenty ordinary champions retain four named abilities, and every team has four positions',()=>{
- assert.equal(Object.keys(CHAMPIONS).length,34);
+ assert.equal(Object.keys(CHAMPIONS).length,35);
  for(const key of Object.keys(CHAMPIONS))for(const position of Object.keys(POSITIONS)){
   const g=new Game(key,position);assert.equal(g.champions().length,8);assert.equal(g.player.position,position);
   for(const team of [0,1])assert.deepEqual(g.champions(team).map(c=>c.position).sort(),['bottom','jungle','support','top']);
@@ -27,7 +27,7 @@ test('all 32 catalog champions and all runtime champions share the cumulative re
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){
   const {g,p}=quiet(key);p.lastCombat=g.time;
   if(key==='dongbaek')p.qCd=1;const grade=key==='ezra'?3:RUNTIME_CHAMPIONS[key].reload;
-  close(g.reloadInterval(p),key==='ezra'?2.5:key==='jamila'?1.5:combatSeconds(RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1)));
+  close(g.reloadInterval(p),key==='moses'?.8:key==='ezra'?2.5:key==='jamila'?1.5:combatSeconds(RULES.reload[grade]/RULES.reloadEfficiency/(key==='ahab'?1.15:1)));
  }
 });
 test('natural healing waits three seconds after attacks including missed attacks',()=>{
@@ -55,7 +55,7 @@ test('Moses directional selection requires a deliberate drag',()=>{
  for(const key of ['moses','ezra']){const {g,p}=quiet(key);const ammo=p.ammo;assert.equal(g.cast(p,'q',{x:34,y:5.5}),false);assert.equal(p.qCd,0);assert.equal(p.ammo,ammo);}
 });
 test('Moses choice is committed only with a direction and consumed by next attack',()=>{
- const {g,p}=quiet('moses');assert.ok(g.cast(p,'q',{x:34,y:5.5},{direction:'left'}));assert.equal(p.state.smoke,'left');assert.ok(p.qCd>0);g.attack(p,{x:34,y:5.5});assert.equal(p.state.smoke,null);
+ const {g,p}=quiet('moses');assert.ok(g.cast(p,'q',{x:34,y:5.5},{direction:'left'}));assert.equal(p.state.smoke,'left');assert.equal(p.state.mosesCharges,1);assert.equal(p.qCd,0);g.attack(p,{x:34,y:5.5});assert.equal(p.state.smoke,null);
 });
 test('Ezra uses a fixed four-round cycle and returns from her timed ultimate',()=>{
  const {g,p}=quiet('ezra');assert.equal(ammoCap(g,p),4);assert.equal(g.cast(p,'q',p),false);assert.ok(g.attack(p,{x:p.x+8,y:p.y}));run(g,.7);assert.equal(p.state.weapon,1);assert.equal(p.ammo,3);assert.ok(g.cast(p,'r',p));assert.equal(p.ammo,4);assert.equal(g.cast(p,'q',p),false);run(g,10.1);assert.equal(p.ammo,3);assert.equal(p.state.weapon,1);assert.equal(g.buff(p,'ezraUlt'),false);

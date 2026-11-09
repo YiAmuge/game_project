@@ -1,3 +1,4 @@
+import*as Moses from'./moses.js';
 import{initRivalries}from'./rivalries.js';
 import{Game}from'./game.js';
 import{ROOM_POSITIONS,cleanInput,idleInput,validPoint}from'./online-protocol.js';
@@ -22,7 +23,7 @@ export function makeOnlineGame(match,memberId){
  initRivalries(g);g.player=g.units.find(e=>e.memberId===memberId);g.input=idleInput(g.player);g.controllers.get(g.player.id).input=g.input;
  return g;
 }
-export function cancelCharge(g,e){Yan.cancelCharge(e);Hohenheim.cancelCharge(e);cancelHeath(e);Don.cancel(g,e);}
+export function cancelCharge(g,e){Moses.choose(g,e,false);Yan.cancelCharge(e);Hohenheim.cancelCharge(e);cancelHeath(e);Don.cancel(g,e);}
 export function releaseBasic(g,e,p){return e.key==='hohenheim'?Hohenheim.release(g,e,p):Yan.release(g,e,p);}
 export function releaseTactical(g,e,p){return e.key==='don'?Don.release(g,e,p):releaseHeath(g,e,p);}
 const options=value=>({...(typeof value?.direction==='string'&&['left','right','up','down'].includes(value.direction)?{direction:value.direction}:{}),...(value?.manual===true?{manual:true}:{}),...(value?.queenAim===true?{queenAim:true}:{}),...(value?.targetKind&&['champion','minion','building','creep'].includes(value.targetKind)?{targetKind:value.targetKind}:{})});
@@ -32,6 +33,7 @@ export function executeCommand(g,e,p){
  const point=p.point||g.controllers.get(e.id).input.aim;
  return g.withController(e,()=>{
   switch(p.action){
+   case'mosesChoose':return Moses.choose(g,e,p.active===true,p.direction);
    case'attack':return g.attack(e,point,options(p.options));
    case'cast':return ['q','r'].includes(p.slot)&&g.cast(e,p.slot,point,options(p.options));
    case'releaseBasic':return releaseBasic(g,e,point);

@@ -1,3 +1,4 @@
+import{MOSES_DATA}from'./moses-data.js';
 import{EZRA_DATA}from'./ezra-data.js';
 export const EXTRA_CHAMPIONS = {
   "don": {
@@ -253,28 +254,6 @@ export const EXTRA_CHAMPIONS = {
     "ultimate": "정신 분쇄",
     "brief": "정신력 지팡이 · 정신채찍 받는 피해 중첩"
   },
-  "moses": {
-    "id": 19,
-    "name": "모제스",
-    "tag": "MOSES",
-    "role": "지원",
-    "color": "#b9c9c0",
-    "icon": "M",
-    "power": 1,
-    "health": 3,
-    "speed": 2,
-    "ammo": 4,
-    "reload": 5,
-    "range": 5,
-    "damage": 180,
-    "attackTime": 0.5,
-    "q": 6,
-    "r": 45,
-    "passive": "깊은 사색",
-    "basic": "숨결 뱉기",
-    "tactical": "곰방대 피우기",
-    "ultimate": "붉은 점",
-    "brief": "방향으로 선택하는 네 곰방대"
-  },
+  "moses": MOSES_DATA,
   "ezra": EZRA_DATA
 };

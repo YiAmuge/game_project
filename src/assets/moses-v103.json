@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "file": "source/moses-body.png",
+      "sha256": "b7ddfc182d466cae3b7cf4d196038c805656ee7841ede9c35cfe6478ff94aa15"
+    },
+    {
+      "file": "source/moses-pipe.png",
+      "sha256": "45c053638b6df8c27db7ec9ae0b65070fc1b5170100d8da320421ecb3ba63c2a"
+    }
+  ],
+  "frames": {
+    "moses": {
+      "x": 8,
+      "y": 8,
+      "w": 207,
+      "h": 400,
+      "sheet": 21,
+      "rotation": 0,
+      "source": "source/moses-body.png",
+      "sourceRect": [
+        290,
+        117,
+        594,
+        1149
+      ],
+      "referenceHeight": 400,
+      "crownOffset": 0,
+      "heightScale": 1,
+      "heightBasis": "crown",
+      "foot": [
+        0.5,
+        1
+      ],
+      "face": [
+        8.28,
+        0,
+        190.44,
+        192
+      ]
+    },
+    "mosesPipe": {
+      "x": 223,
+      "y": 8,
+      "w": 640,
+      "h": 216,
+      "sheet": 21,
+      "rotation": 0,
+      "source": "source/moses-pipe.png",
+      "sourceRect": [
+        157,
+        67,
+        1872,
+        631
+      ]
+    }
+  }
+}

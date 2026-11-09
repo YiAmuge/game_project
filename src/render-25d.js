@@ -1,3 +1,4 @@
+import{drawMosesScene}from'./moses-vfx.js';
 import{deploymentGhosts}from'./jamila.js';
 import{isCampCreep,campVisualHeight,structureVisualHeight}from'./world-art.js';
 import{drawCombatNumbers}from'./combat-text.js';
@@ -187,7 +188,7 @@ export class Renderer25D {
   const actors=[...this.units.values()].map(a=>({e:a.entity,tree:false}));for(const e of deploymentGhosts(game))actors.push({e,tree:false});for(const z of game.zones)if(z.kind==='desireTree'&&z.until>game.time)actors.push({e:z,tree:true});
   try{for(const {e,tree} of actors.sort((a,b)=>a.e.y-b.e.y||(a.e.id||0)-(b.e.id||0))){
    this.vfx.drawUntil(c,e.y);if(tree){this.championVfx.tree(c,this.camera,e,game);continue;}if(e.kind==='champion')this.dashTrails.draw(c,this.camera,e,game,r,this.vfx);this.championVfx.body(c,this.camera,e,game);at(e,()=>['tower','core'].includes(e.kind)?r.structure(e,game):r.unit(e,game));this.championVfx.body(c,this.camera,e,game,true);
-  }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
+  }this.vfx.drawUntil(c);this.vfx.drawFlashes(c,this.camera);this.vfx.drawBodyHits(c,this.camera);this.projectileVfx.draw(c,this.camera,game);this.projectileVfx.beams(c,this.camera,game);this.championVfx.events(c,this.camera,game);drawMosesScene(c,this.camera,game);}finally{r.billboardPass=old;r.skillVfx=oldVfx;}
   for(const e of game.units.filter(e=>e.alive&&game.visibleTo(game.player.team,e)&&!game.hidden(e)&&e.kind!=='champion'))at(e,()=>{
    if(e.kind==='neutral'){orderMark(r,e,game);const y=e.y-(e.camp==='boss'?bossVisualHeight(e)+.18:['needle','sewingKing'].includes(e.camp)?needleVisualHeight(e)+.18:isClerk(e)?CLERK_HEIGHT+.18:isCampCreep(e)?campVisualHeight(e)+.18:.95);r.bar(e,['boss','sewingKing'].includes(e.camp)?3.4:1.2,y,game);}
    else if(e.bloodBat)r.bar(e,.8,e.y-.85,game,{height:.12});

@@ -14,6 +14,7 @@ const GLOVE_PALETTES={
 };
 const mix=(color,t)=>'#'+[1,3,5].map(i=>{const n=parseInt(color.slice(i,i+2),16);return Math.round(t>=0?n+(255-n)*t:n*(1+t)).toString(16).padStart(2,'0');}).join('');
 export function gripAppearance(key){
+ if(key==='moses')return{material:'metal',base:'#9b907b',shadow:'#706756',light:'#b4aa93',outline:'#25221f'};
  if(UNCHANGED_HANDS.has(key))return null;
  const material=BLACK_GLOVES.has(key)?'black':BROWN_GLOVES.has(key)?'brown':key==='ahab'?'white':key==='kromer'?'gray':BARE_HAND_COLORS[key]?'skin':null;
  if(!material)return null;const base=BARE_HAND_COLORS[key];
@@ -21,7 +22,7 @@ export function gripAppearance(key){
 }
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
-export const GRIP_PATHS={
+export const GRIP_PATHS={mosesPipe:[[.28,.18],[.9,.18]],
  ezraHammer:[[.09,.43],[.27,.43]],ezraDrill:[[.08,.31],[.34,.31]],ezraAxe:[[.25,.43],[.25,.88]],
  queenWand:[[.5,.53],[.5,.67]],nosWine:[[.5,.76],[.5,.85]],
  donBloodLance:[[.055,.5],[.18,.5]],heathBloodSack:[[.03,.5],[.065,.5]],

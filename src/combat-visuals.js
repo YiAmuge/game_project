@@ -1,3 +1,4 @@
+import{breath as mosesBreath}from'./moses.js';
 import{basicFanAngle}from'./data.js';
 import*as Ezra from'./ezra.js';
 import { dashLength,dashBasic } from './skills.js';
@@ -29,6 +30,7 @@ export function preview(r,e,g){
   const len=e.key==='myo'?g.attackRange(e):dashLength(e,{don:3.5,rodya:2.4,starbuck:3.75}[e.key]||g.attackRange(e));
   polygon(len,['don','starbuck'].includes(e.key)?1.5:.6*2*1.2);
  }
+ if(e.key==='moses'){const b=mosesBreath(g,e);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,b.range,angle-b.angle/2,angle+b.angle/2);ctx.closePath();ctx.fillStyle=b.color+'0b';ctx.fill();ctx.strokeStyle=b.color+'77';ctx.lineWidth=.035;ctx.stroke();}
  const cones={sinclair:Math.PI,ryoshu:Math.PI,heathcliff:1.7,ishmael:1.6,gregor:g.buff(e,'mutant')?1.8*1.3*1.2:1.8,nelly:1.2,dongbaek:1.3,dongrang:1.9,alisa:1.1,kim:e.state.followSlashUntil>g.time?1.9*1.3*1.2*1.08:1.2*1.3};
  if(cones[e.key]||e.key==='nosferatu'&&!e.state.bloodfiend){const range=g.attackRange(e)*(e.key==='kim'&&e.state.followSlashUntil>g.time?1.2*1.08:1);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,range,angle-basicFanAngle(e.key)/2,angle+basicFanAngle(e.key)/2);ctx.closePath();ctx.fillStyle='#bddfd20b';ctx.fill();ctx.strokeStyle='#bddfd255';ctx.lineWidth=.035;ctx.stroke();}
 

@@ -22,7 +22,7 @@ async def main():
      if r.request.url==url:await r.continue_()
      else:external.append(r.request.url);await r.abort()
     await p.route('**/*',route)
-   await p.goto(url,wait_until='networkidle',timeout=120000);await p.click('#training-open');await p.locator('#champion-select [data-key="ezra"]').click();await p.wait_for_timeout(150);await p.screenshot(path=str(ART/f'{mode}-portrait-size.png'));await p.click('#start');await p.wait_for_function('__moba.game.training');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===27&&__moba.audio.synth.swings.failures.length===0')
+   await p.goto(url,wait_until='networkidle',timeout=120000);await p.click('#training-open');await p.locator('#champion-select [data-key="ezra"]').click();await p.wait_for_timeout(150);await p.screenshot(path=str(ART/f'{mode}-portrait-size.png'));await p.click('#start');await p.wait_for_function('__moba.game.training');await p.wait_for_function('__moba.audio.context?.state==="running"');await p.evaluate('()=>__moba.audio.synth.swings.ready');assert await p.evaluate('__moba.audio.synth.swings.buffers.size===28&&__moba.audio.synth.swings.failures.length===0')
    await p.evaluate(SETUP,'ezra');await p.wait_for_timeout(100);await p.screenshot(path=str(ART/f'{mode}-alas-rest.png'));await p.evaluate('()=>{const g=__moba.game,p=g.player;g.attack(p,g.input.aim);advance(.08);}');await p.wait_for_timeout(120);await p.screenshot(path=str(ART/f'{mode}-alas-extension.png'))
    await p.evaluate(SETUP,'ezra');await p.evaluate('()=>{const g=__moba.game,p=g.player;p.state.weapon=1;target(38,20);g.attack(p,g.input.aim);}');turns=[]
    for i in range(3):

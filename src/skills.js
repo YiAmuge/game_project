@@ -1,3 +1,4 @@
+import*as Moses from'./moses.js';
 import{FAN_ANGLE}from'./data.js';
 import*as Queen from'./queen.js';
 import*as Ezra from'./ezra.js';
@@ -28,7 +29,7 @@ import { startRudolphWeapon,tickRudolphWeapon } from './rudolph-weapon.js';
 
 function pushTarget(g,t,dx,dy,options={}){const length=Math.hypot(dx,dy);return g.startMotion(t,{x:dx/(length||1),y:dy/(length||1)},length,{kind:'knock',...options});}
 
-export const EXPERIMENTAL_KEYS=['moses'];
+export const EXPERIMENTAL_KEYS=[];
 export const DRAG_KEYS=['moses'];
 export function dragChoice(key,dx,dy,min=18){
  if(Math.hypot(dx,dy)<min)return null;
@@ -59,7 +60,7 @@ export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
 export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
 export function skillCharges(g,e,slot){
- if(slot!=='q')return null;if(e.key==='nosferatu')return Nosferatu.charges(g,e);if(e.key==='ppui')return Ppui.charges(g,e);
+ if(slot!=='q')return null;if(e.key==='moses')return Moses.charges(g,e);if(e.key==='nosferatu')return Nosferatu.charges(g,e);if(e.key==='ppui')return Ppui.charges(g,e);
  const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='ryoshu'?[s.ryoshuCharges??2,2,s.ryoshuReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
  if(!values)return null;const [current,max,ready]=values;return {current,max,remaining:current<max&&Number.isFinite(ready)?Math.max(0,ready-g.time):0};
 }
@@ -83,13 +84,14 @@ export function canRecast(g,e,slot){
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')));
 }
-export function init(g,e){Ezra.init(g,e);Ppui.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
-export function onRespawn(g,e){Ezra.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
+export function init(g,e){Moses.init(g,e);Ezra.init(g,e);Ppui.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
+export function onRespawn(g,e){Moses.init(g,e);Ezra.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
 export const coverMultiplier=New.coverMultiplier;
 export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.key==='moses')return Moses.validate(g,e,slot,options);
  if(e.key==='ezra')return Ezra.validate(g,e,slot);
  if(e.key==='queen')return Queen.validate(g,e,slot);
  if(e.key==='nosferatu')return Nosferatu.validate(g,e,slot,p);
@@ -104,7 +106,6 @@ export function validateSkill(g,e,slot,p,options={}){
  if(!New.validate(g,e,slot,p)||!V06.validate(g,e,slot,p))return false;
  if(g.stat(e,'root')&&(['outis','sinclair'].includes(e.key)||e.key==='don'&&slot==='r'||(['ryoshu','heathcliff'].includes(e.key)||e.key==='alisa'&&!g.buff(e,'alisaReload'))&&slot==='q'))return false;
  if(e.key==='rudolph'&&slot==='r')return e.ammo>=ammoCap(g,e)*.5&&(g.training?!g.blocked(p.x,p.y,.05):terrainContains(p.x,p.y));
- if(e.key==='moses'&&slot==='q')return ['up','down','left','right'].includes(options.direction);
  if(e.key==='alisa'&&slot==='r')return e.state.heat>=5;
  if(e.key==='gubo'&&slot==='r'){
   return Boolean(guboTarget(g,e,p,options.executeAlly));
@@ -129,6 +130,7 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
+ if(e.key==='moses'){Moses.basic(g,e,d);return true;}
  if(e.key==='ezra'){Ezra.basic(g,e,p,d);return true;}
  if(e.key==='queen'){Queen.basic(g,e,d);return true;}
  if(e.key==='nosferatu'){Nosferatu.basic(g,e,d);return true;}
@@ -154,11 +156,6 @@ export function basic(g,e,p,d,options={}){
   // Preserve 10 SP/s after rounding the attack clock; basic already spends 1 SP.
   startRudolphWeapon(g,e);
   e.state.whipChainAt??=g.time;e.ammo=Math.max(0,e.ammo-(g.attackInterval(e)*10-1));const len=Math.min(g.attackRange(e),distance(e,p)),whipPoint={x:e.x+d.x*len,y:e.y+d.y*len};g.effects.push({type:'whipArc',source:e.id,x:e.x,y:e.y,to:whipPoint,theme:'rudolph',color:'#ffad58',life:.2,maxLife:.2},{type:'ring',...whipPoint,r:2.1675,color:'#ed883d',life:.2,maxLife:.2});g.effects.push({type:'rudolphField',source:e.id,theme:'rudolph',...whipPoint,r:2.1675,life:.3,maxLife:.3});area(g,e,whipPoint,2.1675,t=>{decayMentalWhip(g,t);return 57*(1+.15*(t.state?.mentalWhip?.[e.id]?.stage||0));},t=>mentalWhip(g,e,t));return true;
- case 'moses':{
-  const color=e.state.smoke;e.state.smoke=null;cone(g.attackRange(e),1.1,180,t=>{if(color==='down')g.status(t,'stun',1,.7,e);if(color==='left'){g.status(t,'slow',.2,3,e);g.status(t,'vulnerable',.12,3,e);}});
-  if(['up','right'].includes(color))for(const a of g.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5)){const toward=direction(e,a);if(toward.x*d.x+toward.y*d.y<.4&&a!==e)continue;if(color==='up')g.addBuff(a,'mosesWhite',4);else {g.addShield(a,200,`smoke-${e.id}`);g.addBuff(a,'mosesHeal',2);}g.support(e);}
-  return true;
- }
  default:return false;
  }
 }
@@ -173,6 +170,7 @@ function shockIshmael(g,e){
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 export function cast(g,e,slot,p,d,options={}){
+ if(e.key==='moses'){Moses.cast(g,e,slot,d,options);return true;}
  if(e.key==='ezra'){Ezra.cast(g,e,slot,p,d);return true;}
  if(e.key==='queen'){Queen.cast(g,e,slot,p,d,options);return true;}
  if(e.key==='nosferatu'){Nosferatu.cast(g,e,slot,p);return true;}
@@ -224,10 +222,6 @@ export function cast(g,e,slot,p,d,options={}){
   if(slot==='q'){const spend=Math.min(e.hp-1,e.hp*.1);e.hp-=spend;e.ammo=Math.min(ammoCap(g,e),e.ammo+35);g.addShield(e,spend,`focus-${e.id}`);}
   else{const spent=e.ammo;e.ammo=0;state.recoveryDuration=1.25;e.channelUntil=g.time+1.25;g.pending.push({type:'global',source:e,x:p.x,y:p.y,r:5.25,at:g.time+1.25,damage:8.5*spent,ignoreWalls:true,onHit:t=>{if(t.kind==='champion'&&!g.debuffImmune?.(t)){t.state.mentalWhip??={};t.state.mentalWhip[e.id]={hits:0,stage:3,at:g.time,decayAt:g.time+2};}g.status(t,'slow',.3,1.5,e);}});}
   return true;
- case 'moses':
-  if(slot==='q'){state.smoke=options.direction;if(state.smoke==='down')e.hp=Math.max(1,e.hp*.94);}
-  else g.bullet(e,d,550,9,{width:.6,onHit:t=>{g.status(t,'stun',1,.75,e);g.status(t,'vulnerable',.18,3,e);}});
-  return true;
  case 'alisa':
   if(slot==='q'){if(g.buff(e,'alisaReload'))endAlisaReload(g,e);else dash(g,e,d,3,0,()=>{},{onComplete:()=>{state.heat=Math.min(5,(state.heat||0)+3);state.alisaReloadActive=true;g.addBuff(e,'alisaReload',5,{copy:false});}});}
   else{state.blastArmed=true;state.alisaUltimateChannel=true;e.ccImmuneUntil=Infinity;e.channelUntil=g.time+.8;g.schedule(e,.8,()=>{delete state.alisaUltimateChannel;state.heat=0;const aim=e.player?g.aim(e,g.input.aim):d;const finish=()=>beginAlisaDetonation(g,e,e);if(!dash(g,e,aim,2.5,0,()=>{},{offensive:true,onComplete:finish}))finish();});}
@@ -246,7 +240,7 @@ export function damageBonus(g,e,t){
  if(e.key==='sora'&&e.actionKind==='basic'&&!Sora.ego(g,e)&&Sora.marked(g,e,t))b*=1.1;
  if(e.key==='heathcliff'&&t.hp/t.maxHp>e.hp/e.maxHp)b*=1.15;
  if(g.buff(e,'mutant'))b*=1.2;
- if(e.key!=='dongrang'&&g.buff(e,'power'))b*=1+g.buffValue(e,'power',.12);
+ if(!['dongrang','moses'].includes(e.key)&&g.buff(e,'power'))b*=1+g.buffValue(e,'power',.12);
 
  return b;
 }
@@ -299,6 +293,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
+ Moses.tick(g,e);
  Queen.tick(g,e);Nosferatu.tick(g,e);Ezra.tick(g,e,dt);
  Ppui.tick(g,e);Kromer.tick(g,e,dt);
  const s=e.state;
