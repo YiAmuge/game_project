@@ -1,8 +1,24 @@
 import{BREATHS}from'./moses-data.js';
+import{MOSES_FRAMES}from'./moses-sprites.js';
+import{bodyFacing}from'./champion-pose.js';
+import{projectFeet,leapLift,levitationLift}from'./projection-25d.js';
 const sprites=new Map();
 function smoke(color){if(sprites.has(color))return sprites.get(color);const canvas=document.createElement('canvas');canvas.width=canvas.height=96;const c=canvas.getContext('2d');for(const[x,y,r]of[[47,49,42],[31,43,27],[61,38,25],[59,62,22]]){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color+'b0');g.addColorStop(.45,color+'72');g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}sprites.set(color,canvas);return canvas;}
 function puff(c,camera,point,z,r,color,alpha){const p=camera.worldToScreen(point,z),size=r*camera.scale;c.globalAlpha=Math.max(0,Math.min(1,alpha));c.drawImage(smoke(color),p.x-size,p.y-size,size*2,size*2);}
-export function mosesWeaponPose(g,e,p){const s=e.state,r=s.mosesR,at=s.mosesChoosing?.at??(r&&g.time-r.at<.25?r.at:undefined),blend=at===undefined?0:Math.max(0,Math.min(1,(g.time-at)/.15)),side=p.flip,angle=side>0?Math.PI+.28:-.28,mouth={x:p.origin.x+side*.16,y:p.origin.y-1.5},raised={x:mouth.x-Math.cos(angle)*.735,y:mouth.y-Math.sin(angle)*.735},rest={x:p.origin.x+side*.42,y:p.origin.y-.72};return{hand:{x:rest.x+(raised.x-rest.x)*blend,y:rest.y+(raised.y-rest.y)*blend},angle:blend?angle:side>0?.48:Math.PI-.48};}
+const ease=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
+export function mosesMouth(p){const f=MOSES_FRAMES.moses,h=2.1*f.heightScale,w=h*f.w/f.h;return{x:p.origin.x+(f.mouth[0]-f.foot[0])*w*p.flip,y:p.origin.y+(f.mouth[1]-f.foot[1])*h};}
+export function mosesWeaponPose(g,e,p){
+ const s=e.state,r=s.mosesR,lowering=s.mosesPipeLowering,side=p.flip;
+ let blend=0;
+ if(r){const age=g.time-r.at;blend=age<=.25?ease(age/.15):1-ease((age-.25)/.12);}
+ else if(s.mosesChoosing)blend=ease((g.time-s.mosesChoosing.at)/.15);
+ else if(lowering)blend=ease((g.time-lowering.raisedAt)/.15)*(1-ease((g.time-lowering.at)/.12));
+ // Anchor the actual mouthpiece pixel to the lips, rather than the weapon box.
+ const pipe=MOSES_FRAMES.mosesPipe,length=1.05,height=length*pipe.h/pipe.w,smokingAngle=side>0?Math.PI+.28:-.28,restAngle=side>0?.48:Math.PI-.48;
+ const mouth=mosesMouth(p),dx=(pipe.mouth[0]-pipe.grip[0])*length,dy=(pipe.mouth[1]-pipe.grip[1])*height,flip=Math.cos(smokingAngle)<0?-1:1,a=Math.atan2(Math.sin(smokingAngle),Math.abs(Math.cos(smokingAngle)));
+ const raised={x:mouth.x-flip*(dx*Math.cos(a)-dy*Math.sin(a)),y:mouth.y-dx*Math.sin(a)-dy*Math.cos(a)},rest={x:p.origin.x+side*.42,y:p.origin.y-.72};
+ return{hand:{x:rest.x+(raised.x-rest.x)*blend,y:rest.y+(raised.y-rest.y)*blend},angle:restAngle+(smokingAngle-restAngle)*blend,pivot:pipe.grip[0],gripY:pipe.grip[1]-.5,blend};
+}
 function column(c,camera,p,d,length,width,progress=1){const color=BREATHS.right.color;for(let i=0;i<18;i++){const t=i/17,phase=i*2.399,pnt={x:p.x-d.x*t*length-Math.sin(phase)*d.y*width*.23,y:p.y-d.y*t*length+Math.sin(phase)*d.x*width*.23};puff(c,camera,pnt,1.35+Math.cos(phase)*.12,width*(.28+.15*Math.sin(Math.PI*t)),color,(.42+.22*Math.sin(Math.PI*t))*progress);}}
 export function drawMosesPoint(c,camera,p){if(p.type!=='mosesPoint')return false;c.save();column(c,camera,p,{x:p.dx,y:p.dy},3.7,2);c.restore();return true;}
 export function drawMosesScene(c,camera,g){
@@ -13,7 +29,7 @@ export function drawMosesScene(c,camera,g){
  }
  for(const e of g.champions().filter(e=>e.key==='moses'&&e.alive&&!g.hidden(e)&&g.visibleTo(g.player.team,e))){
   const s=e.state,r=s.mosesR,attack=s.mosesBreath,age=g.time-(attack?.at??-99),choosing=s.mosesChoosing,color=r?BREATHS.right.color:attack&&age>=0&&age<.65?attack.color:BREATHS[choosing?.direction??s.smoke]?.color||'#b6bdb9',active=r||choosing||s.smoke||age>=0&&age<.65;
-  if(active){const d={x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)};for(let i=0;i<5;i++){const t=(g.time*.8+i*.19)%1,p={x:e.x+d.x*(.18+t*.4),y:e.y+d.y*(.18+t*.4)};puff(c,camera,p,1.5+t*.2,.1+t*.16,color,(1-t)*.5);}
+  if(active){const flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(MOSES_FRAMES.moses.mirror)?-1:1,feet=projectFeet(camera,e),mouth=mosesMouth({origin:{x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-levitationLift(g,e)},flip});for(let i=0;i<5;i++){const t=(g.time*.8+i*.19)%1,size=(.06+t*.11)*camera.scale,x=feet.x+(mouth.x-e.x+flip*t*.15)*camera.scale,y=feet.y+(mouth.y-e.y-feet.offset-t*.24)*camera.scale;c.globalAlpha=(1-t)*.4;c.drawImage(smoke(color),x-size,y-size,size*2,size*2);}
    if(choosing||s.smoke)for(let i=0;i<6;i++){const a=g.time*.55+i*Math.PI/3;puff(c,camera,{x:e.x+Math.cos(a)*.6,y:e.y+Math.sin(a)*.6},.45+((g.time*.25+i/6)%1)*.8,.25,color,.17);}
   }
   if(r&&g.time-r.at>=.25){const progress=Math.max(0,Math.min(1,(g.time-r.at-.25)/1.25)),d={x:Math.cos(r.angle),y:Math.sin(r.angle)},head={x:e.x+d.x*(.65+3.7*progress),y:e.y+d.y*(.65+3.7*progress)};column(c,camera,head,d,3.7*progress,.3+1.7*progress,.35+.65*progress);}

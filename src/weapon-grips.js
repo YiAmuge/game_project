@@ -1,4 +1,5 @@
 import { loadAtlas } from './art.js';
+import{MOSES_FRAMES}from'./moses-sprites.js';
 
 export const UNCHANGED_HANDS=new Set(['meursault','sora','ppui','queequeg','gregor']);
 export const TWO_HANDED_GRIPS=new Set(['sinclair','marton','honglu','dongrang','hohenheim','rudolph']);
@@ -22,7 +23,7 @@ export function gripAppearance(key){
 }
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
-export const GRIP_PATHS={mosesPipe:[[.28,.18],[.9,.18]],
+export const GRIP_PATHS={mosesPipe:[MOSES_FRAMES.mosesPipe.grip,[.9,MOSES_FRAMES.mosesPipe.grip[1]]],
  ezraHammer:[[.09,.43],[.27,.43]],ezraDrill:[[.08,.31],[.34,.31]],ezraAxe:[[.25,.43],[.25,.88]],
  queenWand:[[.5,.53],[.5,.67]],nosWine:[[.5,.76],[.5,.85]],
  donBloodLance:[[.055,.5],[.18,.5]],heathBloodSack:[[.03,.5],[.065,.5]],

@@ -1,5 +1,8 @@
 import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{Game,damageFormula}from'../src/game.js';import{CHAMPIONS}from'../src/data.js';import*as M from'../src/moses.js';import{recordingProfile,SWING_SAMPLES}from'../src/weapon-swings.js';import{soundVoice}from'../src/sound-profiles.js';import{SnapshotWriter,applySnapshot}from'../src/online-state.js';import{FRAMES}from'../src/art.js';import{gripAppearance}from'../src/weapon-grips.js';import{skillReference}from'../src/skill-reference.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-5,`${a} != ${b}`),run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
+import{equipmentPose,weaponGeometry,weaponOrientation}from'../src/weapon-art.js';
+import{gripSourcePoint,gripLayout}from'../src/weapon-grips.js';
+import{mosesWeaponPose}from'../src/moses-vfx.js';
 function arena(){const g=new Game('moses','support',{mode:'training',seed:19}),p=g.player;g.units=[p];g.map={walls:[],bounds:{x:0,y:0,w:120,h:80}};g.bounds=g.map.bounds;Object.assign(g.practice,{lineStopped:true,pauseXp:true});Object.assign(p,{x:40,y:20,lastDamageAt:999,lastAttackAt:999});g.input.aim={x:50,y:20};g.aiChampion=g.aiMinion=g.aiNeutral=g.aiStructure=()=>{};return{g,p};}
 function hero(g,team=1,x=42,y=20){const e=g.makeChampion('faust',team,g.nextId+20);Object.assign(e,{x,y,armor:0,hp:100000,maxHp:100000,lastDamageAt:999,lastAttackAt:999});return e;}
 const damage=(g,p,n)=>damageFormula(n,CHAMPIONS.moses.power,1)*g.powerScale(p);
@@ -17,3 +20,23 @@ test('silence and death interrupt concentration without releasing a late project
 test('snapshots preserve breath selection, charges, concentration and fixed sprite slots',()=>{const{g,p}=arena(),client=arena().g;g.cast(p,'q',p,{direction:'left'});g.cast(p,'r',g.input.aim);assert.ok(applySnapshot(client,JSON.parse(JSON.stringify(new SnapshotWriter().capture(g,true))),p.id));assert.equal(client.player.state.smoke,'left');assert.equal(client.player.state.mosesCharges,1);assert.equal(client.player.state.mosesR.until,1.5);assert.equal(FRAMES.moses.sheet,21);assert.equal(FRAMES.mosesPipe.sheet,21);assert.equal(gripAppearance('moses').base,'#9b907b');});
 test('the uploaded inhale/exhale is the single voice with short silence-free cuts and no synthetic swing duplicate',()=>{const{g,p}=arena();M.choose(g,p,true);g.cast(p,'q',p,{direction:'left'});g.attack(p,g.input.aim);assert.equal(g.soundEvents.filter(e=>e.kind==='breath'&&e.phase==='moses-inhale').length,1);assert.equal(g.soundEvents.filter(e=>e.kind==='breath'&&e.phase==='moses-exhale').length,1);assert.equal(g.soundEvents.filter(e=>['swing','cast','shot'].includes(e.kind)).length,0);for(const phase of['moses-inhale','moses-exhale','moses-red-point']){const profile=recordingProfile(soundVoice({key:'moses',kind:'breath',phase,slot:phase==='moses-red-point'?'r':'q'}));assert.equal(profile.id,'mosesBreath');assert.ok(profile.duration<=1.12);}assert.ok(SWING_SAMPLES.some(s=>s.id==='mosesBreath'&&s.end===2.6));assert.ok(readFileSync(new URL('../src/assets/audio/stuiestu-male-deep-breath-457556.mp3',import.meta.url)).length>700000);});
 test('the encyclopedia reports all four breaths, two charges, and an infinite red point',()=>{assert.match(skillReference('moses',2).details,/2초/);assert.match(skillReference('moses',2).cooldown,/2/);assert.match(skillReference('moses',3).ranges[0].text,/무제한/);});
+
+test('red healing snapshots haste before new shields, independently of ally iteration order',()=>{for(const casterFirst of[true,false]){const{g,p}=arena(),a=hero(g,0);p.augments=['forceBattery'];p.upgrades.haste=1;p.hp=a.hp=1000;g.units=casterFirst?[p,a]:[a,p];g.cast(p,'q',p,{direction:'right'});const hp=p.hp;g.attack(p,g.input.aim);near(g.haste(p),.16);run(g,.51);near(p.hp-hp,67);near(a.hp-1000,67);}});
+test('the rendered mouthpiece meets the body lips in both directions and the round hand grips the shaft',()=>{
+ for(const facing of[0,Math.PI,.8,Math.PI-.3]){
+  const{g,p}=arena();p.facing=facing;M.choose(g,p,true,'up');g.time=.18;
+  const body=FRAMES.moses,frame=FRAMES.mosesPipe,base=equipmentPose(g,p),pose=mosesWeaponPose(g,p,base),m=weaponGeometry('mosesPipe',1.05),tip=gripSourcePoint(frame.mouth,m,pose.pivot),orientation=weaponOrientation(pose.angle),a=orientation.angle,y=tip.y-pose.gripY*m.height*m.scale;
+  const actual={x:pose.hand.x+orientation.flip*(tip.x*Math.cos(a)-y*Math.sin(a)),y:pose.hand.y+tip.x*Math.sin(a)+y*Math.cos(a)},height=2.1*body.heightScale;
+  near(pose.blend,1);near(actual.x,base.origin.x+(body.mouth[0]-body.foot[0])*height*body.w/body.h*base.flip);near(actual.y,base.origin.y+(body.mouth[1]-body.foot[1])*height);
+  const hand=gripLayout('moses','mosesPipe',m,pose.pivot)[0];near(hand.x,0);near(hand.y-pose.gripY*m.height*m.scale,0);
+ }
+});
+test('smoking raises and lowers the pipe continuously on selection, release and the first quarter-second of the ultimate',()=>{
+ const{g,p}=arena(),pose=()=>mosesWeaponPose(g,p,equipmentPose(g,p));
+ M.choose(g,p,true,'up');const rest=pose();near(rest.blend,0);g.time=.075;near(pose().blend,.5);g.time=.4;const raised=pose();near(raised.blend,1);
+ g.cast(p,'q',p,{direction:'up'});near(pose().angle,raised.angle);g.time+=.06;near(pose().blend,.5);g.time+=.06;near(pose().blend,0);near(pose().angle,rest.angle);
+ g.cast(p,'r',g.input.aim);const at=g.time;g.time=at+.25;near(pose().blend,1);g.time=at+.251;assert.ok(pose().blend>.99);g.time=at+.31;near(pose().blend,.5);g.time=at+.37;near(pose().blend,0);
+});
+test('a short selection or instant tactical cast still completes one smoking motion without repeating its inhale',()=>{
+ for(const quickCast of[true,false]){const{g,p}=arena();if(!quickCast){M.choose(g,p,true,'up');g.time=.04;}g.cast(p,'q',p,{direction:'up'});const pose=()=>mosesWeaponPose(g,p,equipmentPose(g,p));assert.ok(pose().blend<.2);g.time=.2;near(pose().blend,1);g.time=.38;near(pose().blend,0);assert.equal(g.soundEvents.filter(s=>s.phase==='moses-inhale').length,1);}
+});

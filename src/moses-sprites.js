@@ -14,6 +14,10 @@ export const MOSES_FRAMES={
       594,
       1149
     ],
+    "mouth": [
+      0.6978114478114478,
+      0.3990426457789382
+    ],
     "referenceHeight": 400,
     "crownOffset": 0,
     "heightScale": 1,
@@ -42,6 +46,14 @@ export const MOSES_FRAMES={
       67,
       1872,
       631
+    ],
+    "mouth": [
+      0.999732905982906,
+      0.18700475435816163
+    ],
+    "grip": [
+      0.3,
+      0.19096671949286848
     ]
   }
 };
