@@ -15,9 +15,9 @@ function drawTelegraph(c,camera,s,time,ally){
  const d={x:Math.cos(s.angle),y:Math.sin(s.angle)},n={x:-d.y,y:d.x},points=[[0,-1],[s.range,-1],[s.range,1],[0,1]].map(([along,side])=>camera.worldToScreen({x:s.x+d.x*along+n.x*s.width/2*side,y:s.y+d.y*along+n.y*s.width/2*side},.04));
  c.save();c.fillStyle=ally?'#fa64bd17':'#e5416633';c.strokeStyle=ally?'#ffa6dfb0':'#ff5a7cd9';c.lineWidth=1.5;c.setLineDash([7,5]);c.lineDashOffset=-time*10;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill();c.stroke();c.restore();
 }
-function uprightSeal(c,camera,p,angle,radius,time,alpha=1){
+export function uprightSeal(c,camera,p,angle,radius,time,alpha=1,palette={}){
  const at=camera.worldToScreen(p,1.45),side=camera.worldToScreen({x:p.x-Math.sin(angle),y:p.y+Math.cos(angle)},1.45),up=camera.worldToScreen(p,2.45);let ux=up.x-at.x,uy=up.y-at.y;if(Math.hypot(ux,uy)<1){ux=0;uy=-camera.scale;}
- c.save();c.translate(at.x,at.y);c.transform((side.x-at.x<0?-1:1)*Math.max(Math.abs(side.x-at.x),camera.scale*.42),side.y-at.y,ux,uy,0,0);drawMagicCircle(c,time*5,{radius,alpha});c.restore();
+ c.save();c.translate(at.x,at.y);c.transform((side.x-at.x<0?-1:1)*Math.max(Math.abs(side.x-at.x),camera.scale*.42),side.y-at.y,ux,uy,0,0);drawMagicCircle(c,time*5,{radius,alpha,...palette});c.restore();
 }
 function beam(c,camera,f){
  const d={x:Math.cos(f.angle),y:Math.sin(f.angle)},n={x:-d.y,y:d.x},alpha=Math.min(1,f.life/Math.max(.01,f.maxLife)*2),at=(along,side)=>camera.worldToScreen({x:f.x+d.x*along+n.x*side,y:f.y+d.y*along+n.y*side},1.35);
