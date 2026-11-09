@@ -4,6 +4,7 @@ import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 import { rectangle } from './reworks.js';
 
+function ahabUltimateHit(g,e,t,damage,options={}){const delayed=Boolean(t.state?.posthumous||t.state?.detonating);g.deal(e,t,damage,options);if(t.kind==='champion'&&(!t.alive||!delayed&&(t.state?.posthumous||t.state?.detonating)))e.state.recastUntil=g.time+5;}
 export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}onRespawn(g,e);}
 export function onRespawn(g,e){if(e.key==='ahab'){e.state.order='cover';g.addBuff(e,'ahabOrder',Infinity,{copy:false});}}
 function harpoonMark(g,t,captain){const mark=t.state?.harpoons?.[captain.id]||t.state?.harpoon;return mark?.source===captain.id&&mark.team===captain.team&&mark.until>g.time;}
@@ -41,7 +42,7 @@ export function validate(g,e,slot,p){
  if(e.key==='ahab'&&slot==='r')return !g.stat(e,'root')&&!g.blocked(p.x,p.y,e.radius);
  return true;
 }
-export function recast(g,e,slot){return e.key==='ahab'&&slot==='r'&&e.state.recastUntil>g.time&&!e.state.recastSpent;}
+export function recast(g,e,slot){return e.key==='ahab'&&slot==='r'&&e.state.recastUntil>g.time;}
 export function receivedMultiplier(g,e,t,kind){return e.key==='gahwan'&&kind==='skill'&&t.state?.contempt?.[e.id]>g.time?1.12:1;}
 function gaze(g,e,t,n=1){
  if(t.kind!=='champion'||!t.alive||t.hp<=0||g.debuffImmune?.(t))return;
@@ -109,16 +110,16 @@ export function cast(g,e,slot,p,d){
  if(e.key==='ahab'){
   if(slot==='q'){s.order=s.order==='guard'?'cover':'guard';s.orderAt=g.time;g.addBuff(e,'ahabOrder',Infinity,{copy:false});}
   else{
-   const isRecast=recast(g,e,slot);s.recastSpent=isRecast;s.recastUntil=0;
+   s.recastUntil=0;
    const len=Math.min(6.5,distance(e,p)),dest=trapPoint(g,e,{x:e.x+d.x*len,y:e.y+d.y*len}),execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
    s.ahabUlt={origin:{x:e.x,y:e.y},immune:e.ccImmuneUntil||0,invulnerable:e.invulnerableUntil||0};e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.channelUntil=g.time+.45;
    s.ahabSlamAt=g.time+.45;s.ahabTeleportTrail={from:{x:e.x,y:e.y},to:{...dest},at:g.time,facing:e.facing};
    e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
    {
-    for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{g.effects.push({source:e.id,theme:e.key,slot:'r',damageKind:'skill',type:'ahabSpin',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.28,maxLife:.28});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){g.deal(e,t,180,{nonLethal:execute.has(t.id)});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+5;}});
+    for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{g.effects.push({source:e.id,theme:e.key,slot:'r',damageKind:'skill',type:'ahabSpin',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.28,maxLife:.28});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){ahabUltimateHit(g,e,t,180,{nonLethal:execute.has(t.id)});}});
     g.schedule(e,.45,()=>{g.emitSound?.('slam',e,{slot:'r',phase:'ahab-slam',family:'spear',element:'fire'});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){
-     if(execute.has(t.id)){g.deal(e,t,t.hp+g.shield(t),{fixed:true});if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+5;}
-     else{g.deal(e,t,300+(t.maxHp-t.hp)*.18);if(!t.alive&&t.kind==='champion'&&!isRecast)s.recastUntil=g.time+5;}
+     if(execute.has(t.id)){ahabUltimateHit(g,e,t,t.hp+g.shield(t),{fixed:true});}
+     else{ahabUltimateHit(g,e,t,300+(t.maxHp-t.hp)*.18);}
     }g.effects.push({type:'burst',x:e.x,y:e.y,r:2.5,theme:e.key,life:.7,maxLife:.7});const ult=s.ahabUlt;const done=()=>{e.ccImmuneUntil=ult.immune;e.invulnerableUntil=ult.invulnerable;delete s.ahabUlt;s.returnAnchorUntil=g.time+.05;};e.channelUntil=0;if(!g.startMotion(e,direction(e,ult.origin),distance(e,ult.origin),{speed:12,maxSpeed:12,phaseEnemies:true,follow:{...ult.origin,alive:true},onComplete:done}))done();});
    }
   }return true;

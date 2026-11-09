@@ -2,12 +2,12 @@ import { distance } from './geometry.js';
 import { AUGMENTS,AUGMENT_RULES } from './data.js';
 export { AUGMENTS,AUGMENT_RULES };
 export const absorbedOrder=e=>['yan','sora'].includes(e.key)&&Boolean(e.absorbedOrder);
-export const has=(e,key)=>Boolean(e.augments?.includes(key)||key==='writtenOrder'&&absorbedOrder(e));
+export const has=(e,key)=>Boolean(e.augments?.includes(key)||key==='writtenOrder'&&absorbedOrder(e)||key==='carrier'&&e.absorbedCarrier);
 export const cost=(e,key)=>AUGMENT_RULES.cost*(['yan','sora'].includes(e.key)&&key==='writtenOrder'?.5:1);
 export const saleValue=(e,key)=>cost(e,key)*AUGMENT_RULES.refund;
 // A rifle/single projectile keeps the ordinary range bonus; fans, rectangles,
 // radial attacks, piercing projectiles and damaging dashes use the area bonus.
-export const broadBasic=e=>!['jamila','outis','ppui'].includes(e.key)&&(e.key!=='faust'||e.level>=10);
+export const broadBasic=e=>e.key==='ppui'?(e.ppuiHealing||0)+1e-8>=10000:!['jamila','outis'].includes(e.key)&&(e.key!=='faust'||e.level>=10);
 export const rangeBonus=e=>has(e,'range7')?(broadBasic(e)?1.3:2.5):0;
 export function absorbOrder(g,e){if(!['yan','sora'].includes(e.key)||absorbedOrder(e)||!g.buff(e,e.key==='yan'?'yanDistorted':'soraEgo')||!e.augments.includes('writtenOrder'))return false;e.augments=e.augments.filter(k=>k!=='writtenOrder');e.absorbedOrder=true;return true;}
 export function unlocked(e,group){return group==='combat'?e.upgrades.power>=3:group==='survival'?e.upgrades.health>=3:e.upgrades.speed+e.upgrades.reload+e.upgrades.haste>=3;}
@@ -31,10 +31,11 @@ export const categoryCount=(e,group)=>e.augments.filter(key=>AUGMENTS.find(a=>a.
 export const resentment=e=>has(e,'resentment')?Math.min(8,Math.floor((1-e.hp/e.maxHp+1e-8)*10))*.05:0;
 export function tick(g,e,dt=0){
  for(const key of ['orderStacks'])e.state[key]=liveStacks(g,e,key);
- if(has(e,'forceBattery')&&g.time-e.lastDamageAt>=2-1e-8)naturalShield(g,e,e.maxHp*.13*dt);
+ if(has(e,'forceBattery')&&g.time-e.lastDamageAt>=2-1e-8)naturalShield(g,e,e.maxHp*.03*dt);
  if(has(e,'antimatter'))e.state.antimatterNext??=g.time+.5;
  if(has(e,'antimatter')&&g.time+1e-8>=e.state.antimatterNext){e.state.antimatterNext=g.time+.5;for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=1.6+t.radius&&g.clearLine(e,t))g.deal(e,t,20,{fixed:true,proc:false});}
  const s=e.state;
+ if(s.duelStacks>0&&g.time+1e-8>=s.duelDecay){while(s.duelStacks>0&&g.time+1e-8>=s.duelDecay){s.duelStacks--;s.duelDecay+=5;}}
  if(e.key==='kim'&&has(e,'power15')){s.unityNext??=g.time+2;while(g.time+1e-8>=s.unityNext){s.unityNext+=2;const id=`sword-unity-${e.id}`,old=e.shields.find(a=>a.source===id&&a.until>g.time)?.value||0;g.addShield(e,Math.min(e.maxHp*.12,old+e.maxHp*.01),id,5);g.addBuff(e,'swordDiscipline',5,{copy:false});}}else delete s.unityNext;
  if(e.key==='queen'&&has(e,'battleHaste')&&e.state.queenR?.phase==='charging'){if(!g.buff(e,'augBattleHaste')){e.visuals.battleHaste={at:g.time,until:g.time+1};g.addBuff(e,'augBattleHaste',.1,{copy:false});}else e.buffs.augBattleHaste=g.time+.1;}
  else if(g.time-e.lastCombat>3){delete s.augCombatAt;delete e.buffs.augBattleHaste;}
@@ -43,7 +44,7 @@ export function tick(g,e,dt=0){
 }
 export function interceptFatal(g,e,remaining){
  if(e.kind!=='champion'||remaining<e.hp||!has(e,'kAmpule')||(e.state.ampuleReady||0)>g.time)return false;
- e.state.ampuleReady=g.time+60;e.visuals.ampule={at:g.time,until:g.time+1.2};e.hp=e.maxHp*.5;
+ e.state.ampuleReady=g.time+60;e.ampuleGrowth=(e.ampuleGrowth||0)+.025;e.maxHp=g.maxHp(e);e.visuals.ampule={at:g.time,until:g.time+1.2};e.hp=e.maxHp*.5;
  for(const key of ['stun','root','silence','slow','disarm','taunt','captured','netCapture','yanLock'])delete e.status[key];
  delete e.state.netCapture;delete e.state.taunt;if(e.motion?.forced)delete e.motion;const owner=g.units.find(a=>a.state?.swordGrab?.target===e);if(owner)delete owner.state.swordGrab;delete e.state.swordHeldBy;
  e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+1);g.addBuff(e,'ampuleStride',1,{copy:false});
@@ -52,10 +53,14 @@ export function interceptFatal(g,e,remaining){
 export function naturalShield(g,e,amount){
  if(!has(e,'forceBattery')||amount<=0)return;
  const id=`battery-${e.id}`,old=e.shields.find(s=>s.source===id&&s.until>g.time)?.value||0;
- g.addShield(e,Math.min(e.maxHp*.3,old+amount),id,Infinity,false);
+ g.addShield(e,Math.min(e.maxHp*.12,old+amount),id,Infinity,false);
 }
-export function afterHit(g,e,t,actual,proc,absorbed=0){
+export function afterHit(g,e,t,actual,proc,absorbed=0,origin=null){
  if(e.kind==='champion'&&e.team!==t.team&&has(e,'glaive')&&actual>0)g.heal(e,e,actual*.3,false);
+ if(e.kind==='champion'&&e.team!==t.team&&actual+absorbed>0){
+  if(has(e,'duelManual')){e.state.duelStacks=Math.min(5,(e.state.duelStacks||0)+1);e.state.duelDecay=g.time+5;}
+  if(has(e,'wisdom')&&origin!=='wisdom'&&(e.state.wisdomReady||0)<=g.time){e.state.wisdomReady=g.time+10;const damage=150+g.powerScale(e)*50;for(let i=1;i<=3;i++)g.schedule(e,i,()=>{if(t.alive){g.deal(e,t,damage,{fixed:true,proc:false,augmentOrigin:'wisdom'});g.effects.push({type:'wisdomSlash',source:e.id,target:t.id,x:t.x,y:t.y,angle:i%2?.65:-.65,life:.4,maxLife:.4});}},{autonomous:true});}
+ }
  if(!proc||actual+absorbed<=0)return;
  if(e.kind==='champion'&&e.team!==t.team&&has(e,'writtenOrder')){stack(g,e,'orderStacks',orderLimit(e));g.addBuff(e,'writtenOrder',5,{copy:false});}
  if(e.kind==='champion'&&e.team!==t.team){
@@ -66,18 +71,18 @@ export function afterHit(g,e,t,actual,proc,absorbed=0){
 export const slots=e=>AUGMENT_RULES.slots;
 export const usedSlots=e=>e.augments.length;
 export const categoryFits=(e,key)=>has(e,'carrier')||key==='carrier'||categoryCount(e,AUGMENTS.find(a=>a.key===key)?.group)<AUGMENT_RULES.categorySlots;
-export const fits=(e,key)=>usedSlots(e)<slots(e);
-export const sellable=(g,key,e=g.player)=>!(key==='writtenOrder'&&absorbedOrder(e));
+export const fits=(e,key)=>key==='carrier'||usedSlots(e)<slots(e);
+export const sellable=(g,key,e=g.player)=>!(key==='writtenOrder'&&absorbedOrder(e))&&(key!=='carrier'||g.training);
 export const liveStacks=(g,e,key)=>(e.state[key]||[]).filter(at=>at>g.time+1e-8);
 function stack(g,e,key,max){const list=liveStacks(g,e,key);if(list.length>=max)list.shift();list.push(g.time+5);e.state[key]=list;}
-export function powerRate(g,e){return (e.key==='queen'&&has(e,'battleHaste')&&battleActive(g,e)?.15:0)+(has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.05:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?Math.max(0,g.speed(e)/g.baseSpeed(e)-1):0);}
-export const speedRate=(g,e)=>(has(e,'duelManual')?.05:0)+(has(e,'carrier')?.03:0)+(has(e,'forceBattery')&&g.shield(e)>=e.maxHp*.1-1e-8?.1:0);
-export const reloadRate=(g,e)=>(has(e,'kAmpule')?.07:0)+(e.key==='sora'&&has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*.025:0);
+export function powerRate(g,e){return (e.key==='queen'&&has(e,'battleHaste')&&battleActive(g,e)?.15:0)+(has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.07:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?(e.state.duelStacks||0)*.05:0);}
+export const speedRate=(g,e)=>(has(e,'duelManual')?.05+(e.state.duelStacks||0)*.02:0)+(has(e,'carrier')?.03:0)+(has(e,'forceBattery')?.1:0);
+export const reloadRate=(g,e)=>(e.key==='sora'&&has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*.025:0);
 export const armorRate=(g,e)=>(has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*(e.key==='sora'?.025:.05):0)+(has(e,'traumaGuard')?.05:0)+(has(e,'highRisk')?.07:0);
 export const armorPen=e=>has(e,'power15')?.2:0;
 export const converts=(g,e)=>has(e,'writtenOrder')&&liveStacks(g,e,'orderStacks').length>=orderLimit(e);
 export const conversionRate=(g,e)=>converts(g,e)?e.key==='sora'?.07:.1:0;
-export const healthRate=e=>(has(e,'antimatter')?.1:0)+(has(e,'traumaGuard')?.05:0);
+export const healthRate=e=>(has(e,'antimatter')?.1:0)+(has(e,'traumaGuard')?.05:0)+(has(e,'kAmpule')?.07:0)+(e.ampuleGrowth||0);
 export const cooldownFactor=e=>1;
 export function onCast(){}
 export function onDebuff(g,e,target){
@@ -98,3 +103,5 @@ export function interceptCC(g,e,key,amount,seconds){
  g.effects.push({type:'traumaField',source:e.id,x:e.x,y:e.y,r:1,color:'#ffffff',life:.6,maxLife:.6});return true;
 }
 export function cleanup(e){for(const k of ['maskStacks','orderStacks','antimatterNext'])delete e.state[k];}
+
+export function moved(g,e,from){if(!has(e,'adaptiveSpeed')||!from)return;const s=e.state,len=distance(from,e);if(len<=1e-8)return;s.accelDistance=Math.min(5,(s.accelDistance||0)+len);if(s.accelDistance>=5-1e-8&&(s.accelReady||0)<=g.time){s.accelDistance=0;s.accelReady=g.time+3;g.rewindCooldowns(e,-1.3);}}

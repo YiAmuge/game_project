@@ -30,15 +30,15 @@ function hit(g,e,t,w,index,kind,slot,damage=w.damage){
  if(!t.alive)return;
  if(index===1)g.status(t,'slow',.12,w.slowTime,e);
  if(index===3){
-  if(actual+absorbed>0){const hits=(t.state??={}).ezraGauntletHits??={},last=hits[e.id];if(last!==undefined&&g.time-last<=w.rehitWindow+1e-8)g.status(t,'root',1,w.rootTime,e);hits[e.id]=g.time;}
-  const toward=direction(t,e),len=Math.min(2.5,Math.max(0,distance(t,e)-e.radius-t.radius));if(len>0)g.startMotion(t,toward,len,{kind:'knock',source:e,speed:12,forcedMaxSpeed:12});g.status(t,'slow',.30,1.25,e);
+  const hits=(t.state??={}).ezraGauntletHits??={},last=hits[e.id],root=last!==undefined&&g.time-last<=w.rehitWindow+1e-8;if(actual+absorbed>0)hits[e.id]=g.time;
+  const toward=direction(t,e),len=Math.min(2.5,Math.max(0,distance(t,e)-e.radius-t.radius));if(len>0)g.startMotion(t,toward,len,{kind:'knock',source:e,speed:12,forcedMaxSpeed:12});g.status(t,'slow',.30,1.25,e);if(root&&actual+absorbed>0)g.status(t,'root',1,w.rootTime,e);
  }
  if(index===4){g.status(t,'slow',.25,1,e);if(t.status?.slow?.theme==='ezra')t.status.slow.decayAt=g.time;}
 }
 function liveAim(g,e){return e.player?g.aim(e,g.input.aim):{x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)};}
 function strike(g,e,w,index,d,kind,slot,{circle=false,fourth=false}={}){
  const a=e.state.ezraAttack;if(index!==2||a.phase!=='strike')a.at=g.time;a.phase='strike';
- if(fourth)a.until=g.time+.3;
+ if(index===4)a.until=g.time+.3;
  if(index===1){d=liveAim(g,e);a.angle=Math.atan2(d.y,d.x);a.spinDirection=e.state.ezraHammerDirection=-(e.state.ezraHammerDirection??-1);circle=true;a.hammerStrike=(a.hammerStrike||0)+1;}
  const range=w.range+rangeBonus(e)+(index===1?(a.hammerStrike-1)*w.rangeGrowth:0),angle=[1,2].includes(index)?w.angle:circle?Math.PI*2:Math.PI,shape=circle?{kind:'circle',range}:{kind:'cone',range,spread:angle,angle:a.angle};
  // Drill's three damage ticks belong to one visible swing and one swing sound.
@@ -57,16 +57,16 @@ function perform(g,e,index,p,d,kind,slot){
  const w=weapon(g,e,index),serial=(e.state.ezraSerial||0)+1,fourth=index===4&&e.state.ultAttacks===4;
  e.state.ezraBusyUntil=g.time+(w.hits?((w.hits-1)*w.every):0);e.state.ezraSerial=serial;
  e.state.ezraAttack={weapon:index,angle:Math.atan2(d.y,d.x),at:g.time,startedAt:g.time,until:g.time+(index===1?.88:index===2?.6:.85),phase:index===3?'leap':movementWeapon(g,e,index)?'dash':'strike',fourth,serial};
- const valid=()=>e.alive&&e.state.ezraSerial===serial&&!g.stat(e,'stun'),apply=()=>{if(valid())strike(g,e,w,index,d,kind,slot,{circle:index===3||fourth,fourth});};
+ const valid=()=>e.alive&&e.state.ezraSerial===serial&&!g.stat(e,'stun'),apply=()=>{if(valid())strike(g,e,w,index,d,kind,slot,{circle:index===3||index===4,fourth});};
  if(index===0){
-  g.addShield(e,e.maxHp*w.shield,`ezra-glove-${e.id}`,w.shieldTime);
+  g.addShield(e,e.maxHp*w.shield,`ezra-glove-${e.id}`,w.shieldTime);g.addBuff(e,'ezraGloveStride',1,{copy:false});
   const hits=new Set(),len=w.dash+rangeBonus(e);g.emitSound('swing',e,{damageKind:kind,slot,stance:index,family:w.family});
   g.effects.push({type:'thrust',source:e.id,theme:'ezra',weaponIndex:index,damageKind:kind,slot,x:e.x,y:e.y,r:len,angle:Math.atan2(d.y,d.x),shape:{kind:'rect',range:len,width:1.2,angle:Math.atan2(d.y,d.x)},life:.18,maxLife:.18});
   g.startMotion(e,d,len,{speed:44,maxSpeed:44,phaseEnemies:true,actionTag:'ezraGlove',onStep:(from,to)=>{if(!valid())return;for(const t of[...g.units])if(g.hostile(e,t)&&!hits.has(t.id)&&segmentDistance(t,from,to)<=t.radius+.6&&g.clearLine(e,t)){hits.add(t.id);hit(g,e,t,w,index,kind,slot);}},onComplete:()=>{if(valid())e.state.ezraAttack.phase='strike';}});
  }else if(index===1||index===2){
   e.attackCd=Math.max(e.attackCd,combatSeconds((w.hits-1)*w.every+.1));for(let i=0;i<w.hits;i++)if(i===0)apply();else g.schedule(e,i*w.every,apply);
  }else if(index===3){
-  const landing=g.safeLanding(e,p,w.dash),len=Math.max(.001,distance(e,landing));g.startMotion(e,direction(e,landing),len,{kind:'leap',speed:len/.45,maxSpeed:Infinity,minDuration:.45,arcHeight:2.2,ignoreWalls:true,phaseEnemies:true,actionTag:'ezraSlam',onComplete:apply});
+  const landing=g.safeLanding(e,p,w.dash),len=Math.max(.001,distance(e,landing));g.startMotion(e,direction(e,landing),len,{kind:'leap',speed:len/.5,maxSpeed:Infinity,minDuration:.5,arcHeight:2.2,ignoreWalls:true,phaseEnemies:true,actionTag:'ezraSlam',onComplete:apply});
  }else{
   const len=Math.min(w.dash,distance(e,p)),done=()=>{apply();if(e.ammo<1)endUltimate(g,e);};if(len<.001)done();else g.startMotion(e,d,len,{speed:15,maxSpeed:15,phaseEnemies:true,actionTag:'ezraAxe',onComplete:done});
  }
@@ -77,7 +77,7 @@ export function basic(g,e,p,d){
 }
 export function endUltimate(g,e){const saved=e.state.ezraNormal;if(!saved)return;delete e.buffs.ezraUlt;delete e.state.ezraNormal;e.state.ultAttacks=0;e.state.weapon=saved.weapon;e.ammo=saved.ammo;e.reloadProgress=saved.progress;e.state.ezraReloading=saved.reloading;e.range=weapon(g,e).range;if(e.ammo<1&&!e.state.ezraReloading)beginReload(g,e);}
 export function cast(g,e,slot,p,d){
- if(slot==='q'){perform(g,e,e.state.ezraLastWeapon,p,d,'skill','q');return;}
+ if(slot==='q'){g.heal(e,e,(e.maxHp-e.hp)*.07,false,{skillHeal:true});perform(g,e,e.state.ezraLastWeapon,p,d,'skill','q');return;}
  // Resume the pending magazine slot; the last basic is only the tactical repeat history.
  delete e.state.ezraAttack;e.state.ezraSerial=(e.state.ezraSerial||0)+1;e.state.ezraNormal={ammo:e.ammo,weapon:e.state.weapon,progress:e.reloadProgress,reloading:Boolean(e.state.ezraReloading)};delete e.state.ezraReloading;e.reloadProgress=0;e.state.ultAttacks=0;g.addBuff(e,'ezraUlt',EZRA.rDuration,{copy:false});e.ammo=EZRA.ammo;e.range=EZRA_AXE.range;
 }

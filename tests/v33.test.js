@@ -34,7 +34,7 @@ test('fountain applies to enemy minions, neutral creeps and invulnerable summons
  for(const e of [creep,minion,summon,p])F.tick(g,e,.5);assert.ok(!creep.alive&&!minion.alive&&!summon.alive);close(p.hp,hp);
 });
 test('battery begins at two seconds without taking damage even while attacking, caps and grants ten haste',()=>{
- const {g,p}=arena();p.augments=['forceBattery'];p.lastDamageAt=10;p.lastAttackAt=100;g.time=11.99;A.tick(g,p,.1);close(g.shield(p),0);g.time=12;A.tick(g,p,1);close(g.shield(p),p.maxHp*.13);close(g.haste(p),.1);A.tick(g,p,3);close(g.shield(p),p.maxHp*.3);p.shields[0].value=p.maxHp*.099;close(g.haste(p),0);
+ const {g,p}=arena();p.augments=['forceBattery'];p.lastDamageAt=10;p.lastAttackAt=100;g.time=11.99;A.tick(g,p,.1);close(g.shield(p),0);g.time=12;A.tick(g,p,1);close(g.shield(p),p.maxHp*.03);close(g.haste(p),.1);A.tick(g,p,3);close(g.shield(p),p.maxHp*.12);p.shields[0].value=p.maxHp*.099;close(g.haste(p),.1);
 });
 test('sword union gives ten power and twenty percent armor penetration in real damage',()=>{
  const {g,p}=arena(),t=hero(g);t.armor=100;const power=g.powerScale(p);p.augments=['power15'];close(g.powerScale(p)/power,1.1);const hit=g.deal(p,t,100,{proc:false});close(hit,damageFormula(100,4,1)*1.1/(1+.8));
@@ -42,11 +42,11 @@ test('sword union gives ten power and twenty percent armor penetration in real d
 test('glaive heals thirty percent of actual HP damage, including periodic damage, without healing from absorbed damage',()=>{
  const {g,p}=arena(),t=hero(g);p.augments=['glaive'];p.hp-=1000;let hp=p.hp;const actual=g.deal(p,t,100);close(p.hp-hp,actual*.3);hp=p.hp;g.addShield(t,1000,'test',3);g.deal(p,t,100);close(p.hp,hp);t.shields=[];g.deal(p,t,100,{fixed:true,proc:false});close(p.hp-hp,30);
 });
-test('wisdom preserves thirty-percent magazine reload during attacking and full speed when idle',()=>{
- const {g,p}=arena();p.augments=['wisdom'];p.ammo=0;p.attackCd=10;const gap=g.reloadInterval(p);run(g,gap);close(p.reloadProgress,gap*.3,1/60);assert.equal(p.ammo,0);p.attackCd=0;g.input.fire=false;run(g,gap*.72);assert.ok(p.ammo>=1);
+test('wisdom does not reload during attacking and full speed when idle',()=>{
+ const {g,p}=arena();p.augments=['wisdom'];p.ammo=0;p.attackCd=10;const gap=g.reloadInterval(p);run(g,gap);close(p.reloadProgress,0,1/60);assert.equal(p.ammo,0);p.attackCd=0;g.input.fire=false;run(g,gap*1.01);assert.ok(p.ammo>=1);
 });
-test('duel manual power follows actual bonus movement without recursive stat calculation',()=>{
- const {g,p}=arena();p.augments=['duelManual'];close(g.speed(p)/g.baseSpeed(p),1.05);close(g.powerScale(p),1.05);g.addBuff(p,'hohenheimStride',1);close(g.powerScale(p),1.35);p.upgrades.speed=3;close(g.powerScale(p),1.44);
+test('duel manual power is independent of unrelated movement bonuses without recursive stat calculation',()=>{
+ const {g,p}=arena();p.augments=['duelManual'];close(g.speed(p)/g.baseSpeed(p),1.05);close(g.powerScale(p),1);g.addBuff(p,'hohenheimStride',1);close(g.powerScale(p),1);p.upgrades.speed=3;close(g.powerScale(p),1);
 });
 test('antimatter adds health and ticks on half-second boundaries only inside range',()=>{
  const {g,p}=arena(),near=hero(g,21.5),far=hero(g,22.2);p.augments=['antimatter'];close(g.maxHp(p),2800*1.1);A.tick(g,p,0);run(g,.49);close(near.hp,100000);run(g,.02);close(near.hp,99980);close(far.hp,100000);run(g,.5);close(near.hp,99960);
@@ -59,8 +59,8 @@ test('trauma negates one CC, restores one magazine, retains its sixteen-second c
  const {g,p}=arena(),t=hero(g);p.augments=['traumaGuard'];p.ammo=0;g.status(p,'armorDown',10,1,t);assert.equal(p.state.traumaReady,undefined);g.status(p,'stun',1,2,t);close(g.stat(p,'stun'),0);close(p.ammo,1);close(p.state.traumaReady,26);g.status(p,'root',1,2,t);close(g.stat(p,'root'),1);g.kill(p,t);close(p.state.traumaReady,26);
  const b=arena();b.p.augments=['traumaGuard'];b.p.ammo=0;assert.equal(b.g.startMotion(b.p,{x:1,y:0},2,{kind:'knock'}),false);close(b.p.ammo,1);assert.equal(b.p.motion,undefined);
 });
-test('carrier occupies one of six slots, removes category limits and can be sold in the fountain',()=>{
- const {g,p}=arena();upgrade(p);p.augments=['power15','glaive','resentment','kAmpule'];assert.ok(g.buyAugment(p,'carrier'));close(A.usedSlots(p),5);close(A.slots(p),6);assert.ok(g.buyAugment(p,'wisdom'));close(A.usedSlots(p),6);assert.equal(g.buyAugment(p,'magazine2'),false);g.training=false;Object.assign(p,{x:FOUNTAIN_AREAS[0].x+2,y:24,lastCombat:-99});assert.ok(g.sellAugment(p,'carrier'));close(A.slots(p),6);close(A.usedSlots(p),5);assert.equal(g.buyAugment(p,'range7'),false);
+test('carrier absorbs without a slot, removes category limits and can be sold in the fountain',()=>{
+ const {g,p}=arena();upgrade(p);p.augments=['power15','glaive','resentment','kAmpule'];assert.ok(g.buyAugment(p,'carrier'));close(A.usedSlots(p),4);close(A.slots(p),6);assert.ok(g.buyAugment(p,'wisdom'));close(A.usedSlots(p),5);assert.equal(g.buyAugment(p,'magazine2'),true);g.training=false;Object.assign(p,{x:FOUNTAIN_AREAS[0].x+2,y:24,lastCombat:-99});assert.equal(g.sellAugment(p,'carrier'),false);g.training=true;assert.ok(g.sellAugment(p,'carrier'));close(A.slots(p),6);close(A.usedSlots(p),6);assert.equal(g.buyAugment(p,'range7'),false);
 });
 test('mask triggers on successful debuffs and high-risk supplies power and armor',()=>{
  const {g,p}=arena(),t=hero(g);p.augments=['maskDeLu','highRisk'];const gap=g.reloadInterval(p);A.onCast(g,p);close(g.speed(p)/g.baseSpeed(p),1);close(g.reloadInterval(p),gap);p.qCd=10;p.rCd=40;p.ammo=0;g.status(t,'slow',.2,2,p);close(p.qCd,8);close(p.rCd,32);close(p.ammo,1);close(p.state.maskReady,g.time+10);close(g.powerScale(p),1.05);close(g.cooldown(p,'q'),11);close(A.armorRate(g,p),.07);
@@ -71,7 +71,7 @@ test('stack gauges use under-ammo progress and transformation/awakening time',()
  const {g,p}=arena('sora');p.state.unlock=3;close(stackGauge(p,g).ratio,.6);
 });
 test('Alisa explosion phases opponents, does not leave a corpse and snapshots bonus-health-scaled burn',()=>{
- const {g,p}=arena('alisa'),t=hero(g,21);Skills.beginAlisaDetonation(g,p,p);assert.ok(p.phaseEnemiesUntil>g.time);moveBody(g,p,.8,0);assert.ok(p.x>20.7);run(g,2.01);assert.equal(p.alive,false);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,0);assert.ok(t.burn.explosion);close(t.burn.damage,15+g.bonusHealth(p)*.02);
+ const {g,p}=arena('alisa'),t=hero(g,21);Skills.beginAlisaDetonation(g,p,p);assert.ok(p.phaseEnemiesUntil>g.time);moveBody(g,p,.8,0);assert.ok(p.x>20.7);run(g,2.01);assert.equal(p.alive,false);assert.equal(g.corpses.filter(c=>c.key==='alisa').length,0);assert.ok(t.burn.explosion);close(t.burn.damage,25+g.bonusHealth(p)*.025);
 });
 test('lethal burns cannot leave dead creep aggro, pattern or DoT state, and respawn is clean',()=>{
  for(const explosion of [false,true]){const {g,p}=arena('alisa'),n=g.makeNeutral(23,20,'amplify');n.hp=1;Skills.applyBurn(g,p,n,explosion);run(g,.51);assert.equal(n.alive,false);assert.equal(n.burn,undefined);assert.equal(n.aggro,null);assert.equal(n.hostile,false);assert.equal(n.pattern,undefined);Skills.applyBurn(g,p,n,explosion);assert.equal(n.burn,undefined);g.time=n.respawnAt;g.step(.01);assert.ok(n.alive);const hp=n.hp;run(g,3);close(n.hp,hp);assert.equal(n.hostile,false);}
@@ -83,7 +83,7 @@ test('Outis ultimate kills refund thirty percent of the base cooldown per kill',
  const {g,p}=arena('outis'),t=hero(g,22);t.hp=1;g.cast(p,'r',t);run(g,.3);assert.equal(t.alive,false);assert.ok(p.rCd<=g.cooldown(p,'r')*.7);assert.ok(g.buff(p,'outisReload'));
 });
 test('Ahab ultimate grants exactly a five-second recast window for champion kills',()=>{
- const {g,p}=arena('ahab'),t=hero(g,24);t.hp=1;g.cast(p,'r',t);run(g,.46);close(p.state.recastUntil-(10+.45),5,1/120+.00001);assert.equal(p.state.recastSpent,false);
+ const {g,p}=arena('ahab'),t=hero(g,24);t.hp=1;g.cast(p,'r',t);run(g,.46);close(p.state.recastUntil-(10+.45),5,1/120+.00001);assert.equal(p.state.recastSpent,undefined);
 });
 test('explicit partial-strength buffs retain their numerical potency without automatic Hong Lu copies',()=>{
  const {g,p}=arena('honglu'),ally=hero(g,24,20,0),own=g.powerScale(p),other=g.powerScale(ally);g.addBuff(p,'amplify',10);close(g.powerScale(p)/own,1.10);close(g.powerScale(ally)/other,1);g.addBuff(ally,'amplify',10,{strength:.5,copy:false});close(g.powerScale(ally)/other,1.05);g.addShield(p,350,'gift',2);close(g.shield(ally),0);g.addShield(ally,175,'partial-gift',2,false);close(g.shield(ally),175);

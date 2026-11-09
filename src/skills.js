@@ -116,7 +116,7 @@ export function ammoCap(g,e){
  if(e.lcaTrooper)return 16;if(e.key==='jamila')return 16+(has(e,'magazine2')?8:0);
  const extra=(has(e,'magazine2')?2:0)+(e.key==='faust'&&e.level===RULES.maxLevel?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
  if(e.key==='ezra')return Ezra.EZRA.ammo;
- return CHAMPIONS[e.key].ammo+extra*(e.key==='rudolph'?15:1);
+ return CHAMPIONS[e.key].ammo+extra*(e.key==='rudolph'?15:1)+(e.key==='ppui'&&Ppui.pulse(e)>=30?1:0);
 }
 export function reloadGrade(e){return CHAMPIONS[e.key].reload;}
 export function beforeBasic(g,e,point,options={}){
@@ -273,10 +273,10 @@ export function takedown(g,e,victim,direct){
  if(e.key==='gubo'&&victim.kind==='champion')e.qCd=0;
  if(e.key==='heathcliff'&&victim.kind==='champion'&&g.buff(e,'heathUlt')&&(e.state.heathExtensions||0)<4){e.state.heathExtensions++;e.buffs.heathUlt+=1+(direct?.5:0);}
 }
-export function guboBlast(g,e,victim,ratio=e.state.guboLaserFiring?.25:.2){
- const enemies=g.units.filter(t=>t.team===1-e.team&&t.alive),enemy=enemies.slice().sort((a,b)=>distance(a,victim)-distance(b,victim))[0];if(!enemy)return;
- const d=direction(victim,enemy);for(const t of enemies.filter(t=>distance(t,victim)<=14.7+t.radius)){const td=direction(victim,t);if(td.x*d.x+td.y*d.y>=Math.cos(FAN_ANGLE/2))g.deal(e,t,ratio*(g.combatPower(e)+t.maxHp),{fixed:true,proc:false});}
- g.effects.push({type:'guboBlast',source:e.id,x:victim.x,y:victim.y,r:14.7,angle:Math.atan2(d.y,d.x),spread:FAN_ANGLE,theme:'gubo',life:.8,maxLife:.8});
+export function guboBlast(g,e,victim){
+ const origin={x:victim.x,y:victim.y},enemy=g.units.filter(t=>g.hostile(e,t)).sort((a,b)=>distance(a,origin)-distance(b,origin))[0],d=enemy?direction(origin,enemy):{x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)},ultimate=Boolean(e.state.guboLaserFiring),base=ultimate?100:75,ratio=ultimate?.06:.04;
+ g.effects.push({type:'guboBlast',source:e.id,...origin,r:14.7,angle:Math.atan2(d.y,d.x),spread:FAN_ANGLE,theme:'gubo',life:1,maxLife:1,windup:.5});
+ for(let i=0;i<5;i++)g.schedule(e,.5+i*.1,()=>{for(const t of[...g.units])if(g.hostile(e,t)&&distance(origin,t)<=14.7+t.radius){const td=direction(origin,t);if(td.x*d.x+td.y*d.y>=Math.cos(FAN_ANGLE/2))g.deal(e,t,base+t.maxHp*ratio,{fixed:true,proc:false});}},{autonomous:true});
 }
 export function endAlisaReload(g,e){if(!e.state.alisaReloadActive)return;const heat=e.state.heat||0;delete e.buffs.alisaReload;delete e.state.alisaReloadActive;e.state.heat=0;g.heal(e,e,e.maxHp*(.05+.035*heat),false);}
 export function beginAlisaDetonation(g,e,killer,{lethal=false}={}){
@@ -293,7 +293,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
- Moses.tick(g,e);
+ Moses.tick(g,e,dt);
  Queen.tick(g,e);Nosferatu.tick(g,e);Ezra.tick(g,e,dt);
  Ppui.tick(g,e);Kromer.tick(g,e,dt);
  const s=e.state;
@@ -323,7 +323,7 @@ export function tick(g,e,dt){
   tickRudolphWeapon(g,e);
   if(s.exhaustedUntil){if(s.exhaustedUntil>g.time)return;delete s.exhaustedUntil;delete s.exhaustedAt;delete s.recoveryDuration;e.ammo=ammoCap(g,e);return;}
   if(e.ammo<=0){const duration=s.recoveryDuration||2.5;s.exhaustedAt=g.time;s.recoveryDuration=duration;s.exhaustedUntil=g.time+duration;g.status(e,'silence',1,duration,e);g.status(e,'disarm',1,duration,e);if(s.recoveryDuration===1.25){for(const key of ['silence','disarm'])if(e.status[key]?.theme==='rudolph')e.status[key].hideVisual=true;}return;}
-  if(g.reloadRate(e)>0&&(g.time-e.lastAttackAt>.4||has(e,'wisdom')||has(e,'reloadStacks')&&e.state.augReloadStacks>=5))e.ammo=Math.min(ammoCap(g,e),e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt*g.reloadRate(e));
+  if(g.reloadRate(e)>0&&(g.time-e.lastAttackAt>.4||has(e,'reloadStacks')&&e.state.augReloadStacks>=5))e.ammo=Math.min(ammoCap(g,e),e.ammo+18*RULES.reload[reloadGrade(e)]/g.reloadInterval(e)*dt*g.reloadRate(e));
  }
 
 }
@@ -331,7 +331,7 @@ export function tick(g,e,dt){
 export function applyBurn(g,source,target,explosion=false){
  if(!target.alive||target.hp<=0||target.returning||g.debuffImmune?.(target))return;
  if(target.burn?.explosion&&!explosion&&target.burn.until>g.time)return;
- const interval=explosion?.3:.5;target.burn={source,explosion,until:g.time+(explosion?3:2),next:g.time+interval,interval,damage:explosion?15+g.bonusHealth(source)*.02:12+g.bonusHealth(source)*.015};g.triggerDisrupt(source,target);
+ const interval=explosion?.3:.5;target.burn={source,explosion,until:g.time+(explosion?3:2.5),next:g.time+interval,interval,damage:explosion?25+g.bonusHealth(source)*.025:12+g.bonusHealth(source)*.015};g.triggerDisrupt(source,target);
 }
 export function tickBurn(g,e){
  const b=e.burn;if(!b)return;if(!e.alive||e.returning){delete e.burn;return;}

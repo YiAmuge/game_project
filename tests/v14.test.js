@@ -80,9 +80,9 @@ for(const end of ['expiry','cleanse','owner-death','victim-death','recast'])test
  if(end==='recast'){const cd=p.qCd;g.cast(p,'q',{x:48,y:7});close(p.qCd,cd);assert.ok(t.motion?.forced);}
  assert.equal(p.state.swordGrab,undefined);assert.equal(t.state.swordHeldBy,undefined);assert.equal(g.stat(t,'stun'),0);
 });
-test('Ppui minion sharing grants fifteen percent XP without boosting gold, direct kills or automatic XP',()=>{
+test('Ppui minion sharing uses ordinary shared XP without boosting gold, direct kills or automatic XP',()=>{
  const {g,p}=quiet('ppui'),a=champ(g,0,41,7,'meursault'),m=g.entity({kind:'minion',team:1,x:42,y:7,maxHp:100,radius:.3});
- const finisher=g.entity({kind:'minion',team:0,x:42,y:7,maxHp:100});g.kill(m,finisher);close(p.xp,24*.25*1.15);close(a.xp,24*.25);close(p.gold,253.75);const before=p.xp;g.award(p,24,0);close(p.xp-before,24);run(g,1);close(p.xp-before,27);
+ const finisher=g.entity({kind:'minion',team:0,x:42,y:7,maxHp:100});g.kill(m,finisher);close(p.xp,24*.25);close(a.xp,24*.25);close(p.gold,253.75);const before=p.xp;g.award(p,24,0);close(p.xp-before,24);run(g,1);close(p.xp-before,27);
 });
 test('Ppui tactical performs ten target-health healing ticks independently of frame rate',()=>{
  function sample(dt){const {g,p}=quiet('ppui'),t=champ(g,0,46.8,7);t.hp=t.maxHp-2000;g.cast(p,'q',p);for(let i=0;i<3/dt;i++){g.time+=dt;tickSkills(g,t,dt);}return t.hp;}const {g}=quiet('ppui'),t=champ(g,0,46.8,7),expected=t.maxHp-2000+10*(25+t.maxHp*.015)*.82*.9;close(sample(.1),expected);close(sample(.02),expected);
@@ -90,8 +90,8 @@ test('Ppui tactical performs ten target-health healing ticks independently of fr
 test('Ppui tactical heals every allied champion in seven range and leaves outsiders alone',()=>{
  const {g,p}=quiet('ppui'),a=champ(g,0,42,7),b=champ(g,0,44,8,'yi'),out=champ(g,0,49,7);g.canNaturalHeal=()=>false;g.inSpawn=()=>false;for(const t of[p,a,b,out])t.hp-=1000;g.cast(p,'q',p);const before=[p.hp,a.hp,b.hp];run(g,1);[p,a,b].forEach((t,i)=>assert.ok(t.hp>before[i]));close(out.hp,9000);
 });
-test('Ppui ultimate refills ammunition without resetting its tactical cooldown, permits walking, and deals five moving waves of 144',()=>{
+test('Ppui ultimate refills ammunition without resetting its tactical cooldown, permits walking, and deals ten moving waves of 75',()=>{
  const {g,p}=quiet('ppui'),t=champ(g,1,43,7);p.ammo=0;p.qCd=10;const waves=[],cone=g.cone.bind(g);g.cone=(e,d,r,a,n,fn)=>{if(e===p)waves.push({y:p.y,damage:n});return cone(e,d,r,a,n,fn);};
  g.cast(p,'r',t);close(p.qCd,10);close(p.ammo,g.ammoCap(p));assert.ok(!(p.channelUntil>g.time));g.input.y=1;run(g,.4);g.input.y=0;assert.ok(p.y>8);run(g,1.7);
- assert.equal(waves.length,5);assert.ok(waves.every(w=>w.damage===144));assert.ok(waves.at(-1).y>waves[0].y);
+ assert.equal(waves.length,10);assert.ok(waves.every(w=>w.damage===75));assert.ok(waves.at(-1).y>waves[0].y);
 });

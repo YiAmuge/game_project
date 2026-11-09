@@ -119,8 +119,8 @@ export function afterStep(g){
  for(const e of g.champions().filter(e=>e.trainingDummy&&e.alive)){if(e.trainingDummy.infinite)e.hp=e.maxHp;if(distance(e,e.trainingDummy.home)>e.trainingDummy.leash)resetDummyPosition(g,e);}
 }
 export function sellAll(g){
- if(!g.training)return false;const p=g.player;p.augments=[];p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
- for(const k of ['augReloadStacks','augCombatAt','maskStacks','orderStacks','antimatterNext'])delete p.state[k];for(const k of ['augReload','augBattleHaste','maskBoost','writtenOrder'])delete p.buffs[k];
+ if(!g.training)return false;const p=g.player;p.augments=[];delete p.absorbedCarrier;p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
+ for(const k of ['augReloadStacks','augCombatAt','maskStacks','orderStacks','antimatterNext','duelStacks','duelDecay','accelDistance','accelReady'])delete p.state[k];for(const k of ['augReload','augBattleHaste','maskBoost','writtenOrder'])delete p.buffs[k];
  g.refreshEquipment(p);return true;
 }
 export function deathOrRespawn(g){

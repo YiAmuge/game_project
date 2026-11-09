@@ -22,7 +22,7 @@ test('Gubo normal shot pierces all three enemies',()=>{
 });
 test('Gubo allied execution has a long uncapped cone, halves respawn and grants return haste',()=>{
  const {g,p,t}=quiet('gubo');t.x=48;const a=g.makeChampion('yi',0,9);Object.assign(a,{x:41,y:7,maxHp:1000,hp:200,lastDamageAt:20});const near=enemy(g,43),back=enemy(g,38),b=enemy(g,49);g.time=20;
- g.attack(p,a);run(g,.05);assert.equal(a.alive,false);close(a.respawnAt-g.time,respawnTime(20,1)*.5-.05,.04);const blast=.2*(g.combatPower(p)+10000);close(10000-t.hp,blast);close(10000-near.hp,blast);close(back.hp,10000);close(10000-b.hp,blast);g.time=a.respawnAt;g.step(.001);assert.ok(a.alive);assert.ok(g.buff(a,'executedHaste'));close(g.speed(a)/championBaseSpeed(a.key),1.4);
+ g.attack(p,a);run(g,.05);assert.equal(a.alive,false);close(a.respawnAt-g.time,respawnTime(20,1)*.5-.05,.04);g.projectiles=[];run(g,.91);const blast=5*(75+.04*10000);close(10000-t.hp,blast);close(10000-near.hp,blast);close(back.hp,10000);close(10000-b.hp,blast);g.time=a.respawnAt;g.step(.001);assert.ok(a.alive);assert.ok(g.buff(a,'executedHaste'));close(g.speed(a)/championBaseSpeed(a.key),1.4);
 });
 test('Gubo shot and ultimate respect the inclusive live ally health threshold and its temporary increase',()=>{
  const {g,p}=quiet('gubo'),a=g.makeChampion('faust',0,8);Object.assign(a,{x:42,y:7,maxHp:1000,hp:211});close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);a.hp=210;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=350;g.cast(p,'q',p);close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),1);a.hp=351;close(g.deal(p,a,1,{fixed:true,allowFriendly:true}),0);
@@ -31,7 +31,7 @@ test('Gubo ultimate aims without damage and hits when its fast projectile arrive
  const {g,p,t}=quiet('gubo');t.x=50;assert.ok(g.cast(p,'r',t));assert.equal(p.state.guboAim.target,t);close(t.hp,10000);run(g,1.1);close(t.hp,10000);run(g,.12);assert.equal(t.hp,10000);assert.equal(g.projectiles.length,1);run(g,.08);assert.equal(g.projectiles.length,0);assert.ok(g.effects.some(f=>f.type==='guboLaser'));assert.ok(t.hp<10000);assert.equal(p.state.guboAim,undefined);
 });
 test('Gubo ultimate ally kill does not duplicate the passive blast',()=>{
- const {g,p,t}=quiet('gubo'),a=g.makeChampion('yi',0,8);Object.assign(a,{x:42,y:7,hp:200,maxHp:1000,lastDamageAt:0});t.x=48;assert.ok(g.cast(p,'r',a));run(g,1.5);assert.equal(a.alive,false);close(10000-t.hp,.25*(g.combatPower(p)+t.maxHp));
+ const {g,p,t}=quiet('gubo'),a=g.makeChampion('yi',0,8);Object.assign(a,{x:42,y:7,hp:200,maxHp:1000,lastDamageAt:0});t.x=48;assert.ok(g.cast(p,'r',a));run(g,2.3);assert.equal(a.alive,false);close(10000-t.hp,5*(100+.06*t.maxHp));
 });
 test('Gahwan converts gaze at five and ultimate adds precisely one stack per hit at 0/.75/1.5',()=>{
  const {g,p,t}=quiet('gahwan');t.x=48;g.cast(p,'r',t);assert.equal(t.state.gaze[p.id].n,1);run(g,.7);assert.equal(t.state.gaze[p.id].n,1);run(g,.1);assert.equal(t.state.gaze[p.id].n,2);run(g,.75);assert.equal(t.state.gaze[p.id].n,3);for(let i=0;i<2;i++)g.deal(p,t,1);assert.equal(t.state.gaze[p.id].n,0);assert.ok(t.state.contempt[p.id]>g.time);

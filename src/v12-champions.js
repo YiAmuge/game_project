@@ -19,7 +19,7 @@ export function basic(g,e,p,d){
   else{delete e.state.kimWideSlashSerial;e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2*1.3,75));}return true;
  }
  if(e.key==='ppui'){
-  for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,75,g.attackRange(e),{theme:'ppui',width:.2}));
+  for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,55+Ppui.pulse(e),g.attackRange(e),{theme:'ppui',width:.2,pierce:Ppui.pulse(e)>=10?Infinity:0,onHit:(t,b,actual)=>{if(Ppui.pulse(e)>=20)g.heal(e,e,actual*.1,false);}}));
   return true;
  }return false;
 }
@@ -55,11 +55,11 @@ export function cast(g,e,slot,p,d){
   if(slot==='q'){
    Ppui.cast(g,e);
   }else{
-   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.state.nailStorm={d:{...d},aim:{...p},until:g.time+2};
-   for(let i=0;i<5;i++)g.schedule(e,i*.4,()=>{
+   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.state.nailStorm={d:{...d},aim:{...p},until:g.time+2,hits:{}};
+   for(let i=0;i<10;i++)g.schedule(e,i*.2,()=>{
     if(g.stat(e,'stun')||g.stat(e,'silence')){delete e.state.nailStorm;return;}
     const storm=e.state.nailStorm;if(!storm)return;const aim=distance(e,storm.aim)>.1?direction(e,storm.aim):storm.d;storm.d={...aim};const angle=Math.atan2(aim.y,aim.x);e.facing=angle;
-    g.effects.push({type:'nailVolley',source:e.id,theme:'ppui',slot:'r',shape:{kind:'cone',range:7,spread:1.5,angle},x:e.x,y:e.y,angle,r:7,spread:1.5,life:.36,maxLife:.36});g.cone(e,aim,7,1.5,144,(t,actual)=>{g.heal(e,e,actual*.4,false);if((t.state?.nailPushReady||0)<=g.time){if(t.state)t.state.nailPushReady=g.time+.6;g.startMotion(t,aim,.5,{kind:'knock'});}});
+    g.effects.push({type:'nailVolley',source:e.id,theme:'ppui',slot:'r',shape:{kind:'cone',range:9,spread:1.5,angle},x:e.x,y:e.y,angle,r:9,spread:1.5,life:.22,maxLife:.22});g.cone(e,aim,9,1.5,75+Ppui.pulse(e),(t,actual)=>{g.heal(e,e,actual*.4,false);storm.hits[t.id]=(storm.hits[t.id]||0)+1;if(storm.hits[t.id]%4===0)g.status(t,'root',1,.3,e);});
    });
   }return true;
  }return false;

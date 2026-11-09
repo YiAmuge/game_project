@@ -12,20 +12,20 @@ test('Alas gives twelve percent shield on use, refreshes through tactical, and e
 test('Alas grants its shield on a miss, but a rejected rooted use grants neither ammo loss nor shield',()=>{
  const{g,p}=arena();g.status(p,'root',1,1,p);assert.equal(g.attack(p,g.input.aim),false);near(g.shield(p),0);assert.equal(p.ammo,4);run(g,1.01);assert.ok(g.attack(p,g.input.aim));near(g.shield(p),p.maxHp*.12);
 });
-test('Nester expands to 2.6, 2.9 and 3.2 with one 63-damage hit per eligible swing and 1.7 slow',()=>{
- const{g,p}=arena();select(p,1);const targets=[2.55,2.85,3.15,3.4].map(x=>enemy(g,p.x+x));g.attack(p,g.input.aim);const ranges=[g.effects.find(f=>f.type==='slash').r];near(targets[0].maxHp-targets[0].hp,damage(63));near(targets[1].hp,targets[1].maxHp);run(g,.31);ranges.push(g.effects.find(f=>f.type==='slash').r);near(targets[1].maxHp-targets[1].hp,damage(63));near(targets[2].hp,targets[2].maxHp);run(g,.3);ranges.push(g.effects.find(f=>f.type==='slash').r);[3,2,1,0].forEach((n,i)=>near(targets[i].maxHp-targets[i].hp,damage(63)*n));[2.6,2.9,3.2].forEach((r,i)=>near(ranges[i],r));near(targets[2].status.slow.until,2.3);
+test('Nester expands to 2.6, 3.6 and 4.6 with one 66-damage hit per eligible swing and 2.1 slow',()=>{
+ const{g,p}=arena();select(p,1);const targets=[2.55,3.55,4.55,4.8].map(x=>enemy(g,p.x+x));g.attack(p,g.input.aim);const ranges=[g.effects.find(f=>f.type==='slash').r];near(targets[0].maxHp-targets[0].hp,damage(66));near(targets[1].hp,targets[1].maxHp);run(g,.31);ranges.push(g.effects.find(f=>f.type==='slash').r);near(targets[1].maxHp-targets[1].hp,damage(66));near(targets[2].hp,targets[2].maxHp);run(g,.3);ranges.push(g.effects.find(f=>f.type==='slash').r);[3,2,1,0].forEach((n,i)=>near(targets[i].maxHp-targets[i].hp,damage(66)*n));[2.6,3.6,4.6].forEach((r,i)=>near(ranges[i],r));near(targets[2].status.slow.until,2.7);
 });
 test('range augments, tactical targeting and attack previews share all three Nester radii',()=>{
- const{g,p}=arena();select(p,1);p.augments=['range7'];p.state.ezraLastWeapon=1;near(Ezra.attackReach(g,p),4.5);near(skillTargeting(g,p,'q').radius,4.5);const rings=[];preview({ctx:{},circle:(_x,_y,r)=>rings.push(r)},p,g);[4.5,4.2,3.9].forEach((r,i)=>near(rings[i],r));const edge=enemy(g,44.4);assert.ok(g.cast(p,'q',g.input.aim));run(g,.61);near(edge.maxHp-edge.hp,damage(63));assert.match(skillReference('ezra',1).ranges[1].text,/2.6.*2.9.*3.2/);
+ const{g,p}=arena();select(p,1);p.augments=['range7'];p.state.ezraLastWeapon=1;near(Ezra.attackReach(g,p),5.9);near(skillTargeting(g,p,'q').radius,5.9);const rings=[];preview({ctx:{},circle:(_x,_y,r)=>rings.push(r)},p,g);[5.9,4.9,3.9].forEach((r,i)=>near(rings[i],r));const edge=enemy(g,45.8);assert.ok(g.cast(p,'q',g.input.aim));run(g,.61);near(edge.maxHp-edge.hp,damage(66));assert.match(skillReference('ezra',1).ranges[1].text,/2.6.*3.6.*4.6/);
 });
-test('drill uses seventy damage and thirty percent final true damage, including shield-only hits',()=>{
- for(const armor of[0,100])for(const shielded of[false,true]){const{g,p}=arena();select(p,2);const normal=enemy(g,42,20.4),cc=enemy(g,42,19.6);normal.armor=cc.armor=armor;g.status(cc,'slow',.1,10,p);if(shielded){g.addShield(normal,3000,'test');g.addShield(cc,3000,'test');}const hp=normal.hp,other=cc.hp;g.attack(p,g.input.aim);run(g,.41);const base=damage(70)*3/(1+armor/100);if(shielded){near(3000-g.shield(normal),base);near(3000-g.shield(cc),base*1.3);near(normal.hp,hp);near(cc.hp,other);}else{near(hp-normal.hp,base);near(other-cc.hp,base*1.3);}}
+test('drill uses seventy-three damage and fifty percent final true damage, including shield-only hits',()=>{
+ for(const armor of[0,100])for(const shielded of[false,true]){const{g,p}=arena();select(p,2);const normal=enemy(g,42,20.4),cc=enemy(g,42,19.6);normal.armor=cc.armor=armor;g.status(cc,'slow',.1,10,p);if(shielded){g.addShield(normal,3000,'test');g.addShield(cc,3000,'test');}const hp=normal.hp,other=cc.hp;g.attack(p,g.input.aim);run(g,.41);const base=damage(73)*3/(1+armor/100);if(shielded){near(3000-g.shield(normal),base);near(3000-g.shield(cc),base*1.5);near(normal.hp,hp);near(cc.hp,other);}else{near(hp-normal.hp,base);near(other-cc.hp,base*1.5);}}
 });
 test('Namir roots a repeated gauntlet hit within one second, and the one-second root expires',()=>{
- for(const delay of[.53,.55]){const{g,p}=arena();select(p,3);const t=enemy(g,42);g.attack(p,{x:40,y:20});run(g,.46);near(t.maxHp-t.hp,damage(220));near(g.stat(t,'root'),0);run(g,delay);assert.ok(g.cast(p,'q',{x:p.x,y:p.y}));run(g,.46);near(t.maxHp-t.hp,damage(440));near(g.stat(t,'root'),delay<.54?1:0);if(delay<.54){run(g,1);near(g.stat(t,'root'),0);}}
+ for(const delay of[.48,.52]){const{g,p}=arena();select(p,3);const t=enemy(g,42);g.attack(p,{x:40,y:20});run(g,.51);near(t.maxHp-t.hp,damage(220));near(g.stat(t,'root'),0);run(g,delay);assert.ok(g.cast(p,'q',{x:p.x,y:p.y}));run(g,.51);near(t.maxHp-t.hp,damage(440));near(g.stat(t,'root'),delay<.5?1:0);if(delay<.5){run(g,1);near(g.stat(t,'root'),0);}}
 });
 test('Namir repeat tracking belongs to each caster and does not trigger from an Alas hit',()=>{
- const{g,p}=arena();select(p,3);const t=enemy(g,42);g.attack(p,p);run(g,.46);select(p,0);p.attackCd=0;g.attack(p,{x:43,y:20});run(g,.1);near(g.stat(t,'root'),0);const other=g.makeChampion('ezra',0,20,'top');Object.assign(other,{x:t.x,y:t.y,lastDamageAt:100,lastAttackAt:100});select(other,3);g.attack(other,other);run(g,.46);near(g.stat(t,'root'),0);
+ const{g,p}=arena();select(p,3);const t=enemy(g,42);g.attack(p,p);run(g,.51);select(p,0);p.attackCd=0;g.attack(p,{x:43,y:20});run(g,.1);near(g.stat(t,'root'),0);const other=g.makeChampion('ezra',0,20,'top');Object.assign(other,{x:t.x,y:t.y,lastDamageAt:100,lastAttackAt:100});select(other,3);g.attack(other,other);run(g,.51);near(g.stat(t,'root'),0);
 });
 test('ultimate preserves every pending magazine slot, reload and repeat history on both exits',()=>{
  for(const spent of[0,1,2,3,4])for(const exit of['expiry','empty'])for(const repeat of[false,true]){
@@ -49,5 +49,5 @@ test('Namir keeps the last golden round through repeated ultimates and host snap
   for(let n=0;n<4;n++){assert.ok(g.attack(p,p));if(n<3)run(g,.75);}
   assert.ok(applySnapshot(client,JSON.parse(JSON.stringify(writer.capture(g,true))),p.id));assert.equal(client.player.state.weapon,3);assert.equal(client.player.ammo,1);assert.deepEqual(Ezra.ammoSlots(client,client.player).map(s=>[s.loaded,s.active]),[[false,false],[false,false],[false,false],[true,true]]);run(g,.75);
  }
- const t=enemy(g,p.x+1,p.y);assert.ok(g.attack(p,p));assert.equal(p.state.ezraAttack.weapon,3);run(g,.46);near(t.maxHp-t.hp,damage(220));assert.equal(p.ammo,0);assert.ok(p.state.ezraReloading);
+ const t=enemy(g,p.x+1,p.y);assert.ok(g.attack(p,p));assert.equal(p.state.ezraAttack.weapon,3);run(g,.51);near(t.maxHp-t.hp,damage(220));assert.equal(p.ammo,0);assert.ok(p.state.ezraReloading);
 });

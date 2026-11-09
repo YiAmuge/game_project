@@ -107,7 +107,7 @@ export class ChampionVFX {
    if(f.type==='yanGreatsword')this.event('fallenSword',e,g,{x:f.x,y:f.y,r:f.r,life:.55});
    if(f.type==='burst'&&e.key==='marton'&&f.r<3)this.event('roots',e,g,{x:f.x,y:f.y,r:f.r,life:.6});
    if(f.type==='impact'&&e.key==='marton'&&g.buff(e,'martonDrain'))this.event('molecules',e,g,{x:f.x,y:f.y,life:.65});
-   if(f.type==='guboBlast')this.event('barrage',e,g,{x:f.x,y:f.y,r:f.r,angle:f.angle,spread:f.spread,life:f.maxLife||.8});
+
    if(f.type==='ryoshuStorm')this.event('fireSwirl',e,g,{r:f.r,life:.7});
    if(f.type==='burst'&&e.key==='dongbaek')this.event('petalExplosions',e,g,{x:f.x,y:f.y,r:f.r,life:1.5});
    if(f.type==='burst'&&e.key==='gahwan'&&f.slot==='r')this.event('gazeSlash',e,g,{x:f.x,y:f.y,r:f.r,life:.65});

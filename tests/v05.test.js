@@ -1,5 +1,6 @@
 import {combatSeconds} from '../src/combat-timing.js';
 import * as Don from '../src/don.js';
+import*as Moses from'../src/moses.js';
 import test from 'node:test';
 import { release as releaseYan } from '../src/yan.js';
 import { release as releaseHohenheim } from '../src/hohenheim.js';
@@ -22,7 +23,7 @@ test('all ordinary and experimental champions have individual positive growth an
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);if(key==='nosferatu')close(p.maxHp,baseHp);else assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);if(key==='dongrang')close(g.powerScale(p),basePower);else assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));if(key==='yan')releaseYan(g,p,t);if(key==='hohenheim')releaseHohenheim(g,p,t);close(p.attackCd,key==='yan'?.9:combatSeconds(c.attackTime*(c.attackTime<=.4?1:1.3)));}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));if(key==='moses')Moses.release(g,p,t);if(key==='yan')releaseYan(g,p,t);if(key==='hohenheim')releaseHohenheim(g,p,t);close(p.attackCd,key==='moses'?.7:key==='yan'?.9:combatSeconds(c.attackTime*(c.attackTime<=.4?1:1.3)));}
 });
 test('reload pauses throughout ammo consumption, preserving partial progress, and resumes after firing',()=>{
  const {g,p,t}=quiet();p.ammo=2;p.reloadProgress=.25;g.attack(p,t);run(g,.2);close(p.reloadProgress,.25);run(g,.7);assert.ok(p.reloadProgress>.25);
@@ -53,7 +54,7 @@ test('Rodion sword wave travels before damage while its caster remains in place'
  const {g,p,t}=quiet('rodya');t.x=42;g.attack(p,t);close(t.hp,100000);assert.equal(p.motion,undefined);close(p.x,40);run(g,.3);assert.ok(t.hp<100000);assert.equal(CHAMPIONS.rodya.q,12);
 });
 test('Heath ultimate radius preview matches damage, Ishmael targets the first champion at range 16 and Outis uses a contact dash',()=>{
- const a=quiet('heathcliff');a.t.x=45;a.g.cast(a.p,'r',a.p);run(a.g,.6);assert.ok(a.t.hp<100000);close(skillTargeting(a.g,a.p,'r').radius,5);
+ const a=quiet('heathcliff');a.t.x=44.4;a.g.cast(a.p,'r',a.p);run(a.g,.6);assert.ok(a.t.hp<100000);close(skillTargeting(a.g,a.p,'r').radius,4.5);
  const {g,p,t}=quiet('ishmael');t.x=46;const t2=g.makeChampion('yi',1,5);t2.x=50;t2.y=7;g.cast(p,'r',t);assert.equal(g.projectiles.length,0);run(g,.25);assert.ok(g.projectiles[0].remaining<=16);run(g,.6);assert.ok(t.hp<100000);close(t2.hp,t2.maxHp);
  const o=quiet('outis');o.g.cast(o.p,'r',o.t);assert.ok(o.p.motion);close(o.p.motion.total,4.5);run(o.g,.8);assert.ok(o.t.hp<100000);assert.equal(o.g.projectiles.length,0);
 });
@@ -73,7 +74,7 @@ test('augment gates, unique ownership, six slots, refund and repurchase are enfo
 });
 test('every augment can be purchased after its own category unlock and stat augments change real combat stats',()=>{
  for(const item of AUGMENTS){const {g,p}=quiet();p.alive=false;p.gold=10000;Object.assign(p.upgrades,{power:3,health:3,speed:1,reload:1,haste:1});assert.ok(g.buyAugment(p,item.key),item.key);}
- const {g,p,t}=quiet();p.augments=['power15','blackOrb','range7'];close(g.powerScale(p),1.2);close(g.maxHp(p),2800);close(g.attackRange(p),7.5+2.5);p.augments=['magazine2','cooldown15','adaptiveSpeed'];assert.equal(g.ammoCap(p),5);g.cast(p,'q',t);close(p.qCd,CHAMPIONS.faust.q*.85);p.lastCombat=-99;const outside=g.speed(p);p.lastCombat=g.time;assert.ok(g.speed(p)<outside);
+ const {g,p,t}=quiet();p.augments=['power15','blackOrb','range7'];close(g.powerScale(p),1.2);close(g.maxHp(p),2800);close(g.attackRange(p),7.5+2.5);p.augments=['magazine2','cooldown15','adaptiveSpeed'];assert.equal(g.ammoCap(p),5);g.cast(p,'q',t);close(p.qCd,CHAMPIONS.faust.q*.85);p.lastCombat=-99;const outside=g.speed(p);p.lastCombat=g.time;close(g.speed(p),outside);
 });
 test('final damage augment procs once per 7 seconds and respects final post-armor damage',()=>{
  const {g,p,t}=quiet();p.augments=['finalBullet'];t.armor=100;let hp=t.hp;const hit=g.deal(p,t,100);close(hp-t.hp,hit*1.07);hp=t.hp;g.deal(p,t,100);close(hp-t.hp,hit);g.time=7.1;hp=t.hp;g.deal(p,t,100);close(hp-t.hp,hit*1.07);
@@ -98,8 +99,8 @@ test('Ahab cover rewards the captain and takedown support retains its bonus',()=
  const {g,p,t}=quiet('ahab'),a=ally(g);assert.equal(p.state.order,'cover');p.attackCd=0;g.attack(p,t);run(g,.2);assert.ok(t.state.harpoon);g.deal(a,t,1);assert.ok(g.buff(p,'ahabCover'));assert.equal(g.buff(a,'ahabCover'),false);const xp=a.xp,gold=a.gold;g.deal(p,t,1000000,{fixed:true});close(a.xp-xp,150);close(a.gold-gold,120);
 });
 
-test('Ahab execution snapshots below ten percent and grants only one ultimate recast',()=>{
- const {g,p,t}=quiet('ahab');t.maxHp=100000;t.hp=9000;g.cast(p,'r',t);t.hp=90000;run(g,.9);assert.equal(t.alive,false);assert.ok(p.state.recastUntil>g.time);const next=g.makeChampion('yi',1,6);next.x=p.x+1;next.y=p.y;next.maxHp=100000;next.hp=9000;assert.ok(g.cast(p,'r',next));run(g,.8);assert.equal(next.alive,false);assert.ok(!p.state.recastUntil);assert.equal(g.cast(p,'r',p),false);
+test('Ahab execution snapshots below ten percent and allows repeated ultimate recasts',()=>{
+ const {g,p,t}=quiet('ahab');t.maxHp=100000;t.hp=9000;g.cast(p,'r',t);t.hp=90000;run(g,.9);assert.equal(t.alive,false);assert.ok(p.state.recastUntil>g.time);const next=g.makeChampion('yi',1,6);next.x=p.x+1;next.y=p.y;next.maxHp=100000;next.hp=9000;assert.ok(g.cast(p,'r',next));run(g,.8);assert.equal(next.alive,false);assert.ok(p.state.recastUntil>g.time);assert.equal(g.cast(p,'r',p),true);
 });
 
 test('charge cooldown reduction and extra ultimate ammunition apply to special resource users',()=>{

@@ -38,10 +38,10 @@ test('Gubo bullet crosses terrain and every enemy with linear fifteen-percent de
  const {g,p}=quiet('gubo');p.range=20;p.sniperReady=100;const ts=Array.from({length:9},(_,i)=>target(g,42+i*1.5));g.map.walls=[{x:44,y:4,w:.4,h:6}];g.attack(p,{x:65,y:7});run(g,1.3);ts.forEach((t,i)=>close(100000-t.hp,expected(g,p,240)*(1-Math.min(.65,i*.15))));
 });
 test('Gubo always deals full damage to an eligible ally after piercing enemies',()=>{const {g,p}=quiet('gubo');target(g,42);target(g,44);const a=target(g,46,7,0);a.hp=20000;g.attack(p,{x:50,y:7});run(g,.5);close(20000-a.hp,expected(g,p,240));});
-for(const [slot,ratio] of [['basic',.2],['r',.25]])test(`Gubo ${slot} allied execution has one uncapped 14.7 cone using current power`,()=>{
+for(const [slot,ratio] of [['basic',.2],['r',.25]])test(`Gubo ${slot} allied execution has one uncapped 14.7 cone with five delayed salvos`,()=>{
  const {g,p}=quiet('gubo'),a=target(g,42,7,0),t=target(g,55),behind=target(g,25);a.maxHp=1000;a.hp=1;const power=g.combatPower(p);
  if(slot==='r'){g.cast(p,'r',a);a.x=70;run(g,1.19);assert.ok(a.alive);a.x=42;run(g,.10);}else g.attack(p,a),run(g,.2);
- assert.ok(!a.alive);close(100000-t.hp,(power+t.maxHp)*ratio);close(behind.hp,100000);assert.equal(g.effects.filter(f=>f.type==='guboBlast').length,1);if(slot==='r'){assert.equal(g.projectiles.length,0);assert.ok(g.effects.some(f=>f.type==='guboLaser'));}
+ assert.ok(!a.alive);const fx=g.effects.find(f=>f.type==='guboBlast');run(g,.91);close(100000-t.hp,5*((slot==='r'?100:75)+t.maxHp*(slot==='r'?.06:.04)));close(behind.hp,100000);assert.ok(fx&&fx.windup===.5);if(slot==='r'){assert.equal(g.projectiles.length,0);assert.ok(p.state.guboAim===undefined);}
 });
 test('Gubo aimed R hits a locked target beyond range and through terrain on bullet impact',()=>{const {g,p}=quiet('gubo'),t=target(g);g.cast(p,'r',t);t.x=78;g.map.walls=[{x:50,y:0,w:1,h:15}];run(g,1.19);close(t.hp,100000);run(g,.32);assert.ok(t.hp<100000);assert.equal(g.projectiles.length,0);});
 test('Queequeg straight six hits and attack bonuses expire after the volley',()=>{const {g,p}=quiet('queequeg'),t=target(g,42.9,8.2),outside=target(g,42,8.5);const speed=g.speed(p),armor=g.armor(p);g.attack(p,{x:45,y:7});close(g.speed(p)/speed,1.07);close((100+g.armor(p))/(100+armor),1.07);run(g,.4);assert.equal(p.state.captureHits[t.id],6);close(outside.hp,100000);run(g,.03);close(g.speed(p),speed);});

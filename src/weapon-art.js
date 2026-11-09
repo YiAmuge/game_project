@@ -316,7 +316,7 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
    hand={x:hand.x+Math.cos(facing)*reach,y:hand.y+Math.sin(facing)*reach};trail=t<1;
   }else if(index===1){
    angle=facing+(a.spinDirection||1)*swingProgress(progress)*Math.PI*2;hand={x:p.origin.x,y:p.origin.y-.65};mode='orbit';trail=progress<1;
-  }else if(index===4&&a.fourth){
+  }else if(index===4){
    // Hong Lu's full-turn timing, with the axe grip centered on Ezra's torso.
    // Keep the axe forward during the approach; begin the single turn on impact.
    if(a.phase==='strike'){angle=facing+swingProgress(progress)*Math.PI*2;hand={x:p.origin.x,y:p.origin.y-.65};mode='orbit';trail=progress<1;}

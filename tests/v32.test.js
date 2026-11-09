@@ -68,9 +68,9 @@ test('maximum-level Faust freely moves and attacks while the original point deto
 for(const interrupted of ['stunned','dead'])test(`maximum-level Faust delayed field still explodes with its caster ${interrupted}`,()=>{
  const {g,p}=arena();p.level=10;const t=hero(g,24,20);g.cast(p,'r',t);if(interrupted==='dead')g.kill(p,t);else g.status(p,'stun',1,3,t);run(g,1.24);close(t.hp,100000);run(g,.02);assert.ok(t.hp<100000);
 });
-test('Dongbaek pulses four times at a locked point while visual burst is emitted once',()=>{
+test('Dongbaek pulses six times at a locked point while visual burst is emitted once',()=>{
  const {g,p}=arena('dongbaek'),t=hero(g,24,20),hits=[],deal=g.deal.bind(g);g.deal=(source,target,base,opts)=>{if(source===p&&target===t)hits.push({at:g.time,base});return deal(source,target,base,opts);};
- g.cast(p,'r',t);p.x=16;run(g,.76);assert.equal(hits.length,4);hits.forEach((h,i)=>{close(h.base,105);close(h.at,10+i*.25);});assert.equal(g.events.length,0);assert.equal(g.buff(p,'flowerReload'),true);
+ g.cast(p,'r',t);p.x=16;run(g,1.01);assert.equal(hits.length,6);hits.forEach((h,i)=>{close(h.base,105);close(h.at,10+i*.2);});assert.equal(g.events.length,0);assert.equal(g.buff(p,'flowerReload'),true);
 });
 test('Outis close attack passive applies at impact through 2.5 but does not reload on normal kills',()=>{
  for(const x of [22.5,22.501]){const {g,p}=arena('outis'),t=hero(g,x,20),before=g.ammoCap(p);g.deal(p,t,100,{proc:false});close(100000-t.hp,power(g,p,100)*(x<=22.5?1.25:1));p.ammo=0;t.hp=1;g.deal(p,t,100);close(p.ammo,0);assert.equal(g.buff(p,'outisReload'),false);assert.ok(before>0);}
@@ -99,6 +99,6 @@ test('Gubo ally executions reserve one dedicated 14.7 cone footprint for basic a
  for(const slot of ['basic','r']){
   const {g,p}=arena('gubo'),a=hero(g,24,20,0,'rodya'),enemy=hero(g,28,20);a.hp=1;
   if(slot==='basic'){g.attack(p,a);run(g,.25);}else{g.cast(p,'r',a);run(g,1.26);}
-  assert.equal(a.alive,false);const f=g.effects.find(f=>f.type==='guboBlast');assert.equal(f.source,p.id);close(f.r,14.7);close(f.angle,0);close(f.spread,FAN_ANGLE);assert.ok(enemy.hp<100000);
+  assert.equal(a.alive,false);const f=g.effects.find(f=>f.type==='guboBlast');assert.equal(f.source,p.id);close(f.r,14.7);close(f.angle,0);close(f.spread,FAN_ANGLE);close(enemy.hp,100000);run(g,.91);assert.ok(enemy.hp<100000);
  }
 });

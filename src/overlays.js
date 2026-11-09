@@ -19,6 +19,8 @@ import { THEMES } from './art.js';
 import { heathCharge,guardAlly } from './skills.js';
 
 export function stackInfo(e,g){
+ if(e.key==='ppui')return{label:'맥동',value:Math.min(30,Math.floor(((e.ppuiHealing||0)+1e-8)/1000)),max:30,color:'#f4a9bb',textOnly:true};
+ if(e.key==='ahab'&&e.state.recastUntil>g.time)return{label:'재사용 '+(e.state.recastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffcf7c'};
  if(e.key==='nosferatu')return {label:'혈찬',value:Math.floor(e.state.bloodFeast||0),max:Math.floor(bloodCapacity(g,e)),color:'#ed3c65',textOnly:true};
  if(e.key==='queen'&&e.state.queenR)return{label:'아르카나',value:queenStage(g,e),max:3,color:'#ff9ce0',textOnly:true};
  if(e.key==='yan'&&Yan.distorted(g,e))return {label:`뒤틀림 ${(e.buffs.yanDistorted-g.time).toFixed(1)}s · 중첩 획득 중지`,textOnly:true,color:'#c4e5fa'};
@@ -73,6 +75,7 @@ export function championHud(r,e,g){
   const gap=.075,w=(width-gap*(cap-1))/cap;
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)&&e.key!=='ezra'?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
  }
+ if(e.key==='moses'&&e.state.mosesCharge){const progress=Math.min(1,e.state.mosesCharge.progress/1.5);c.fillStyle='#182a39';c.fillRect(x,resourceY+.3,width,.12);c.fillStyle=progress>=1?'#f2fff4':'#a3d2c5';c.fillRect(x,resourceY+.3,width*progress,.12);}
  if(e.key==='ezra'&&e.state.ezraReloading){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*Math.min(1,e.reloadProgress/EZRA.reload),.10);}
  if(e.key==='jamila'&&e.state.lcaReload){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*reloadFraction(e),.10);}
  if(e.key==='gubo'&&g.buff(e,'guboReload')){const left=e.buffs.guboReload-g.time;c.fillStyle='#2c1019';c.fillRect(x,resourceY+.32,width,.13);c.fillStyle='#a72b47';c.fillRect(x,resourceY+.32,width*Math.min(1,left/4),.13);r.text(`흉탄 ${left.toFixed(1)}s · 아군 ≤35%`,e.x,resourceY+.64,'#ec93a4',.22);}

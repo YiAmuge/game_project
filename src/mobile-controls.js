@@ -72,8 +72,8 @@ export class MobileControls{
   const rect=$('mobile-cancel').getBoundingClientRect();s.cancel=s.manual&&s.x>=rect.left&&s.x<=rect.right&&s.y>=rect.top&&s.y<=rect.bottom;document.body.classList.add('mobile-aiming');document.body.classList.toggle('mobile-canceling',Boolean(s.cancel));
   if(s.cancel){g.input.fire=false;return;}
   // A held button remains queued when an automatic discharge/cancel ends a charge.
-  if(this.chargeGesture(s,p)&&s.started){const active=s.slot==='q'?(p.key==='don'?p.state.donCharge:p.state.chargeAt!==undefined):(p.key==='yan'?p.state.yanCharge:p.state.hohenCharge);if(!active)s.started=false;}
-  if(!s.started){if(s.slot==='basic'&&['yan','hohenheim'].includes(p.key)&&!distorted(g,p)){s.beganBasic=g.attack(p,s.point);s.started=Boolean(s.beganBasic);}else if(this.api.chargeTactical(p)&&s.slot==='q'){if(p.qCd<=0)s.started=Boolean(this.api.skill('q',{point:s.point,confirm:true}));}else s.started=true;}
+  if(this.chargeGesture(s,p)&&s.started){const active=s.slot==='q'?(p.key==='don'?p.state.donCharge:p.state.chargeAt!==undefined):(p.key==='moses'?p.state.mosesCharge:p.key==='yan'?p.state.yanCharge:p.state.hohenCharge);if(!active)s.started=false;}
+  if(!s.started){if(s.slot==='basic'&&['yan','hohenheim','moses'].includes(p.key)&&!distorted(g,p)){s.beganBasic=g.attack(p,s.point);s.started=Boolean(s.beganBasic);}else if(this.api.chargeTactical(p)&&s.slot==='q'){if(p.qCd<=0)s.started=Boolean(this.api.skill('q',{point:s.point,confirm:true}));}else s.started=true;}
   if(s.slot==='basic'&&distorted(g,p)){g.attack(p,s.point);s.handMoved=true;}if(!s.autoHeld)g.input.fire=false;
  }
  end(e,canceled=false){const ui=this.uiTouches.get(e.pointerId);this.uiTouches.delete(e.pointerId);const s=this.gestures.get(e.pointerId);if(!s){if(ui&&!canceled&&!ui.button.disabled&&Math.hypot(e.clientX-ui.x,e.clientY-ui.y)<=12){e.preventDefault();this.uiClick={button:ui.button,x:e.clientX,y:e.clientY,until:performance.now()+500};ui.button.click();}return;}e.preventDefault();e.stopImmediatePropagation();this.gestures.delete(e.pointerId);const g=this.api.game(),p=g.player;
@@ -102,7 +102,7 @@ export class MobileControls{
   s.autoHeld=true;const auto=this.autoAim(s);g.input.fire=Boolean(auto.target||auto.manualFallback);
   if(g.input.fire){g.input.aim=auto.point;g.mobileAim={slot:'basic',point:g.input.aim,autoTarget:auto.target?.id};this.api.takeAim();}else delete g.mobileAim;
  }
- chargeGesture(s,p){return s.slot==='basic'&&['yan','hohenheim'].includes(p.key)&&!distorted(this.api.game(),p)||s.slot==='q'&&this.api.chargeTactical(p);}
+ chargeGesture(s,p){return s.slot==='basic'&&['yan','hohenheim','moses'].includes(p.key)&&!distorted(this.api.game(),p)||s.slot==='q'&&this.api.chargeTactical(p);}
  steerGrab(s){const g=this.api.game();if(!g.player.state.kromerGrab||!this.api.allowed())return;if(Math.hypot(s.x-s.cx,s.y-s.cy)<6)return;s.manual=true;g.input.aim=this.manualPoint(s);g.input.fire=false;g.mobileAim={slot:s.slot,point:g.input.aim};this.api.takeAim();}
  tick(){this.refreshMode();if(!this.enabled||this.blocking)return;for(const s of this.gestures.values())if(!['map','move'].includes(s.slot)&&!s.precision&&!s.queenTargeting){if(s.kromerSteering){this.steerGrab(s);continue;}const mode=this.updateGesture(s);if(this.chargeGesture(s,this.api.game().player)){this.aim(s);continue;}if(mode==='tap')continue;if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&!s.manual){this.holdAttack(s);continue;}this.aim(s);}}
  fitMap(){this.score.fit();}

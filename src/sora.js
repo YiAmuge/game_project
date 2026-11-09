@@ -53,7 +53,7 @@ function shockwave(g,p,r,cracks=false,owner){
 }
 export function basic(g,e,p,d){
  if(e.key!=='sora')return false;
- if(ego(g,e)){g.addBuff(e,'soraScratch',.35,{copy:false});const strike=()=>{if(!ego(g,e))return;g.action(e,'basic',()=>area(g,e,e,g.attackRange(e),0,t=>g.deal(e,t,SORA.egoDamage)));};strike();g.schedule(e,SORA.egoHitDelay,strike);g.effects.push({source:e.id,theme:'sora',type:'soraClaw',x:e.x,y:e.y,r:g.attackRange(e),angle:Math.atan2(d.y,d.x),circle:true,life:.3,maxLife:.3});}
+ if(ego(g,e)){const strike=()=>{if(!ego(g,e))return;g.action(e,'basic',()=>area(g,e,e,g.attackRange(e),0,t=>g.deal(e,t,SORA.egoDamage)));};strike();g.schedule(e,SORA.egoHitDelay,strike);g.effects.push({source:e.id,theme:'sora',type:'soraClaw',x:e.x,y:e.y,r:g.attackRange(e),angle:Math.atan2(d.y,d.x),circle:true,life:.3,maxLife:.3});}
  else {const impact=basicImpact(g,e,d);if(g.clearLine(e,impact)){area(g,e,impact,impact.r,0,t=>{if(g.clearLine(e,t))g.deal(e,t,SORA.basicDamage);});shockwave(g,impact,impact.r,false,e);}}
  return true;
 }

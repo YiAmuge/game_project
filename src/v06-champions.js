@@ -48,7 +48,7 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='dongbaek'){
   if(slot==='q'){g.addShield(e,e.maxHp*.08,`petals-${e.id}`,3);g.addBuff(e,'flowerStride',3);}
-  else{const point={...p};g.emitSound('petal',e,{...point,slot:'r',phase:'dongbaek-bloom',duration:2.6});area(g,e,point,4.2,105);for(let i=1;i<4;i++)g.schedule(e,i*.25,()=>area(g,e,point,4.2,105),{autonomous:true});g.addBuff(e,'flowerReload',3,{copy:false});g.effects.push({type:'burst',source:e.id,...point,r:4.2,theme:e.key,life:.65,maxLife:.65});}
+  else{const point={...p};g.emitSound('petal',e,{...point,slot:'r',phase:'dongbaek-bloom',duration:2.6});for(let i=0;i<6;i++){const radius=4.2+(6.5-4.2)*i/5,hit=()=>{area(g,e,point,radius,105);g.effects.push({type:'petalFan',source:e.id,...point,r:radius,angle:0,spread:Math.PI*2,shape:{kind:'circle',range:radius},theme:e.key,life:.3,maxLife:.3});};if(i===0)hit();else g.schedule(e,i*.2,hit,{autonomous:true});}g.addBuff(e,'flowerReload',3,{copy:false});g.effects.push({type:'burst',source:e.id,...point,r:6.5,theme:e.key,life:1.2,maxLife:1.2});}
   return true;
  }
  if(e.key==='dongrang'){

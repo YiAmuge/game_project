@@ -18,16 +18,16 @@ const run=(g,s)=>{for(let i=0;i<Math.round(s*120);i++)g.step(1/120);};
 test('normal charge grants 20 percent armor and ultimate blocks basic attacks without consuming ammo',()=>{
  const{g,p}=arena(),base=g.armor(p);g.cast(p,'q',{x:47,y:20});near(g.armor(p),(100+base)*1.2-100);
  assert.ok(g.cast(p,'r',p));assert.equal(p.state.chargeAt,undefined);assert.equal(p.motion?.kind,'leap');
- near(g.armor(p),(100+base)*1.3-100);const ammo=p.ammo;
+ near(g.armor(p),(100+base)*1.2-100);const ammo=p.ammo;
  for(let i=0;i<3;i++){assert.equal(g.attack(p,{x:45,y:20}),false);run(g,.1);}near(p.ammo,ammo);
  run(g,.7);delete p.buffs.heathUlt;assert.ok(g.attack(p,{x:p.x+2,y:p.y}));
 });
-test('ultimate uses the five-unit circle, 210 damage every 0.3 seconds and 30 percent actual-damage healing',()=>{
- const{g,p}=arena(),inside=enemy(g,44.9),outside=enemy(g,45.7);p.hp=p.maxHp*.3;g.cast(p,'r',p);
+test('ultimate uses the 4.5-unit circle, 210 damage every 0.3 seconds and 20 percent actual-damage healing',()=>{
+ const{g,p}=arena(),inside=enemy(g,44.4),outside=enemy(g,45.2);p.hp=p.maxHp*.3;g.cast(p,'r',p);
  const rawDeal=g.deal.bind(g),hits=[],heals=[];g.deal=(s,t,n,o)=>{if(s===p)hits.push({target:t,n});return rawDeal(s,t,n,o);};
  const rawHeal=g.heal.bind(g);g.heal=(s,t,n,...rest)=>{if(s===p&&t===p)heals.push(n);return rawHeal(s,t,n,...rest);};
  run(g,.29);assert.equal(hits.length,0);run(g,.32);assert.equal(hits.length,2);assert.ok(hits.every(h=>h.n===210&&h.target===inside));
- near(heals.reduce((a,b)=>a+b,0),(10000-inside.hp)*.3);near(outside.hp,10000);near(skillTargeting(g,p,'r').radius,5);assert.equal(p.state.heathSweepSerial,2);
+ near(heals.reduce((a,b)=>a+b,0),(10000-inside.hp)*.2);near(outside.hp,10000);near(skillTargeting(g,p,'r').radius,4.5);assert.equal(p.state.heathSweepSerial,2);
 });
 test('ultimate Q immediately starts the existing full-charge leap and deals its damage only on landing',()=>{
  const normal=arena();normal.g.cast(normal.p,'q',{x:47,y:20});normal.g.time=1.5;releaseHeath(normal.g,normal.p,{x:47,y:20});
@@ -57,9 +57,9 @@ test('ultimate rotation keeps its phase, alternating direction and sack during t
  }
  assert.equal(p.motion,undefined);assert.ok(g.time-p.state.heathSlamAt<.18);
 });
-test('each sack sweep makes a full turn, alternates direction and bends while its tip stays at range five',()=>{
+test('each sack sweep makes a full turn, alternates direction and bends while its tip stays at range 4.5',()=>{
  const{g,p}=arena();g.cast(p,'r',p);const start=heathSweepPose(g,p);g.time=.15;const middle=heathSweepPose(g,p);assert.equal(middle.direction,1);near(middle.angle-start.angle,Math.PI);assert.ok(Math.abs(middle.bend)>1);
- near(Math.hypot(...Object.values(heathSackPoint(middle,1))),5);g.time=.3-1e-8;const end=heathSweepPose(g,p);near(end.angle-start.angle,Math.PI*2-1e-8/.3*Math.PI*2);
+ near(Math.hypot(...Object.values(heathSackPoint(middle,1))),4.5);g.time=.3-1e-8;const end=heathSweepPose(g,p);near(end.angle-start.angle,Math.PI*2-1e-8/.3*Math.PI*2);
  run(g,1/120);g.time=.45;const reversed=heathSweepPose(g,p);assert.equal(reversed.direction,-1);near(reversed.angle-start.angle,-Math.PI);
  const copy=arena(),packet=new SnapshotWriter().capture(g,true);assert.ok(applySnapshot(copy.g,packet,p.id));assert.deepEqual(heathSweepPose(copy.g,copy.g.player),heathSweepPose(g,p));
 });
@@ -68,6 +68,6 @@ test('Don uses the spiral from the initial ultimate dash to the end of blood thi
 });
 test('current codex describes immediate full-charge leaps and current ultimate values',()=>{
  const q=skillReference('heathcliff',2),r=skillReference('heathcliff',3),text=JSON.stringify({q,r});
- for(const n of ['20%','30%','210','즉시 도약','기본공격'])assert.ok(text.includes(n),n);
+ for(const n of ['20%','4.5','210','즉시 도약','기본공격'])assert.ok(text.includes(n),n);
  assert.ok(!text.includes('순간이동')&&!text.includes('즉시 이동'));
 });

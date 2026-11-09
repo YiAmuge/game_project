@@ -53,7 +53,7 @@ test('Outis tactical spin appears at the real landing circle, with one neutral s
 });
 test('Gahwan has three complete circular ultimate slashes, and Ppui uses the real fan size',()=>{
  const {g,p,t}=arena('gahwan'),v=new ChampionVFX(new SkillVFX()),times=[];g.cast(p,'r',t);v.sync(g);times.push(...v.effects.filter(f=>f.type==='gazeSlash').map(f=>f.at));run(g,1.6,()=>{v.sync(g);for(const f of v.effects.filter(f=>f.type==='gazeSlash'))if(!times.includes(f.at))times.push(f.at);});assert.equal(times.length,3);
- const b=arena('ppui');b.g.cast(b.p,'r',b.t);b.g.step(.001);const f=b.g.effects.find(f=>f.type==='nailVolley');assert.equal(f.shape.range,7);assert.equal(f.shape.spread,1.5);
+ const b=arena('ppui');b.g.cast(b.p,'r',b.t);b.g.step(.001);const f=b.g.effects.find(f=>f.type==='nailVolley');assert.equal(f.shape.range,9);assert.equal(f.shape.spread,1.5);
 });
 test('waterfall is a persistent ripple field without an eruption emitter',()=>{
  const {g,p}=arena('honglu'),v=new SkillVFX();g.zones=[{kind:'waterfall',source:p,x:22,y:20,r:6.5}];v.sync(g,camera);assert.equal(v.emitters.length,0);assert.equal(v.particles.length,0);

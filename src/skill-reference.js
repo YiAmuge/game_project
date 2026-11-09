@@ -17,6 +17,7 @@ const fields=[['passive','passiveText'],['basic','basicText'],['tactical','qText
 const cache=new Map();
 export const number=n=>String(Number(Number(n).toFixed(4)));
 const row=(label,text)=>({label,text});
+const section=(title,text)=>{text=text.trim();return{title,text:text.startsWith(title+':')?text.slice(title.length+1).trim():text};};
 function referenceArena(key,transformed){
  const id=key+':'+transformed;if(cache.has(id))return cache.get(id);
  const g=new Game(key,'bottom',{mode:'training',seed:70}),e=g.player;g.time=0;g.units=[e];e.lastCombat=0;if(key==='dongbaek')e.qCd=1;
@@ -30,8 +31,8 @@ const degrees=r=>number(Number((r*180/Math.PI).toFixed(1)))+'°';
 function basicRanges(key,g,e,transformed){
  const range=g.attackRange(e),r=number(range);
  if(key==='don'||key==='starbuck')return[row('공격 범위','돌진 거리 '+r+' · 직선 폭 1.5')];
- if(key==='moses')return[row('기본 숨결','사거리 4 · 부채꼴 160°'),row('하얀 숨','사거리 4 · 전방 반원 180°'),row('푸른 숨','사거리 6.6 · 부채꼴 166°')];
- if(key==='ezra')return[row('알라스 공방 장갑','돌진 거리 3.8'),row('네스터 공방 망치','1타 반경 2.6 · 2타 반경 2.9 · 3타 반경 3.2'),row('스크류 아틀리에제 드릴 망치','사거리 3.3 · 부채꼴 150°'),row('나미르 공방 건틀릿','지정 도약 거리 2.5 · 착지 반경 3.5')];
+ if(key==='moses')return[row('기본 숨결','사거리 6 · 부채꼴 145°'),row('하얀 숨','사거리 6 · 전방 반원 180°'),row('푸른 숨','사거리 8.6 · 부채꼴 151°')];
+ if(key==='ezra')return[row('알라스 공방 장갑','돌진 거리 3.8'),row('네스터 공방 망치','1타 반경 2.6 · 2타 반경 3.6 · 3타 반경 4.6'),row('스크류 아틀리에제 드릴 망치','사거리 3.3 · 부채꼴 150°'),row('나미르 공방 건틀릿','지정 도약 거리 2.5 · 착지 반경 3.5')];
  if(key==='queen')return[row('관통 투사체','사거리 '+r)];
  if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 전방 반원 180°'),row('피의 칼날','사거리 6.8 · 폭 4.54 · 관통 불가')];
  if(key==='yan')return transformed?[row('손 조작','조작 거리 '+YAN.handLeash+' · 손 공격 반경 '+YAN.handRadius)]:[row('미충전','사거리 '+YAN.basicRange+' · 폭 '+YAN.width),row('최대 충전','사거리 '+YAN.fullRange+' · 폭 '+YAN.width),row('충전 변화','사거리 최소 '+YAN.basicRange+' ~ 최대 '+YAN.fullRange)];
@@ -56,7 +57,7 @@ function basicRanges(key,g,e,transformed){
 function skillRanges(key,index,g,e,transformed,variant){
  if(key==='ezra'&&index===2)return basicRanges(key,g,e,transformed);
  if(key==='moses'&&index===3)return[row('붉은 점','사거리 무제한 · 폭 2 · 길이 3.7')];
- if(key==='ezra'&&index===3)return[row('도끼 돌진','거리 2.5'),row('1~3번째 공격','사거리 3 · 전방 반원 180°'),row('4번째 공격','자신 중심 반경 3')];
+ if(key==='ezra'&&index===3)return[row('도끼 돌진','거리 2.5'),row('1~3번째 공격','자신 중심 반경 3'),row('4번째 공격','자신 중심 반경 3')];
  if(key==='queen'&&index===3)return ARCANA_STAGES.map((s,i)=>row(i+'단계','사거리 '+s.range+' · 폭 '+s.width));
  if(key==='nosferatu'&&index===2)return[row('소환','사거리 6.8 · 최대 3마리'),row('박쥐 활동','주인 중심 거리 8 · 공격 사거리 2.5')];
  if(index===1)return basicRanges(key,g,e,transformed);
@@ -102,6 +103,7 @@ function skillRanges(key,index,g,e,transformed,variant){
 function cooldownLabel(key,index,g,e,transformed,variant){
  if(index===0)return ({ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
+  if(key==='moses')return '탄창 '+g.ammoCap(e)+'개 · 1개 장전 '+number(g.reloadInterval(e))+'초 · 완충 1.5초 · 충전 포함 최소 공격 간격 0.7초 · 발사 후 대기 0.7초';
   if(key==='ezra')return '탄창 4개 · 전탄 소진 후 일괄 장전 2.5초 · 장전 속도 보정 1.5배';
   if(key==='nosferatu'&&transformed)return '탄창 소모 없음 · 자동 공격 간격 0.4초';
   if(key==='jamila')return '탄창 '+g.ammoCap(e)+'개 · 일괄 장전 '+number(g.reloadInterval(e))+'초 · 공격 간격 0.2초';
@@ -124,13 +126,20 @@ export function cleanSkillDetails(text){
   .replace(new RegExp('(?:전체\\s*)?(?:반경|반폭|폭|각도)\\s*'+value+'(?:라디안|도)?\\s*(?:의|에|내|안의)?','gu'),'')
   .replace(/\(\s*\)/gu,'').replace(/(?<=[.!?])\s*[·,]+|^[·,.\s]+/gu,'').replace(/\s*[·,]\s*(?=[.!?])/gu,'').replace(/\s+/gu,' ').replace(/ ([.,])/gu,'$1').trim();
 }
+export function cleanBasicDetails(text){
+ return text
+  .replace(/(?:기본\s*)?공격\s*(?:최소\s*사용\s*|최소\s*)?간격(?:은|는|이|가)?\s*\d+(?:\.\d+)?초(?:\([^)]*\))?(?:이다|다)?[.,]?/gu,'')
+  .replace(/(?:기본\s*)?탄창(?:\s*수)?(?:은|는|이|가)?\s*\d+\s*개(?!당)(?:이며|이다|다)?[.,]?/gu,'')
+  .replace(/(?:기본\s*)?(?:재장전|장전)(?:\s*시간)?(?:은|는)?\s*\d+(?:\.\d+)?초(?:이다|다)?[.,]?/gu,'')
+  .replace(/^[\s·,.]+|[·,]\s*(?=[.!?])/gu,'').replace(/ {2,}/gu,' ').trim();
+}
 export function skillReference(key,index,transformed=false,variant){
  const {g,e}=referenceArena(key,transformed),c=championDescription(key,transformed),[title,field]=fields[index];
  const alternate=index===3&&variant!==undefined?c.baseUltimates?.[variant]:null;
  const summaryKey=transformed?(key==='sora'?'soraEgo':key==='nosferatu'?'bloodfiend':'yanDistorted'):key;
  let summary=SKILL_SUMMARIES[summaryKey]?.[index]||c[field]?.split(/[.!?]/u)[0]||'';
  if(alternate){summary=key==='sora'?(variant===0?'새 지령을 부여하고 기존 지령을 갱신합니다.':'대행 5중첩으로 12초간 개화 E.G.O 상태가 됩니다.'):(variant===0?'주변의 적 챔피언에게 가짜 지령을 부여하고 갱신합니다.':'불길한 힘 6중첩으로 20초간 뒤틀림 상태가 됩니다.');}
- const details=alternate?cleanSkillDetails(alternate.description):SKILL_DETAILS[summaryKey]?.[index]??cleanSkillDetails(c[field]||''),labels=key==='gubo'&&index===0?['아군 처형','처형 파급']:key==='jamila'&&index===3?['전투원 소환','LCA 우제트 전투원']:null;return{title:alternate?.name||c[title],cooldown:cooldownLabel(key,index,g,e,transformed,variant),ranges:skillRanges(key,index,g,e,transformed,variant),summary,details,summarySections:labels?summary.split(/\n\s*\n/).map((text,i)=>({title:labels[i],text})):null,sections:labels?details.split(/\n\s*\n/).map((text,i)=>({title:labels[i],text})):null};
+ const rawDetails=alternate?cleanSkillDetails(alternate.description):SKILL_DETAILS[summaryKey]?.[index]??cleanSkillDetails(c[field]||''),details=index===1?cleanBasicDetails(rawDetails):rawDetails,labels=key==='ahab'&&index===2?['명령 전환','엄호해라!','자, 막아내라!']:key==='ezra'&&index===1?['공방무기','알라스 공방 장갑','네스터 공방 망치','스크류 아틀리에제 드릴 망치','나미르 공방 건틀릿']:key==='gubo'&&index===0?['아군 처형','처형 파급']:key==='jamila'&&index===3?['전투원 소환','LCA 우제트 전투원']:null;return{title:alternate?.name||c[title],cooldown:cooldownLabel(key,index,g,e,transformed,variant),ranges:skillRanges(key,index,g,e,transformed,variant),summary,details,summarySections:labels?summary.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null,sections:labels?details.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null};
 }
 
 // Escape first; only numeric spans selected by local Korean effect labels may

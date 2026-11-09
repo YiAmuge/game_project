@@ -63,9 +63,9 @@ test('Yi ground effect spends ammo once per target per zone and stacks 3.5% slow
 test('Myo Q deals 65 per shot and frenzy lasts 4.5 with fifty percent basic-dash reduction',()=>{
  const {g,p,t}=quiet('myo');g.cast(p,'q',t);run(g,.25);assert.ok(g.projectiles.every(b=>b.damage===65));p.qCd=0;g.cast(p,'r',p);close(p.buffs.rabbitFrenzy-g.time,4.5);p.attackCd=0;g.attack(p,{x:47,y:7});const hp=p.hp;g.deal(t,p,100);close(hp-p.hp,100*1.12*.9*.5/1.1);
 });
-test('Ppui gains fifteen percent assist XP, without changing kill XP or ally rewards',()=>{
- const {g,p,t}=quiet('ppui'),a=ally(g);g.deal(p,t,1,{fixed:true});g.deal(a,t,1e6,{fixed:true});close(p.xp,80.5);close(a.xp,120);close(p.gold,250+40*4/3);
- const next=g.makeChampion('faust',1,20);Object.assign(next,{x:42,y:7});g.kill(next,p);close(p.xp,200.5);
+test('Ppui uses ordinary assist XP, without changing kill XP or ally rewards',()=>{
+ const {g,p,t}=quiet('ppui'),a=ally(g);g.deal(p,t,1,{fixed:true});g.deal(a,t,1e6,{fixed:true});close(p.xp,70);close(a.xp,120);close(p.gold,250+40*4/3);
+ const next=g.makeChampion('faust',1,20);Object.assign(next,{x:42,y:7});g.kill(next,p);close(p.xp,190);
 });
 test('Ppui basics fire at enemies without granting regeneration to an allied target',()=>{
  const {g,p,t}=quiet('ppui'),a=ally(g,'meursault',41,7);g.attack(p,a);assert.equal(p.state.empower,undefined);g.attack(a,t);run(g,.3);assert.ok(t.hp<t.maxHp);assert.equal(a.buffs.redEncouragement,undefined);
@@ -73,8 +73,8 @@ test('Ppui basics fire at enemies without granting regeneration to an allied tar
 test('Ppui tactical heals allies around the caster and keeps outside targets unaffected',()=>{
  const {g,p}=quiet('ppui');g.units=[p];const a=ally(g,'faust',42,7),b=ally(g,'yi',43,9),outside=ally(g,'yi',48,7);a.hp-=500;b.hp-=500;outside.hp-=500;a.lastDamageAt=b.lastDamageAt=100;g.canNaturalHeal=()=>false;g.inSpawn=()=>false;g.cast(p,'q',p);const before=a.hp;run(g,.5);assert.ok(a.hp>before&&b.hp>b.maxHp-500);close(outside.hp,outside.maxHp-500);assert.equal(skillTargeting(g,p,'q').kind,'self');assert.equal(skillTargeting(g,p,'q').radius,7);
 });
-test('Ppui ultimate deals five waves totaling seven hundred twenty before scaling',()=>{
- const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,5);close(amounts.reduce((a,b)=>a+b,0),720);
+test('Ppui ultimate deals ten waves totaling seven hundred fifty before scaling',()=>{
+ const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,10);close(amounts.reduce((a,b)=>a+b,0),750);
 });
 test('Kim hitting a champion gives 120 shields to nearby allies with reload/haste benefit',()=>{
  const {g,p,t}=quiet('kim'),a=ally(g,'yi');g.attack(p,t);run(g,.02);close(g.shield(p),60+p.maxHp*.012);close(g.shield(a),60+p.maxHp*.012);close(g.haste(p),.12);const shields=g.shield(p);run(g,.3);close(g.shield(p),shields);

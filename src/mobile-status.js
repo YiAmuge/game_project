@@ -34,6 +34,7 @@ export function mobileStatusEntries(g,e){
  const remaining=g.passiveCooldown(e),active=Boolean(passiveActive(g,e));
  if(!(e.key==='sora'&&g.buff(e,'soraEgo'))&&(!timedPassives.has(e.key)||remaining>0||active)){const stack=stackInfo(e,g),description=championDescription(e.key);entries.push({kind:'passive',key:e.key,priority:1,order:0,label:remaining>0?Math.ceil(remaining)+'s':stack?.value!==undefined?stack.value+'/'+stack.max:'',name:description.passive,glyph:'P',ready:active,title:description.passiveText});}
  if(absorbedOrder(e)){const state=augmentStatus(g,e,'writtenOrder'),a=AUGMENTS.find(a=>a.key==='writtenOrder');entries.push({kind:'passive',key:'writtenOrder',priority:1,order:1,label:state.label,name:augmentName(e,a),glyph:'지령',ready:state.ready,title:augmentName(e,a)+' · '+augmentText(e,a)});}
+ if(e.absorbedCarrier){const a=AUGMENTS.find(a=>a.key==='carrier');entries.push({kind:'passive',key:'carrier',priority:1,order:1,label:'흡수',name:a.name,glyph:'운송',ready:true,title:a.text});}
  for(const[index,key]of e.augments.entries()){const a=AUGMENTS.find(a=>a.key===key);if(!a)continue;const state=augmentStatus(g,e,key);entries.push({kind:'augment',key,priority:2,order:index,label:state.label,name:augmentName(e,a),group:a.group,ready:state.ready});}
  return entries.sort((a,b)=>a.priority-b.priority||b.order-a.order).slice(0,MOBILE_STATUS_LIMIT);
 }

@@ -71,12 +71,12 @@ export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!CHAMPIONS[key]));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const BASE_HEALTH={moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
-export const BASE_SPEED={moses:2.85,ezra:3.6,yi:4.35,rudolph:3.25};
+export const BASE_HEALTH={sora:2500,moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
+export const BASE_SPEED={sora:3.6,moses:2.85,ezra:3.6,yi:4.35,rudolph:3.25};
 export const championBaseHealth=key=>BASE_HEALTH[key]??RULES.health[RUNTIME_CHAMPIONS[key].health]*(RUNTIME_CHAMPIONS[key].healthMultiplier||1);
 export const championBaseSpeed=key=>BASE_SPEED[key]??RULES.speed[RUNTIME_CHAMPIONS[key].speed];
 
-export const ARMOR_GRADES={moses:2,ezra:3,queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:3,yan:4};
+export const ARMOR_GRADES={moses:2,ezra:3,queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:2,yan:4};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS))c.armor=ARMOR_GRADES[key]??2;
 export const GROWTH={
  queen:[.055,.045,.013],nosferatu:[.055,.055,.016],
@@ -173,11 +173,11 @@ export const AUGMENTS=[
  {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 관통 또는 범위 공격이 가능한 기본 공격은 사거리 +1.3을 적용'},
  {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소. 최대 중첩 중 공격 중에도 장전이 15% 속도로 진행'},
  {key:'glaive',group:'survival',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
- {key:'wisdom',group:'combat',name:'지혜성도',text:'전투력 +5% · 공격 중에도 장전이 30% 속도로 진행'},
- {key:'duelManual',group:'combat',name:'듀엘교본 3권',text:'이동속도 +5% · 기본 이동속도를 초과한 현재 이동속도의 비율만큼 전투력 증가'},
+ {key:'wisdom',group:'combat',name:'지혜성도',text:"전투력 +7%. 10초마다 적에게 피해를 입히면 1초 간격으로 (150 + 현재 전투력 2%당 1) 고정 피해를 총 3회 입힌다."},
+ {key:'duelManual',group:'combat',name:'듀엘교본 3권',text:"이동속도 +5%. 적에게 피해를 입힐 때마다 이동속도 +2%·전투력 +5%를 얻으며 최대 5중첩이다. 중첩 획득 후 5초마다 1중첩 감소한다."},
  {key:'resentment',group:'survival',name:'원한 문신',text:'잃은 체력 10%마다 전투력·방어력·장전속도 +5%, 최대 8중첩. 현재 체력에 따라 실시간 적용'},
- {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:'장전 속도 +7%. 치명적인 피해를 받으면 체력을 최대 체력의 50%로 복구하고 모든 군중제어 해제. 1초간 군중제어 면역·이동속도 +30%. 재사용 대기시간 60초'},
- {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:'2초간 피해를 받지 않으면 초당 최대 체력의 13% 보호막 충전, 최대 30%. 최대 체력의 10% 이상 보호막 보유 중 스킬 가속 +10% · 이동속도 +10%'},
+ {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:"최대 체력 +7%. 치명적인 피해를 받으면 최대 체력의 50%로 체력을 복구하고 군중제어를 해제한다. 1초간 군중제어 면역·이동속도 +30%. 복구할 때마다 최대 체력이 영구적으로 2.5% 증가한다. 재사용 대기시간 60초."},
+ {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:"스킬 가속 +10%·이동속도 +10%. 2초간 피해를 받지 않으면 초당 최대 체력의 3%만큼 보호막을 충전하며 최대 12%까지 누적한다."},
  {key:'blackOrb',group:'combat',name:'흑수환',text:'전투력·이동속도·장전속도 +10%'},
  {key:'antimatter',group:'survival',name:'반물질 옷',text:'최대 체력 +10% · 사거리 1.6의 적에게 0.5초마다 20 고정 피해'},
  {key:'writtenOrder',group:'survival',name:'쪽지로 전해진 지령',text:'공격 적중 시 방어력 +5%, 최대 5중첩. 각 중첩은 5초 유지. 최대 중첩 중 일반 피해의 10%를 고정 피해로 전환하고 해당 고정 피해만큼 5초 보호막 획득, 최대 500 누적'},
@@ -185,10 +185,10 @@ export const AUGMENTS=[
  {key:'battleHaste',group:'tech',name:'사랑과 증오의 이름으로',text:'전투를 3초 이상 유지하면 스킬 가속 +25%. 비전투 시 해제'},
  {key:'cooldown15',group:'tech',name:'주민등록 마이크로칩',text:'전술기·궁극기 기본 재사용 대기시간 −15%'},
  {key:'magazine2',group:'tech',name:'카포를 위하여',text:'최대 탄창 +2'},
- {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:'스킬 가속 +3% · 이동속도 +3%. 카테고리별 증강 2개 제한을 해제한다. 전체 보유 한도 6개에는 포함된다'},
+ {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:"스킬 가속 +3%·이동속도 +3%. 카테고리별 증강 2개 제한을 해제한다. 구매 즉시 흡수되어 증강 칸을 차지하지 않는다. 판매할 수 없으며 연습장에서만 판매할 수 있다."},
  {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'적에게 상태이상·디버프를 부여하면 남은 스킬 재사용 대기시간 20% 감소 및 빈 탄창 1개 충전. 재사용 대기시간 10초'},
- {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 방어력 +7%. 귀환 버튼을 누른 채 왼쪽으로 밀면 귀환, 오른쪽으로 밀면 침투를 사용한다. 침투 재사용 대기 중에도 귀환할 수 있다.\n\n침투\n어디서든 1.75초간 준비한 뒤 전장에서 사라진다. 시전 위치 중심 사거리 35 안에서 최대 10초 동안 착지점을 고른다.\nPC는 WASD, 모바일은 이동 조이스틱으로 위치를 옮긴다. 전술기 버튼·우클릭을 유지하면 정밀 이동하며, 기본공격으로 확정하면 0.5초 후 나타난다. 선택시간이 끝나면 선택점 근처의 유효한 지점으로 자동 착지한다.\n위치 선택 중 시야가 30% 넓어지고 정밀 이동 중에는 원래 시야로 돌아온다. 착지 후 2초간 이동속도 +10%. 성공 시 재사용 대기 75초, B 또는 귀환 버튼으로 취소 시 1.5초.'},
- {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:'비전투 이동속도 +15% · 전투 중 +7%'},
+ {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 방어력 +7%. 귀환 버튼 또는 PC의 B키를 누른 채 왼쪽으로 움직이면 귀환, 오른쪽으로 움직이면 침투를 선택한다. 침투 재사용 대기 중에도 귀환할 수 있다.\n\n침투\n어디서든 1.75초간 준비한 뒤 전장에서 사라진다. 시전 위치 중심 사거리 35 안에서 최대 10초 동안 착지점을 고른다.\nPC는 WASD, 모바일은 이동 조이스틱으로 위치를 옮긴다. 전술기 버튼·우클릭을 유지하면 정밀 이동하며, 기본공격으로 확정하면 0.5초 후 나타난다. 선택시간이 끝나면 선택점 근처의 유효한 지점으로 자동 착지한다.\n위치 선택 중 시야가 30% 넓어지고 정밀 이동 중에는 원래 시야로 돌아온다. 착지 후 2초간 이동속도 +10%. 성공 시 재사용 대기 75초, B 또는 귀환 버튼으로 취소 시 1.5초.'},
+ {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:"거리 5를 이동할 때마다 전술기·궁극기의 남은 재사용 대기시간을 1.3초 줄인다. 발동 대기시간 3초."},
 ];
 
 for(const [key,text] of Object.entries(CHAMPION_TEXT))Object.assign(RUNTIME_CHAMPIONS[key],text);

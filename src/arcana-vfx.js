@@ -1,6 +1,6 @@
 import{FRAMES,loadAtlas}from'./art.js';
 import{drawMagicCircle}from'./magic-circle.js';
-import{magicCircleCount,telegraph}from'./queen.js';
+import{QUEEN,magicCircleCount,telegraph}from'./queen.js';
 const TAU=Math.PI*2;
 export function drawBloodBat(r,e,g){const f=FRAMES.bloodBat,a=loadAtlas(f.sheet);if(!a.complete||!a.naturalWidth)return;const c=r.ctx,w=1.26,h=w*f.h/f.w,flap=.85+.15*Math.sin(g.time*23+e.id);c.save();c.translate(e.x,e.y-.55);c.scale(Math.cos(e.facing||0)<0?-1:1,flap);c.shadowColor='#c1143a';c.shadowBlur=5;c.drawImage(a,f.x,f.y,f.w,f.h,-w/2,-h/2,w,h);c.restore();}
 function roundedStar(c,r){const points=Array.from({length:10},(_,i)=>{const a=i*Math.PI/5-Math.PI/2,rad=i%2?r*.5:r;return{x:Math.cos(a)*rad,y:Math.sin(a)*rad};});c.beginPath();for(let i=0;i<10;i++){const p=points[i],next=points[(i+1)%10],prev=points[(i+9)%10],a={x:p.x*.8+prev.x*.2,y:p.y*.8+prev.y*.2},b={x:p.x*.8+next.x*.2,y:p.y*.8+next.y*.2};i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y);c.quadraticCurveTo(p.x,p.y,b.x,b.y);}c.closePath();}
@@ -17,7 +17,7 @@ function drawTelegraph(c,camera,s,time,ally){
 }
 function uprightSeal(c,camera,p,angle,radius,time,alpha=1){
  const at=camera.worldToScreen(p,1.45),side=camera.worldToScreen({x:p.x-Math.sin(angle),y:p.y+Math.cos(angle)},1.45),up=camera.worldToScreen(p,2.45);let ux=up.x-at.x,uy=up.y-at.y;if(Math.hypot(ux,uy)<1){ux=0;uy=-camera.scale;}
- c.save();c.translate(at.x,at.y);c.transform((side.x-at.x<0?-1:1)*Math.max(Math.abs(side.x-at.x),camera.scale*.42),side.y-at.y,ux,uy,0,0);drawMagicCircle(c,time,{radius,alpha});c.restore();
+ c.save();c.translate(at.x,at.y);c.transform((side.x-at.x<0?-1:1)*Math.max(Math.abs(side.x-at.x),camera.scale*.42),side.y-at.y,ux,uy,0,0);drawMagicCircle(c,time*5,{radius,alpha});c.restore();
 }
 function beam(c,camera,f){
  const d={x:Math.cos(f.angle),y:Math.sin(f.angle)},n={x:-d.y,y:d.x},alpha=Math.min(1,f.life/Math.max(.01,f.maxLife)*2),at=(along,side)=>camera.worldToScreen({x:f.x+d.x*along+n.x*side,y:f.y+d.y*along+n.y*side},1.35);
@@ -38,9 +38,9 @@ export function drawArcanaEffects(c,camera,g){
  for(const f of g.effects)if(f.type==='arcanaBeam')beam(c,camera,f);
  for(const e of g.champions()){if(!e.alive||g.hidden(e)||!g.visibleTo(g.player.team,e))continue;
   if(e.key==='queen'){
-   const q=e.state.queenQ;if(q)uprightSeal(c,camera,q,q.angle,2.1,g.time,q.phase==='preparing'?.8:1);
+   const q=e.state.queenQ;if(q)uprightSeal(c,camera,q,q.angle,2.1*Math.min(1,Math.max(0,(g.time-q.at)/.3)),g.time,q.phase==='preparing'?.8:1);
    for(const slot of ['q','r']){const shape=telegraph(g,e,slot);if(shape)drawTelegraph(c,camera,shape,g.time,e.team===g.player.team);}
-   const r=e.state.queenR;if(r){const n=magicCircleCount(g,e);for(let i=0;i<n;i++){const offset=.55+i*.65,p={x:r.x+Math.cos(r.angle)*offset,y:r.y+Math.sin(r.angle)*offset};uprightSeal(c,camera,p,r.angle,1.5*1.1**i,g.time+i*.4,.8+i*.08);}}
+   const r=e.state.queenR;if(r){const n=magicCircleCount(g,e);for(let i=0;i<n;i++){const offset=.55+i*.65,p={x:r.x+Math.cos(r.angle)*offset,y:r.y+Math.sin(r.angle)*offset};uprightSeal(c,camera,p,r.angle,1.5*1.1**i*Math.min(1,Math.max(0,(g.time-r.at-i*QUEEN.stageTime)/.3)),g.time+i*.4,.8+i*.08);}}
   }
   if(e.key==='nosferatu'&&e.state.bloodfiend)bloodMist(c,camera,g,e,e.state.bloodfiend);
  }
