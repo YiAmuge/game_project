@@ -58,7 +58,7 @@ export function naturalShield(g,e,amount){
 export function afterHit(g,e,t,actual,proc,absorbed=0,origin=null){
  if(e.kind==='champion'&&e.team!==t.team&&has(e,'glaive')&&actual>0)g.heal(e,e,actual*.3,false);
  if(e.kind==='champion'&&e.team!==t.team&&actual+absorbed>0){
-  if(has(e,'duelManual')){e.state.duelStacks=Math.min(5,(e.state.duelStacks||0)+1);e.state.duelDecay=g.time+5;}
+  if(has(e,'duelManual')){if(!(e.state.duelStacks>0))e.state.duelDecay=g.time+5;e.state.duelStacks=Math.min(5,(e.state.duelStacks||0)+1);}
   if(has(e,'wisdom')&&origin!=='wisdom'&&(e.state.wisdomReady||0)<=g.time){e.state.wisdomReady=g.time+10;const damage=150+g.powerScale(e)*50;for(let i=1;i<=3;i++)g.schedule(e,i,()=>{if(t.alive){g.deal(e,t,damage,{fixed:true,proc:false,augmentOrigin:'wisdom'});g.effects.push({type:'wisdomSlash',source:e.id,target:t.id,x:t.x,y:t.y,angle:i%2?.65:-.65,life:.4,maxLife:.4});}},{autonomous:true});}
  }
  if(!proc||actual+absorbed<=0)return;
