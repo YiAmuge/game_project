@@ -35,7 +35,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     permissions:
       pages: write
       id-token: write
@@ -48,7 +48,8 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
         with:
-          timeout: '1200000'
+          # deploy-pages enforces a maximum of ten minutes per deployment.
+          timeout: '600000'
       - name: Verify published revision
         env:
           PUBLISHED_PAGE_URL: ${{ steps.deployment.outputs.page_url }}
