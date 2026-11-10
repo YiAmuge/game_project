@@ -68,7 +68,7 @@ export function cast(g,e,slot,d,options={}){
 }
 function sync(g,e){e.qCd=(e.state.mosesCharges??2)>0?0:Math.max(0,e.state.mosesReady-g.time);}
 export function onDamage(g,source,target,amount){
- if(amount<=0||target.kind!=='champion'||source.team===target.team)return;
+ if(amount<=0||target.kind!=='champion')return;
  for(const e of g.champions(target.team))if(e.key==='moses'&&e.alive&&e.rCd>0&&(e.state.mosesRefundReady||0)<=g.time&&distance(e,target)<=MOSES.rSupportRange){e.rCd=Math.max(0,e.rCd-MOSES.rRefund);e.state.mosesRefundReady=g.time+MOSES.rRefundEvery;}
 }
 export function tick(g,e,dt=0){

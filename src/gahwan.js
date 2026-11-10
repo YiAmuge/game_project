@@ -24,7 +24,8 @@ export function tick(g,e){
    if(!g.hostile(e,t)||distance(e,t)>GAHWAN.range+t.radius||!g.clearLine(e,t))continue;
    const dx=t.x-e.x,dy=t.y-e.y;if(dx*d.x+dy*d.y< -1e-8)continue;
    // Resolve the stronger hit from the mark that existed before this attack.
-   const marked=hasContempt(g,t);g.deal(e,t,GAHWAN.damage+(marked?GAHWAN.bonus:0),{damageKind:'skill',sound:{family:'blade',slot:'r'}});
+   const marked=hasContempt(g,t),shield=g.shield(t),actual=g.deal(e,t,GAHWAN.damage+(marked?GAHWAN.bonus:0),{damageKind:'skill',sound:{family:'blade',slot:'r'}});
+   if(actual<=0&&g.shield(t)>=shield)continue;
    g.status(t,'slow',GAHWAN.slow,GAHWAN.slowTime,e);
    if(marked){g.status(t,'weak',GAHWAN.weak,GAHWAN.weakTime,e);g.status(t,'armorWeak',GAHWAN.weak,GAHWAN.weakTime,e);g.status(t,'stun',1,GAHWAN.stunTime,e);}
    contempt(g,e,t);

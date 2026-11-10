@@ -92,6 +92,10 @@ test('an idle ultimate does not spend the allied-damage refund interval, and sel
  const {g,p}=arena(),ally=hero(g,0),enemy=hero(g);g.deal(enemy,ally,10,{fixed:true});assert.equal(p.state.mosesRefundReady,undefined);
  p.rCd=.5;g.selfDamage(p,10);near(p.rCd,.5);g.deal(enemy,ally,10,{fixed:true});near(p.rCd,0);
 });
+test('actual allied friendly-fire damage also triggers the nearby-damage refund',()=>{
+ const {g,p}=arena(),ally=hero(g,0),gubo=hero(g,0,44,40,'gubo');ally.hp=1000;p.rCd=20;
+ assert.ok(g.deal(gubo,ally,10,{fixed:true,allowFriendly:true})>0);near(p.rCd,19);
+});
 test('Moses can change red point direction until launch and the fired projectile keeps its direction',()=>{
  const {g,p}=arena();g.cast(p,'r',g.input.aim);run(g,1);g.input.aim={x:40,y:60};run(g,.51);
  const point=g.projectiles.find(p=>p.type==='mosesPoint');assert.ok(point);near(point.dx,0);near(point.dy,1);
@@ -109,6 +113,11 @@ test('Gahwan waits 1.75 seconds then hits every enemy champion in the forward ha
 test('existing contempt adds 100 damage, fifteen-percent power and armor weakness, and a half-second stun',()=>{
  const {g,p}=arena('gahwan'),t=hero(g);t.armor=40;Gahwan.contempt(g,p,t);const power=g.combatPower(t);g.cast(p,'r',g.input.aim);run(g,1.76);
  near(t.maxHp-t.hp,damage(g,p,450)*1.12/1.4);near(g.combatPower(t),power*.85);near(g.armor(t),34);near(g.stat(t,'stun'),1);run(g,.5);near(g.stat(t,'stun'),0);run(g,2.51);near(g.armor(t),40);near(g.combatPower(t),power);
+});
+test('Gahwan ultimate marks shielded hits but never marks or slows an invulnerable target',()=>{
+ const {g,p}=arena('gahwan'),immune=hero(g),shielded=hero(g,1,44);immune.invulnerableUntil=10;g.addShield(shielded,1000,'test-shield',10);
+ g.cast(p,'r',g.input.aim);run(g,1.76);near(immune.hp,immune.maxHp);assert.equal(Gahwan.hasContempt(g,immune),false);near(g.stat(immune,'slow'),0);
+ near(shielded.hp,shielded.maxHp);assert.ok(g.shield(shielded)<1000);assert.ok(Gahwan.hasContempt(g,shielded));
 });
 test('contempt prevents gaze from every caster and gaze resumes after contempt expires',()=>{
  const {g,p}=arena('gahwan'),t=hero(g),other=hero(g,0,40,42,'gahwan');for(let i=0;i<5;i++)g.deal(p,t,1,{fixed:true});
