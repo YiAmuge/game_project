@@ -5,13 +5,12 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: pages
-  # Finish an active publication; keep only the latest queued update.
-  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages-build-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -29,13 +28,27 @@ jobs:
           const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
           writeFileSync('dist/build-info.json', JSON.stringify({ version, revision: process.env.GITHUB_SHA }) + '\n');
           NODE
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p "$RUNNER_TEMP/pages-site"
+          cp dist/city-border.html dist/build-info.json "$RUNNER_TEMP/pages-site/"
+          cat > "$RUNNER_TEMP/pages-site/index.html" <<'HTML'
+          <!doctype html>
+          <html lang="ko"><meta charset="utf-8"><title>도시 경계</title>
+          <script>location.replace('./city-border.html'+location.search+location.hash);</script>
+          <a href="./city-border.html">게임 열기</a></html>
+          HTML
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
+          path: ${{ runner.temp }}/pages-site
   deploy:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    concurrency:
+      group: pages
+      # Finish an active publication; keep only the latest queued update.
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
@@ -67,9 +80,11 @@ jobs:
               if (!response.ok) throw new Error(`Build information returned HTTP ${response.status}.`);
               const info = await response.json();
               if (info.revision !== process.env.EXPECTED_REVISION) throw new Error('Pages still serves a different revision.');
-              const page = await fetch(pageURL, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
-              await page.body?.cancel();
-              if (!page.ok) throw new Error(`The game page returned HTTP ${page.status}.`);
+              for (const target of [pageURL, new URL('city-border.html', pageURL)]) {
+                const page = await fetch(target, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+                await page.body?.cancel();
+                if (!page.ok) throw new Error(`The game page returned HTTP ${page.status}.`);
+              }
               console.log(`Verified published game revision ${info.revision} (v${info.version}).`);
               process.exit(0);
             } catch (error) {
