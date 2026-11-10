@@ -1,17 +1,20 @@
 // Local billboard effects share the champion's feet, leap height and scale.
 const tau=Math.PI*2;
+import{drawGahwanIcon}from'./gahwan-icons.js';
 const active=(g,records)=>Object.values(records||{}).filter(m=>(typeof m==='number'?m:m.until)>g.time);
 export function debuffBadges(g,e){
  const badges=[],state=e.state||{};if(active(g,state.queenMarks).length)badges.push({kind:'queenHeart',size:.34,color:'#ff8bcf',border:'#b93380'});
- if(active(g,state.gaze).some(m=>m.n>0))badges.push({kind:'gaze',size:.30,color:'#f6cd48',border:'#080a0c'});
- if(active(g,state.contempt).length)badges.push({kind:'contempt',size:.42,color:'#ffd19a',border:'#e33b42'});
+ const contempt=active(g,state.contempt).length,gaze=active(g,state.gaze).filter(m=>m.n>0);
+ if(gaze.length&&!contempt)badges.push({kind:'gaze',size:.40,stacks:Math.max(...gaze.map(m=>m.n)),color:'#f6cd48',border:'#080a0c'});
+ if(contempt)badges.push({kind:'contempt',size:.42,color:'#ffd19a',border:'#e33b42'});
  if(Object.values(state.mentalWhip||{}).some(m=>m.stage>0))badges.push({kind:'whip',size:.32,color:'#ff9b32',border:'#21100a'});
  return badges;
 }
 export function drawDebuffBadges(r,e,g,head){
  const c=r.ctx,badges=debuffBadges(g,e);
  for(const [i,b]of badges.entries()){
-  c.save();c.translate(e.x+.65+i*.85,head-.13);c.lineWidth=b.kind==='contempt'?.055:.03;c.strokeStyle=b.border;c.fillStyle=b.color;
+  c.save();c.translate(e.x+.65+i*.85,head-(b.kind==='gaze'?.35:.13));c.lineWidth=b.kind==='contempt'?.055:.03;c.strokeStyle=b.border;c.fillStyle=b.color;
+  if(b.kind==='gaze'||b.kind==='contempt'){if(b.kind==='contempt'){c.shadowColor='#ee2d1ab3';c.shadowBlur=4;}drawGahwanIcon(c,b.kind,0,0,b.size*2);if(b.kind==='gaze')r.text(String(b.stacks),0,.59,'#ffe3a1',.24);c.restore();continue;}
   if(b.kind==='queenHeart'){const s=b.size;c.beginPath();c.moveTo(0,s*.8);c.bezierCurveTo(-s*1.8,-s*.2,-s*.7,-s*1.4,0,-s*.45);c.bezierCurveTo(s*.7,-s*1.4,s*1.8,-s*.2,0,s*.8);c.fill();c.stroke();}else if(b.kind==='whip'){
    c.beginPath();for(const [i,[x,y]]of [[-.02,-.34],[-.23,.05],[-.02,.01],[-.08,.33],[.25,-.09],[.05,-.04]].entries())i?c.lineTo(x,y):c.moveTo(x,y);c.closePath();c.fill();c.stroke();
   }else{
@@ -22,6 +25,7 @@ export function drawDebuffBadges(r,e,g,head){
  }
 }
 function petal(c,x,y,angle,size,color){c.save();c.translate(x,y);c.rotate(angle);c.fillStyle=color;c.beginPath();c.moveTo(0,-size);c.bezierCurveTo(size,-size*.3,size*.7,size*.7,0,size*.65);c.bezierCurveTo(-size*.7,size*.5,-size,-size*.4,0,-size);c.fill();c.restore();}
+export function drawPulseIcon(c,x,y){c.save();c.translate(x,y);for(const[px,py,a,size,color]of[[-.13,.09,-.8,.17,'#8f1634'],[.12,.08,.8,.18,'#b51c40'],[-.07,-.02,-.45,.19,'#e03757'],[.09,-.04,.6,.16,'#f25770'],[-.01,-.10,-.2,.17,'#ca2446']])petal(c,px,py,a,size,color);c.strokeStyle='#ff9cae';c.lineWidth=.018;for(const[x,y,a]of[[-.07,-.02,-.45],[.09,-.04,.6],[-.01,-.10,-.2]]){c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.sin(a)*.07,y-Math.cos(a)*.09);c.stroke();}c.restore();}
 export function blueEmberPulse(c,age,seed){
  const t=Math.max(0,Math.min(1,age/.28));c.save();c.globalCompositeOperation='lighter';c.globalAlpha*=1-t;
  const glow=c.createRadialGradient(0,-1.05,0,0,-1.05,.72);glow.addColorStop(0,'#d8f8ff');glow.addColorStop(.15,'#52baffbb');glow.addColorStop(1,'#1259ff00');c.fillStyle=glow;c.fillRect(-.72,-1.77,1.44,1.44);

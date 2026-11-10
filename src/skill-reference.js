@@ -103,7 +103,7 @@ function skillRanges(key,index,g,e,transformed,variant){
 function cooldownLabel(key,index,g,e,transformed,variant){
  if(index===0)return ({ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
-  if(key==='moses')return '탄창 '+g.ammoCap(e)+'개 · 1개 장전 '+number(g.reloadInterval(e))+'초 · 완충 1.5초 · 충전 포함 최소 공격 간격 0.7초 · 발사 후 대기 0.7초';
+  if(key==='moses')return '완충 1초 · 충전 포함 최소 공격 간격 0.7초 · 발사 후 대기 0.7초';
   if(key==='ezra')return '탄창 4개 · 전탄 소진 후 일괄 장전 2.5초 · 장전 속도 보정 1.5배';
   if(key==='nosferatu'&&transformed)return '탄창 소모 없음 · 자동 공격 간격 0.4초';
   if(key==='jamila')return '탄창 '+g.ammoCap(e)+'개 · 일괄 장전 '+number(g.reloadInterval(e))+'초 · 공격 간격 0.2초';

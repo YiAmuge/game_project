@@ -19,7 +19,7 @@ export const NEW_DATA = {
     "passive": "N사 E.G.O::경멸, 경외",
     "basic": "경외하도록",
     "tactical": "경멸스러운 것",
-    "ultimate": "경멸 밑으로 쏟아지는 경외의 시선",
+    "ultimate": "경멸, 경외 [잠재 해방]",
     "brief": "붉은 시선과 N사 E.G.O.의 연속 찌르기",
     "powerMultiplier": 0.8
   },

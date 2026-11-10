@@ -209,10 +209,11 @@ export function gregorThrust(g,e){
  return {angle:cast.angle,straighten:extend,length:WEAPON_ART.gregor[1]+(range-WEAPON_ART.gregor[1])*extend,thrust:.45*Math.sin(Math.min(1,age/.25)*Math.PI)};
 }
 export function gahwanSlash(g,e){
- const cast=e.visualCast,age=g.time-(cast?.at??-99);if(age<0)return null;
- const duration=cast?.slot==='q'?.26:cast?.slot==='r'?.32:0;if(!duration||age>=duration)return null;
- const progress=age/duration;return {angle:cast.angle+(swingProgress(progress)-.5)*2.5*weaponOrientation(cast.angle).flip,progress,part:`skill-${cast.slot}`};
+ const cast=e.visualCast,release=e.state.gahwanRelease,ultimate=cast?.slot==='r',at=ultimate?release?.at:cast?.at,age=g.time-(at??-99),duration=ultimate?.18:cast?.slot==='q'?.26:0;
+ if(age<0||!duration||age>=duration)return null;
+ const progress=age/duration,angle=ultimate?release.angle:cast.angle;return {angle:angle+(swingProgress(progress)-.5)*Math.PI*weaponOrientation(angle).flip,progress,part:`skill-${ultimate?'r':'q'}`};
 }
+export function gahwanChargePose(g,e,p=equipmentPose(g,e)){const r=e.state.gahwanR;if(!r)return null;const age=g.time-r.at,jitter=Math.sin(age*90)*.022;return{hand:{x:p.right.x+jitter,y:p.right.y+Math.cos(age*103)*.012},angle:r.angle+Math.PI+jitter,pivot:.5};}
 export function yanWeaponAngle(e,p){
  const base=p.attacking?(e.attackFacing??p.facing):p.facing,progress=e.state.yanCharge?.progress/1.5||0,raise=e.state.yanCharge?.65*progress:p.attacking?.9*(1-swingProgress(p.age/.15)):0;
  return base-weaponOrientation(base).flip*raise;
@@ -283,6 +284,7 @@ export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0
 }
 export function hohenheimWeaponCharge(g,e){return e.key==='hohenheim'?Math.max(0,Math.min(1,(e.state.hohenCharge?.progress||0)/1.5)):0;}
 export function drawWeaponCharge(c,r,g,e,m,pivot){
+ if(e.key==='gahwan'&&e.state.gahwanR&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#fb2044'),progress=Math.min(1,(g.time-e.state.gahwanR.at)/1.75);c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.22+progress*.22;c.shadowColor='#ff193e';c.shadowBlur=12;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
  if(e.key==='faust'&&e.level>=RULES.maxLevel&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#ffffff');c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.16+.05*Math.sin(g.time*4);c.shadowColor='#e3f4ff';c.shadowBlur=9;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
  const progress=hohenheimWeaponCharge(g,e);if(!progress||!r.skillVfx)return;
  const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#4dafff');
@@ -349,6 +351,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   else held('nosWine',.43,{x:p.origin.x+p.flip*.53,y:p.origin.y-.64},0,.5,{mode:null,trail:false});return true;
  }
  if(e.key==='moses'){const pose=mosesWeaponPose(g,e,p);held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:null,trail:false,gripY:pose.gripY});return true;}
+ if(e.key==='gahwan'&&e.state.gahwanR){const pose=gahwanChargePose(g,e,p);c.save();c.shadowColor='#ff193e';c.shadowBlur=14;held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:null,trail:false,centerGrip:true});c.restore();return true;}
  if(e.key==='ezra'){const pose=ezraWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,gripY:pose.gripY,flipY:pose.flipY,part:pose.part});return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}
  if(e.key==='kromer'){
@@ -372,7 +375,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='gregor'){
   const strike=gregorThrust(g,e);held(entry[0],strike?.length??entry[1],p.right,strike?.angle??p.angle,undefined,{...(strike?{mode:'thrust',progress:(g.time-e.visualCast.at)/.4}:{}),flipY:-1,straighten:strike?.straighten||0,thrust:strike?.thrust||0,trail:!strike&&slash&&attacking});
  }else if(e.key==='gahwan'&&gahwanSlash(g,e)){
-  const cut=gahwanSlash(g,e);held(entry[0],entry[1],p.right,cut.angle,undefined,{mode:'swing',progress:cut.progress,trail:true,part:cut.part});
+  const cut=gahwanSlash(g,e);if(cut.part==='skill-r')for(let i=3;i>0;i--){c.save();c.globalAlpha*=.18/i;c.shadowColor='#ff254e';c.shadowBlur=9;held(entry[0],entry[1],p.right,cut.angle-i*.19*p.flip,undefined,{mode:'swing',progress:cut.progress,trail:false,part:'gahwan-echo-'+i});c.restore();}held(entry[0],entry[1],p.right,cut.angle,undefined,{mode:'swing',progress:cut.progress,trail:true,part:cut.part});
  }else if(e.key==='outis'&&outisSpinPose(g,e,p)){
   const spin=outisSpinPose(g,e,p);held(entry[0],entry[1],spin.hand,spin.angle,undefined,{mode:'orbit',progress:(g.time-e.state.outisSpinAt)/.4,trail:true,part:'outis-spin'});
  }else if(e.key==='heathcliff'&&heathSlamPose(g,e,p)){

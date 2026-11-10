@@ -3,6 +3,7 @@ import { AHAB, RULES, RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
 import { area, dash, targetAt } from './skills.js';
 import { rectangle } from './reworks.js';
+import*as Gahwan from'./gahwan.js';
 
 function ahabUltimateHit(g,e,t,damage,options={}){const delayed=Boolean(t.state?.posthumous||t.state?.detonating);g.deal(e,t,damage,options);if(t.kind==='champion'&&(!t.alive||!delayed&&(t.state?.posthumous||t.state?.detonating)))e.state.recastUntil=g.time+5;}
 export function init(g,e){if(e.key==='nelly'){e.state.knifeCharges=2;e.state.knifeReady=Infinity;}onRespawn(g,e);}
@@ -44,11 +45,6 @@ export function validate(g,e,slot,p){
 }
 export function recast(g,e,slot){return e.key==='ahab'&&slot==='r'&&e.state.recastUntil>g.time;}
 export function receivedMultiplier(g,e,t,kind){return e.key==='gahwan'&&kind==='skill'&&t.state?.contempt?.[e.id]>g.time?1.12:1;}
-function gaze(g,e,t,n=1){
- if(t.kind!=='champion'||!t.alive||t.hp<=0||g.debuffImmune?.(t))return;
- g.triggerDisrupt(e,t);t.state.gaze??={};const mark=t.state.gaze[e.id]??={n:0,until:0};if(mark.until<=g.time)mark.n=0;mark.n+=n;mark.until=g.time+5;
- if(mark.n>=5){mark.n=0;t.state.contempt??={};t.state.contempt[e.id]=g.time+3;t.revealedUntil=g.time+3;t.visuals.contempt={until:g.time+3,theme:'gahwan'};g.triggerDisrupt(e,t);}
-}
 function refundKnife(g,e){const s=e.state;if(Number.isFinite(s.knifeReady))s.knifeReady=g.time+Math.max(0,s.knifeReady-g.time)*.5;}
 function nellyMark(g,e,t,force=false){
  if(g.debuffImmune?.(t))return;
@@ -61,7 +57,7 @@ function nellyMark(g,e,t,force=false){
 }
 export function afterDamage(g,e,t,actual,proc){
  if(!proc||actual<=0||e.kind!=='champion'||t.kind!=='champion'||t.hp<=0)return;
- if(e.key==='gahwan')gaze(g,e,t);
+ if(e.key==='gahwan')Gahwan.gaze(g,e,t);
  if(e.key==='nelly')nellyMark(g,e,t);
 }
 export function basic(g,e,p,d){
@@ -88,12 +84,9 @@ export function cast(g,e,slot,p,d){
  if(e.key==='gahwan'){
   if(slot==='q'){
    const len=Math.min(8.2,distance(e,p)),center={x:e.x+d.x*len,y:e.y+d.y*len},rooted=new Set();
-   for(let i=0;i<5;i++)g.schedule(e,i*.13,()=>{area(g,e,center,2.5,39,t=>{g.status(t,'slow',.25,1.5,e);if(t.kind==='champion'&&t.state.contempt?.[e.id]>g.time&&!rooted.has(t.id)&&(s.bindReady?.[t.id]||0)<=g.time){rooted.add(t.id);s.bindReady??={};s.bindReady[t.id]=g.time+5;g.status(t,'root',1,1.5,e);}});g.effects.push({type:'slash',source:e.id,slot:'q',shape:{kind:'circle',range:2.5},...center,angle:e.facing+i*.5,spread:1.2,r:2.5,theme:e.key,life:.3,maxLife:.3});});
+   for(let i=0;i<5;i++)g.schedule(e,i*.13,()=>{area(g,e,center,2.5,39,t=>{g.status(t,'slow',.25,1.5,e);if(t.kind==='champion'&&t.state.contempt?.[e.id]>g.time&&!rooted.has(t.id)&&(s.bindReady?.[t.id]||0)<=g.time){rooted.add(t.id);s.bindReady??={};s.bindReady[t.id]=g.time+5;g.status(t,'root',1,1.5,e);}});g.effects.push({type:'gahwanCut',source:e.id,slot:'q',shape:{kind:'circle',range:2.5},...center,angle:e.facing+(i%2?-.55:.55),r:2.5,theme:e.key,life:.22,maxLife:.22});});
   }else{
-   e.channelUntil=g.time+1.5;
-   g.effects.push({type:'burst',source:e.id,theme:'gahwan',slot:'r',...p,r:5,life:.6,maxLife:.6});
-   area(g,e,p,5,350/3,t=>{const contempt=t.state?.contempt?.[e.id]>g.time;g.status(t,'slow',.5,contempt?1.5:1,e);if(contempt)g.status(t,'armorDown',25,3,e);});
-   for(let i=1;i<3;i++)g.pending.push({type:'gazeBurst',source:e,...p,r:5,at:g.time+i*.75,windup:i*.75,damage:350/3});
+   Gahwan.cast(g,e,d);
   }
   return true;
  }
@@ -127,6 +120,7 @@ export function cast(g,e,slot,p,d){
  return false;
 }
 export function tick(g,e){
+ Gahwan.tick(g,e);
  const s=e.state;
  if(e.key==='nelly'){
   s.knifeCharges??=2;s.knifeReady??=Infinity;

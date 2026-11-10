@@ -76,7 +76,7 @@ export function championPresentation(g,e){
 export class ChampionVFX {
  constructor(vfx,projectiles,art){this.vfx=vfx;this.projectiles=projectiles;this.art=art;this.previous=new WeakMap();this.effects=[];this.seen=new WeakSet();this.cache=new Map();this.pulse=new WeakMap();}
  reset(game){this.game=game;this.previous=new WeakMap();this.effects=[];this.seen=new WeakSet();this.pulse=new WeakMap();}
- event(type,e,g,options={}){if(options.spread)options={...options,spread:type==='petalFan'?basicFanAngle(e.key):FAN_ANGLE};this.effects.push({type,owner:e.id,x:e.x,y:e.y,at:g.time,life:1,...options});if(this.effects.length>72)this.effects.shift();}
+ event(type,e,g,options={}){if(options.spread&&options.spread<Math.PI*2)options={...options,spread:type==='petalFan'?basicFanAngle(e.key):FAN_ANGLE};this.effects.push({type,owner:e.id,x:e.x,y:e.y,at:g.time,life:1,...options});if(this.effects.length>72)this.effects.shift();}
  sync(g){
   if(this.game!==g||g.time<(this.time||0))this.reset(g);this.time=g.time;this.effects=this.effects.filter(f=>g.time-f.at<f.life);
   for(const e of g.champions().filter(e=>e.alive&&!e.trainingDummy)){
@@ -117,7 +117,7 @@ export class ChampionVFX {
    if(f.type==='outisShotgun')this.event('shotgun',e,g,{x:f.x,y:f.y,r:f.r,angle:f.angle,spread:f.spread,life:.55});
    if(f.type==='outisSpin')this.event('spinSlash',e,g,{x:f.x,y:f.y,r:f.r,life:.4});
    if(f.type==='ahabSpin')this.event('waterSpin',e,g,{x:f.x,y:f.y,r:f.r,life:.28});
-   if(f.type==='petalFan')this.event('petalFan',e,g,{x:f.x,y:f.y,r:f.r,angle:f.angle,spread:f.spread,life:.48});
+   if(f.type==='petalFan')this.event('petalFan',e,g,{x:f.x,y:f.y,r:f.r,angle:f.angle,spread:f.spread,life:f.maxLife||.48});
   }
  }
  texture(form,color,variant=0){return this.vfx.sprite(form,color,3,{accent:color,dark:color},variant);}

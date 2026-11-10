@@ -155,7 +155,7 @@ export function setChampionAI(g,on){
  return true;
 }
 export function aiChampion(g,e,dt){
- if(!g.practice.championAI||!e.alive||g.stat(e,'stun')||e.channelUntil>g.time)return;
+ if(!g.practice.championAI||!e.alive||g.stat(e,'stun')||e.channelUntil>g.time&&!e.state.gahwanR)return;
  const t=g.nearest(e,12,false);if(!t)return;
  if(distance(e,t)>g.attackRange(e)+t.radius||!g.clearLine(e,t))g.moveToward(e,t,dt);
  else g.attack(e,t);

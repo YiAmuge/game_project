@@ -39,8 +39,8 @@ test('Gregor deformation puts the curved source spine on one line without increa
  try{const f=FRAMES.gregorClaw,calls=[],scales=[],c={save(){},restore(){},translate(){},rotate(){},scale(x,y){scales.push([x,y]);},drawImage(...a){calls.push(a);}};drawWeapon(c,'gregorClaw',6,{straighten:1,pivot:.12});assert.ok(calls.length>100);close(scales.at(-1)[1],WEAPON_ART.gregor[1]/6);for(const a of calls){const u=(a[1]-f.x+a[3]/2)/f.w;close(a[6]+gregorCenterline(u)*f.h,0);}}
  finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });
-test('Gahwan draws exactly one weapon sweep for either skill while their later damage pulses keep their schedule',()=>{
- for(const slot of ['q','r']){const {g,p}=arena('gahwan');g.cast(p,slot,{x:46,y:7});const duration=slot==='q'?.26:.32;g.time=.015;const a=gahwanSlash(g,p);g.time=duration-.015;const b=gahwanSlash(g,p);assert.ok(a&&b);assert.ok(Math.abs(a.angle-b.angle)>2);assert.equal(a.part,`skill-${slot}`);for(const time of [duration+.001,.75,1.5,2]){g.time=time;assert.equal(gahwanSlash(g,p),null);}}
+test('Gahwan tactical sweeps immediately and ultimate sweeps only after concentration',()=>{
+ for(const slot of ['q','r']){const {g,p}=arena('gahwan');g.cast(p,slot,{x:46,y:7});const duration=slot==='q'?.26:.18;let at=0;if(slot==='r'){g.time=1;assert.equal(gahwanSlash(g,p),null);g.step(.75);at=p.state.gahwanRelease.at;}g.time=at+.015;const a=gahwanSlash(g,p);g.time=at+duration-.015;const b=gahwanSlash(g,p);assert.ok(a&&b);assert.ok(Math.abs(a.angle-b.angle)>2);assert.equal(a.part,`skill-${slot}`);for(const time of [duration+.001,.75,1.5,2]){g.time=at+time;assert.equal(gahwanSlash(g,p),null);}}
 });
 test('Yan raises the sword upward for both left-facing and right-facing charge and basic animations',()=>{
  for(const facing of [0,Math.PI]){const {g,p}=arena('yan');p.facing=facing;p.state.yanCharge={progress:1.5};assert.ok(Math.sin(yanWeaponAngle(p,equipmentPose(g,p)))<-.1);delete p.state.yanCharge;p.attackAt=0;p.attackFacing=facing;for(const time of [.01,.05,.1]){g.time=time;assert.ok(Math.sin(yanWeaponAngle(p,equipmentPose(g,p)))<0);}g.time=.31;close(yanWeaponAngle(p,equipmentPose(g,p)),facing);}

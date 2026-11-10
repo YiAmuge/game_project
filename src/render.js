@@ -219,7 +219,7 @@ export class Renderer {
         else this.yanChargePreview(p,game);
       }else if(p.key==='sora'&&!soraEgo(game,p)){
         const impact=soraImpact(game,p,{x:Math.cos(theta),y:Math.sin(theta)});this.circle(impact.x,impact.y,impact.r,'#9ddce80b','#b7d3c766',.035);this.line([{x:p.x,y:p.y},impact],'#dfcfaa50',.04,[.18,.2]);
-      }else{
+      }else if(p.key!=='ezra'){
         c.setLineDash([.1,.24]);this.circle(p.x,p.y,game.attackRange(p),null,'#b7d3c727',.035);c.setLineDash([]);
         this.line([{x:p.x+Math.cos(theta),y:p.y+Math.sin(theta)},{x:p.x+Math.cos(theta)*game.attackRange(p),y:p.y+Math.sin(theta)*game.attackRange(p)}],'#dfcfaa50',.04,[.18,.2]);
       }
@@ -260,7 +260,7 @@ export class Renderer {
     const key=[e.key,e.attackSerial,e.attackAt,soraEgo(game,e),game.buff(e,'mutant'),e.state.weapon,equippedWeapon(game,e)?.[0]].join('/');
     const samples=this.weaponTrails.sample(e,part,{time:game.time,key,active,anchor:{x:e.x,y:e.y},...blade});
     const sections=ribbonSections(samples,game.time,s=>projectBlade(s,project,this.scale));
-    c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);drawRibbon(c,sections,combatStyle(e.key,game,e,{kind:'basic'}).color);c.restore();
+    c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);drawRibbon(c,sections,e.key==='gahwan'&&part.startsWith('skill-')?'#e92a4c':combatStyle(e.key,game,e,{kind:'basic'}).color);c.restore();
   }
   weapon(e,game){
     if(drawEquipment(this,e,game,{lift:championPresentation(game,e).lift}))return;

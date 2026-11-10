@@ -67,8 +67,8 @@ test('clock stops at exactly twenty minutes and freezes all simulation after the
  const {g}=quiet();g.time=1199.98;g.step(.5);close(g.time,1200);assert.equal(g.winner,-1);const time=g.time;g.step(1);close(g.time,time);assert.match(g.reason,/20분/);
 });
 test('coordinate creation and ground/target teleports confirm; directional, self and enemy-target shots quickcast',()=>{
- for(const [key,slot] of [['faust','r'],['yi','q'],['gahwan','q'],['gahwan','r'],['ahab','r'],['nelly','r'],['dongbaek','r'],['dongrang','q'],['dongrang','r'],['ryoshu','r'],['sinclair','r']]){const {g,p}=quiet(key);assert.ok(skillTargeting(g,p,slot).confirm,key+slot);}
- for(const [key,slot] of [['faust','q'],['meursault','r'],['rodya','q'],['ishmael','r'],['gubo','r'],['gubo','q'],['myo','q']]){const {g,p}=quiet(key);assert.equal(skillTargeting(g,p,slot).confirm,false,key+slot);}
+ for(const [key,slot] of [['faust','r'],['yi','q'],['gahwan','q'],['ahab','r'],['nelly','r'],['dongbaek','r'],['dongrang','q'],['dongrang','r'],['ryoshu','r'],['sinclair','r']]){const {g,p}=quiet(key);assert.ok(skillTargeting(g,p,slot).confirm,key+slot);}
+ for(const [key,slot] of [['gahwan','r'],['faust','q'],['meursault','r'],['rodya','q'],['ishmael','r'],['gubo','r'],['gubo','q'],['myo','q']]){const {g,p}=quiet(key);assert.equal(skillTargeting(g,p,slot).confirm,false,key+slot);}
 });
 test('Nelly has four 210-damage single-hit ammunition charges and restores the original power growth',()=>{
  const {g,p,t}=quiet('nelly');assert.equal(p.ammo,4);const hp=t.hp;g.attack(p,t);close(hp-t.hp,210*1.12*.9);assert.equal(p.ammo,3);assert.equal(g.events.length,0);g.award(p,250,0);close(g.powerScale(p),1.066);
@@ -80,8 +80,8 @@ test('Gubo allied threshold changes from 21 to 35 percent only while the four-se
 test('Gahwan ranges and close knockback follow the new percentages',()=>{
  const {g,p,t}=quiet('gahwan');close(g.attackRange(p),7.5);close(skillTargeting(g,p,'q').range,8.2);t.x=41;g.attack(p,t);close(t.motion.total,2.5);
 });
-test('Gahwan ultimate channels then hits the selected distant area three times instead of himself',()=>{
- const {g,p,t}=quiet('gahwan');t.x=48;const hp=t.hp;g.cast(p,'r',t);assert.equal(g.pending.length,2);assert.ok(g.pending.every(ev=>ev.x===48));assert.ok(t.hp<hp);const first=t.hp;run(g,.7);close(t.hp,first);run(g,.1);assert.ok(t.hp<first);run(g,.8);assert.equal(g.pending.length,0);close(p.x,40);
+test('Gahwan ultimate concentrates for 1.75 seconds before one forward half-moon strike',()=>{
+ const {g,p,t}=quiet('gahwan');t.x=48;const hp=t.hp;g.cast(p,'r',t);assert.equal(g.pending.length,0);assert.equal(p.state.gahwanR.until,1.75);close(t.hp,hp);run(g,1.7);close(t.hp,hp);run(g,.1);assert.ok(t.hp<hp);assert.ok(t.state.contempt[p.id]>g.time);close(p.x,40);
 });
 test('Ahab power drops twelve percent and his ultimate teleports before the original attack sequence',()=>{
  const {g,p,t}=quiet('ahab');close(g.powerScale(p),.88);g.cast(p,'r',t);close(p.x,42);assert.equal(p.motion,undefined);const hp=t.hp;run(g,.1);assert.ok(t.hp<hp);run(g,.5);assert.ok(t.hp<hp-500);

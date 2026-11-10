@@ -2,7 +2,7 @@ import{ARCANA_DATA}from'./arcana-data.js';
 import{EZRA_DATA}from'./ezra-data.js';
 export const FAN_ANGLE=165*Math.PI/180;
 export const BASIC_FAN_ANGLE=145*Math.PI/180;
-export const basicFanAngle=key=>key==='moses'?160*Math.PI/180:key==='sinclair'?150*Math.PI/180:key==='starbuck'?.975*1.2:key==='nosferatu'?Math.PI:key==='dongbaek'?BASIC_FAN_ANGLE-30*Math.PI/180:BASIC_FAN_ANGLE;
+export const basicFanAngle=key=>key==='moses'?145*Math.PI/180:key==='sinclair'?150*Math.PI/180:key==='starbuck'?.975*1.2:key==='nosferatu'?Math.PI:key==='dongbaek'?BASIC_FAN_ANGLE-30*Math.PI/180:BASIC_FAN_ANGLE;
 import {KROMER_DATA} from './kromer-data.js';
 import {JAMILA_DATA} from './jamila-data.js';
 import { CHAMPION_TEXT } from './champion-text.js';

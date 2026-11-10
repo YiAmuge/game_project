@@ -1,6 +1,8 @@
 import{distance}from'./geometry.js';
 import{rangeBonus}from'./augments.js';
 import{MOSES,BREATHS}from'./moses-data.js';
+import{RULES,RUNTIME_CHAMPIONS}from'./data.js';
+import{damageBonus}from'./skills.js';
 export{MOSES,BREATHS};
 export const rawBonus=(g,e)=>Math.max(0,g.rawPowerScale(e)*(1+g.buffValue(e,'power',.12))*(g.buff(e,'marks')?1.12:1)-1);
 export const passiveRate=(g,e)=>e.key==='moses'?rawBonus(g,e)*.15:0;
@@ -21,7 +23,7 @@ export function inside(e,t,d,b){const dx=t.x-e.x,dy=t.y-e.y,len=Math.hypot(dx,dy
 export function cancelCharge(e){if(e.key==='moses')delete e.state.mosesCharge;}
 export function chargeShape(g,e,p){const progress=e.state.smoke?1:Math.max(0,Math.min(1,(e.state.mosesCharge?.progress||0)/MOSES.chargeTime));return{...breath(g,e),d:g.aim(e,p),progress,damage:MOSES.minDamage+(MOSES.damage-MOSES.minDamage)*progress};}
 export function attack(g,e,p){
- if(e.ammo<1)return false;g.cancelRecall(e);e.lastAttackAt=g.time;
+ g.cancelRecall(e);e.lastAttackAt=g.time;
  if(e.state.mosesCharge){e.state.mosesCharge.aim={...p};return false;}
  e.state.mosesCharge={at:g.time,progress:0,aim:{...p}};
  if(e.state.smoke)return release(g,e,p);
@@ -29,12 +31,12 @@ export function attack(g,e,p){
 }
 export function release(g,e,p){
  const charge=e.state.mosesCharge;if(e.key!=='moses'||!charge)return false;
- if(!e.alive||e.ammo<1||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall||e.state.mosesR){cancelCharge(e);return false;}
- const shape=chargeShape(g,e,p||charge.aim);cancelCharge(e);e.ammo--;e.attackCd=MOSES.interval;e.lastAttackAt=e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.facing=e.attackFacing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;e.healingEvent={key:`basic-${e.id}-${e.attackSerial}`,at:g.time};
+ if(!e.alive||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall||e.state.mosesR){cancelCharge(e);return false;}
+ const shape=chargeShape(g,e,p||charge.aim);cancelCharge(e);e.attackCd=MOSES.interval;e.lastAttackAt=e.attackAt=g.time;e.attackSerial=(e.attackSerial||0)+1;e.facing=e.attackFacing=Math.atan2(shape.d.y,shape.d.x);e.revealedUntil=g.time+1.25;e.healingEvent={key:`basic-${e.id}-${e.attackSerial}`,at:g.time};
  g.action(e,'basic',()=>basic(g,e,shape.d,shape.damage,shape.progress));return true;
 }
 export function basic(g,e,d,damage=MOSES.damage,progress=1){
- const choice=e.state.smoke,b=breath(g,e),redHealing=55+200*g.haste(e);e.state.smoke=null;lowerPipe(g,e);e.state.mosesBreath={at:g.time,color:b.color,choice,progress,angle:Math.atan2(d.y,d.x)};
+ const choice=e.state.smoke,b=breath(g,e),redHealing=65+300*g.haste(e);let redAllies=0;e.state.smoke=null;lowerPipe(g,e);e.state.mosesBreath={at:g.time,color:b.color,choice,progress,angle:Math.atan2(d.y,d.x)};
  g.emitSound('breath',e,{phase:'moses-exhale',breath:choice});
  g.effects.push({type:'mosesBreath',source:e.id,theme:'moses',x:e.x,y:e.y,color:b.color,r:b.range,progress,angle:Math.atan2(d.y,d.x),spread:b.angle,life:.8,maxLife:.8});
  for(const t of[...g.units])if(t.alive&&inside(e,t,d,b)&&g.clearLine(e,t)){
@@ -46,13 +48,15 @@ export function basic(g,e,d,damage=MOSES.damage,progress=1){
     for(let n=1;n<=3;n++)g.schedule(e,n*.3,()=>{if(t.alive)g.deal(e,t,50,{damageKind:'basic',sound:{family:'smoke'}});});
    }
   }else if(t.kind==='champion'&&t.team===e.team){
-   if(choice==='up')g.addBuff(t,'mosesWhite',3,{copy:false});
+   if(t!==e&&!g.hidden(t)&&!t.state.posthumous){const value=damage*RULES.power[RUNTIME_CHAMPIONS[e.key].power]*.9*g.powerScale(e)*(1-g.powerWeak(e))*damageBonus(g,e,t)*MOSES.shieldRatio;const id=`moses-breath-${e.id}`,shields=t.shields.filter(s=>s.until>g.time&&s.source.startsWith('moses-breath-')),old=shields.find(s=>s.source===id)?.value||0,others=shields.filter(s=>s.source!==id).reduce((n,s)=>n+s.value,0);g.addShield(t,Math.min(old+value,Math.max(0,t.maxHp*MOSES.shieldCap-others)),id,MOSES.shieldTime);}
+   if(choice==='up'){g.addBuff(t,'mosesWhite',3,{copy:false});g.addShield(t,t.maxHp*.1,`moses-white-${e.id}`,1.5);}
    if(choice==='right'){
-    g.addShield(t,350,`moses-red-${e.id}`,5,false);
+    if(t!==e&&!g.hidden(t)&&!t.state.posthumous)redAllies++;
     (t.state.mosesMending??={})[e.id]={source:e,until:g.time+5,next:g.time+.5,heal:redHealing,event:e.healingEvent};g.addBuff(t,'mosesMending',5,{copy:false});t.supporters[e.id]=g.time;
    }
   }
  }
+ if(choice==='right')e.rCd=Math.max(0,e.rCd-Math.min(1.5,redAllies*.5));
 }
 export function cast(g,e,slot,d,options={}){
  if(slot==='q'){
@@ -63,6 +67,10 @@ export function cast(g,e,slot,d,options={}){
  cancelCharge(e);delete e.state.mosesChoosing;e.channelUntil=g.time+MOSES.rCharge;e.state.mosesR={at:g.time,until:e.channelUntil,angle:Math.atan2(d.y,d.x),x:e.x,y:e.y};g.emitSound('breath',e,{slot:'r',phase:'moses-inhale'});
 }
 function sync(g,e){e.qCd=(e.state.mosesCharges??2)>0?0:Math.max(0,e.state.mosesReady-g.time);}
+export function onDamage(g,source,target,amount){
+ if(amount<=0||target.kind!=='champion'||source.team===target.team)return;
+ for(const e of g.champions(target.team))if(e.key==='moses'&&e.alive&&e.rCd>0&&(e.state.mosesRefundReady||0)<=g.time&&distance(e,target)<=MOSES.rSupportRange){e.rCd=Math.max(0,e.rCd-MOSES.rRefund);e.state.mosesRefundReady=g.time+MOSES.rRefundEvery;}
+}
 export function tick(g,e,dt=0){
  if(e.key==='moses'){
   const s=e.state;while((s.mosesCharges??2)<2&&s.mosesReady<=g.time+1e-8){s.mosesCharges++;s.mosesReady=s.mosesCharges<2?s.mosesReady+g.cooldown(e,'q'):Infinity;}sync(g,e);
@@ -70,6 +78,7 @@ export function tick(g,e,dt=0){
   if(s.mosesPipeLowering&&g.time-s.mosesPipeLowering.at>=.12)delete s.mosesPipeLowering;
   const charge=s.mosesCharge;if(charge){if(!e.alive||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.recall||s.mosesR)cancelCharge(e);else{e.lastAttackAt=g.time;charge.progress=Math.min(MOSES.chargeTime,charge.progress+dt*g.reloadMultiplier(e));if(e.player)charge.aim={...g.input.aim};else if(charge.progress>=MOSES.chargeTime)release(g,e,charge.aim);}}
   const r=s.mosesR;if(r){
+   const control=e.player?g.input:e.networkControl;if(control?.aim){const d=g.aim(e,control.aim);r.angle=Math.atan2(d.y,d.x);e.facing=r.angle;}
    if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence'))cancel(g,e);
    else if(g.time+1e-8>=r.until){delete s.mosesR;e.channelUntil=0;s.mosesCameraReturn=g.time+.3;s.mosesBreath={at:g.time,color:BREATHS.right.color,angle:r.angle};
     g.emitSound('breath',e,{slot:'r',phase:'moses-red-point'});

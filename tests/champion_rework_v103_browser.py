@@ -13,10 +13,10 @@ async def main():
    box=await p.locator('#basic-btn').bounding_box();x=box['x']+box['width']/2;y=box['y']+box['height']/2
    if mobile:await touch('touchStart',x,y);await p.wait_for_function('__moba.game.player.state.mosesCharge')
    else:await p.mouse.move(x,y);await p.mouse.down();await p.wait_for_function('__moba.game.player.state.mosesCharge')
-   await p.evaluate('advance(.75)');assert await p.evaluate('__moba.game.player.ammo===3&&Math.abs(__moba.game.player.state.mosesCharge.progress-.75)<.01');await p.screenshot(path=str(ART/f'{mode}-breath-charge.png'))
+   await p.evaluate('advance(.75)');assert await p.evaluate('__moba.game.player.ammo===0&&Math.abs(__moba.game.player.state.mosesCharge.progress-.75)<.01');await p.screenshot(path=str(ART/f'{mode}-breath-charge.png'))
    if mobile:await touch('touchEnd')
    else:await p.mouse.up()
-   await p.wait_for_function('__moba.game.player.ammo===2&&!__moba.game.player.state.mosesCharge');assert await p.evaluate('Math.abs(__moba.game.player.attackCd-.7)<.01');await p.evaluate('advance(.71)')
+   await p.wait_for_function('__moba.game.player.ammo===0&&!__moba.game.player.state.mosesCharge');assert await p.evaluate('Math.abs(__moba.game.player.attackCd-.7)<.01');await p.evaluate('advance(.71)')
    for use in[0,1]:
     if mobile:
      box=await p.locator('#q-btn').bounding_box();qx=box['x']+box['width']/2;qy=box['y']+box['height']/2;await touch('touchStart',qx,qy);await touch('touchMove',qx,qy-60)
@@ -24,7 +24,7 @@ async def main():
     await p.wait_for_function('__moba.game.player.state.mosesChoosing?.direction==="up"');assert await p.evaluate('!document.querySelector("#drag-wheel [data-dir=up]").classList.contains("unavailable")');await p.evaluate('advance(.2)')
     if mobile:await touch('touchEnd')
     else:await p.mouse.up(button='right')
-    await p.wait_for_function('__moba.game.player.state.smoke==="up"');assert await p.evaluate(f'__moba.game.player.ammo==={2-use}')
+    await p.wait_for_function('__moba.game.player.state.smoke==="up"');assert await p.evaluate(f'__moba.game.player.ammo===0')
     await p.locator('#basic-btn').tap()if mobile else await p.locator('#basic-btn').click();await p.wait_for_function('__moba.game.player.state.smoke===null');assert await p.evaluate('!__moba.game.player.state.mosesCharge');await p.evaluate('advance(.71)')
    await p.evaluate(SETUP,'moses');await p.evaluate('()=>{const g=__moba.game,p=g.player;g.cast(p,"r",{x:60,y:20});advance(.9);}');assert await p.evaluate('__moba.game.player.state.mosesR');await p.screenshot(path=str(ART/f'{mode}-pipe-at-mouth.png'));await p.evaluate('advance(.55)');await p.screenshot(path=str(ART/f'{mode}-red-column-charge.png'));await p.evaluate('advance(.12)');await p.screenshot(path=str(ART/f'{mode}-red-column-flight.png'))
    if not mobile:

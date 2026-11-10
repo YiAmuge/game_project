@@ -3,7 +3,9 @@ import{capacity as bloodCapacity}from'./nosferatu.js';
 import{HEATH}from'./heathcliff.js';
 import{EZRA}from'./ezra-data.js';
 import{ammoSlots}from'./ezra.js';
-import{drawDebuffBadges}from'./champion-update-effects.js';
+import{drawDebuffBadges,drawPulseIcon}from'./champion-update-effects.js';
+import*as Moses from'./moses.js';
+import{pulse}from'./ppui.js';
 import{drawKromerEffects}from'./kromer-vfx.js';
 import{drawLevelBadge}from'./level-badge.js';
 import { paintHealth } from './health-display.js';
@@ -55,11 +57,15 @@ export function championHud(r,e,g){
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
  drawLevelBadge(r,e,x,y,g);
  if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1000)),sx,sy+.43,'#e8e9b6',.24);}
+ if(e.key==='ppui'){const sx=e.x+width/2+.29,sy=y+.07;drawPulseIcon(c,sx,sy);r.text(String(pulse(e)),sx,sy+.43,'#ffb5c4',.24);}
  if(e.trainingDummy){c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);
  if(e.key==='hohenheim'){
   const shape=Hohenheim.chargeShape(g,e,e.player?g.input.aim:e.state.hohenCharge?.aim||{x:e.x+1,y:e.y});
   const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}if(shape.progress>=1-1e-8){c.save();c.strokeStyle='#439cff';c.shadowColor='#238dff';c.shadowBlur=9+Math.sin(g.time*16)*4;c.lineWidth=.055;c.strokeRect(x-.035,resourceY-.035,width+.07,.31);c.restore();}
+ }else if(e.key==='moses'){
+  const progress=Moses.chargeShape(g,e,e.player?g.input.aim:e.state.mosesCharge?.aim||{x:e.x+1,y:e.y}).progress;
+  c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#f2fff4':'#a3d2c5';c.fillRect(x,resourceY,width*progress,.24);
  }else if(e.key==='yan'){
   const progress=Yan.chargeShape(g,e,e.player?g.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}).progress;
   c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);
@@ -75,7 +81,6 @@ export function championHud(r,e,g){
   const gap=.075,w=(width-gap*(cap-1))/cap;
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)&&e.key!=='ezra'?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
  }
- if(e.key==='moses'&&e.state.mosesCharge){const progress=Math.min(1,e.state.mosesCharge.progress/1.5);c.fillStyle='#182a39';c.fillRect(x,resourceY+.3,width,.12);c.fillStyle=progress>=1?'#f2fff4':'#a3d2c5';c.fillRect(x,resourceY+.3,width*progress,.12);}
  if(e.key==='ezra'&&e.state.ezraReloading){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*Math.min(1,e.reloadProgress/EZRA.reload),.10);}
  if(e.key==='jamila'&&e.state.lcaReload){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*reloadFraction(e),.10);}
  if(e.key==='gubo'&&g.buff(e,'guboReload')){const left=e.buffs.guboReload-g.time;c.fillStyle='#2c1019';c.fillRect(x,resourceY+.32,width,.13);c.fillStyle='#a72b47';c.fillRect(x,resourceY+.32,width*Math.min(1,left/4),.13);r.text(`흉탄 ${left.toFixed(1)}s · 아군 ≤35%`,e.x,resourceY+.64,'#ec93a4',.22);}
@@ -147,6 +152,7 @@ export function championGroundEffects(r,e,g){
 }
 
 export function stackGauge(e,g){
+ if(e.key==='ppui'){const full=pulse(e)>=30,value=(e.ppuiHealing||0)%1000;return{color:'#ef637e',ratio:full?1:value/1000,label:full?'맥동 최대':`다음 맥동까지 ${Math.ceil(1000-value)} 치유`,max:1};}
  if(e.key==='nosferatu'){const s=e.state.bloodfiend;return{ratio:s?Math.max(0,(s.until-g.time)/10):(e.state.bloodFeast||0)/bloodCapacity(g,e),color:'#ed3c65',label:s?'':`혈찬 ${Math.floor(e.state.bloodFeast||0)} / ${Math.floor(bloodCapacity(g,e))}`,timer:Boolean(s),max:s?0:bloodCapacity(g,e)/200};}
  if(e.key==='queen'&&e.state.queenR){const s=e.state.queenR;return{ratio:s.phase==='charging'?Math.min(1,(g.time-s.at)/3.75):s.stage/3,color:'#ff91dc',label:'',timer:false,max:3};}
  if(e.key==='dongrang'){const value=(e.totalHealingReceived||0)%1000;return{color:'#d8d48b',ratio:value/1000,label:`다음 양분까지 ${Math.ceil(1000-value)} 회복`,max:1};}

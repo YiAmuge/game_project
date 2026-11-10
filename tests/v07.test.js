@@ -33,8 +33,8 @@ test('Gubo ultimate aims without damage and hits when its fast projectile arrive
 test('Gubo ultimate ally kill does not duplicate the passive blast',()=>{
  const {g,p,t}=quiet('gubo'),a=g.makeChampion('yi',0,8);Object.assign(a,{x:42,y:7,hp:200,maxHp:1000,lastDamageAt:0});t.x=48;assert.ok(g.cast(p,'r',a));run(g,2.3);assert.equal(a.alive,false);close(10000-t.hp,5*(100+.06*t.maxHp));
 });
-test('Gahwan converts gaze at five and ultimate adds precisely one stack per hit at 0/.75/1.5',()=>{
- const {g,p,t}=quiet('gahwan');t.x=48;g.cast(p,'r',t);assert.equal(t.state.gaze[p.id].n,1);run(g,.7);assert.equal(t.state.gaze[p.id].n,1);run(g,.1);assert.equal(t.state.gaze[p.id].n,2);run(g,.75);assert.equal(t.state.gaze[p.id].n,3);for(let i=0;i<2;i++)g.deal(p,t,1);assert.equal(t.state.gaze[p.id].n,0);assert.ok(t.state.contempt[p.id]>g.time);
+test('Gahwan converts five gaze stacks and ultimate applies contempt without allowing new gaze',()=>{
+ const {g,p,t}=quiet('gahwan');t.x=48;for(let i=0;i<4;i++)g.deal(p,t,1);assert.equal(t.state.gaze[p.id].n,4);g.deal(p,t,1);assert.deepEqual(t.state.gaze,{});assert.ok(t.state.contempt[p.id]>g.time);g.deal(p,t,1);assert.deepEqual(t.state.gaze,{});g.cast(p,'r',t);run(g,1.8);assert.ok(t.state.contempt[p.id]>g.time+2.9);assert.deepEqual(t.state.gaze,{});
 });
 test('Gahwan close knockback cooldown is independent per champion and does not remove close extra damage',()=>{
  const {g,p,t}=quiet('gahwan'),b=enemy(g,42,7.4);t.x=42;g.attack(p,t);close(t.motion.total,2.5);close(b.motion.total,2.5);delete t.motion;delete b.motion;p.attackCd=0;const hp=t.hp;g.attack(p,t);assert.equal(t.motion,undefined);assert.ok(t.hp<hp);g.time=2.01;p.attackCd=0;p.ammo=1;g.attack(p,t);close(t.motion.total,2.5);

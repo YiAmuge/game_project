@@ -1,9 +1,10 @@
 import*as Ezra from'./ezra.js';
+import{GAHWAN}from'./gahwan.js';
 import{QUEEN,ARCANA_STAGES,stage}from'./queen.js';
 import{NOSFERATU}from'./nosferatu.js';
 import{FAN_ANGLE}from'./data.js';
 import { HEATH } from './heathcliff.js';
-import {ultGrowth} from './v06-champions.js';
+import {ultGrowth,DONGBAEK_R} from './v06-champions.js';
 import * as Kromer from './kromer.js';
 import * as Hohenheim from './hohenheim.js';
 import { WORLD,AHAB } from './data.js';
@@ -15,6 +16,8 @@ import { STARBUCK } from './v10-champions.js';
 import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
+ if(e.key==='gahwan'&&slot==='r')return{kind:'cone',range:GAHWAN.range,radius:GAHWAN.angle,impact:0,confirm:false};
+ if(e.key==='dongbaek'&&slot==='r')return{kind:'circle',range:DONGBAEK_R.range,radius:DONGBAEK_R.maxRadius,innerRadius:DONGBAEK_R.minRadius,impact:0,confirm:true};
  if(e.key==='ezra'){if(slot==='r')return{kind:'self',range:0,radius:3,impact:0,confirm:false};const index=e.state.ezraLastWeapon??0,w=Ezra.weapon(g,e,index),bonus=g.attackRange(e)-Ezra.weapon(g,e).range;return index===0?{kind:'quick',range:w.dash+bonus,radius:.6,impact:0,confirm:false}:index===1?{kind:'self',range:0,radius:Ezra.attackReach(g,e,index),impact:0,confirm:false}:index===2?{kind:'cone',range:w.range+bonus,radius:w.angle,impact:0,confirm:false}:{kind:'circle',range:w.dash,radius:w.range+bonus,impact:0,confirm:false};}
  if(e.key==='queen')return slot==='q'?{kind:'line',range:QUEEN.qRange,radius:QUEEN.qWidth/2,impact:0,confirm:false}:{kind:'line',range:ARCANA_STAGES[stage(g,e)].range,radius:ARCANA_STAGES[stage(g,e)].width/2,impact:0,confirm:false,ignoreWalls:true};
  if(e.key==='nosferatu')return slot==='q'?{kind:'circle',range:NOSFERATU.qRange,radius:.75,impact:0,confirm:false}:{kind:'circle',range:NOSFERATU.rRange,radius:0,impact:0,confirm:!e.state.bloodfiend,ignoreWalls:true};

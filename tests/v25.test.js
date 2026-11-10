@@ -71,7 +71,7 @@ test('dash basic width hits a target inside the widened side corridor only once'
 test('Yi teleports at most 6.4 and shields allies without granting passive healing',()=>{
  const {g,p,t}=arena('yi'),ally=g.makeChampion('meursault',0,10);Object.assign(ally,{x:26,y:21});ally.hp-=1000;ally.lastDamageAt=100;g.cast(p,'r',{x:40,y:20});assert.ok(p.x<=26.4&&p.x>25);assert.ok(g.shield(ally)>0);p.passiveReady=0;g.deal(p,t,1,{fixed:true});const hp=ally.hp;run(g,1);close(ally.hp,hp);assert.ok(g.passiveCooldown(p)>0);
 });
-test('Gahwan first ultimate hit slows instead of stunning',()=>{const {g,p,t}=arena('gahwan');g.cast(p,'r',t);close(g.stat(t,'stun'),0);close(g.stat(t,'slow'),.5);run(g,1.6);assert.ok(t.hp<100000);});
+test('Gahwan first ultimate hit slows instead of stunning',()=>{const {g,p,t}=arena('gahwan');g.cast(p,'r',t);close(g.stat(t,'stun'),0);close(g.stat(t,'slow'),0);run(g,1.8);close(g.stat(t,'slow'),.5);close(g.stat(t,'stun'),0);assert.ok(t.hp<100000);});
 test('Heathcliff leaps over a wall and lands outside blocked geometry',()=>{
  const {g,p}=arena('heathcliff');g.map.walls=[{x:22,y:17,w:1,h:6}];g.cast(p,'q',{x:27,y:20});run(g,1.5);assert.ok(S.releaseHeath(g,p,{x:27,y:20}));assert.equal(p.motion.kind,'leap');close(p.motion.arcHeight,3);run(g,.9);assert.ok(p.x>23&&!g.blocked(p.x,p.y,p.radius));
 });

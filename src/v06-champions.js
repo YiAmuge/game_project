@@ -2,6 +2,8 @@ import{basicFanAngle}from'./data.js';
 import { RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
 import { area, dash } from './skills.js';
+export const DONGBAEK_R={range:9.5,minRadius:4.2,maxRadius:6.5,hits:6,every:.2,damage:105};
+export const dongbaekRadius=hit=>DONGBAEK_R.minRadius+(DONGBAEK_R.maxRadius-DONGBAEK_R.minRadius)*Math.max(0,Math.min(DONGBAEK_R.hits-1,hit))/(DONGBAEK_R.hits-1);
 
 export function init(g,e){if(e.key==='dongbaek'){e.state.petals=3;e.state.petalReady=Infinity;}if(e.key==='dongrang'){e.totalHealingReceived=0;}}
 export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1000);return {radius:3.2+Math.min(2,Math.floor(n/3)*.1),damage:180+n*25};}
@@ -48,7 +50,7 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='dongbaek'){
   if(slot==='q'){g.addShield(e,e.maxHp*.08,`petals-${e.id}`,3);g.addBuff(e,'flowerStride',3);}
-  else{const point={...p};g.emitSound('petal',e,{...point,slot:'r',phase:'dongbaek-bloom',duration:2.6});for(let i=0;i<6;i++){const radius=4.2+(6.5-4.2)*i/5,hit=()=>{area(g,e,point,radius,105);g.effects.push({type:'petalFan',source:e.id,...point,r:radius,angle:0,spread:Math.PI*2,shape:{kind:'circle',range:radius},theme:e.key,life:.3,maxLife:.3});};if(i===0)hit();else g.schedule(e,i*.2,hit,{autonomous:true});}g.addBuff(e,'flowerReload',3,{copy:false});g.effects.push({type:'burst',source:e.id,...point,r:6.5,theme:e.key,life:1.2,maxLife:1.2});}
+  else{const point={...p};g.emitSound('petal',e,{...point,slot:'r',phase:'dongbaek-bloom',duration:2.6});for(let i=0;i<DONGBAEK_R.hits;i++){const radius=dongbaekRadius(i),hit=()=>{area(g,e,point,radius,DONGBAEK_R.damage);g.effects.push({type:'petalFan',source:e.id,slot:'r',damageKind:'skill',...point,r:radius,angle:0,spread:Math.PI*2,shape:{kind:'circle',range:radius},theme:e.key,life:.3,maxLife:.3});if(i===DONGBAEK_R.hits-1)g.effects.push({type:'burst',source:e.id,slot:'r',...point,r:radius,theme:e.key,life:.5,maxLife:.5});};if(i===0)hit();else g.schedule(e,i*DONGBAEK_R.every,hit,{autonomous:true});}g.addBuff(e,'flowerReload',3,{copy:false});}
   return true;
  }
  if(e.key==='dongrang'){

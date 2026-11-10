@@ -53,7 +53,7 @@ export function hitStyle(g,source,fx){
 }
 export function bodyHeight(e){return (e.kind==='champion'||e.lcaTrooper)?1.25:e.kind==='tower'?2.1:e.kind==='core'?1.6:e.camp==='boss'?1.1:e.kind==='neutral'?.65:e.kind==='summon'?.9:.35;}
 export function visualShape(fx){
- if(fx.shape)return fx.shape.kind==='cone'?{...fx.shape,spread:fx.theme==='ezra'?fx.shape.spread:fx.shape.spread>=Math.PI*2?fx.shape.spread:fx.damageKind==='basic'?(fx.shape.spread??basicFanAngle(fx.theme)):FAN_ANGLE,angle:fx.shape.angle??fx.angle??0}:fx.shape.kind==='rect'?{...fx.shape,angle:fx.shape.angle??fx.angle??0}:fx.shape;
+ if(fx.shape)return fx.shape.kind==='cone'?{...fx.shape,spread:fx.theme==='ezra'||fx.type==='gahwanWave'?fx.shape.spread:fx.shape.spread>=Math.PI*2?fx.shape.spread:fx.damageKind==='basic'?(fx.shape.spread??basicFanAngle(fx.theme)):FAN_ANGLE,angle:fx.shape.angle??fx.angle??0}:fx.shape.kind==='rect'?{...fx.shape,angle:fx.shape.angle??fx.angle??0}:fx.shape;
  const angle=fx.angle||0,r=fx.r||1;
  if(fx.type==='yanWave')return {kind:'cone',range:r,spread:FAN_ANGLE,angle};
  if(fx.type==='yanCleave')return {kind:'rect',range:Math.hypot(fx.to.x-fx.x,fx.to.y-fx.y),width:fx.width,angle:Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x)};

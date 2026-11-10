@@ -16,7 +16,7 @@ export function preview(r,e,g){
   if(index===0)polygon(range,1.2);
   else if(index===1)for(let i=w.hits-1;i>=0;i--)r.circle(e.x,e.y,range+i*w.rangeGrowth,i?null:'#b66cef10',i?'#dfc5ff33':'#dfc5ff77',i?.025:.035);
   else if(index===2)arc(e,w.angle);
-  else{const len=Math.min(w.dash,Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y)),at={x:e.x+d.x*len,y:e.y+d.y*len};if(index===3||e.state.ultAttacks===3)r.circle(at.x,at.y,range,'#f2dda510','#e8d5a477',.035);else arc(at,Math.PI);}
+  else{const len=Math.min(w.dash,Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y)),at=g.safeLanding(e,g.input.aim,w.dash);if(index===4){at.x=e.x+d.x*len;at.y=e.y+d.y*len;}r.circle(at.x,at.y,range,'#f2dda510','#e8d5a477',.035);}
   return;
  }
  if(e.key==='nosferatu'&&e.state.bloodfiend)r.circle(e.x,e.y,g.attackRange(e),null,'#ff456d88',.045);

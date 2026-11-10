@@ -11,6 +11,7 @@ export function mosesWeaponPose(g,e,p){
  const s=e.state,r=s.mosesR,lowering=s.mosesPipeLowering,side=p.flip;
  let blend=0;
  if(r){const age=g.time-r.at;blend=age<=1?ease(age/.15):1-ease((age-1)/.12);}
+ else if(s.mosesCharge)blend=ease((g.time-s.mosesCharge.at)/.15);
  else if(s.mosesChoosing)blend=ease((g.time-s.mosesChoosing.at)/.15);
  else if(lowering)blend=ease((g.time-lowering.raisedAt)/.15)*(1-ease((g.time-lowering.at)/.12));
  // Anchor the actual mouthpiece pixel to the lips, rather than the weapon box.

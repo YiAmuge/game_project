@@ -36,8 +36,8 @@ test('Kim emits body embers every 0.15 seconds only while the opponent remains i
  for(let i=0;i<260;i++){g.step(1/120);for(const f of g.effects)if(f.type==='kimEmbers'&&!seen.has(f)){seen.add(f);events.push(f);}}
  assert.ok(events.length>=10);assert.ok(events.every(f=>f.target===t.id));for(let i=1;i<events.length;i++)near(events[i].at-events[i-1].at,.15);assert.equal(p.state.swordGrab,undefined);assert.ok(g.effects.every(f=>f.type!=='kimEmbers'));
 });
-test('debuff badges distinguish gaze, larger contempt and active mental-whip stages',()=>{
- const{g,p}=arena('faust');p.state.gaze={1:{n:1,until:5}};p.state.contempt={1:3};p.state.mentalWhip={1:{stage:1,at:0}};let b=debuffBadges(g,p);assert.deepEqual(b.map(b=>b.kind),['gaze','contempt','whip']);assert.ok(b[1].size>b[0].size);assert.equal(b[1].border,'#e33b42');g.time=6;p.state.mentalWhip[1].stage=0;assert.deepEqual(debuffBadges(g,p),[]);
+test('debuff badges show numbered gaze, mutually exclusive contempt and active mental-whip stages',()=>{
+ const{g,p}=arena('faust');p.state.gaze={1:{n:3,until:5}};p.state.mentalWhip={1:{stage:1,at:0}};let b=debuffBadges(g,p);assert.deepEqual(b.map(b=>b.kind),['gaze','whip']);assert.equal(b[0].stacks,3);const gazeSize=b[0].size;p.state.contempt={1:3};b=debuffBadges(g,p);assert.deepEqual(b.map(b=>b.kind),['contempt','whip']);assert.ok(b[0].size>gazeSize);assert.equal(b[0].border,'#e33b42');g.time=6;p.state.mentalWhip[1].stage=0;assert.deepEqual(debuffBadges(g,p),[]);
 });
 test('Myo recoil follows actual shots and Gubo has a separate barrel-support glove',()=>{
  const{g,p}=arena('myo'),t=hero(g);g.cast(p,'q',t);run(g,.08);assert.ok(p.state.myoShotAt>.07);assert.ok(myoRiflePose(g,p).thrust<0);run(g,.3);near(myoRiflePose(g,p).thrust,0);
