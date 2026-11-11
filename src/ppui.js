@@ -1,8 +1,12 @@
 import{distance}from'./geometry.js';
 import{settleBody}from'./collision.js';
-export const PPUI={range:7,passiveCooldown:15,passiveHeal:150,healthRatio:.015,qHeal:25,qDuration:3,qEvery:.3,qCharges:2};
-export const pulse=e=>Math.min(30,Math.floor(((e.ppuiHealing||0)+1e-8)/1000));
-export function onHealing(source,target,value,actual){if(source?.key==='ppui'&&source.team===target.team&&target.kind==='champion')source.ppuiHealing=Math.min(30000,(source.ppuiHealing||0)+actual+Math.max(0,value-actual)*.3);}
+export const PPUI={range:7,passiveCooldown:15,passiveHeal:150,healthRatio:.015,qHeal:25,qDuration:3,qEvery:.3,qCharges:2,pulseCap:100,pierceAt:20,lifestealAt:40,ammoAt:60};
+export const pulse=e=>Math.min(PPUI.pulseCap,Math.floor(((e.ppuiHealing||0)+1e-8)/1000));
+export const basicDamage=e=>60+Math.floor(pulse(e)/4);
+export const ultimateDamage=e=>55+Math.floor(pulse(e)/2);
+export const stormActive=(g,e)=>e.key==='ppui'&&e.state.nailStorm?.until>g.time;
+export function endStorm(g,e,{refill=true}={}){if(!e.state.nailStorm)return;delete e.state.nailStorm;if(refill&&e.alive){e.ammo=g.ammoCap(e);e.reloadProgress=0;}}
+export function onHealing(source,target,value,actual){if(source?.key==='ppui'&&source.team===target.team&&target.kind==='champion')source.ppuiHealing=Math.min(PPUI.pulseCap*1000,(source.ppuiHealing||0)+actual+Math.max(0,value-actual)*.3);}
 export const CONTROL_KEYS=new Set(['stun','root','silence','disarm','slow','taunt','captured','netCapture','knock']);
 export function init(g,e){if(e.key==='ppui'){e.state.ppuiCharges=2;e.state.ppuiReady=Infinity;}}
 export function charges(g,e){const s=e.state,current=s.ppuiCharges??2;return{current,max:2,remaining:current<2&&Number.isFinite(s.ppuiReady)?Math.max(0,s.ppuiReady-g.time):0};}

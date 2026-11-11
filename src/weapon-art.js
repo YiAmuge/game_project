@@ -1,3 +1,4 @@
+import{GAHWAN}from'./gahwan.js';
 import{mosesWeaponPose}from'./moses-vfx.js';
 import{RULES}from'./data.js';
 import*as Ezra from'./ezra.js';
@@ -284,7 +285,7 @@ export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0
 }
 export function hohenheimWeaponCharge(g,e){return e.key==='hohenheim'?Math.max(0,Math.min(1,(e.state.hohenCharge?.progress||0)/1.5)):0;}
 export function drawWeaponCharge(c,r,g,e,m,pivot){
- if(e.key==='gahwan'&&e.state.gahwanR&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#fb2044'),progress=Math.min(1,(g.time-e.state.gahwanR.at)/1.75);c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.22+progress*.22;c.shadowColor='#ff193e';c.shadowBlur=12;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
+ if(e.key==='gahwan'&&e.state.gahwanR&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#fb2044'),progress=Math.min(1,(g.time-e.state.gahwanR.at)/GAHWAN.charge);c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.22+progress*.22;c.shadowColor='#ff193e';c.shadowBlur=12;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
  if(e.key==='faust'&&e.level>=RULES.maxLevel&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#ffffff');c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.16+.05*Math.sin(g.time*4);c.shadowColor='#e3f4ff';c.shadowBlur=9;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
  const progress=hohenheimWeaponCharge(g,e);if(!progress||!r.skillVfx)return;
  const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#4dafff');

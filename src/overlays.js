@@ -5,7 +5,7 @@ import{EZRA}from'./ezra-data.js';
 import{ammoSlots}from'./ezra.js';
 import{drawDebuffBadges,drawPulseIcon}from'./champion-update-effects.js';
 import*as Moses from'./moses.js';
-import{pulse}from'./ppui.js';
+import{pulse,PPUI}from'./ppui.js';
 import{drawKromerEffects}from'./kromer-vfx.js';
 import{drawLevelBadge}from'./level-badge.js';
 import { paintHealth } from './health-display.js';
@@ -21,7 +21,7 @@ import { THEMES } from './art.js';
 import { heathCharge,guardAlly } from './skills.js';
 
 export function stackInfo(e,g){
- if(e.key==='ppui')return{label:'맥동',value:Math.min(30,Math.floor(((e.ppuiHealing||0)+1e-8)/1000)),max:30,color:'#f4a9bb',textOnly:true};
+ if(e.key==='ppui')return{label:'맥동',value:pulse(e),max:PPUI.pulseCap,color:'#f4a9bb',textOnly:true};
  if(e.key==='ahab'&&e.state.recastUntil>g.time)return{label:'재사용 '+(e.state.recastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffcf7c'};
  if(e.key==='nosferatu')return {label:'혈찬',value:Math.floor(e.state.bloodFeast||0),max:Math.floor(bloodCapacity(g,e)),color:'#ed3c65',textOnly:true};
  if(e.key==='queen'&&e.state.queenR)return{label:'아르카나',value:queenStage(g,e),max:3,color:'#ff9ce0',textOnly:true};
@@ -64,8 +64,8 @@ export function championHud(r,e,g){
   const shape=Hohenheim.chargeShape(g,e,e.player?g.input.aim:e.state.hohenCharge?.aim||{x:e.x+1,y:e.y});
   const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}if(shape.progress>=1-1e-8){c.save();c.strokeStyle='#439cff';c.shadowColor='#238dff';c.shadowBlur=9+Math.sin(g.time*16)*4;c.lineWidth=.055;c.strokeRect(x-.035,resourceY-.035,width+.07,.31);c.restore();}
  }else if(e.key==='moses'){
-  const progress=Moses.chargeShape(g,e,e.player?g.input.aim:e.state.mosesCharge?.aim||{x:e.x+1,y:e.y}).progress;
-  c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#f2fff4':'#a3d2c5';c.fillRect(x,resourceY,width*progress,.24);
+  const progress=Moses.air(g,e)/Moses.airCap(g,e);
+  c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=e.state.mosesRecovering?'#b99786':'#a3d2c5';c.fillRect(x,resourceY,width*progress,.24);r.text(`숨 ${Math.floor(Moses.air(g,e))} / ${Moses.airCap(g,e)}`,e.x,resourceY+.12,'#f2fff4',.205);
  }else if(e.key==='yan'){
   const progress=Yan.chargeShape(g,e,e.player?g.input.aim:e.state.yanCharge?.aim||{x:e.x+1,y:e.y}).progress;
   c.fillStyle='#182a39';c.fillRect(x,resourceY,width,.24);c.fillStyle=progress>=1?'#e4f7ff':'#89bce4';c.fillRect(x,resourceY,width*progress,.24);
@@ -152,7 +152,7 @@ export function championGroundEffects(r,e,g){
 }
 
 export function stackGauge(e,g){
- if(e.key==='ppui'){const full=pulse(e)>=30,value=(e.ppuiHealing||0)%1000;return{color:'#ef637e',ratio:full?1:value/1000,label:full?'맥동 최대':`다음 맥동까지 ${Math.ceil(1000-value)} 치유`,max:1};}
+ if(e.key==='ppui'){const full=pulse(e)>=PPUI.pulseCap,value=(e.ppuiHealing||0)%1000;return{color:'#ef637e',ratio:full?1:value/1000,label:full?'맥동 최대':`다음 맥동까지 ${Math.ceil(1000-value)} 치유`,max:1};}
  if(e.key==='nosferatu'){const s=e.state.bloodfiend;return{ratio:s?Math.max(0,(s.until-g.time)/10):(e.state.bloodFeast||0)/bloodCapacity(g,e),color:'#ed3c65',label:s?'':`혈찬 ${Math.floor(e.state.bloodFeast||0)} / ${Math.floor(bloodCapacity(g,e))}`,timer:Boolean(s),max:s?0:bloodCapacity(g,e)/200};}
  if(e.key==='queen'&&e.state.queenR){const s=e.state.queenR;return{ratio:s.phase==='charging'?Math.min(1,(g.time-s.at)/3.75):s.stage/3,color:'#ff91dc',label:'',timer:false,max:3};}
  if(e.key==='dongrang'){const value=(e.totalHealingReceived||0)%1000;return{color:'#d8d48b',ratio:value/1000,label:`다음 양분까지 ${Math.ceil(1000-value)} 회복`,max:1};}

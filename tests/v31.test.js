@@ -52,7 +52,7 @@ test('Ppui basics always create three nails without an allied regeneration effec
 });
 test('Ppui ultimate has twenty-two forward visual nails per volley with the same real ten damage waves',()=>{
  const {g,p,t}=arena('ppui'),damage=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)damage.push(n);return deal(a,b,n,o);};g.cast(p,'r',t);run(g,.01);const fx=g.effects.find(f=>f.type==='nailVolley'),flight=fanFlight({...fx,type:'nailFan',at:10},.18);assert.equal(flight.length,22);for(const p of flight)assert.ok(p.target.x>=fx.x);
- run(g,2.1);assert.equal(damage.length,10);close(damage.reduce((a,b)=>a+b,0),750);
+ run(g,2.1);assert.equal(damage.length,10);close(damage.reduce((a,b)=>a+b,0),550);
 });
 test('Ppui tactical effect is centered on its caster with its real seven-unit radius',()=>{
  const {g,p}=arena('ppui'),v=new ChampionVFX(new SkillVFX()),point={x:24,y:21};g.cast(p,'q',point);v.sync(g);const f=v.effects.find(e=>e.type==='petalField');assert.equal(f.x,p.x);assert.equal(f.y,p.y);assert.equal(f.r,7);assert.equal(f.life,.6);

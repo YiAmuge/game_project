@@ -15,11 +15,11 @@ export function validate(g,e,slot,p){
 export function beforeBasic(){return true;}
 export function basic(g,e,p,d){
  if(e.key==='kim'){
-  if(e.state.followSlashUntil>g.time){e.state.kimWideSlashSerial=e.attackSerial;delete e.state.followSlashUntil;g.cone(e,d,g.attackRange(e)*1.2*1.08,1.9*1.3*1.2*1.08,210);g.addShield(e,100,`draw-${e.id}`,3);}
+  if(e.state.followSlashUntil>g.time){e.state.kimWideSlashSerial=e.attackSerial;delete e.state.followSlashUntil;let hit=false;g.cone(e,d,g.attackRange(e)*1.2*1.08,1.9*1.3*1.2*1.08,270,(_,actual,absorbed)=>{if(actual+absorbed>0)hit=true;});if(hit)g.addShield(e,150,`draw-${e.id}`,3);}
   else{delete e.state.kimWideSlashSerial;e.state.followSlashUntil=g.time+1.2;for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.cone(e,d,g.attackRange(e),1.2*1.3,75));}return true;
  }
  if(e.key==='ppui'){
-  for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,55+Ppui.pulse(e),g.attackRange(e),{theme:'ppui',width:.2,pierce:Ppui.pulse(e)>=10?Infinity:0,onHit:(t,b,actual)=>{if(Ppui.pulse(e)>=20)g.heal(e,e,actual*.1,false);}}));
+  for(let i=0;i<3;i++)g.schedule(e,i*.1,()=>g.bullet(e,d,Ppui.basicDamage(e),g.attackRange(e),{theme:'ppui',width:.2,pierce:Ppui.pulse(e)>=Ppui.PPUI.pierceAt?Infinity:0,onHit:(t,b,actual)=>{if(Ppui.pulse(e)>=Ppui.PPUI.lifestealAt)g.heal(e,e,actual*.1,false);}}));
   return true;
  }return false;
 }
@@ -55,11 +55,12 @@ export function cast(g,e,slot,p,d){
   if(slot==='q'){
    Ppui.cast(g,e);
   }else{
-   e.ammo=g.ammoCap(e);e.reloadProgress=0;e.state.nailStorm={d:{...d},aim:{...p},until:g.time+2,hits:{}};
+   const storm=e.state.nailStorm={d:{...d},aim:{...p},until:g.time+2,hits:{}};
    for(let i=0;i<10;i++)g.schedule(e,i*.2,()=>{
-    if(g.stat(e,'stun')||g.stat(e,'silence')){delete e.state.nailStorm;return;}
-    const storm=e.state.nailStorm;if(!storm)return;const aim=distance(e,storm.aim)>.1?direction(e,storm.aim):storm.d;storm.d={...aim};const angle=Math.atan2(aim.y,aim.x);e.facing=angle;
-    g.effects.push({type:'nailVolley',source:e.id,theme:'ppui',slot:'r',shape:{kind:'cone',range:9,spread:1.5,angle},x:e.x,y:e.y,angle,r:9,spread:1.5,life:.22,maxLife:.22});g.cone(e,aim,9,1.5,75+Ppui.pulse(e),(t,actual)=>{g.heal(e,e,actual*.4,false);storm.hits[t.id]=(storm.hits[t.id]||0)+1;if(storm.hits[t.id]%4===0)g.status(t,'root',1,.3,e);});
+    if(e.state.nailStorm!==storm)return;
+    if(g.stat(e,'stun')||g.stat(e,'silence')){Ppui.endStorm(g,e);return;}
+    const aim=distance(e,storm.aim)>.1?direction(e,storm.aim):storm.d;storm.d={...aim};const angle=Math.atan2(aim.y,aim.x);e.facing=angle;
+    g.effects.push({type:'nailVolley',source:e.id,theme:'ppui',slot:'r',shape:{kind:'cone',range:9,spread:1.5,angle},x:e.x,y:e.y,angle,r:9,spread:1.5,life:.22,maxLife:.22});g.cone(e,aim,9,1.5,Ppui.ultimateDamage(e),(t,actual)=>{g.heal(e,e,actual*.4,false);storm.hits[t.id]=(storm.hits[t.id]||0)+1;if(storm.hits[t.id]%4===0)g.status(t,'root',1,.3,e);});
    });
   }return true;
  }return false;
@@ -75,9 +76,10 @@ export function tick(g,e,dt){
  if(e.key==='kim'&&e.state.swordGrab&&(!carried(g,e)||g.stat(e,'stun')))releaseGrab(g,e);
  if(e.key==='kim'&&e.state.swordGrab){const s=e.state.swordGrab;s.nextEmber??=g.time;while(s.nextEmber<=Math.min(g.time,s.until)+1e-8){g.effects.push({type:'kimEmbers',source:e.id,target:s.target.id,at:s.nextEmber,life:.28,maxLife:.28});s.nextEmber+=.15;}}
  if(e.key!=='ppui')return;
- if(e.state.nailStorm?.until<=g.time)delete e.state.nailStorm;
+ if(e.state.nailStorm&&(e.state.nailStorm.until<=g.time+1e-8||g.stat(e,'stun')||g.stat(e,'silence')))Ppui.endStorm(g,e);
 }
 export function onDeath(g,e){
+ if(e.key==='ppui')Ppui.endStorm(g,e,{refill:false});
  if(e.key==='kim')releaseGrab(g,e);
  for(const kim of g.champions().filter(a=>a.key==='kim'&&a.state.swordGrab?.target===e))releaseGrab(g,kim);
 }

@@ -11,7 +11,7 @@ export function mosesWeaponPose(g,e,p){
  const s=e.state,r=s.mosesR,lowering=s.mosesPipeLowering,side=p.flip;
  let blend=0;
  if(r){const age=g.time-r.at;blend=age<=1?ease(age/.15):1-ease((age-1)/.12);}
- else if(s.mosesCharge)blend=ease((g.time-s.mosesCharge.at)/.15);
+ else if(s.mosesSmoking)blend=ease((g.time-s.mosesSmoking.at)/.15);
  else if(s.mosesChoosing)blend=ease((g.time-s.mosesChoosing.at)/.15);
  else if(lowering)blend=ease((g.time-lowering.raisedAt)/.15)*(1-ease((g.time-lowering.at)/.12));
  // Anchor the actual mouthpiece pixel to the lips, rather than the weapon box.
@@ -25,13 +25,17 @@ function breathFan(c,camera,f,alpha){
  c.save();c.globalAlpha=alpha;c.shadowColor=f.color;c.shadowBlur=10;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fillStyle=f.color+'42';c.fill();c.strokeStyle=f.color+'e8';c.lineWidth=1.6;c.stroke();
  c.strokeStyle='#f0f6f0a0';c.lineWidth=.9;for(let i=0;i<13;i++){const a=f.angle+(i/12-.5)*f.spread,start=camera.worldToScreen({x:f.x+Math.cos(a)*f.r*.2,y:f.y+Math.sin(a)*f.r*.2},.35),end=camera.worldToScreen({x:f.x+Math.cos(a)*f.r*.92,y:f.y+Math.sin(a)*f.r*.92},.35);c.beginPath();c.moveTo(start.x,start.y);c.lineTo(end.x,end.y);c.stroke();}c.restore();
 }
-function column(c,camera,p,d,length,width,progress=1){
+function column(c,camera,p,d,length,width,progress=1,phase=0){
  if(length<=.01)return;const color=BREATHS.right.color,tail={x:p.x-d.x*length,y:p.y-d.y*length},n={x:-d.y*width/2,y:d.x*width/2},at=q=>camera.worldToScreen(q,1.35),a=at(tail),b=at(p),corners=[at({x:tail.x+n.x,y:tail.y+n.y}),at({x:p.x+n.x,y:p.y+n.y}),at({x:p.x-n.x,y:p.y-n.y}),at({x:tail.x-n.x,y:tail.y-n.y})];
  c.save();c.globalAlpha=progress;c.shadowColor='#ff2448';c.shadowBlur=22;const glow=c.createLinearGradient(a.x,a.y,b.x,b.y);glow.addColorStop(0,'#a80f36cc');glow.addColorStop(.5,'#ee294de8');glow.addColorStop(1,'#ff7388f0');c.fillStyle=glow;c.strokeStyle='#ffadba';c.lineWidth=1.8;c.beginPath();corners.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill();c.stroke();
  const edge=at({x:p.x+n.x,y:p.y+n.y}),radius=Math.max(2,Math.hypot(edge.x-b.x,edge.y-b.y)),angle=Math.atan2(edge.y-b.y,edge.x-b.x);for(const cap of[a,b]){c.beginPath();c.ellipse(cap.x,cap.y,radius,radius*.3,angle,0,Math.PI*2);c.fill();c.stroke();}c.strokeStyle='#ffe1e7';c.lineWidth=Math.max(2,camera.scale*.09);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.restore();
+ for(let strand=0;strand<2;strand++){
+  c.save();c.globalAlpha=progress*.9;c.lineCap='round';c.strokeStyle=strand?'#ff8fa5':'#ffe2e8';c.lineWidth=Math.max(1.5,camera.scale*.045);c.shadowColor='#ff2a53';c.shadowBlur=7;c.beginPath();
+  for(let i=0;i<=40;i++){const u=i/40,a=u*Math.PI*4+phase+strand*Math.PI,side=Math.cos(a)*width*.45,pos={x:tail.x+d.x*u*length-d.y*side,y:tail.y+d.y*u*length+d.x*side},q=camera.worldToScreen(pos,1.35+Math.sin(a)*width*.24);i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y);}c.stroke();c.restore();
+ }
  for(let i=0;i<10;i++){const t=i/9;puff(c,camera,{x:p.x-d.x*t*length,y:p.y-d.y*t*length},1.35,width*.24,color,.19*progress);}
 }
-export function drawMosesPoint(c,camera,p){if(p.type!=='mosesPoint')return false;c.save();column(c,camera,p,{x:p.dx,y:p.dy},3.7,2);c.restore();return true;}
+export function drawMosesPoint(c,camera,p,time=0){if(p.type!=='mosesPoint')return false;c.save();column(c,camera,p,{x:p.dx,y:p.dy},3.7,2,1,time*12);c.restore();return true;}
 export function drawMosesScene(c,camera,g){
  c.save();
  for(const f of g.effects.filter(f=>f.type==='mosesBreath').slice(-24)){
@@ -40,11 +44,11 @@ export function drawMosesScene(c,camera,g){
   for(let i=0;i<24;i++){const n=(i+.5)/24,angle=f.angle+(n-.5)*f.spread,travel=f.r*Math.min(1,t*1.45)*(.58+.42*((i*7)%13)/12),p={x:f.x+Math.cos(angle)*travel,y:f.y+Math.sin(angle)*travel};puff(c,camera,p,1.45-travel/f.r*.55,.16+t*.46,f.color,fade*.67);}
  }
  for(const e of g.champions().filter(e=>e.key==='moses'&&e.alive&&!g.hidden(e)&&g.visibleTo(g.player.team,e))){
-  const s=e.state,r=s.mosesR,attack=s.mosesBreath,age=g.time-(attack?.at??-99),choosing=s.mosesChoosing,color=r?BREATHS.right.color:attack&&age>=0&&age<.65?attack.color:BREATHS[choosing?.direction??s.smoke]?.color||'#b6bdb9',active=r||choosing||s.mosesCharge||s.smoke||age>=0&&age<.65;
+  const s=e.state,r=s.mosesR,attack=s.mosesBreath,age=g.time-(attack?.at??-99),choosing=s.mosesChoosing,color=r?BREATHS.right.color:attack&&age>=0&&age<.65?attack.color:BREATHS[choosing?.direction??s.smoke]?.color||'#b6bdb9',active=r||choosing||s.mosesSmoking||s.smoke||age>=0&&age<.65;
   if(active){const flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(MOSES_FRAMES.moses.mirror)?-1:1,feet=projectFeet(camera,e),mouth=mosesMouth({origin:{x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-levitationLift(g,e)},flip});for(let i=0;i<5;i++){const t=(g.time*.8+i*.19)%1,size=(.06+t*.11)*camera.scale,x=feet.x+(mouth.x-e.x+flip*t*.15)*camera.scale,y=feet.y+(mouth.y-e.y-feet.offset-t*.24)*camera.scale;c.globalAlpha=(1-t)*.4;c.drawImage(smoke(color),x-size,y-size,size*2,size*2);}
    if(choosing||s.smoke)for(let i=0;i<6;i++){const a=g.time*.55+i*Math.PI/3;puff(c,camera,{x:e.x+Math.cos(a)*.6,y:e.y+Math.sin(a)*.6},.45+((g.time*.25+i/6)%1)*.8,.25,color,.17);}
   }
-  if(r&&g.time-r.at>=1){const progress=Math.max(0,Math.min(1,(g.time-r.at-1)/.5)),d={x:Math.cos(r.angle),y:Math.sin(r.angle)},head={x:e.x+d.x*(.65+3.7*progress),y:e.y+d.y*(.65+3.7*progress)};column(c,camera,head,d,3.7*progress,.3+1.7*progress,.35+.65*progress);}
+  if(r&&g.time-r.at>=1){const progress=Math.max(0,Math.min(1,(g.time-r.at-1)/.5)),d={x:Math.cos(r.angle),y:Math.sin(r.angle)},head={x:e.x+d.x*(.65+3.7*progress),y:e.y+d.y*(.65+3.7*progress)};column(c,camera,head,d,3.7*progress,.3+1.7*progress,.35+.65*progress,g.time*12);}
  }
  c.restore();
 }

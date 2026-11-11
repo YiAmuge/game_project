@@ -73,8 +73,8 @@ test('Ppui basics fire at enemies without granting regeneration to an allied tar
 test('Ppui tactical heals allies around the caster and keeps outside targets unaffected',()=>{
  const {g,p}=quiet('ppui');g.units=[p];const a=ally(g,'faust',42,7),b=ally(g,'yi',43,9),outside=ally(g,'yi',48,7);a.hp-=500;b.hp-=500;outside.hp-=500;a.lastDamageAt=b.lastDamageAt=100;g.canNaturalHeal=()=>false;g.inSpawn=()=>false;g.cast(p,'q',p);const before=a.hp;run(g,.5);assert.ok(a.hp>before&&b.hp>b.maxHp-500);close(outside.hp,outside.maxHp-500);assert.equal(skillTargeting(g,p,'q').kind,'self');assert.equal(skillTargeting(g,p,'q').radius,7);
 });
-test('Ppui ultimate deals ten waves totaling seven hundred fifty before scaling',()=>{
- const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,10);close(amounts.reduce((a,b)=>a+b,0),750);
+test('Ppui ultimate deals ten waves totaling five hundred fifty before scaling',()=>{
+ const {g,p,t}=quiet('ppui');const amounts=[],deal=g.deal.bind(g);g.deal=(a,b,n,o)=>{if(a===p&&b===t)amounts.push(n);return deal(a,b,n,o);};g.cast(p,'r',{x:48,y:7});run(g,2.1);assert.equal(amounts.length,10);close(amounts.reduce((a,b)=>a+b,0),550);
 });
 test('Kim hitting a champion gives 120 shields to nearby allies with reload/haste benefit',()=>{
  const {g,p,t}=quiet('kim'),a=ally(g,'yi');g.attack(p,t);run(g,.02);close(g.shield(p),60+p.maxHp*.012);close(g.shield(a),60+p.maxHp*.012);close(g.haste(p),.12);const shields=g.shield(p);run(g,.3);close(g.shield(p),shields);

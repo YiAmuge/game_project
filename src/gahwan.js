@@ -1,6 +1,6 @@
 import{distance}from'./geometry.js';
 
-export const GAHWAN={charge:1.75,range:10,angle:Math.PI,damage:350,bonus:100,contemptTime:3,slow:.5,slowTime:1,weak:.15,weakTime:3,stunTime:.5};
+export const GAHWAN={charge:1.5,chargeArmor:15,range:10,angle:Math.PI,damage:350,bonus:100,contemptTime:3,slow:.5,slowTime:1,weak:.15,weakTime:3,stunTime:.5};
 export const hasContempt=(g,t)=>Object.values(t.state?.contempt||{}).some(until=>until>g.time);
 export function contempt(g,e,t){
  if(!t.alive||t.hp<=0||g.debuffImmune?.(t))return;

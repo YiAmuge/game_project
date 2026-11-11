@@ -101,7 +101,6 @@ export function refreshOptions(g){
  if(o.noCooldown){
   p.qCd=p.rCd=0;
   if(p.key==='ppui'){p.state.ppuiCharges=2;p.state.ppuiReady=Infinity;}
-  if(p.key==='ryoshu'){p.state.ryoshuCharges=2;p.state.ryoshuReady=Infinity;}
   if(p.key==='nelly'){p.state.knifeCharges=2;p.state.knifeReady=Infinity;p.state.qDelayUntil=0;}
   if(p.key==='sora'&&Sora.ego(g,p)){p.state.egoQCharges=2;p.state.egoQReady=Infinity;}
  }

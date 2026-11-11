@@ -40,7 +40,7 @@ test('Sora normal dash hits enemies in its seventy percent wider contact area',(
 test('Kim initial and follow-up slash areas increase independently with stronger follow-up damage',()=>{
  const {g,p}=quiet(),first=champ(g,1,43.4,7),wide=champ(g,1,40+3*Math.cos(1.2),7+3*Math.sin(1.2));
  g.attack(p,{x:48,y:7});run(g,.22);close(10000-first.hp,225*.9);close(10000-wide.hp,225*.9);
- p.attackCd=0;p.ammo=1;g.attack(p,{x:48,y:7});close(10000-wide.hp,(225+210)*.9);
+ p.attackCd=0;p.ammo=1;g.attack(p,{x:48,y:7});close(10000-wide.hp,(225+270)*.9);
  const fx=g.effects.findLast(e=>e.type==='slash');close(fx.r,3.744*1.08);close(fx.spread,BASIC_FAN_ANGLE);
 });
 test('Kim holds with a 1.8-second stun and carries the victim atomically while walking',()=>{
@@ -90,8 +90,8 @@ test('Ppui tactical performs ten target-health healing ticks independently of fr
 test('Ppui tactical heals every allied champion in seven range and leaves outsiders alone',()=>{
  const {g,p}=quiet('ppui'),a=champ(g,0,42,7),b=champ(g,0,44,8,'yi'),out=champ(g,0,49,7);g.canNaturalHeal=()=>false;g.inSpawn=()=>false;for(const t of[p,a,b,out])t.hp-=1000;g.cast(p,'q',p);const before=[p.hp,a.hp,b.hp];run(g,1);[p,a,b].forEach((t,i)=>assert.ok(t.hp>before[i]));close(out.hp,9000);
 });
-test('Ppui ultimate refills ammunition without resetting its tactical cooldown, permits walking, and deals ten moving waves of 75',()=>{
+test('Ppui ultimate refills at the end without resetting tactical cooldown and deals ten moving waves of 55',()=>{
  const {g,p}=quiet('ppui'),t=champ(g,1,43,7);p.ammo=0;p.qCd=10;const waves=[],cone=g.cone.bind(g);g.cone=(e,d,r,a,n,fn)=>{if(e===p)waves.push({y:p.y,damage:n});return cone(e,d,r,a,n,fn);};
- g.cast(p,'r',t);close(p.qCd,10);close(p.ammo,g.ammoCap(p));assert.ok(!(p.channelUntil>g.time));g.input.y=1;run(g,.4);g.input.y=0;assert.ok(p.y>8);run(g,1.7);
- assert.equal(waves.length,10);assert.ok(waves.every(w=>w.damage===75));assert.ok(waves.at(-1).y>waves[0].y);
+ g.cast(p,'r',t);close(p.qCd,10);close(p.ammo,0);assert.ok(!(p.channelUntil>g.time));g.input.y=1;run(g,.4);g.input.y=0;assert.ok(p.y>8);run(g,1.7);
+ close(p.ammo,g.ammoCap(p));assert.equal(waves.length,10);assert.ok(waves.every(w=>w.damage===55));assert.ok(waves.at(-1).y>waves[0].y);
 });

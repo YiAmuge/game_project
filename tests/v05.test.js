@@ -23,7 +23,7 @@ test('all ordinary and experimental champions have individual positive growth an
  for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),baseHp=p.maxHp,baseSpeed=g.speed(p),basePower=g.powerScale(p);g.award(p,10000,0);assert.equal(p.level,10);if(key==='nosferatu')close(p.maxHp,baseHp);else assert.ok(p.maxHp>baseHp,key);assert.ok(g.speed(p)>baseSpeed,key);if(key==='dongrang')close(g.powerScale(p),basePower);else assert.ok(g.powerScale(p)>basePower,key);assert.ok(RUNTIME_CHAMPIONS[key].attackStyle);}
 });
 test('ammo use interval increases 30 percent except original fast attack profiles',()=>{
- for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));if(key==='moses')Moses.release(g,p,t);if(key==='yan')releaseYan(g,p,t);if(key==='hohenheim')releaseHohenheim(g,p,t);close(p.attackCd,key==='moses'?.7:key==='yan'?.9:combatSeconds(c.attackTime*(c.attackTime<=.4?1:1.3)));}
+ for(const key of Object.keys(RUNTIME_CHAMPIONS)){const {g,p,t}=quiet(key),c=RUNTIME_CHAMPIONS[key];assert.ok(g.attack(p,t));if(key==='moses')Moses.release(g,p,t);if(key==='yan')releaseYan(g,p,t);if(key==='hohenheim')releaseHohenheim(g,p,t);close(p.attackCd,key==='moses'?.3:key==='yan'?.9:combatSeconds(c.attackTime*(c.attackTime<=.4?1:1.3)));}
 });
 test('reload pauses throughout ammo consumption, preserving partial progress, and resumes after firing',()=>{
  const {g,p,t}=quiet();p.ammo=2;p.reloadProgress=.25;g.attack(p,t);run(g,.2);close(p.reloadProgress,.25);run(g,.7);assert.ok(p.reloadProgress>.25);

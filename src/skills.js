@@ -61,7 +61,7 @@ export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
 export function skillCharges(g,e,slot){
  if(slot!=='q')return null;if(e.key==='moses')return Moses.charges(g,e);if(e.key==='nosferatu')return Nosferatu.charges(g,e);if(e.key==='ppui')return Ppui.charges(g,e);
- const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='ryoshu'?[s.ryoshuCharges??2,2,s.ryoshuReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
+ const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
  if(!values)return null;const [current,max,ready]=values;return {current,max,remaining:current<max&&Number.isFinite(ready)?Math.max(0,ready-g.time):0};
 }
 export const cancelHeath=Reworks.cancelHeath;
@@ -84,8 +84,8 @@ export function canRecast(g,e,slot){
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')));
 }
-export function init(g,e){Moses.init(g,e);Ezra.init(g,e);Ppui.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
-export function onRespawn(g,e){Moses.init(g,e);Ezra.init(g,e);if(e.key==='ryoshu'){e.state.ryoshuCharges=2;e.state.ryoshuReady=Infinity;}New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
+export function init(g,e){Moses.init(g,e);Ezra.init(g,e);Ppui.init(g,e);New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
+export function onRespawn(g,e){Moses.init(g,e);Ezra.init(g,e);New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
 export const coverMultiplier=New.coverMultiplier;
 export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
@@ -98,7 +98,7 @@ export function validateSkill(g,e,slot,p,options={}){
  if(e.key==='kromer')return Kromer.validate(g,e,slot);
  if(e.key==='ppui'&&slot==='q')return (e.state.ppuiCharges??2)>0;
  if(e.key==='jamila')return Jamila.validate(g,e,slot);
- if(e.state.donCharge)return false;if(e.key==='ryoshu'&&slot==='q'&&(e.state.ryoshuCharges??2)<=0)return false;
+ if(e.state.donCharge)return false;
  if(!Hohenheim.validate(g,e,slot,p)||!Sora.validate(g,e,slot,p)||!Yan.validate(g,e,slot))return false;
  if(!V12.validate(g,e,slot,p))return false;
  if(!V10.validate(g,e,slot,p))return false;
@@ -116,7 +116,7 @@ export function ammoCap(g,e){
  if(e.lcaTrooper)return 16;if(e.key==='jamila')return 16+(has(e,'magazine2')?8:0);
  const extra=(has(e,'magazine2')?2:0)+(e.key==='faust'&&e.level===RULES.maxLevel?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
  if(e.key==='ezra')return Ezra.EZRA.ammo;
- return CHAMPIONS[e.key].ammo+extra*(e.key==='rudolph'?15:1)+(e.key==='ppui'&&Ppui.pulse(e)>=30?1:0);
+ return CHAMPIONS[e.key].ammo+extra*(e.key==='rudolph'?15:1)+(e.key==='ppui'&&Ppui.pulse(e)>=Ppui.PPUI.ammoAt?1:0);
 }
 export function reloadGrade(e){return CHAMPIONS[e.key].reload;}
 export function beforeBasic(g,e,point,options={}){
@@ -185,7 +185,7 @@ export function cast(g,e,slot,p,d,options={}){
   else{e.qCd=0;g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false),{actionTag:'donR'});}
   return true;
  case 'ryoshu':
-  if(slot==='q'){e.state.ryoshuCharges=(e.state.ryoshuCharges??2)-1;if(!Number.isFinite(e.state.ryoshuReady))e.state.ryoshuReady=g.time+g.cooldown(e,'q');e.qCd=e.state.ryoshuCharges>0?0:e.state.ryoshuReady-g.time;e.state.ryoshuStep=true;const len=3.5;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
+  if(slot==='q'){e.state.ryoshuStep=true;const len=3.5;e.invulnerableUntil=g.time+len/RULES.dashSpeed;dash(g,e,d,len,160,(t,actual,absorbed)=>{if(actual+absorbed>0)e.ammo=Math.min(ammoCap(g,e),e.ammo+1);},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
   else{
    const len=Math.min(7,distance(e,p)),rawDest={x:clamp(e.x+d.x*len,g.bounds.x+.6,g.bounds.x+g.bounds.w-.6),y:clamp(e.y+d.y*len,g.bounds.y+.6,g.bounds.y+g.bounds.h-.6)};
    const dest=trapPoint(g,e,rawDest);if(!g.blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
@@ -298,7 +298,6 @@ export function tick(g,e,dt){
  Ppui.tick(g,e);Kromer.tick(g,e,dt);
  const s=e.state;
  if(s.ishmaelWeak)for(const [id,mark]of Object.entries(s.ishmaelWeak))if(mark.until<=g.time)delete s.ishmaelWeak[id];
- if(e.key==='ryoshu'){s.ryoshuCharges??=2;s.ryoshuReady??=Infinity;while(s.ryoshuCharges<2&&g.time+1e-8>=s.ryoshuReady){s.ryoshuCharges++;s.ryoshuReady=s.ryoshuCharges<2?s.ryoshuReady+g.cooldown(e,'q'):Infinity;}e.qCd=s.ryoshuCharges>0?0:Math.max(0,s.ryoshuReady-g.time);}
  decayMentalWhip(g,e);New.tick(g,e,dt);V06.tick(g,e,dt);V12.tick(g,e,dt);Sora.tick(g,e);Yan.tick(g,e,dt);Hohenheim.tick(g,e,dt);Reworks.tick(g,e);
  Don.tick(g,e);
 

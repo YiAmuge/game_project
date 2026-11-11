@@ -75,7 +75,7 @@ export class ProjectileVFX {
  draw(c,camera,game){
   c.save();
   for(const p of game.projectiles){
-   if(drawMosesPoint(c,camera,p))continue;
+   if(drawMosesPoint(c,camera,p,game.time))continue;
    if(drawArcanaProjectile(c,camera,game,p))continue;
    const style=projectileAppearance(p,game),base=camera.worldToScreen(p,style.height),at=this.position(p,game,camera,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy??0,p.dx??1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);
    const {width,length}=projectileDimensions(style,camera.scale),margin=Math.max(150,Math.hypot(width,length)/2+30);

@@ -1,3 +1,4 @@
+import*as Moses from'./moses.js';
 import{basicFanAngle}from'./data.js';
 import{ARCANA_STAGES}from'./queen.js';
 import {Game} from './game.js';
@@ -31,7 +32,7 @@ const degrees=r=>number(Number((r*180/Math.PI).toFixed(1)))+'°';
 function basicRanges(key,g,e,transformed){
  const range=g.attackRange(e),r=number(range);
  if(key==='don'||key==='starbuck')return[row('공격 범위','돌진 거리 '+r+' · 직선 폭 1.5')];
- if(key==='moses')return[row('기본 숨결','사거리 6 · 부채꼴 145°'),row('하얀 숨','사거리 6 · 전방 반원 180°'),row('푸른 숨','사거리 8.6 · 부채꼴 151°')];
+ if(key==='moses')return[row('기본 숨결','사거리 6 · 부채꼴 115°'),row('하얀 숨','사거리 6 · 전방 반원 180°'),row('푸른 숨','사거리 8.6 · 부채꼴 121°')];
  if(key==='ezra')return[row('알라스 공방 장갑','돌진 거리 3.8'),row('네스터 공방 망치','1타 반경 2.6 · 2타 반경 3.6 · 3타 반경 4.6'),row('스크류 아틀리에제 드릴 망치','사거리 3.3 · 부채꼴 150°'),row('나미르 공방 건틀릿','지정 도약 거리 2.5 · 착지 반경 3.5')];
  if(key==='queen')return[row('관통 투사체','사거리 '+r)];
  if(key==='nosferatu')return transformed?[row('공격 범위','자신 중심 반경 '+r)]:[row('근접 참격','사거리 '+r+' · 전방 반원 180°'),row('피의 칼날','사거리 6.8 · 폭 4.54 · 관통 불가')];
@@ -103,7 +104,7 @@ function skillRanges(key,index,g,e,transformed,variant){
 function cooldownLabel(key,index,g,e,transformed,variant){
  if(index===0)return ({ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
-  if(key==='moses')return '완충 1초 · 충전 포함 최소 공격 간격 0.7초 · 발사 후 대기 0.7초';
+  if(key==='moses')return '숨 '+Moses.airCap(g,e)+' · 공격 간격 0.3초';
   if(key==='ezra')return '탄창 4개 · 전탄 소진 후 일괄 장전 2.5초 · 장전 속도 보정 1.5배';
   if(key==='nosferatu'&&transformed)return '탄창 소모 없음 · 자동 공격 간격 0.4초';
   if(key==='jamila')return '탄창 '+g.ammoCap(e)+'개 · 일괄 장전 '+number(g.reloadInterval(e))+'초 · 공격 간격 0.2초';
@@ -114,7 +115,7 @@ function cooldownLabel(key,index,g,e,transformed,variant){
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return '변신 재사용 대기 없음';
  if(key==='nosferatu'&&index===2)return '쿨타임 '+number(g.cooldown(e,'q'))+'초 · 2.5초 내 최대 2회 재사용';
- const charges=index===2&&(key==='moses'||key==='ppui'||key==='nelly'||key==='ryoshu'||key==='sora'&&transformed)?2:1;
+ const charges=index===2&&(key==='moses'||key==='ppui'||key==='nelly'||key==='sora'&&transformed)?2:1;
  return (charges>1?'충전당 ':'쿨타임 ')+number(key==='myo'&&index===2?.15:g.cooldown(e,index===2?'q':'r'))+'초'+(charges>1?' · 최대 '+charges+'회 충전':'');
 }
 export function cleanSkillDetails(text){

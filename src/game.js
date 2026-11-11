@@ -1,5 +1,5 @@
 import*as Moses from'./moses.js';
-import{cancel as cancelGahwan}from'./gahwan.js';
+import{GAHWAN,cancel as cancelGahwan}from'./gahwan.js';
 import*as Yi from'./yi.js';
 import*as Ezra from'./ezra.js';
 import{combatSeconds}from'./combat-timing.js';
@@ -224,8 +224,8 @@ export class Game {
   powerWeak(e){return Math.max(this.stat(e,'weak'),this.stat(e,'yanLock'),Math.max(0,...Object.values(e.state?.ishmaelWeak||{}).filter(v=>v.until>this.time).map(v=>v.stacks))*.02);}
   desireEfficiency(e,stat='health'){if(e.key!=='dongrang')return 1;const extra=Math.max(0,this.unconvertedPowerScale(e)*(1+this.buffValue(e,'power',.12))*(this.buff(e,'marks')?1.12:1)-1);return 1+extra*(stat==='armor'?.1:.3);}
   syncDesire(e){if(e.key!=='dongrang'||e.kind!=='champion')return;const ratio=e.maxHp>0?e.hp/e.maxHp:1,next=this.maxHp(e);e.maxHp=next;if(e.alive)e.hp=Math.min(next,Math.max(0,ratio*next));}
-  armor(e){const armor=(e.armor||0)+(Ezra.ultimate(this,e)?Ezra.EZRA.rArmor:0)+(e.kind==='champion'&&e.key==='queequeg'?12*(V08.endurance(e)):0)+this.buffValue(e,'tetherArmor',30)+(e.key==='dongbaek'&&e.qCd>0?10:0);return ((100+armor)*(1+Augments.resentment(e)+Augments.armorRate(this,e))*(1+this.buffValue(e,'chainArmor',.1))*(1+this.buffValue(e,'tetherGuard',.1))*(e.key==='ahab'&&e.state.order==='guard'?1.12:1)*(Yan.distorted(this,e)?1.12:1)*(this.buff(e,'faustUlt')?1+.1*(e.ultStacks||0):1)*(this.buff(e,'queegAttack')?1.07:1)*(e.state?.donCharge?1.5:1)*(e.key==='heathcliff'&&e.state.chargeAt!==undefined?1+HEATH.chargeArmor:1)*(this.buff(e,'heathUlt')?1+HEATH.ultimateArmor:1)*(1+this.buffValue(e,'hongluCare',.07))-100)*this.desireEfficiency(e,'armor')*(e.key==='yan'&&e.state.yanCharge?1+Yan.YAN.chargeArmor:1)*(Sora.ego(this,e)?Sora.SORA.egoArmor:1)*(1+Ezra.ammoBonus(e))*(1-this.stat(e,'armorWeak'));}
-  rewindCooldowns(e,seconds){e.qCd=Math.max(0,e.qCd+seconds);e.rCd=Math.max(0,e.rCd+seconds);for(const key of ['knifeReady','treeReady','ryoshuReady','egoQReady','ppuiReady','mosesReady'])if(Number.isFinite(e.state[key]))e.state[key]=Math.max(this.time,e.state[key]+seconds);if(['nelly','dongrang'].includes(e.key))e.state.qDelayUntil=Math.max(this.time,e.state.qDelayUntil||0)+seconds;}
+  armor(e){const armor=(e.armor||0)+(e.state?.gahwanR?GAHWAN.chargeArmor:0)+(Ezra.ultimate(this,e)?Ezra.EZRA.rArmor:0)+(e.kind==='champion'&&e.key==='queequeg'?12*(V08.endurance(e)):0)+this.buffValue(e,'tetherArmor',30)+(e.key==='dongbaek'&&e.qCd>0?10:0);return ((100+armor)*(1+Augments.resentment(e)+Augments.armorRate(this,e))*(1+this.buffValue(e,'chainArmor',.1))*(1+this.buffValue(e,'tetherGuard',.1))*(e.key==='ahab'&&e.state.order==='guard'?1.12:1)*(Yan.distorted(this,e)?1.12:1)*(this.buff(e,'faustUlt')?1+.1*(e.ultStacks||0):1)*(this.buff(e,'queegAttack')?1.07:1)*(e.state?.donCharge?1.5:1)*(e.key==='heathcliff'&&e.state.chargeAt!==undefined?1+HEATH.chargeArmor:1)*(this.buff(e,'heathUlt')?1+HEATH.ultimateArmor:1)*(1+this.buffValue(e,'hongluCare',.07))-100)*this.desireEfficiency(e,'armor')*(e.key==='yan'&&e.state.yanCharge?1+Yan.YAN.chargeArmor:1)*(Sora.ego(this,e)?Sora.SORA.egoArmor:1)*(1+Ezra.ammoBonus(e))*(1-this.stat(e,'armorWeak'));}
+  rewindCooldowns(e,seconds){e.qCd=Math.max(0,e.qCd+seconds);e.rCd=Math.max(0,e.rCd+seconds);for(const key of ['knifeReady','treeReady','egoQReady','ppuiReady','mosesReady'])if(Number.isFinite(e.state[key]))e.state[key]=Math.max(this.time,e.state[key]+seconds);if(['nelly','dongrang'].includes(e.key))e.state.qDelayUntil=Math.max(this.time,e.state.qDelayUntil||0)+seconds;}
   attackStyle(e){if(Sora.ego(this,e))return 'sweep';return e.key==='ezra'?Ezra.weapon(this,e).style:CHAMPIONS[e.key]?.attackStyle;}
   passiveCooldown(e){
     const ready={ppui:e.passiveReady,yi:e.passiveReady,kim:e.passiveReady,ishmael:e.passiveReady,gregor:e.state.mutateReady,sora:e.state.orderAt,don:e.state.villainAt,rudolph:e.state.exhaustedUntil,dongbaek:Number.isFinite(e.state.petalReady)?e.state.petalReady:0,ryoshu:e.lastCombat+2}[e.key]||0;
@@ -233,7 +233,7 @@ export class Game {
   }
   cooldown(e,slot){if(e.key==='yan'&&slot==='q'&&Yan.distorted(this,e))return 5*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e));return (e.key==='sora'&&slot==='q'&&Sora.ego(this,e)?Sora.SORA.egoQCooldown:CHAMPIONS[e.key][slot])*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e))*(1-rivalBonus(e,'cooldown'));}
   attackInterval(e){if(e.key==='moses')return Moses.MOSES.interval;if(Nosferatu.bloodfiend(this,e))return combatSeconds(Nosferatu.NOSFERATU.rAttackEvery);const c=CHAMPIONS[e.key];return combatSeconds(c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier));}
-  reloadPaused(e){if(e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(e.key==='dongbaek'&&e.state.usedPetal&&e.attackCd>0)return false;if(Sora.ego(this,e)||e.key==='alisa'&&this.buff(e,'alisaReload'))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||Boolean(e.state.donCharge)||Boolean(e.state.mosesCharge)||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
+  reloadPaused(e){if(Ppui.stormActive(this,e)||e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(e.key==='dongbaek'&&e.state.usedPetal&&e.attackCd>0)return false;if(Sora.ego(this,e)||e.key==='alisa'&&this.buff(e,'alisaReload'))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||Boolean(e.state.donCharge)||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
   ammoCap(e){return Skills.ammoCap(this,e);}
   attackRange(e){if(e.key==='moses')return Moses.breath(this,e).range;if(e.key==='ezra')return Ezra.weapon(this,e).range+Augments.rangeBonus(e);if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)+Augments.rangeBonus(e);}
   bonusStats(e){
@@ -520,7 +520,7 @@ export class Game {
     for(const target of this.units.filter(u=>this.hostile(e,u))) {
       if(exclude?.has(target.id))continue;
       const d=direction(e,target);
-      if(distance(e,target)<=range+target.radius&&d.x*dir.x+d.y*dir.y>=Math.cos(angle/2)&&this.clearLine(e,target)) {const actual=this.deal(e,target,damage,{sound});onHit(target,actual);}
+      if(distance(e,target)<=range+target.radius&&d.x*dir.x+d.y*dir.y>=Math.cos(angle/2)&&this.clearLine(e,target)) {const shield=this.shield(target),actual=this.deal(e,target,damage,{sound});onHit(target,actual,Math.max(0,shield-this.shield(target)));}
     }
     this.effects.push({source:e.id,damageKind:e.actionKind||'basic',slot:e.actionKind==='skill'?e.castSlot:undefined,shape:{kind:'cone',range,spread:angle,angle:Math.atan2(dir.y,dir.x)},type:['thrust','punch','whip','flame'].includes(this.attackStyle(e))?'thrust':'slash',x:e.x,y:e.y,angle:Math.atan2(dir.y,dir.x),spread:angle,r:range,color:e.key==='gregor'?CHAMPIONS[e.key].color:e.team===0?'#bce5e5':'#eaa39c',theme:e.key,side:(e.attackSerial||0)%2?1:-1,life:.28,maxLife:.28});
   }
@@ -536,9 +536,9 @@ export class Game {
     if(this.stat(e,'taunt')&&!options.taunted)return false;
     if(options.queenAim&&this.mobileInput)return Queen.lockWeakest(this,e);
     if(this.training&&e===this.player)Training.refreshOptions(this);
-    if(e.key==='kim'&&carried(this,e))return false;
+    if(Ppui.stormActive(this,e)||e.key==='kim'&&carried(this,e))return false;
     if(e.state.ahabUlt||e.key==='heathcliff'&&this.buff(e,'heathUlt')||this.stat(e,'disarm')||e.state.donCharge||e.motion||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||e.attackCd>0)return false;
-    if(e.key==='moses')return Moses.attack(this,e,point);
+    if(e.key==='moses')return Moses.attack(this,e,point,options);
     if(e.key==='yan')return Yan.attack(this,e,point);
     if(e.key==='hohenheim')return Hohenheim.attack(this,e,point);
     if(!Skills.beforeBasic(this,e,point,options))return false;

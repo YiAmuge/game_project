@@ -80,11 +80,11 @@ test('Gubo allied threshold changes from 21 to 35 percent only while the four-se
 test('Gahwan ranges and close knockback follow the new percentages',()=>{
  const {g,p,t}=quiet('gahwan');close(g.attackRange(p),7.5);close(skillTargeting(g,p,'q').range,8.2);t.x=41;g.attack(p,t);close(t.motion.total,2.5);
 });
-test('Gahwan ultimate concentrates for 1.75 seconds before one forward half-moon strike',()=>{
- const {g,p,t}=quiet('gahwan');t.x=48;const hp=t.hp;g.cast(p,'r',t);assert.equal(g.pending.length,0);assert.equal(p.state.gahwanR.until,1.75);close(t.hp,hp);run(g,1.7);close(t.hp,hp);run(g,.1);assert.ok(t.hp<hp);assert.ok(t.state.contempt[p.id]>g.time);close(p.x,40);
+test('Gahwan ultimate concentrates for 1.5 seconds before one forward half-moon strike',()=>{
+ const {g,p,t}=quiet('gahwan');t.x=48;const hp=t.hp;g.cast(p,'r',t);assert.equal(g.pending.length,0);assert.equal(p.state.gahwanR.until,1.5);close(t.hp,hp);run(g,1.4);close(t.hp,hp);run(g,.12);assert.ok(t.hp<hp);assert.ok(t.state.contempt[p.id]>g.time);close(p.x,40);
 });
 test('Ahab power drops twelve percent and his ultimate teleports before the original attack sequence',()=>{
- const {g,p,t}=quiet('ahab');close(g.powerScale(p),.88);g.cast(p,'r',t);close(p.x,42);assert.equal(p.motion,undefined);const hp=t.hp;run(g,.1);assert.ok(t.hp<hp);run(g,.5);assert.ok(t.hp<hp-500);
+ const {g,p,t}=quiet('ahab');close(g.powerScale(p),.88);g.cast(p,'r',t);close(p.x,42);assert.equal(p.motion,undefined);const hp=t.hp;run(g,.12);assert.ok(t.hp<hp);run(g,.5);assert.ok(t.hp<hp-500);
 });
 test('Myo basic dashes at 10.4, Q spends one ammo and frenzy blocks Q',()=>{
  const {g,p,t}=quiet('myo');assert.ok(g.attack(p,t));close(p.x,40);g.step(.1);assert.ok(p.x>40&&p.x<41.1);run(g,.3);assert.ok(t.hp<100000);p.ammo=4;assert.ok(g.cast(p,'q',t));assert.equal(p.ammo,3);run(g,.3);assert.ok(t.state.rabbitMark[p.id]>g.time);assert.ok(g.cast(p,'r',p));assert.ok(g.buff(p,'rabbitFrenzy'));assert.equal(g.cast(p,'q',t),false);close(g.attackRange(p),2.4);

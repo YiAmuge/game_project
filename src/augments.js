@@ -7,7 +7,7 @@ export const cost=(e,key)=>AUGMENT_RULES.cost*(['yan','sora'].includes(e.key)&&k
 export const saleValue=(e,key)=>cost(e,key)*AUGMENT_RULES.refund;
 // A rifle/single projectile keeps the ordinary range bonus; fans, rectangles,
 // radial attacks, piercing projectiles and damaging dashes use the area bonus.
-export const broadBasic=e=>e.key==='ppui'?(e.ppuiHealing||0)+1e-8>=10000:!['jamila','outis'].includes(e.key)&&(e.key!=='faust'||e.level>=10);
+export const broadBasic=e=>e.key==='ppui'?(e.ppuiHealing||0)+1e-8>=20000:!['jamila','outis'].includes(e.key)&&(e.key!=='faust'||e.level>=10);
 export const rangeBonus=e=>has(e,'range7')?(broadBasic(e)?1.3:2.5):0;
 export function absorbOrder(g,e){if(!['yan','sora'].includes(e.key)||absorbedOrder(e)||!g.buff(e,e.key==='yan'?'yanDistorted':'soraEgo')||!e.augments.includes('writtenOrder'))return false;e.augments=e.augments.filter(k=>k!=='writtenOrder');e.absorbedOrder=true;return true;}
 export function unlocked(e,group){return group==='combat'?e.upgrades.power>=3:group==='survival'?e.upgrades.health>=3:e.upgrades.speed+e.upgrades.reload+e.upgrades.haste>=3;}
@@ -88,7 +88,7 @@ export function onCast(){}
 export function onDebuff(g,e,target){
  if(!e||e.kind!=='champion'||!e.alive||e.team===target.team||!has(e,'maskDeLu')||(e.state.maskReady||0)>g.time)return;
  e.state.maskReady=g.time+10;g.effects.push({type:'maskSplash',source:e.id,x:e.x,y:e.y,life:.65,maxLife:.65});e.qCd*=.8;e.rCd*=.8;
- for(const key of ['knifeReady','treeReady','ryoshuReady','egoQReady','ppuiReady','qDelayUntil'])if(Number.isFinite(e.state[key])&&e.state[key]>g.time)e.state[key]=g.time+(e.state[key]-g.time)*.8;
+ for(const key of ['knifeReady','treeReady','egoQReady','ppuiReady','qDelayUntil'])if(Number.isFinite(e.state[key])&&e.state[key]>g.time)e.state[key]=g.time+(e.state[key]-g.time)*.8;
  g.changeAmmo(e,e.key==='rudolph'?15:1);
 }
 export function convertedShield(g,e,amount){

@@ -52,7 +52,7 @@ test('Outis tactical spin appears at the real landing circle, with one neutral s
  const {g,p}=arena('outis'),v=new ChampionVFX(new SkillVFX());g.cast(p,'q',{x:25,y:20});assert.ok(!g.effects.some(f=>f.type==='outisSpin'));let spin;run(g,.4,()=>{spin||=g.effects.find(f=>f.type==='outisSpin');v.sync(g);});assert.equal(spin.r,2.5);assert.ok(Math.abs(spin.x-23)<.01);assert.ok(v.effects.some(f=>f.type==='spinSlash'&&f.r===2.5));
 });
 test('Gahwan has one delayed half-moon ultimate wave, and Ppui uses the real fan size',()=>{
- const {g,p,t}=arena('gahwan'),v=new ChampionVFX(new SkillVFX());g.cast(p,'r',t);run(g,1.7,()=>v.sync(g));assert.ok(!g.effects.some(f=>f.type==='gahwanWave'));run(g,.1,()=>v.sync(g));const wave=g.effects.find(f=>f.type==='gahwanWave');assert.equal(wave.shape.kind,'cone');assert.equal(wave.shape.spread,Math.PI);assert.equal(wave.shape.range,10);assert.ok(!v.effects.some(f=>f.type==='gazeSlash'));
+ const {g,p,t}=arena('gahwan'),v=new ChampionVFX(new SkillVFX());g.cast(p,'r',t);run(g,1.4,()=>v.sync(g));assert.ok(!g.effects.some(f=>f.type==='gahwanWave'));run(g,.12,()=>v.sync(g));const wave=g.effects.find(f=>f.type==='gahwanWave');assert.equal(wave.shape.kind,'cone');assert.equal(wave.shape.spread,Math.PI);assert.equal(wave.shape.range,10);assert.ok(!v.effects.some(f=>f.type==='gazeSlash'));
  const b=arena('ppui');b.g.cast(b.p,'r',b.t);b.g.step(.001);const f=b.g.effects.find(f=>f.type==='nailVolley');assert.equal(f.shape.range,9);assert.equal(f.shape.spread,1.5);
 });
 test('waterfall is a persistent ripple field without an eruption emitter',()=>{

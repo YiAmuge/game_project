@@ -33,6 +33,10 @@ export function mobileAutoAim(g,e,slot='basic',{category,targetId,movement}={}){
  const allEnemies=e.key==='yi'&&slot==='r'?[]:mobileAttackTargets(g,e,Infinity,{ignoreWalls:spec.ignoreWalls}).filter(t=>(!category||attackCategory(t)===category)&&(!(e.key==='nelly'&&slot==='r')||t.kind==='champion'));
  const prioritize=list=>[...list.filter(t=>inRange(t,reach)),...list.filter(t=>!inRange(t,reach))];
  const enemies=prioritize(nearest?allEnemies.sort(order):allEnemies);
+ if(e.key==='moses'&&slot==='basic'){
+  const nearby=allEnemies.filter(t=>inRange(t,reach)),target=nearby.filter(t=>t.kind==='champion').sort((a,b)=>a.hp-b.hp||order(a,b))[0]||nearby[0];
+  return{point:target?{x:target.x,y:target.y}:{x:e.x+Math.cos(e.facing||0)*range,y:e.y+Math.sin(e.facing||0)*range},target,manualFallback:false,mode:'auto',unavailable:Boolean(category&&!target)};
+ }
  const allies=g.champions(e.team).filter(t=>t!==e&&visible(t)),wounded=prioritize(allies.filter(t=>t.hp<t.maxHp).sort((a,b)=>healthOrder(a)-healthOrder(b)||order(a,b)));
  const allyCandidates=[];
  let target;

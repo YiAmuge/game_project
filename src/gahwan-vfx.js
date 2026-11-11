@@ -17,12 +17,12 @@ export function drawGahwanEffects(c,camera,g){
    c.rotate(f.angle);c.shadowColor='#ff173b';c.shadowBlur=12;
    if(f.type==='gahwanCut'){
     c.beginPath();c.arc(0,0,f.r,0,Math.PI*2);c.clip();c.globalAlpha=fade;c.lineCap='round';
-    for(let i=0;i<3;i++){const off=(i-1)*.5-t*.6;c.beginPath();c.moveTo(-f.r,off+.65);c.quadraticCurveTo(0,off-.45,f.r,off-.25);c.strokeStyle=i===1?'#ffb1b7':'#cc163b';c.lineWidth=i===1?.065:.14;c.stroke();}
+    for(let i=0;i<3;i++){const off=(i-1)*.5-t*.6;c.beginPath();c.moveTo(-f.r,off+.65);c.quadraticCurveTo(0,off-.45,f.r,off-.25);c.strokeStyle='#bf1735';c.lineWidth=.20;c.stroke();c.strokeStyle=i===1?'#fff3a4':'#ffd333';c.lineWidth=i===1?.075:.12;c.stroke();}
    }else{
     sector(c,f.r);c.globalAlpha=fade*.45;c.strokeStyle='#ed3c60';c.lineWidth=.025;c.stroke();c.clip();const radius=f.r*Math.min(1,.08+age/.15);c.globalAlpha=fade;
     const fill=c.createRadialGradient(0,0,Math.max(.01,radius*.55),0,0,Math.max(.02,radius));fill.addColorStop(0,'#790d2200');fill.addColorStop(.8,'#b9113b88');fill.addColorStop(1,'#ff5774cc');sector(c,radius);c.fillStyle=fill;c.fill();
-    for(const [width,color]of[[.25,'#760e27'],[.11,'#ee214d'],[.035,'#ffc1ca']]){c.beginPath();c.arc(0,0,Math.max(.05,radius-.14),-Math.PI/2,Math.PI/2);c.strokeStyle=color;c.lineWidth=width;c.stroke();}
-    c.shadowBlur=4;c.strokeStyle='#ff567b';c.lineWidth=.025;for(let i=0;i<15;i++){const a=(i/14-.5)*Math.PI,r=radius*(.58+.25*Math.sin(i*5)**2);c.beginPath();c.moveTo(Math.cos(a)*r,Math.sin(a)*r);c.lineTo(Math.cos(a)*radius*.94,Math.sin(a)*radius*.94);c.stroke();}
+    for(const [width,color]of[[.25,'#760e27'],[.11,'#ee214d'],[.035,'#ffe075']]){c.beginPath();c.arc(0,0,Math.max(.05,radius-.14),-Math.PI/2,Math.PI/2);c.strokeStyle=color;c.lineWidth=width;c.stroke();}
+    c.shadowBlur=4;c.lineWidth=.025;for(let i=0;i<15;i++){c.strokeStyle=i%3?'#ff567b':'#ffdb4c';const a=(i/14-.5)*Math.PI,r=radius*(.58+.25*Math.sin(i*5)**2);c.beginPath();c.moveTo(Math.cos(a)*r,Math.sin(a)*r);c.lineTo(Math.cos(a)*radius*.94,Math.sin(a)*radius*.94);c.stroke();}
    }
   });
  }

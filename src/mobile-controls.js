@@ -3,7 +3,7 @@ import*as Moses from'./moses.js';
 import{dragChoice}from'./skills.js';
 import{weakestTarget}from'./queen.js';
 import{mobileAutoAim,mobileManualAim,mobileAttackTargets,attackCategory,ATTACK_CATEGORIES,rememberManualAim,dashSlidePriority}from'./mobile-aim.js';
-import{gestureMode,targetButtonPositions}from'./mobile-gestures.js';
+import{HOLD,gestureMode,targetButtonPositions}from'./mobile-gestures.js';
 import{installTouchScroll}from'./touch-scroll.js';
 import{targetIcon,pingIcon}from'./mobile-icons.js';
 import{MobileShell}from'./mobile-shell.js';
@@ -49,6 +49,7 @@ export class MobileControls{
   if(slot==='basic'&&[...this.gestures.values()].some(s=>s.slot==='basic'))return;
   button.setPointerCapture(e.pointerId);if(slot==='move'){this.beginMove(e);return;}const g=this.api.game(),p=g.player,box=button.getBoundingClientRect(),gesture={slot,category,id:e.pointerId,at:performance.now(),cx:box.x+box.width/2,cy:box.y+box.height/2,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,manual:false,started:false,owner:p.id,game:g};this.gestures.set(e.pointerId,gesture);this.api.takeAim();
   if(p.key==='moses'&&slot==='q'){gesture.moses=true;Moses.selectInput(g,p,true);showBreathWheel(p,gesture.cx,gesture.cy);return;}
+  if(p.key==='moses'&&slot==='basic'&&!Infiltration.absent(p)){gesture.mosesBasic=true;gesture.enhanced=Moses.pending(p).length>0;this.aimMoses(gesture);return;}
   if(p.key==='kromer'&&p.state.kromerGrab&&['basic','r'].includes(slot)){gesture.kromerSteering=true;return;}
   if(p.key==='queen'&&p.state.queenR?.phase==='charging'&&slot==='basic'){gesture.queenTargeting=true;return;}
   gesture.autoTarget=mobileAutoAim(g,p,slot,{category,movement:this.axes}).target?.id;
@@ -58,6 +59,7 @@ export class MobileControls{
  move(e){const s=this.gestures.get(e.pointerId);if(!s)return;e.preventDefault();if(s.slot==='map'){if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>12)s.cancel=true;return;}s.x=e.clientX;s.y=e.clientY;
   if(s.slot==='move'){const dx=s.x-s.cx,dy=s.y-s.cy,n=Math.hypot(dx,dy),scale=Math.min(1,n/44);this.axes={x:n>7?dx/(n||1)*scale:0,y:n>7?dy/(n||1)*scale:0};if(n>7)this.api.game().player.mobileMoveDirection={x:dx/n,y:dy/n};$('mobile-stick').style.setProperty('--stick-x',Math.max(-44,Math.min(44,dx))+'px');$('mobile-stick').style.setProperty('--stick-y',Math.max(-44,Math.min(44,dy))+'px');return;}
   if(s.moses){s.choice=dragChoice('moses',s.x-s.startX,s.y-s.startY);Moses.selectInput(this.api.game(),this.api.game().player,true,s.choice);updateBreathWheel(this.api.game().player,s.choice);return;}
+  if(s.mosesBasic){this.aimMoses(s);return;}
   if(s.queenTargeting)return;
   if(s.kromerSteering){this.steerGrab(s);return;}
   if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&(s.autoHeld||s.autoLocked)){this.holdAttack(s);return;}
@@ -72,13 +74,14 @@ export class MobileControls{
   const rect=$('mobile-cancel').getBoundingClientRect();s.cancel=s.manual&&s.x>=rect.left&&s.x<=rect.right&&s.y>=rect.top&&s.y<=rect.bottom;document.body.classList.add('mobile-aiming');document.body.classList.toggle('mobile-canceling',Boolean(s.cancel));
   if(s.cancel){g.input.fire=false;return;}
   // A held button remains queued when an automatic discharge/cancel ends a charge.
-  if(this.chargeGesture(s,p)&&s.started){const active=s.slot==='q'?(p.key==='don'?p.state.donCharge:p.state.chargeAt!==undefined):(p.key==='moses'?p.state.mosesCharge:p.key==='yan'?p.state.yanCharge:p.state.hohenCharge);if(!active)s.started=false;}
-  if(!s.started){if(s.slot==='basic'&&['yan','hohenheim','moses'].includes(p.key)&&!distorted(g,p)){s.beganBasic=g.attack(p,s.point);s.started=Boolean(s.beganBasic);}else if(this.api.chargeTactical(p)&&s.slot==='q'){if(p.qCd<=0)s.started=Boolean(this.api.skill('q',{point:s.point,confirm:true}));}else s.started=true;}
+  if(this.chargeGesture(s,p)&&s.started){const active=s.slot==='q'?(p.key==='don'?p.state.donCharge:p.state.chargeAt!==undefined):(p.key==='yan'?p.state.yanCharge:p.state.hohenCharge);if(!active)s.started=false;}
+  if(!s.started){if(s.slot==='basic'&&['yan','hohenheim'].includes(p.key)&&!distorted(g,p)){s.beganBasic=g.attack(p,s.point);s.started=Boolean(s.beganBasic);}else if(this.api.chargeTactical(p)&&s.slot==='q'){if(p.qCd<=0)s.started=Boolean(this.api.skill('q',{point:s.point,confirm:true}));}else s.started=true;}
   if(s.slot==='basic'&&distorted(g,p)){g.attack(p,s.point);s.handMoved=true;}if(!s.autoHeld)g.input.fire=false;
  }
  end(e,canceled=false){const ui=this.uiTouches.get(e.pointerId);this.uiTouches.delete(e.pointerId);const s=this.gestures.get(e.pointerId);if(!s){if(ui&&!canceled&&!ui.button.disabled&&Math.hypot(e.clientX-ui.x,e.clientY-ui.y)<=12){e.preventDefault();this.uiClick={button:ui.button,x:e.clientX,y:e.clientY,until:performance.now()+500};ui.button.click();}return;}e.preventDefault();e.stopImmediatePropagation();this.gestures.delete(e.pointerId);const g=this.api.game(),p=g.player;
   if(s.slot==='map'){if(!canceled&&!s.cancel){this.api.score(!this.api.scoreOpen());this.fitMap();this.updateSkillHelp();}return;}if(s.slot==='move'){this.axes={x:0,y:0};$('mobile-stick').style.setProperty('--stick-x','0px');$('mobile-stick').style.setProperty('--stick-y','0px');this.layout.applyPart('stick');return;}
   if(s.moses){if(!canceled&&this.api.allowed()&&s.game===g&&s.owner===p.id){const direction=dragChoice('moses',e.clientX-s.startX,e.clientY-s.startY);if(direction)this.api.skill('q',{direction,point:g.input.aim,confirm:true});}Moses.selectInput(g,p,false);hideBreathWheel();this.finishAim(g);return;}
+  if(s.mosesBasic){g.input.fire=false;if(!canceled&&!s.cancel&&this.api.allowed()&&s.game===g&&s.owner===p.id){s.x=e.clientX;s.y=e.clientY;s.manual=s.manual||Math.hypot(s.x-s.startX,s.y-s.startY)>12;const point=s.manual?this.manualPoint(s):this.autoAim(s).point;g.input.aim=point;if(s.manual)rememberManualAim(p,'basic',point);if(s.enhanced||Moses.pending(p).length)this.api.releaseBasic(g,p,point);else if(!s.streaming)g.attack(p,point);}this.finishAim(g);return;}
   if(s.queenTargeting){if(!canceled&&this.api.allowed()&&s.game===g&&s.owner===p.id&&performance.now()-s.at<280&&Math.hypot(e.clientX-s.startX,e.clientY-s.startY)<14){const t=weakestTarget(g,p);if(t){g.input.aim={x:t.x,y:t.y};g.attack(p,g.input.aim,{queenAim:true});}}this.finishAim(g);return;}
   if(s.kromerSteering){g.input.fire=false;this.finishAim(g);return;}
   g.input.fire=false;if(s.precision){g.input.precision=false;return;}
@@ -102,9 +105,17 @@ export class MobileControls{
   s.autoHeld=true;const auto=this.autoAim(s);g.input.fire=Boolean(auto.target||auto.manualFallback);
   if(g.input.fire){g.input.aim=auto.point;g.mobileAim={slot:'basic',point:g.input.aim,autoTarget:auto.target?.id};this.api.takeAim();}else delete g.mobileAim;
  }
- chargeGesture(s,p){return s.slot==='basic'&&['yan','hohenheim','moses'].includes(p.key)&&!distorted(this.api.game(),p)||s.slot==='q'&&this.api.chargeTactical(p);}
+ chargeGesture(s,p){return s.slot==='basic'&&['yan','hohenheim'].includes(p.key)&&!distorted(this.api.game(),p)||s.slot==='q'&&this.api.chargeTactical(p);}
+ aimMoses(s){
+  const g=this.api.game(),p=g.player;if(!this.api.allowed()||s.game!==g||s.owner!==p.id)return;
+  s.manual=s.manual||Math.hypot(s.x-s.startX,s.y-s.startY)>12;if(Moses.pending(p).length)s.enhanced=true;
+  const auto=s.manual?null:this.autoAim(s);s.point=s.manual?this.manualPoint(s):auto.point;g.input.aim=s.point;g.mobileAim={slot:'basic',point:s.point,autoTarget:s.manual?undefined:auto.target?.id};
+  const rect=$('mobile-cancel').getBoundingClientRect();s.cancel=s.manual&&s.x>=rect.left&&s.x<=rect.right&&s.y>=rect.top&&s.y<=rect.bottom;document.body.classList.add('mobile-aiming');document.body.classList.toggle('mobile-canceling',Boolean(s.cancel));
+  g.input.fire=!s.enhanced&&!s.cancel&&(s.manual||performance.now()-s.at>=HOLD&&Boolean(auto?.target));
+  if(g.input.fire&&!s.streaming){s.streaming=true;g.attack(p,s.point);}this.api.takeAim();
+ }
  steerGrab(s){const g=this.api.game();if(!g.player.state.kromerGrab||!this.api.allowed())return;if(Math.hypot(s.x-s.cx,s.y-s.cy)<6)return;s.manual=true;g.input.aim=this.manualPoint(s);g.input.fire=false;g.mobileAim={slot:s.slot,point:g.input.aim};this.api.takeAim();}
- tick(){this.refreshMode();if(!this.enabled||this.blocking)return;for(const s of this.gestures.values())if(!['map','move'].includes(s.slot)&&!s.precision&&!s.queenTargeting){if(s.kromerSteering){this.steerGrab(s);continue;}const mode=this.updateGesture(s);if(this.chargeGesture(s,this.api.game().player)){this.aim(s);continue;}if(mode==='tap')continue;if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&!s.manual){this.holdAttack(s);continue;}this.aim(s);}}
+ tick(){this.refreshMode();if(!this.enabled||this.blocking)return;for(const s of this.gestures.values())if(!['map','move'].includes(s.slot)&&!s.precision&&!s.queenTargeting){if(s.mosesBasic){this.aimMoses(s);continue;}if(s.kromerSteering){this.steerGrab(s);continue;}const mode=this.updateGesture(s);if(this.chargeGesture(s,this.api.game().player)){this.aim(s);continue;}if(mode==='tap')continue;if(s.slot==='basic'&&AUTO_HOLD.has(this.api.game().player.key)&&!s.manual){this.holdAttack(s);continue;}this.aim(s);}}
  fitMap(){this.score.fit();}
  updateSkillHelp(){const g=this.api.game(),stamp=[g.player.key,g.buff(g.player,'soraEgo'),distorted(g,g.player),this.skillTab,this.descriptionMode].join(':');if(this.helpStamp===stamp)return;this.helpStamp=stamp;const help=mobileSkillHelp(g,g.player,this.skillTab,this.descriptionMode),root=$('mobile-score-skills');root.querySelector('strong').textContent=help.title;root.querySelector('p').textContent=help.text;for(const b of root.querySelectorAll('button')){const active=b.dataset.mode?b.dataset.mode===this.descriptionMode:Number(b.dataset.slot)===this.skillTab;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));}}
  hud(){if(!this.enabled)return;const g=this.api.game(),p=g.player;this.shop?.update(p);for(const id of['basic-btn','q-btn','r-btn'])$(id).setAttribute('aria-label',$(id).querySelector('span').textContent);const kinds=new Set(mobileAttackTargets(g,p).map(attackCategory)),visibleKinds=Object.keys(ATTACK_CATEGORIES).filter(kind=>kinds.has(kind)),positions=targetButtonPositions($('basic-btn').getBoundingClientRect(),visibleKinds);for(const b of document.querySelectorAll('.mobile-target-btn')){b.classList.toggle('hidden',!p.alive||Infiltration.absent(p)||!this.api.allowed()||!kinds.has(b.dataset.targetKind));const pos=positions.find(v=>v.kind===b.dataset.targetKind);if(pos){b.style.left=pos.x-18+'px';b.style.top=pos.y-18+'px';}}for(const slot of['q','r']){const b=$(slot+'-btn'),charges=skillCharges(g,p,slot),recast=p.alive&&!Infiltration.absent(p)&&Boolean(canRecast(g,p,slot));b.querySelector('.mobile-charges').textContent=charges?String(charges.current):'';b.dataset.skill=slot;b.classList.toggle('mobile-recast',recast);if(recast)b.setAttribute('aria-label',b.getAttribute('aria-label')+' · 재시전 가능');}
