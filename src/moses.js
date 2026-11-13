@@ -23,6 +23,10 @@ export function choose(g,e,active,direction){
 }
 export function inside(e,t,d,b){const dx=t.x-e.x,dy=t.y-e.y,len=Math.hypot(dx,dy);return len<=b.range+(t.radius||0)&&(len<1e-8||(dx*d.x+dy*d.y)/len>=Math.cos(b.angle/2));}
 export function cancelCharge(e){if(e.key==='moses')delete e.state.mosesCharge;}
+function resetExhale(g,e){
+ const s=e.state,control=e.player?g.input:g.controllers?.get(e.id)?.connected?g.controllers.get(e.id).input:null;
+ if(s.mosesExhaleAt!==undefined&&(control&&!control.fire||g.time-s.mosesExhaleAt>MOSES.interval+.05||g.stat(e,'stun')||g.stat(e,'disarm')||g.hidden(e)||e.motion||e.channelUntil>g.time))delete s.mosesExhaleAt;
+}
 export function attack(g,e,p,options={}){
  const s=e.state;if(s.mosesRecovering?.until>g.time)return false;
  const enhanced=pending(e).length>0;if(enhanced&&e.player&&g.mobileInput&&!options.mosesRelease)return false;
@@ -36,7 +40,7 @@ export function release(g,e,p){
 }
 export function basic(g,e,d,damage=MOSES.damage,progress=1){
  const choice=pending(e)[0],b=breath(g,e),redHealing=65+300*g.haste(e);let redAllies=0;if(choice)e.state.smokeQueue.shift();e.state.smoke=pending(e)[0]||null;lowerPipe(g,e);e.state.mosesBreath={at:g.time,color:b.color,choice,progress,angle:Math.atan2(d.y,d.x)};
- g.emitSound('breath',e,{phase:'moses-exhale',breath:choice});
+ resetExhale(g,e);if(e.state.mosesExhaleAt===undefined)g.emitSound('breath',e,{phase:'moses-exhale',breath:choice});e.state.mosesExhaleAt=g.time;
  g.effects.push({type:'mosesBreath',source:e.id,theme:'moses',x:e.x,y:e.y,color:b.color,r:b.range,progress,angle:Math.atan2(d.y,d.x),spread:b.angle,life:.8,maxLife:.8});
  for(const t of[...g.units])if(t.alive&&inside(e,t,d,b)&&g.clearLine(e,t)){
   if(g.hostile(e,t)){
@@ -83,7 +87,7 @@ export function onDamage(g,source,target,amount){
 }
 export function tick(g,e,dt=0){
  if(e.key==='moses'){
-  const s=e.state;while((s.mosesCharges??2)<2&&s.mosesReady<=g.time+1e-8){s.mosesCharges++;s.mosesReady=s.mosesCharges<2?s.mosesReady+g.cooldown(e,'q'):Infinity;}sync(g,e);
+  const s=e.state;resetExhale(g,e);while((s.mosesCharges??2)<2&&s.mosesReady<=g.time+1e-8){s.mosesCharges++;s.mosesReady=s.mosesCharges<2?s.mosesReady+g.cooldown(e,'q'):Infinity;}sync(g,e);
   if(s.mosesChoosing&&(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.hidden(e)||g.time-s.mosesChoosing.at>15))lowerPipe(g,e);
   if(s.mosesPipeLowering&&g.time-s.mosesPipeLowering.at>=.12)delete s.mosesPipeLowering;
   refill(g,e,dt);
@@ -102,5 +106,5 @@ export function tick(g,e,dt=0){
  }
  if(e.state.mosesMending&&!Object.keys(e.state.mosesMending).length){delete e.state.mosesMending;delete e.buffs.mosesMending;}
 }
-export function cancel(g,e){if(e.key!=='moses'||!e.state)return;if(e.state.mosesR)e.channelUntil=0;for(const key of['mosesR','mosesCharge','mosesChoosing','mosesPipeLowering','mosesBreath','mosesCameraReturn','mosesRecovering','mosesSmoking'])delete e.state[key];}
+export function cancel(g,e){if(e.key!=='moses'||!e.state)return;if(e.state.mosesR)e.channelUntil=0;for(const key of['mosesR','mosesCharge','mosesChoosing','mosesPipeLowering','mosesBreath','mosesCameraReturn','mosesRecovering','mosesSmoking','mosesExhaleAt'])delete e.state[key];}
 export function zoom(g,e){if(e.key!=='moses')return 1;const r=e.state.mosesR;if(r){const p=Math.max(0,Math.min(1,(g.time-r.at)/MOSES.rCharge));return 1+.65*p*p*(3-2*p);}return e.state.mosesCameraReturn>g.time?1+.65*(e.state.mosesCameraReturn-g.time)/.3:1;}

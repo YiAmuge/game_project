@@ -1,8 +1,10 @@
-# 도시 경계 — 4vs4 MOBA v1.0.3
+# 도시 경계 — 4vs4 MOBA v1.0.4
 
 Project Moon 작품을 모티브로 한 비공식 팬 게임입니다. 초대 링크로 참가하는 유저 호스팅 최대4대4 온라인 대전, AI 대전과 시간 제한 없는 연습장을 지원합니다. 모든 경기는 3D 지형과 2D 본진·포탑·챔피언을 사용하는 2.5D로 진행합니다.
 
-[v1.0.3 패치노트](docs/PATCH_NOTES_v1.0.3.md)에서 이번 업데이트 내용을 확인할 수 있습니다.
+[v1.0.4 패치노트](docs/PATCH_NOTES_v1.0.4.md)에서 이번 업데이트 내용을 확인할 수 있습니다.
+
+기본포즈 PNG: [모제스](docs/images/basic-poses-v1.0.4/moses-basic-pose.png) · [에즈라](docs/images/basic-poses-v1.0.4/ezra-basic-pose.png)
 
 전체 효과와 수치는 [현재 구현 규칙](docs/CURRENT_RULES.md) 및 게임 내 도감에 수록합니다.
 
