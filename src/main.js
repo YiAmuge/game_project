@@ -49,7 +49,7 @@ const renderer=new Renderer($('arena'));
 const presentation=new MatchPresentation(),audio=new GameAudio();
 $('sound-toggle').textContent=audio.enabled?'♪ 사운드':'♪ 음소거';$('sound-toggle').setAttribute('aria-pressed',String(audio.enabled));$('sound-toggle').onclick=()=>{$('sound-toggle').textContent=audio.toggle()?'♪ 사운드':'♪ 음소거';$('sound-toggle').setAttribute('aria-pressed',String(audio.enabled));};
 window.addEventListener('pointerdown',()=>audio.unlock(),{once:true});
-$('menu-background').src=$('menu-city-pixel-data')?JSON.parse($('menu-city-pixel-data').textContent):'./src/assets/menu-city-pixel.png';
+$('menu-background').src=$('menu-detectives-v104-data')?JSON.parse($('menu-detectives-v104-data').textContent):'./src/assets/menu-detectives-v104.png';
 new ResizeObserver(()=>renderer.resize()).observe($('arena'));
 function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2600);}
 function inMatch(){return mode==='playing'||mode==='result';}

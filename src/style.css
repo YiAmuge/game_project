@@ -757,3 +757,23 @@ a.menu-action{text-decoration:none;cursor:pointer;color:inherit}
 .drag-wheel [data-dir].selected{color:var(--breath-color);background:color-mix(in srgb,var(--breath-color) 38%,#18222a);border-color:var(--breath-color);box-shadow:0 0 14px color-mix(in srgb,var(--breath-color) 55%,transparent),inset 0 0 9px color-mix(in srgb,var(--breath-color) 20%,transparent)}
 .drag-wheel [data-dir].unavailable{opacity:.3;filter:saturate(.5);box-shadow:none}
 .mobile-ui .drag-wheel{width:218px;height:190px}.mobile-ui .drag-wheel [data-dir]{font-size:9px}
+
+/* Approved LD silhouettes retain their own yellow field and navy edge gradients. */
+body.menu-screen #menu-scenery{background:#071827}
+body.menu-screen #menu-background{position:absolute;left:0;bottom:0;width:94%;height:100%;object-fit:cover;object-position:75% bottom;filter:none;-webkit-mask-image:linear-gradient(90deg,#000 92%,transparent);mask-image:linear-gradient(90deg,#000 92%,transparent)}
+body.menu-screen #menu-scenery:after{background:none}
+body.menu-screen #main-menu{position:fixed;top:50%;right:max(14px,2vw,env(safe-area-inset-right));width:min(407px,calc(100vw - 56px));transform:translateY(-50%) scale(.8);transform-origin:right center}
+body.menu-screen .lobby h1{text-shadow:0 2px 4px #000b,0 0 24px #0009}
+body.menu-screen:not(.mobile-ui) .lobby{padding-left:clamp(24px,3vw,72px)}
+@media(max-width:700px){body.menu-screen #main-menu{width:min(374px,calc(100vw - 56px))}}
+@media(orientation:landscape){
+ body.mobile-ui.menu-screen #main-menu{width:310px}
+ body.mobile-ui.menu-screen #menu-background{width:90%}
+}
+@media(orientation:landscape) and (max-width:740px){
+ body.mobile-ui.menu-screen #menu-background{width:80%}
+ body.mobile-ui.menu-screen .lobby-copy{align-self:start;padding-top:4px}
+}
+@media(orientation:portrait) and (max-width:700px){
+ body.menu-screen #menu-background{width:100%;height:auto;object-fit:contain;object-position:center bottom;-webkit-mask-image:linear-gradient(180deg,transparent,#000 12%);mask-image:linear-gradient(180deg,transparent,#000 12%)}
+}
