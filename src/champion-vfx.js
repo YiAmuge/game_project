@@ -72,6 +72,7 @@ export function championPresentation(g,e){
  if(status('stun')&&e.status.stun.theme==='rodya')frozen=true;
  if(e.visuals?.ampule?.until>g.time)set('#24d66a','glow',.95);
  if(e.key==='dongbaek'&&aura)aura.rimOnly=true;
+ if(e.key==='mei'&&s.meiRush?.until>g.time)set('#ff4c20','flame',1);
  return {aura,dim,frozen,lift:levitationLift(g,e)};
 }
 export class ChampionVFX {
@@ -163,7 +164,7 @@ export class ChampionVFX {
    if(e.key==='yi'&&g.buff(e,'ogamdo'))for(const side of [-1,1])for(let i=0;i<6;i++)this.mote(c,'crystal','#dce7e8',side*(.55+i*.15),-1-i*.18+Math.sin(time)*.04,.19+i*.025,side*(.4+i*.15),.6,i%4);
    if(e.key==='marton'&&s.fairy){c.save();c.translate(0,-4);this.fairy(c,time,.65);c.restore();}
   }else{
-   if(e.burn?.until>time||e.key==='alisa'&&(s.heat||0)>0)this.motes(c,'flame','#cf8a4a',time*2,8,.65,.9*(e.burn?.until>time?1:Math.min(1,s.heat/5)),.8);
+   if(e.burn?.until>time||Object.values(e.meiBurns||{}).some(b=>b.until>time)||e.key==='alisa'&&(s.heat||0)>0)this.motes(c,'flame','#cf8a4a',time*2,8,.65,.9*((e.burn?.until>time||Object.values(e.meiBurns||{}).some(b=>b.until>time))?1:Math.min(1,s.heat/5)),.8);
    if(e.key==='ryoshu'&&time-e.lastCombat>=2){c.save();c.translate(0,-1.7);this.mote(c,'smoke','#d4d2cf',.12,-.08,.3+Math.sin(time)*.025,0,.55,Math.floor(time)%4);c.restore();}
    if(e.key==='myo'&&g.buff(e,'rabbitFrenzy'))this.electric(c,time,'#d79954',.7,8);
    if(e.key==='rudolph'&&e.castSlot==='r'&&e.channelUntil>time)this.electric(c,time,'#d2944e',1,12);

@@ -109,6 +109,7 @@ export function basicTarget(g,e,enemy){
 }
 export function combatSkills(g,e,target){
  if(!target||!safeTowerTarget(g,e,target)||g.time<(e.aiSkillAt||0))return;e.aiSkillAt=g.time+.15;supportSkills(g,e,target);const d=distance(e,target);
+ if(e.key==='mei'){if(e.state.meiQRecastUntil>g.time&&d<=3.6)g.cast(e,'q',target);else if(!e.state.meiQPhase&&d<=5.5)g.cast(e,'q',target);if(target.kind==='champion'&&d<=(e.state.meiKickAt!==undefined&&g.time-e.state.meiKickAt<=1.3?2.7:4.6))g.cast(e,'r',target);return;}
  if(e.key==='moses'){const ally=healTarget(g,e,6);if(Moses.pending(e).length<2){const choice=ally?'right':d<=8.6?'down':'left';g.cast(e,'q',target,{direction:choice});}if(target.kind==='champion'&&d<22)g.cast(e,'r',target);return;}
  if(e.key==='ezra'){if(!Ezra.ultimate(g,e)){if(e.state.ezraLastWeapon!=null&&d<=Ezra.attackReach(g,e,e.state.ezraLastWeapon))g.cast(e,'q',target);if(target.kind==='champion'&&d<=5.5)g.cast(e,'r',target);}return;}
  if(e.key==='queen'){const ally=healTarget(g,e,8),urgent=ally?.hp/ally?.maxHp<.25&&!(target.hp/target.maxHp<.3),aim=jointAim(g,e,target,urgent?ally:null,10.5,2.1);if(!e.state.queenQ)g.cast(e,'q',aim);if(!e.state.queenR)g.cast(e,'r',aim);return;}

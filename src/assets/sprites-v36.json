@@ -68,6 +68,13 @@
     "hongluJade": {
       "file": "honglu-jade.png",
       "sha256": "fdb941410a5e7c04c83a4ce2d813891c2c46fe74a215bb7fb1b7618b20fc1f97"
+    },
+    "mei": {
+      "file": "source/mei.png",
+      "sha256": "ed8bfba34f1d9282864d21de7b71dca6962cab2b08fea5aed27365c2ecb39a32",
+      "atlas": "mei.png",
+      "metadata": "mei.json",
+      "note": "Latest approved 2.25-head proportions, cat mouth, simplified fists"
     }
   },
   "frames": {

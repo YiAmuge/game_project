@@ -1,0 +1,81 @@
+{
+  "source": "source/mei.png",
+  "sha256": "ed8bfba34f1d9282864d21de7b71dca6962cab2b08fea5aed27365c2ecb39a32",
+  "proportions": "2.25 heads; buns excluded; latest cat mouth and simplified hands",
+  "handScale": 1.2,
+  "frames": {
+    "mei": {
+      "x": 8,
+      "y": 8,
+      "w": 256,
+      "h": 428,
+      "sheet": 24,
+      "rotation": 0,
+      "source": "source/mei.png",
+      "sourceRect": [
+        252,
+        151,
+        462,
+        774
+      ],
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 28,
+      "heightScale": 1.07,
+      "foot": [
+        0.56,
+        1
+      ],
+      "face": [
+        51.38121546961326,
+        60.22099447513813,
+        165.74585635359117,
+        154.6961325966851
+      ]
+    },
+    "meiRightFist": {
+      "x": 8,
+      "y": 444,
+      "w": 240,
+      "h": 223,
+      "sheet": 24,
+      "rotation": 0,
+      "source": "source/mei.png",
+      "sourceRect": [
+        1016,
+        144,
+        328,
+        304
+      ],
+      "grip": [
+        0.08,
+        0.5
+      ],
+      "side": "right",
+      "view": "back",
+      "thumb": "up"
+    },
+    "meiLeftFist": {
+      "x": 8,
+      "y": 675,
+      "w": 240,
+      "h": 212,
+      "sheet": 24,
+      "rotation": 0,
+      "source": "source/mei.png",
+      "sourceRect": [
+        1010,
+        592,
+        333,
+        294
+      ],
+      "grip": [
+        0.08,
+        0.5
+      ],
+      "side": "left",
+      "view": "palm",
+      "thumb": "up"
+    }
+  }
+}

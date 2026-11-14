@@ -13,6 +13,7 @@ const landings=new Set(['heath-landing','sora-landing','starbuck-landing','ezra-
 export function championSkillSoundProfile(v){
  const variant=((Math.trunc(v.variant)||0)%4+4)%4,tint=[-.25,.15,-.1,.25][variant];
  const profile=(id,pitch,duration,gain,offset=0,fadeOut=.10,rates=[.98,1.04,.96])=>({id,pitch,duration,gain,offset,fadeOut,rates,dry:true});
+ if(v.key==='mei'&&v.cue==='weapon')return profile('alisaFire',-.35+tint,.60,.72,0,.12,[.98,1.03,.96]);
  if(v.key==='ezra'&&v.cue==='drillMotor')return profile('ezraDrillMotor',-.4+tint,.54,.87,0,.10,[.98,1.035,.96]);
  if(v.key==='alisa'){
   if(v.cue==='weapon'&&!v.slot)return profile('alisaFire',-.35+tint,.60,.72,0,.12,[.98,1.03,.96]);

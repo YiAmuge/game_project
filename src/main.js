@@ -1,3 +1,4 @@
+import * as Mei from './mei.js';
 import * as AhabEgo from './ahab-ego.js';
 import {MATCH_MODES,procedurePrice} from './match-modes.js';
 import * as Bough from './golden-bough.js';
@@ -297,7 +298,7 @@ function updateAnnouncement(){
 }
 function updateHud(){
  mobile?.hud();
- const p=game.player,c={...championDescription(p.key,Sora.ego(game,p)||Yan.distorted(game,p)),...Sora.abilityInfo(game,p),...Yan.abilityInfo(game,p),...Hohenheim.abilityInfo(game,p),...Bough.abilityInfo(game,p),...AhabEgo.abilityInfo(game,p)};
+ const p=game.player,c={...championDescription(p.key,Sora.ego(game,p)||Yan.distorted(game,p)),...Sora.abilityInfo(game,p),...Yan.abilityInfo(game,p),...Hohenheim.abilityInfo(game,p),...Bough.abilityInfo(game,p),...AhabEgo.abilityInfo(game,p),...Mei.abilityInfo(game,p)};
  const form=visualForm(game,p);if($('hud-face').dataset.form!==form){$('hud-face').dataset.form=form==='ahabGasBody'&&!loadAtlas(23).complete?'':form;renderPortraits();}
  $('field-title').innerHTML=game.training?'<i class="live-dot"></i> 연습장 <em>/</em> 입체 실험 정원':'<i class="live-dot"></i> 제13구역 <em>/</em> 경계 전장';$('field-objective').textContent=game.training?'G · 무료 상점 / 우측 상단 연습장 옵션 · 시간 제한 없음':MATCH_MODES[game.matchMode].name+' · '+(game.matchMode==='deep'?'시간 제한 없음 · 건물 체력 +20%':'20분 제한')+' · 적 본진을 공략하세요.';
  document.querySelector('.match-clock>span').textContent=game.training?'TRAINING · 2.5D 실험 정원':'4 VS 4 · 2.5D 전장';

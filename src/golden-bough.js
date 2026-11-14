@@ -1,3 +1,4 @@
+import * as Mei from './mei.js';
 import {GASHARPOON_TEXT,GASHARPOON_NAME} from './ahab-ego-data.js';
 import {RULES,RUNTIME_CHAMPIONS as CHAMPIONS} from './data.js';
 import {distance} from './geometry.js';
@@ -11,6 +12,7 @@ export const fistBonus=(g,e)=>active(e)&&e.key==='meursault'&&(e.state.fistGrowt
 export const outisRadius=(g,e)=>active(e)?g.attackRange(e):2.5;
 export function cooldown(e,slot,base){if(!active(e))return base;if(slot==='q'&&e.key==='meursault')return Math.max(0,base-7);if(slot!=='r')return base;return ({ryoshu:10,honglu:35,ahab:45})[e.key]??Math.max(0,base-({yi:37,don:15,heathcliff:15}[e.key]||0));}
 export const TEXT={
+ mei:'궁극기를 최대 2회 비축한다. 사용한 횟수는 순서대로 충전되며 회축 연계로 사용한 궁극기는 해당 충전의 재사용 대기시간을 50% 환급한다.',
  ahab:GASHARPOON_TEXT,
  yi:'궁극기 기본 재사용 대기시간이 37초 감소하고 최대 2회 비축한다. 사용한 횟수는 순서대로 충전된다.',
  faust:'최대 레벨이 15가 되고 자동 경험치를 포함한 모든 경험치 획득량이 2배가 된다. 최대 레벨에서는 입힌 최종 피해의 7%만큼 추가 고정 피해를 입히고 그 추가 피해의 50%만큼 체력을 회복한다.',
@@ -25,9 +27,9 @@ export const TEXT={
  outis:'패시브의 근접 피해 강화와 보호막 발동 반경이 현재 기본공격 사거리와 같아진다.',
  gregor:'변이 중 기본공격 시 2.5칸 돌진한 뒤 공격한다. 변이 재사용 대기시간이 5초 감소한다.',
 };
-export function purchase(g,e){e.goldenBough=true;if(e.key==='yi'){e.state.yiCharges=2;e.state.yiReady=0;e.rCd=0;}if(e.key==='gregor'&&e.state.mutateReady>g.time)e.state.mutateReady=Math.max(g.time,e.state.mutateReady-5);}
-export function charges(g,e){if(e.key!=='yi'||!active(e))return null;return {current:e.state.yiCharges??2,max:2,remaining:(e.state.yiCharges??2)<2?Math.max(0,(e.state.yiReady||0)-g.time):0};}
-export function tick(g,e){if(!charges(g,e))return;const s=e.state;s.yiCharges??=2;while(s.yiCharges<2&&s.yiReady<=g.time+1e-8){s.yiCharges++;s.yiReady+=g.cooldown(e,'r');}e.rCd=s.yiCharges>0?0:Math.max(0,s.yiReady-g.time);}
+export function purchase(g,e){e.goldenBough=true;if(e.key==='mei'){e.state.meiRCharges=2;e.state.meiRReady=0;e.state.meiRQueue=[];e.rCd=0;}if(e.key==='yi'){e.state.yiCharges=2;e.state.yiReady=0;e.rCd=0;}if(e.key==='gregor'&&e.state.mutateReady>g.time)e.state.mutateReady=Math.max(g.time,e.state.mutateReady-5);}
+export function charges(g,e){if(e.key==='mei')return Mei.charges(g,e);if(e.key!=='yi'||!active(e))return null;return {current:e.state.yiCharges??2,max:2,remaining:(e.state.yiCharges??2)<2?Math.max(0,(e.state.yiReady||0)-g.time):0};}
+export function tick(g,e){if(e.key==='mei'){Mei.tickCharges(g,e);return;}if(!charges(g,e))return;const s=e.state;s.yiCharges??=2;while(s.yiCharges<2&&s.yiReady<=g.time+1e-8){s.yiCharges++;s.yiReady+=g.cooldown(e,'r');}e.rCd=s.yiCharges>0?0:Math.max(0,s.yiReady-g.time);}
 export function spendYi(g,e){const s=e.state;s.yiCharges??=2;if(s.yiCharges===2)s.yiReady=g.time+g.cooldown(e,'r');s.yiCharges--;e.rCd=s.yiCharges>0?0:Math.max(0,s.yiReady-g.time);}
 export function fistHit(g,e){if(!active(e)||e.key!=='meursault')return;if(!(e.state.fistGrowthUntil>g.time))e.state.fistGrowth=0;e.state.fistGrowth=Math.min(4,(e.state.fistGrowth||0)+1);e.state.fistGrowthUntil=g.time+3;}
 export function harpoonHit(g,e){e.ishmaelUltimateHits=(e.ishmaelUltimateHits||0)+1;if(active(e))g.refreshEquipment(e);}
@@ -42,7 +44,7 @@ export function abilityInfo(g,e){
  if(e.key==='faust'){info.passiveText=info.passiveText.replaceAll('최대 레벨 10','최대 레벨 15').replace('초당 자동 경험치 9','초당 자동 경험치 18');info.rText=c.rText.replaceAll('최대 레벨 10','최대 레벨 15');}
  if(e.key==='don')info.rText=c.rText.replace('사용 시 7초간 피갈망을 얻는다.','피갈망은 영구 적용된다.');
  if(e.key==='rodya')info.passiveText=c.passiveText.replace('전투력이 1%','전투력이 3%');
- if(['yi','heathcliff','sinclair'].includes(e.key))info.rText=c.rText+' 황금 가지: '+TEXT[e.key];
+ if(['mei','yi','heathcliff','sinclair'].includes(e.key))info.rText=c.rText+' 황금 가지: '+TEXT[e.key];
  if(['meursault','rodya'].includes(e.key))info.qText=c.qText+' 황금 가지: '+TEXT[e.key];
  if(['meursault','gregor'].includes(e.key))info.basicText=c.basicText+' 황금 가지: '+TEXT[e.key];
  if(e.key==='ryoshu')Object.assign(info,{ultimate:'천살성도 - 아라야시키',rText:TEXT.ryoshu});
@@ -55,6 +57,7 @@ export const CHANGED_ULTIMATES={ahab:GASHARPOON_NAME,ryoshu:'천살성도 - 아�
 export function giftNotes(key){
  if(CHANGED_ULTIMATES[key])return [{label:'궁극기 변경',text:CHANGED_ULTIMATES[key]+'로 변경된다. 상세 효과는 궁극기 도감의 황금 가지 항목에서 확인한다.'}];
  const notes={
+  mei:[['궁극기 비축','최대 2회 비축하며 사용한 횟수는 순서대로 충전한다. 회축 연계는 해당 충전의 재사용 대기시간을 50% 환급한다.']],
   yi:[['궁극기 재사용','기본 재사용 대기시간 −37초. 최대 2회 비축하며 사용한 횟수는 순서대로 충전된다.']],
   faust:[['성장','최대 레벨 15. 자동 경험치를 포함한 모든 경험치 획득량 2배.'],['최대 레벨 효과','최종 피해의 7% 추가 고정 피해. 해당 추가 피해의 50%만큼 회복한다.']],
   don:[['피갈망','영구 적용되며 궁극기로 중복 획득하지 않는다.'],['궁극기 재사용','기본 재사용 대기시간 −15초.']],

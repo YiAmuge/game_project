@@ -3,7 +3,7 @@ import { settleBody } from './collision.js';
 
 export const immune=(g,e)=>e.key==='meursault'&&g.buff(e,'resolve')||e.key==='don'&&Boolean(e.state?.donCharge);
 export function cleanse(g,e){
- e.status={};delete e.burn;delete e.needleBleeds;clearInfestation(g,e);
+ e.status={};delete e.burn;delete e.meiBurns;delete e.needleBleeds;clearInfestation(g,e);
  for(const key of ['kromerNails','netTrap','kromerHeldBy','swordHeldBy','tauntedBy','harpoon','harpoons','mentalWhip','ishmaelWeak','gaze','contempt','nellyMarks','rabbitMark','queenMarks','queenSlow'])delete e.state[key];
  for(const key of ['harpoon','contempt','nellyMark','rabbitMark','queenMarks','queenSlow'])delete e.visuals[key];
  for(const owner of g.champions())if(owner.team!==e.team){

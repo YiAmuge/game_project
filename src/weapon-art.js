@@ -20,7 +20,9 @@ export const HANDLE_EXTENSIONS={
  starbuckHarpoon:{from:.075,to:.34,scale:2},
  hongluGlaive:{from:.025,to:.45,scale:1.25},
 };
+export const MEI_FIST_SIZE=.36*1.2;
 export const WEAPON_ART={
+ mei:['meiRightFist',MEI_FIST_SIZE],
  moses:['mosesPipe',1.05],ezra:['ezraGlove',.483],
  queen:['queenWand',2.1],nosferatu:['nosWine',.43],
  kromer:['kromerNail',2.45],
@@ -50,7 +52,7 @@ export const SORA_CLAW_LENGTH=1.65*.8*.88;
 export const ISHMAEL_SHIELD_LENGTH=.38;
 export const EMISSION_ANCHORS={gubo:[.99,.32],rudolph:[.94,.48],myo:[.995,.50],jamila:[.99,.23]};
 // Anatomical hands in crown-to-sole world units, independent of hair/ornaments.
-export const HAND_ANCHORS={moses:[-.30,-.75],ezra:[-.30,-.72],queen:[-.35,-.88],nosferatu:[-.35,-.7],kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
+export const HAND_ANCHORS={mei:[-.43,-.76],moses:[-.30,-.75],ezra:[-.30,-.72],queen:[-.35,-.88],nosferatu:[-.35,-.7],kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
 export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
  const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],aim=e.facing??(e.team?Math.PI:0),stance=basicStance(g,e)||(!combatPoseActive(g,e)&&Math.abs(Math.sin(aim))<1e-6?restingStance(g,e,aim):null),facing=stance?.weaponFacing??aim,flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[baseX,y]=HAND_ANCHORS[e.key]||[-.3,-.8],x=baseX*(e.key==='sora'&&g.buff(e,'soraEgo')?1.1:1);
@@ -340,6 +342,7 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
  return{weapon:index,hand,angle,mode,progress,thrust,trail,gripY,flipY:index===0?-1:1,part:active&&a.fourth?'ezra-axe-orbit':index===1?'ezra-hammer-'+(a?.spinDirection||1):'ezra-'+index};
 }
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
+ if(e.key==='mei'){drawMeiFists(r,e,g,lift);return true;}
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
  if(e.state.kromerHeldBy)return true;
  if(e.key==='ahab'&&e.state.gasharpoon){drawGasharpoonArm(r,e,g,lift);return true;}
@@ -468,4 +471,38 @@ export function gasharpoonArmPose(g,e,lift=0){
 export function drawGasharpoonArm(r,e,g,lift=0){
  const c=r.ctx,pose=gasharpoonArmPose(g,e,lift),[key,len,pivot]=equippedWeapon(g,e),f=FRAMES[key],m=weaponGeometry(key,len);
  c.save();c.translate(pose.hand.x,pose.hand.y);orientWeapon(c,pose.angle);c.translate(pose.push,-(f.grip[1]-.5)*m.height*m.scale);drawWeapon(c,key,len,{pivot,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
+}
+
+// Separate anatomical fists keep their idle shoulder anchors until a strike.
+export function meiFistPoses(g,e,lift=0){
+ const origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,p=e.state.meiPunch,age=p?g.time-p.at:-1,active=p&&age>=0&&age<.2;
+ return ['right','left'].map((side,index)=>{
+  let x=origin.x+(index?.31:-.43)*flip,y=origin.y-.76,angle=flip>0?0:Math.PI,on=active&&p.index%2===index,progress=active?age/.2:0;
+  if(on){
+   angle=p.last?p.angle:p.angle+(index?1:-1)*(progress-.5)*Math.PI;
+   const reach=p.last?Math.sin(progress*Math.PI)*.85:.56;
+   x+=Math.cos(angle)*reach;y+=Math.sin(angle)*reach;
+  }
+  return{side,key:index?'meiLeftFist':'meiRightFist',x,y,angle,active:Boolean(on),progress,last:Boolean(p?.last),direction:index?1:-1};
+ });
+}
+function meiFistFlames(c,time){
+ c.save();c.shadowColor='#ff5224';c.shadowBlur=13;
+ for(let i=0;i<5;i++){
+  const x=.04+i*.075,tip=-.26-.08*Math.sin(time*25+i*2),sway=.04*Math.sin(time*18+i);
+  c.fillStyle='#f94b23';c.beginPath();c.moveTo(x-.08,.08);c.quadraticCurveTo(x-.15,tip*.6,x+sway,tip);c.quadraticCurveTo(x+.02,tip*.3,x+.09,.08);c.closePath();c.fill();
+  c.fillStyle='#ffcf35';c.beginPath();c.moveTo(x-.035,.07);c.quadraticCurveTo(x-.05,tip*.3,x+sway*.4,tip*.55);c.quadraticCurveTo(x+.02,tip*.2,x+.045,.07);c.closePath();c.fill();
+ }c.restore();
+}
+export function drawMeiFists(r,e,g,lift=0){
+ const c=r.ctx,poses=meiFistPoses(g,e,lift);r.meiTrails??=new Map();let history=r.meiTrails.get(e.id)||[];
+ history=history.filter(p=>g.time-p.at>=0&&g.time-p.at<.5);
+ for(const p of poses)if(p.active&&(!history.length||g.time-history.at(-1).at>.008))history.push({...p,at:g.time,part:e.attackSerial+':'+e.state.meiPunch.index});
+ if(history.length>48)history=history.slice(-48);r.meiTrails.set(e.id,history);if(r.meiTrails.size>64)r.meiTrails.delete(r.meiTrails.keys().next().value);
+ for(let i=0;i<history.length;i++){
+  const p=history[i],age=g.time-p.at,fade=1-age/.5,prev=history[i-1];c.save();c.globalAlpha*=fade*.7;c.shadowColor='#ff5121';c.shadowBlur=9;
+  if(prev?.part===p.part){c.strokeStyle='#ed4620';c.lineWidth=.065*fade;c.beginPath();c.moveTo(prev.x,prev.y);c.lineTo(p.x,p.y);c.stroke();}
+  c.fillStyle=i%4?'#ff5527':'#ffb92b';c.beginPath();c.arc(p.x+Math.sin(i*8)*age*.25,p.y-age*.4,.018*fade,0,Math.PI*2);c.fill();c.restore();
+ }
+ for(const p of poses){c.save();c.translate(p.x,p.y);orientWeapon(c,p.angle);if(p.active)meiFistFlames(c,g.time);drawWeapon(c,p.key,MEI_FIST_SIZE,{pivot:.08,disabled:Boolean(g.stat(e,'disarm'))});c.restore();}
 }

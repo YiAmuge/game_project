@@ -1,5 +1,6 @@
 // Sound timbres describe the held material and the ability, independently of team tint.
 export const WEAPON_VOICES={
+ mei:['punch','fire',1.1],
  queen:['chime','arcane',.8],nosferatu:['blade','blood',1.1],
  kromer:['spear','metal',1.2],
  jamila:['rifle','metal',1],
@@ -11,6 +12,7 @@ export const WEAPON_VOICES={
  ahab:['spear','water',1.15],starbuck:['spear','water',1],sora:['punch','chain',1.4],yan:['greatsword','metal',1.5],moses:['smoke','smoke',.55],ezra:['punch','metal',1.1],
 };
 export const SKILL_VOICES={
+ mei:{q:['punch','fire'],r:['punch','fire']},
  queen:{q:['arcane','arcane'],r:['arcane','arcane']},nosferatu:{q:['organic','blood'],r:['phase','blood']},
  kromer:{q:['spear','wind'],r:['spear','metal']},
  jamila:{q:['blade','wind'],r:['radio','metal']},

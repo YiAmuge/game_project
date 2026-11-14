@@ -6,7 +6,7 @@ export const TWO_HANDED_GRIPS=new Set(['sinclair','marton','honglu','dongrang','
 const BLACK_GLOVES=new Set(['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra']);
 const BROWN_GLOVES=new Set(['alisa','dongrang']);
 // Midtones sampled from the latest body faces, independent of team tint.
-export const BARE_HAND_COLORS={queen:'#f8dfdc',nosferatu:'#eee0e5',yi:'#f8d8c0',faust:'#f0e0d8',don:'#f8d8c0',ryoshu:'#f8d0c0',honglu:'#f8d8c8',heathcliff:'#d09880',ishmael:'#f8d0c0',rodya:'#f8d8c8',outis:'#e0a880',nelly:'#f0a888',dongbaek:'#f8d8b8',marton:'#c89878',starbuck:'#d88848'};
+export const BARE_HAND_COLORS={mei:'#f8d8c8',queen:'#f8dfdc',nosferatu:'#eee0e5',yi:'#f8d8c0',faust:'#f0e0d8',don:'#f8d8c0',ryoshu:'#f8d0c0',honglu:'#f8d8c8',heathcliff:'#d09880',ishmael:'#f8d0c0',rodya:'#f8d8c8',outis:'#e0a880',nelly:'#f0a888',dongbaek:'#f8d8b8',marton:'#c89878',starbuck:'#d88848'};
 const GLOVE_PALETTES={
  black:{base:'#292e38',shadow:'#141820',light:'#59616f',outline:'#090c11'},
  brown:{base:'#805a3b',shadow:'#4b3425',light:'#ad8357',outline:'#291e18'},

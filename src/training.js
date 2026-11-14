@@ -1,3 +1,4 @@
+import * as Mei from './mei.js';
 import * as AhabEgo from './ahab-ego.js';
 import * as Bough from './golden-bough.js';
 import{initRivalries,refreshPracticeRivalries}from'./rivalries.js';
@@ -101,6 +102,7 @@ export function refreshOptions(g){
  const p=g.player,o=g.practice;if(!p?.alive)return;
  if(o.infiniteAmmo&&!AhabEgo.active(p)){p.ammo=g.ammoCap(p);p.reloadProgress=0;if(p.state.exhaustedUntil){delete p.state.exhaustedUntil;delete p.status.silence;}}
  if(o.noCooldown){
+  if(p.key==='mei'&&p.goldenBough){p.state.meiRCharges=2;p.state.meiRReady=0;p.state.meiRQueue=[];}
   if(p.key==='yi'&&Bough.active(p)){p.state.yiCharges=2;p.state.yiReady=0;}
   p.qCd=p.rCd=0;
   if(p.key==='ppui'){p.state.ppuiCharges=2;p.state.ppuiReady=Infinity;}
@@ -121,7 +123,7 @@ export function afterStep(g){
  for(const e of g.champions().filter(e=>e.trainingDummy&&e.alive)){if(e.trainingDummy.infinite)e.hp=e.maxHp;if(distance(e,e.trainingDummy.home)>e.trainingDummy.leash)resetDummyPosition(g,e);}
 }
 export function sellAll(g){
- if(!g.training)return false;const p=g.player;AhabEgo.end(g,p);p.augments=[];delete p.absorbedCarrier;delete p.goldenBough;for(const z of g.zones)if(z.source===p&&z.kind==='arayashiki')z.until=g.time;delete p.state.yiCharges;delete p.state.yiReady;delete p.buffs.donLifesteal;p.level=Math.min(p.level,Bough.maxLevel(p));p.xp=Math.min(p.xp,Bough.levelXp(Bough.maxLevel(p)));p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
+ if(!g.training)return false;const p=g.player;AhabEgo.end(g,p);p.augments=[];delete p.absorbedCarrier;delete p.goldenBough;for(const z of g.zones)if(z.source===p&&z.kind==='arayashiki')z.until=g.time;delete p.state.yiCharges;delete p.state.yiReady;delete p.state.meiRCharges;delete p.state.meiRReady;delete p.state.meiRQueue;delete p.buffs.donLifesteal;p.level=Math.min(p.level,Bough.maxLevel(p));p.xp=Math.min(p.xp,Bough.levelXp(Bough.maxLevel(p)));p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
  for(const k of ['augReloadStacks','augCombatAt','maskStacks','orderStacks','antimatterNext','duelStacks','duelDecay','accelDistance','accelReady'])delete p.state[k];for(const k of ['augReload','augBattleHaste','maskBoost','writtenOrder'])delete p.buffs[k];
  g.refreshEquipment(p);return true;
 }
@@ -140,6 +142,7 @@ export function changeChampion(g,key){
  const old=g.player,point=old.alive?{x:old.x,y:old.y}:{...spawn(g)},saved={level:old.level,xp:old.xp,gold:old.gold,upgrades:{...old.upgrades},augments:[...old.augments],goldenBough:old.goldenBough,absorbedCarrier:old.absorbedCarrier};
  if(old.alive)g.kill(old,old);g.corpses=[];
  const army=new Set(g.units.filter(e=>(e.lcaTrooper||e.bloodBat)&&e.owner===old.id));g.units=g.units.filter(e=>e!==old&&!army.has(e));g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old&&!army.has(e.source));
+ for(const unit of g.units)if(unit.meiBurns?.[old.id]){delete unit.meiBurns[old.id];if(!Object.keys(unit.meiBurns).length)delete unit.meiBurns;}
  g.makeChampion(key,0,0,old.position);g.player=g.units.find(e=>e.player);Object.assign(g.player,saved,point);
  g.player.level=Math.min(g.player.level,Bough.maxLevel(g.player));g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,spawn(g));refreshOptions(g);initRivalries(g);return true;
 }

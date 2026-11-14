@@ -6,6 +6,7 @@ import { area, dash, targetAt } from './skills.js';
 export function endurance(e){return Math.max(0,Math.min(5,Math.floor((1-e.hp/e.maxHp+1e-8)/.1)));}
 export function init(g,e){if(e.key==='queequeg')e.state.endurance=0;}
 export function movementSkill(e,slot){
+ if(e.key==='mei')return slot==='r'||slot==='q'&&!e.state?.meiQRecastUntil;
  if(e.key==='ahab'&&e.goldenBough&&slot==='r')return false;
  const moves={nosferatu:['r'],kromer:['q','r'],don:['r'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],starbuck:['r'],kim:['q'],sora:['q']};
  return moves[e.key]?.includes(slot);

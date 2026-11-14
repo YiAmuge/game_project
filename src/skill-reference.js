@@ -47,6 +47,7 @@ function basicRanges(key,g,e,transformed){
  if(key==='yi')return[row('기본','사거리 '+r+' · 관통 파편 3개'),row('오감도','사거리 '+number(range+1)+' · 관통 파편 7개')];
  if(key==='gahwan')return[row('전체 공격','사거리 '+r+' · 직선 폭 1.5'),row('근접 추가 공격','같은 직선 안 거리 3.25 이내')];
  if(key==='rudolph')return[row('공격 범위','중심점 사거리 '+r+' · 반경 2.1675')];
+ if(key==='mei')return[row('돌진','지정 위치까지 '+r),row('연타','착지 후 전방 근접 범위 · 탄창 수만큼')];
  if(key==='ahab')return[row('직격','사거리 '+r+' · 직선 투사체'),row('폭발','적중 지점 반경 2')];
  if(key==='honglu')return[row('공격 범위','자신 중심 반경 '+r)];
  if(key==='kromer')return[row('공격 범위','사거리 '+r+' · 직사각형 폭 2')];
@@ -58,6 +59,9 @@ function basicRanges(key,g,e,transformed){
  return[row('공격 범위','사거리 '+r+' · 직선'+(widths[key]?' 폭 '+number(widths[key]):''))];
 }
 function skillRanges(key,index,g,e,transformed,variant){
+ if(key==='mei'&&index===0)return[row('화상','같은 적 3회 피해 · 2초간 0.5초마다')];
+ if(key==='mei'&&index===2)return[row('정주','지정 방향으로 4.5 돌진'),row('회축','자신 중심 반경 3.6 · 2초 내 재사용')];
+ if(key==='mei'&&index===3)return[row('철산고','3.6 돌진 · 0.6초 정신집중'),row('회축 연계','1.3초 이내 · 거리 1.8 · 즉시 돌진')];
  if(key==='ezra'&&index===2)return basicRanges(key,g,e,transformed);
  if(key==='moses'&&index===3)return[row('붉은 점','사거리 무제한 · 폭 2 · 길이 3.7')];
  if(key==='ezra'&&index===3)return[row('도끼 돌진','거리 2.5'),row('1~3번째 공격','자신 중심 반경 3'),row('4번째 공격','자신 중심 반경 3')];
@@ -71,6 +75,7 @@ function skillRanges(key,index,g,e,transformed,variant){
   const passive={yi:[row('보호막 대상','자신 중심 반경 10의 아군')],kim:[row('보호막 대상','자신 중심 반경 4의 아군')],gubo:[row('아군 처형','기본 공격 사거리 9.5 · 궁극기 조준 사거리 12'),row('처형 파급','처치 위치에서 사거리 14.7의 부채꼴')],marton:[row('초롱 미끼','시야 반경 8 · 도발 반경 6.5')],gregor:[row('변이 해충','자신 중심 반경 5.5')],alisa:[row('자폭','자신 중심 반경 4')],outis:[row('근접 강화','대상과 거리 2.5 이내')],sora:transformed?[row('적용 대상','자신')]:[row('자동 지령','자신 중심 반경 5 · 최대 표식 2개')],yan:transformed?[row('손 공격','손 중심 반경 3.5 · 조작 거리 10')]:[row('적용 대상','자신 또는 아군이 공격한 가짜 지령 대상')]};
   return passive[key]||[row('적용 대상',key==='ahab'?'처치에 관여한 아군 최대 3명':'자신')];
  }
+ if(key==='mei'&&index===2)return '회축 사용/만료 후 쿨타임 9초';
  if(index===3&&variant===1&&['sora','yan'].includes(key))return[row('변신 범위','자신')];
  if(index===3&&key==='sora')return[row('지령 대상','사거리 '+SORA.ultimateRange)];
  if(key==='kromer')return index===2?[row('투척','사거리 '+KROMER.qRange),row('표식 추적','3.5초 내 재사용 · 지형·적 충돌 무시')]:[row('돌진','거리 3'),row('던지기','거리 3.5')];
@@ -106,6 +111,7 @@ function skillRanges(key,index,g,e,transformed,variant){
 function cooldownLabel(key,index,g,e,transformed,variant){
  if(index===0)return ({ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
+  if(key==='mei')return '탄창 4개 · 1개 장전 0.75초 · 연타 간격 0.2초';
   if(key==='moses')return '숨 '+Moses.airCap(g,e)+' · 공격 간격 0.3초';
   if(key==='ezra')return '탄창 4개 · 전탄 소진 후 일괄 장전 2.5초 · 장전 속도 보정 1.5배';
   if(key==='nosferatu'&&transformed)return '탄창 소모 없음 · 자동 공격 간격 0.4초';
@@ -142,7 +148,7 @@ export function skillReference(key,index,transformed=false,variant){
  const summaryKey=transformed?(key==='sora'?'soraEgo':key==='nosferatu'?'bloodfiend':'yanDistorted'):key;
  let summary=SKILL_SUMMARIES[summaryKey]?.[index]||c[field]?.split(/[.!?]/u)[0]||'';
  if(alternate){summary=key==='sora'?(variant===0?'새 지령을 부여하고 기존 지령을 갱신합니다.':'대행 5중첩으로 12초간 개화 E.G.O 상태가 됩니다.'):(variant===0?'주변의 적 챔피언에게 가짜 지령을 부여하고 갱신합니다.':'불길한 힘 6중첩으로 20초간 뒤틀림 상태가 됩니다.');}
- const rawDetails=alternate?cleanSkillDetails(alternate.description):SKILL_DETAILS[summaryKey]?.[index]??cleanSkillDetails(c[field]||''),details=index===1?cleanBasicDetails(rawDetails):rawDetails,labels=key==='ahab'&&index===2?['명령 전환','엄호해라!','자, 막아내라!']:key==='ezra'&&index===1?['공방무기','알라스 공방 장갑','네스터 공방 망치','스크류 아틀리에제 드릴 망치','나미르 공방 건틀릿']:key==='gubo'&&index===0?['아군 처형','처형 파급']:key==='jamila'&&index===3?['전투원 소환','LCA 우제트 전투원']:null;return{title:alternate?.name||c[title],cooldown:cooldownLabel(key,index,g,e,transformed,variant),ranges:skillRanges(key,index,g,e,transformed,variant),summary,details,summarySections:labels?summary.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null,sections:labels?details.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null};
+ const rawDetails=alternate?cleanSkillDetails(alternate.description):SKILL_DETAILS[summaryKey]?.[index]??cleanSkillDetails(c[field]||''),details=index===1?cleanBasicDetails(rawDetails):rawDetails,labels=key==='mei'&&index===2?['정주','회축']:key==='mei'&&index===3?['철산고','회축 연계']:key==='ahab'&&index===2?['명령 전환','엄호해라!','자, 막아내라!']:key==='ezra'&&index===1?['공방무기','알라스 공방 장갑','네스터 공방 망치','스크류 아틀리에제 드릴 망치','나미르 공방 건틀릿']:key==='gubo'&&index===0?['아군 처형','처형 파급']:key==='jamila'&&index===3?['전투원 소환','LCA 우제트 전투원']:null;return{title:alternate?.name||c[title],cooldown:cooldownLabel(key,index,g,e,transformed,variant),ranges:skillRanges(key,index,g,e,transformed,variant),summary,details,summarySections:labels?summary.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null,sections:labels?details.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null};
 }
 
 // Escape first; only numeric spans selected by local Korean effect labels may

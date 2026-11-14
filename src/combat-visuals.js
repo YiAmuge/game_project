@@ -13,6 +13,7 @@ export function preview(r,e,g){
  const angle=Math.atan2(g.input.aim.y-e.y,g.input.aim.x-e.x),d={x:Math.cos(angle),y:Math.sin(angle)},ctx=r.ctx;
  const polygon=(range,width)=>{const s={x:-d.y*width/2,y:d.x*width/2},to={x:e.x+d.x*range,y:e.y+d.y*range};r.polygon([[e.x+s.x,e.y+s.y],[to.x+s.x,to.y+s.y],[to.x-s.x,to.y-s.y],[e.x-s.x,e.y-s.y]],'#b8d8d313','#c3e8df66');};
  if(e.key==='ahab'&&e.state.gasharpoon){ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,9,angle-50*Math.PI/180,angle+50*Math.PI/180);ctx.closePath();ctx.fillStyle='#ffffff0b';ctx.fill();ctx.strokeStyle='#d2ffe28c';ctx.lineWidth=.035;ctx.stroke();return;}
+ if(e.key==='mei'){const at=g.safeLanding(e,g.input.aim,g.attackRange(e));r.line([{x:e.x,y:e.y},at],'#ffbf684d',.035,[.1,.14]);ctx.beginPath();ctx.moveTo(at.x,at.y);ctx.arc(at.x,at.y,1.6,angle-145*Math.PI/360,angle+145*Math.PI/360);ctx.closePath();ctx.fillStyle='#ffb54610';ctx.fill();ctx.strokeStyle='#ffd59177';ctx.lineWidth=.035;ctx.stroke();return;}
  if(e.key==='ezra'){
   const index=Ezra.currentIndex(g,e),w=Ezra.weapon(g,e),range=g.attackRange(e),arc=(p,spread)=>{ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.arc(p.x,p.y,range,angle-spread/2,angle+spread/2);ctx.closePath();ctx.fillStyle='#f2dda510';ctx.fill();ctx.strokeStyle='#e8d5a477';ctx.lineWidth=.035;ctx.stroke();};
   if(index===0)polygon(range,1.2);

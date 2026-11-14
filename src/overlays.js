@@ -22,6 +22,8 @@ import { THEMES } from './art.js';
 import { heathCharge,guardAlly } from './skills.js';
 
 export function stackInfo(e,g){
+ if(e.key==='mei'&&e.state.meiQRecastUntil>g.time)return{label:'회축 '+(e.state.meiQRecastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffbd49'};
+ if(e.key==='mei'&&e.state.meiKickAt!==undefined&&g.time-e.state.meiKickAt<=1.3)return{label:'철산고 연계 '+Math.max(0,1.3-g.time+e.state.meiKickAt).toFixed(1)+'s',textOnly:true,color:'#ff783d'};
  if(e.key==='ahab'&&e.state.gasharpoon)return{label:'개화 '+Math.max(0,e.state.gasharpoon.until-g.time).toFixed(1)+'s · 탄식 '+e.state.gasharpoon.ammo+'/5',textOnly:true,color:'#f0f7ff'};
  if(e.key==='ishmael'&&Bough.active(e))return{label:'항해',value:Bough.voyage(e),max:8,color:'#e8cc71',textOnly:true};
  if(e.key==='ppui')return{label:'맥동',value:pulse(e),max:PPUI.pulseCap,color:'#f4a9bb',textOnly:true};
