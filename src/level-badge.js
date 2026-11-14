@@ -1,7 +1,7 @@
-import{RULES}from'./data.js';
+import{maxLevel,levelXp}from'./golden-bough.js';
 export function levelProgress(e){
- if(e.level>=RULES.maxLevel)return 1;
- const start=RULES.xp[e.level-1]||0,end=RULES.xp[e.level]||start+1;
+ if(e.level>=maxLevel(e))return 1;
+ const start=levelXp(e.level)||0,end=levelXp(e.level+1)||start+1;
  return Math.max(0,Math.min(1,((e.xp||0)-start)/(end-start)));
 }
 export function drawLevelBadge(r,e,barX,barY,g){

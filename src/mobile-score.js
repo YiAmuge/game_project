@@ -1,8 +1,9 @@
+import * as Bough from './golden-bough.js';
 import{championDescription}from'./champion-reference.js';
 import{SKILL_SUMMARIES}from'./skill-summaries.js';
 export function mobileSkillHelp(g,e,index,mode='summary'){
- const transformed=Boolean(e.key==='sora'&&g.buff(e,'soraEgo')||e.key==='yan'&&g.buff(e,'yanDistorted')),key=transformed?(e.key==='sora'?'soraEgo':'yanDistorted'):e.key,c=championDescription(e.key,transformed),[title,field]=[['passive','passiveText'],['basic','basicText'],['tactical','qText'],['ultimate','rText']][index];
- return{title:c[title]||'',text:(mode==='summary'?SKILL_SUMMARIES[key]?.[index]:null)??c[field]??''};
+ const transformed=Boolean(e.key==='sora'&&g.buff(e,'soraEgo')||e.key==='yan'&&g.buff(e,'yanDistorted')),key=transformed?(e.key==='sora'?'soraEgo':'yanDistorted'):e.key,c={...championDescription(e.key,transformed),...Bough.abilityInfo(g,e)},[title,field]=[['passive','passiveText'],['basic','basicText'],['tactical','qText'],['ultimate','rText']][index];
+ return{title:c[title]||'',text:(mode==='summary'&&!Bough.active(e)?SKILL_SUMMARIES[key]?.[index]:null)??c[field]??''};
 }
 export class MobileScore{
  constructor(root,skills,game){

@@ -1,3 +1,4 @@
+import {drawDissolve,drawArayashikiCuts} from './arayashiki-vfx.js';
 import{zoom as mosesZoom}from'./moses.js';
 import{deploymentGhosts}from'./jamila.js';
 import{drawDeploymentGlow}from'./jamila-deployment.js';
@@ -205,7 +206,7 @@ export class Renderer {
     if(!this.groundPass&&game.training25d){this.follow(game,playing);this.scene25d.draw(game,playing);return;}
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);if(this.groundPass)c.clearRect(0,0,this.width,this.height);else{c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);}if(this.groundTransform)c.transform(...this.groundTransform);else{c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);}
-    this.floor(game);this.camps(game);for(const bait of game.units.filter(e=>e.kind==='bait'&&e.alive)){this.circle(bait.x,bait.y,6.5,'#02ebf708','#66f4eec0',.075);this.circle(bait.x,bait.y,6.42,null,'#c8ffff55',.025);}for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}for(const corpse of game.corpses)this.corpse(corpse,game);
+    this.floor(game);this.camps(game);for(const bait of game.units.filter(e=>e.kind==='bait'&&e.alive)){this.circle(bait.x,bait.y,6.5,'#02ebf708','#66f4eec0',.075);this.circle(bait.x,bait.y,6.42,null,'#c8ffff55',.025);}for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}if(!this.groundPass)drawArayashikiCuts(this.ctx,this.camera,game);for(const corpse of game.corpses)this.corpse(corpse,game);for(const f of game.effects)if(!this.groundPass&&f.type==='arayashikiDissolve')drawDissolve(this,game,f);
 
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo((game.player?.team??0),e))chargePreview(this,e,game);

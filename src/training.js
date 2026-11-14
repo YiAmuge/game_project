@@ -1,3 +1,4 @@
+import * as Bough from './golden-bough.js';
 import{initRivalries,refreshPracticeRivalries}from'./rivalries.js';
 import * as Sewing from './sewing.js';
 import * as Kromer from './kromer.js';
@@ -99,6 +100,7 @@ export function refreshOptions(g){
  const p=g.player,o=g.practice;if(!p?.alive)return;
  if(o.infiniteAmmo){p.ammo=g.ammoCap(p);p.reloadProgress=0;if(p.state.exhaustedUntil){delete p.state.exhaustedUntil;delete p.status.silence;}}
  if(o.noCooldown){
+  if(p.key==='yi'&&Bough.active(p)){p.state.yiCharges=2;p.state.yiReady=0;}
   p.qCd=p.rCd=0;
   if(p.key==='ppui'){p.state.ppuiCharges=2;p.state.ppuiReady=Infinity;}
   if(p.key==='nelly'){p.state.knifeCharges=2;p.state.knifeReady=Infinity;p.state.qDelayUntil=0;}
@@ -118,7 +120,7 @@ export function afterStep(g){
  for(const e of g.champions().filter(e=>e.trainingDummy&&e.alive)){if(e.trainingDummy.infinite)e.hp=e.maxHp;if(distance(e,e.trainingDummy.home)>e.trainingDummy.leash)resetDummyPosition(g,e);}
 }
 export function sellAll(g){
- if(!g.training)return false;const p=g.player;p.augments=[];delete p.absorbedCarrier;p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
+ if(!g.training)return false;const p=g.player;p.augments=[];delete p.absorbedCarrier;delete p.goldenBough;for(const z of g.zones)if(z.source===p&&z.kind==='arayashiki')z.until=g.time;delete p.state.yiCharges;delete p.state.yiReady;delete p.buffs.donLifesteal;p.level=Math.min(p.level,Bough.maxLevel(p));p.xp=Math.min(p.xp,Bough.levelXp(Bough.maxLevel(p)));p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
  for(const k of ['augReloadStacks','augCombatAt','maskStacks','orderStacks','antimatterNext','duelStacks','duelDecay','accelDistance','accelReady'])delete p.state[k];for(const k of ['augReload','augBattleHaste','maskBoost','writtenOrder'])delete p.buffs[k];
  g.refreshEquipment(p);return true;
 }
@@ -134,11 +136,11 @@ export function teleport(g,p){
 }
 export function changeChampion(g,key){
  if(!g.training||!RUNTIME_CHAMPIONS[key])return false;
- const old=g.player,point=old.alive?{x:old.x,y:old.y}:{...spawn(g)},saved={level:old.level,xp:old.xp,gold:old.gold,upgrades:{...old.upgrades},augments:[...old.augments]};
+ const old=g.player,point=old.alive?{x:old.x,y:old.y}:{...spawn(g)},saved={level:old.level,xp:old.xp,gold:old.gold,upgrades:{...old.upgrades},augments:[...old.augments],goldenBough:old.goldenBough,absorbedCarrier:old.absorbedCarrier};
  if(old.alive)g.kill(old,old);g.corpses=[];
  const army=new Set(g.units.filter(e=>(e.lcaTrooper||e.bloodBat)&&e.owner===old.id));g.units=g.units.filter(e=>e!==old&&!army.has(e));g.events=g.events.filter(e=>e.source!==old);g.pending=g.pending.filter(e=>e.source!==old);g.zones=g.zones.filter(e=>e.source!==old);g.projectiles=g.projectiles.filter(e=>e.source!==old&&e.target!==old&&!army.has(e.source));
  g.makeChampion(key,0,0,old.position);g.player=g.units.find(e=>e.player);Object.assign(g.player,saved,point);
- g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,spawn(g));refreshOptions(g);initRivalries(g);return true;
+ g.player.level=Math.min(g.player.level,Bough.maxLevel(g.player));g.player.maxHp=g.maxHp(g.player);g.player.hp=g.player.maxHp;g.player.ammo=g.ammoCap(g.player);settleBody(g,g.player,spawn(g));refreshOptions(g);initRivalries(g);return true;
 }
 
 export function summon(g,key,team,point){
@@ -188,8 +190,8 @@ export function removeSummoned(g,id=null){
 }
 
 export function setLevel(g,level){
- if(!g.training||!Number.isInteger(level)||level<1||level>RULES.maxLevel)return false;
- const p=g.player,ratio=p.hp/p.maxHp;p.level=level;p.xp=RULES.xp[level-1];p.maxHp=g.maxHp(p);if(p.alive)p.hp=Math.max(1,p.maxHp*ratio);p.ammo=Math.min(p.ammo,g.ammoCap(p));return true;
+ if(!g.training||!Number.isInteger(level)||level<1||level>Bough.maxLevel(g.player))return false;
+ const p=g.player,ratio=p.hp/p.maxHp;p.level=level;p.xp=Bough.levelXp(level);p.maxHp=g.maxHp(p);if(p.alive)p.hp=Math.max(1,p.maxHp*ratio);p.ammo=Math.min(p.ammo,g.ammoCap(p));return true;
 }
 export function procedures(g,buy){
  if(!g.training)return false;const p=g.player;for(const u of UPGRADES)p.upgrades[u.key]=buy?u.max:0;g.refreshEquipment(p);return true;

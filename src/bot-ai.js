@@ -1,3 +1,4 @@
+import * as Bough from './golden-bough.js';
 import*as Moses from'./moses.js';
 import*as Ezra from'./ezra.js';
 import{CHAMPIONS,CORE_POSITIONS,FOUNTAIN_AREAS,UPGRADE_STEPS}from'./data.js';
@@ -116,7 +117,7 @@ export function combatSkills(g,e,target){
  if(e.key==='yan'){g.cast(e,'r',target);if(d<=5)g.cast(e,'q',target);return;}
  if(e.key==='sora'){g.cast(e,'r',target);if(d<=4.5)g.cast(e,'q',target);return;}
  if(!['ppui','queequeg','honglu','meursault'].includes(e.key)&&d<=7&&!(e.key==='alisa'&&g.buff(e,'alisaReload')&&e.hp/e.maxHp>.65&&e.buffs.alisaReload-g.time>.4))g.cast(e,'q',target,DRAG_KEYS.includes(e.key)?{direction:'right'}:{});
- if(!['queequeg','honglu'].includes(e.key)&&d<=(e.key==='meursault'?5:e.key==='alisa'?4:8))g.cast(e,'r',target);
+ if(!Bough.storm(g,e)&&!['queequeg','honglu'].includes(e.key)&&d<=(e.key==='meursault'?5:e.key==='alisa'?4:8))g.cast(e,'r',target);
 }
 export function shop(g,e,dt){return shoppingTrip(g,e,dt);}
 export function waitForWave(g,e,dt){

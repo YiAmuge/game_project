@@ -65,7 +65,7 @@ test('carrier absorbs without a slot, removes category limits and can be sold in
 test('mask triggers on successful debuffs and high-risk supplies power and armor',()=>{
  const {g,p}=arena(),t=hero(g);p.augments=['maskDeLu','highRisk'];const gap=g.reloadInterval(p);A.onCast(g,p);close(g.speed(p)/g.baseSpeed(p),1);close(g.reloadInterval(p),gap);p.qCd=10;p.rCd=40;p.ammo=0;g.status(t,'slow',.2,2,p);close(p.qCd,8);close(p.rCd,32);close(p.ammo,1);close(p.state.maskReady,g.time+10);close(g.powerScale(p),1.05);close(g.cooldown(p,'q'),11);close(A.armorRate(g,p),.07);
 });
-test('all three augment categories contain seven unique fully named definitions',()=>{assert.equal(AUGMENTS.length,21);assert.equal(new Set(AUGMENTS.map(a=>a.key)).size,21);for(const group of ['combat','survival','tech'])assert.equal(AUGMENTS.filter(a=>a.group===group).length,7);});
+test('three regular gift categories and one special gift have unique definitions',()=>{assert.equal(AUGMENTS.length,22);assert.equal(new Set(AUGMENTS.map(a=>a.key)).size,22);for(const group of ['combat','survival','tech'])assert.equal(AUGMENTS.filter(a=>a.group===group).length,7);});
 test('stack gauges use under-ammo progress and transformation/awakening time',()=>{
  for(const [key,buff,duration] of [['sinclair','marks',4],['gregor','mutant',5],['sora','soraEgo',20],['yan','yanDistorted',20],['myo','rabbitFrenzy',4.5]]){const {g,p}=arena(key);g.addBuff(p,buff,duration,{copy:false});close(stackGauge(p,g).ratio,1);g.time+=duration/2;close(stackGauge(p,g).ratio,.5);assert.equal(stackGauge(p,g).timer,true);}
  const {g,p}=arena('sora');p.state.unlock=3;close(stackGauge(p,g).ratio,.6);

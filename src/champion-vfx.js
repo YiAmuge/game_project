@@ -1,3 +1,4 @@
+import {maxLevel} from './golden-bough.js';
 import{drawEzraGround}from'./ezra-vfx.js';
 import{FAN_ANGLE,basicFanAngle}from'./data.js';
 import{drawArcanaEffects}from'./arcana-vfx.js';
@@ -158,7 +159,7 @@ export class ChampionVFX {
    if(g.buff(e,'chainArmor')){c.save();c.globalAlpha=.2;const light=c.createLinearGradient(0,-7,0,0);light.addColorStop(0,'#e9ece100');light.addColorStop(1,'#e9ece1');c.fillStyle=light;for(let i=0;i<4;i++)c.fillRect((i-1.5)*.4,-7,.23,7);c.restore();}
    if(g.buff(e,'hongluCare')){this.aura(c,{color:'#5caba4',form:'mist',strength:.7},time);this.motes(c,'petal','#d3aeb8',time,8,1.15,.85);}
    if(e.key==='alisa'&&s.detonatesAt>time)for(const side of [-1,1])for(let i=0;i<7;i++){const a=i/7*Math.PI*1.1-.6,x=side*(.5+Math.sin(a)*.75),y=-1.25-Math.cos(a)*.8;c.save();c.scale(1,1.3);this.mote(c,'flame','#9e3036',x,y,.38,a*side,.45,i%4);c.restore();}
-   if(e.key==='faust'){if(g.buff(e,'faustUlt'))this.formulas(c,time);else if(e.level>=RULES.maxLevel)this.formulas(c,time,.42,.35);}
+   if(e.key==='faust'){if(g.buff(e,'faustUlt'))this.formulas(c,time);else if(e.level>=maxLevel(e))this.formulas(c,time,.42,.35);}
    if(e.key==='yi'&&g.buff(e,'ogamdo'))for(const side of [-1,1])for(let i=0;i<6;i++)this.mote(c,'crystal','#dce7e8',side*(.55+i*.15),-1-i*.18+Math.sin(time)*.04,.19+i*.025,side*(.4+i*.15),.6,i%4);
    if(e.key==='marton'&&s.fairy){c.save();c.translate(0,-4);this.fairy(c,time,.65);c.restore();}
   }else{
@@ -253,6 +254,7 @@ export class ChampionVFX {
    c.globalAlpha=Math.min(1,f.life/.15);c.fillStyle='#d6c78b14';c.strokeStyle='#e2d29bd9';c.lineWidth=.018;c.beginPath();c.arc(0,0,1,0,Math.PI*2);c.fill();c.stroke();
   });
   for(const z of g.zones){
+   if(z.kind==='arayashiki'){this.vfx.groundDisc(c,camera,z,z.r,()=>{const glow=c.createRadialGradient(0,0,0,0,0,1);glow.addColorStop(0,'#f4f8ff12');glow.addColorStop(1,'#ffffff00');c.fillStyle=glow;c.fillRect(-1,-1,2,2);});continue;}
    const time=g.time,kind=z.kind||'mirror',r=z.r;let color=kind==='waterfall'?'#70aaa5':kind==='ice'?'#d1dbe3':kind==='desireTree'?(z.golden?'#c9a958':'#785838'):kind==='electricBloom'?'#8abcb9':'#d8e1e5';
    c.save();const at=world(z,.08),x=world({x:z.x+1,y:z.y},.08),y=world({x:z.x,y:z.y+1},.08);c.translate(at.x,at.y);c.transform(x.x-at.x,x.y-at.y,y.x-at.x,y.y-at.y,0,0);c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.clip();
    if(kind!=='waterfall'){const style=combatStyle(z.source?.key,g,z.source,{kind:'zone',slot:'r',type:kind});if(!z.golden){c.save();c.globalAlpha=.95;c.drawImage(this.vfx.strokes.fieldTexture({...z,...style,kind:'field',born:0,shape:{kind:'circle',range:r}}),-r,-r,r*2,r*2);c.restore();}}

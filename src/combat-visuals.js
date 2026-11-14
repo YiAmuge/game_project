@@ -1,3 +1,4 @@
+import * as Bough from './golden-bough.js';
 import{breath as mosesBreath}from'./moses.js';
 import{basicFanAngle}from'./data.js';
 import*as Ezra from'./ezra.js';
@@ -35,7 +36,7 @@ export function preview(r,e,g){
  if(cones[e.key]||e.key==='nosferatu'&&!e.state.bloodfiend){const range=g.attackRange(e)*(e.key==='kim'&&e.state.followSlashUntil>g.time?1.2*1.08:1);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,range,angle-basicFanAngle(e.key)/2,angle+basicFanAngle(e.key)/2);ctx.closePath();ctx.fillStyle='#bddfd20b';ctx.fill();ctx.strokeStyle='#bddfd255';ctx.lineWidth=.035;ctx.stroke();}
 
  if(e.key==='marton'){const len=Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y);if(len<2.5){ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,2.5,angle-basicFanAngle(e.key)/2,angle+basicFanAngle(e.key)/2);ctx.closePath();ctx.fillStyle='#c9b58915';ctx.fill();ctx.strokeStyle='#c9b58988';ctx.lineWidth=.04;ctx.stroke();}r.circle(e.x,e.y,2.5,null,'#02ebf799',.04);r.circle(e.x,e.y,g.attackRange(e),null,'#8bffff77',.04);const dx=g.input.aim.x-e.x,dy=g.input.aim.y-e.y;if(len>=2.5){const cap=Math.min(g.attackRange(e),len);r.circle(e.x+dx/(len||1)*cap,e.y+dy/(len||1)*cap,2.2,'#02ebf70e','#8bffff77',.045);}}
- if(e.key==='meursault'){const a=e.facing||0,d={x:Math.cos(a),y:Math.sin(a)},s={x:-d.y*1.3,y:d.x*1.3},end={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};r.polygon([[e.x+s.x,e.y+s.y],[end.x+s.x,end.y+s.y],[end.x-s.x,end.y-s.y],[e.x-s.x,e.y-s.y]],'#c2d5e90b','#c2d5e95a');}
+ if(e.key==='meursault'){const a=e.facing||0,d={x:Math.cos(a),y:Math.sin(a)},s={x:-d.y*(2.6+Bough.fistBonus(g,e))/2,y:d.x*(2.6+Bough.fistBonus(g,e))/2},end={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};r.polygon([[e.x+s.x,e.y+s.y],[end.x+s.x,end.y+s.y],[end.x-s.x,end.y-s.y],[e.x-s.x,e.y-s.y]],'#c2d5e90b','#c2d5e95a');}
 }
 export function meter(r,e,g){
  const m=metric(g,e);if(!m)return;const healing=m.kind==='healing',labels=healing?['초당 치유량','총 치유량','마지막 치유기 치유량']:['초당 피해량','총 피해량','마지막 공격 피해량'],values=[m.perSecond,m.total,m.last],c=r.ctx;

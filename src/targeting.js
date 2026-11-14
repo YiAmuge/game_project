@@ -1,3 +1,4 @@
+import * as Bough from './golden-bough.js';
 import*as Ezra from'./ezra.js';
 import{GAHWAN}from'./gahwan.js';
 import{QUEEN,ARCANA_STAGES,stage}from'./queen.js';
@@ -16,6 +17,8 @@ import { STARBUCK } from './v10-champions.js';
 import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
+ if(slot==='r'&&Bough.active(e)&&e.key==='ryoshu')return Bough.storm(g,e)?{kind:'self',range:0,radius:3,confirm:false}:{kind:'circle',range:5.5,radius:3,confirm:true,ignoreWalls:true};
+ if(slot==='r'&&Bough.active(e)&&e.key==='honglu')return {kind:'self',range:0,radius:3.5,confirm:false};
  if(e.key==='gahwan'&&slot==='r')return{kind:'cone',range:GAHWAN.range,radius:GAHWAN.angle,impact:0,confirm:false};
  if(e.key==='dongbaek'&&slot==='r')return{kind:'circle',range:DONGBAEK_R.range,radius:DONGBAEK_R.maxRadius,innerRadius:DONGBAEK_R.minRadius,impact:0,confirm:true};
  if(e.key==='ezra'){if(slot==='r')return{kind:'self',range:0,radius:3,impact:0,confirm:false};const index=e.state.ezraLastWeapon??0,w=Ezra.weapon(g,e,index),bonus=g.attackRange(e)-Ezra.weapon(g,e).range;return index===0?{kind:'quick',range:w.dash+bonus,radius:.6,impact:0,confirm:false}:index===1?{kind:'self',range:0,radius:Ezra.attackReach(g,e,index),impact:0,confirm:false}:index===2?{kind:'cone',range:w.range+bonus,radius:w.angle,impact:0,confirm:false}:{kind:'circle',range:w.dash,radius:w.range+bonus,impact:0,confirm:false};}

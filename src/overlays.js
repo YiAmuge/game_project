@@ -1,3 +1,4 @@
+import * as Bough from './golden-bough.js';
 import{stage as queenStage}from'./queen.js';
 import{capacity as bloodCapacity}from'./nosferatu.js';
 import{HEATH}from'./heathcliff.js';
@@ -21,6 +22,7 @@ import { THEMES } from './art.js';
 import { heathCharge,guardAlly } from './skills.js';
 
 export function stackInfo(e,g){
+ if(e.key==='ishmael'&&Bough.active(e))return{label:'항해',value:Bough.voyage(e),max:8,color:'#e8cc71',textOnly:true};
  if(e.key==='ppui')return{label:'맥동',value:pulse(e),max:PPUI.pulseCap,color:'#f4a9bb',textOnly:true};
  if(e.key==='ahab'&&e.state.recastUntil>g.time)return{label:'재사용 '+(e.state.recastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffcf7c'};
  if(e.key==='nosferatu')return {label:'혈찬',value:Math.floor(e.state.bloodFeast||0),max:Math.floor(bloodCapacity(g,e)),color:'#ed3c65',textOnly:true};
@@ -146,7 +148,7 @@ export function championGroundEffects(r,e,g){
  if(g.buff(e,'martonDrain'))r.circle(e.x,e.y,5.5,null,'#02ebf770',.035);
  if(g.buff(e,'heathUlt'))outline(HEATH.radius);
  if(e.state.detonatesAt>g.time)r.circle(e.x,e.y,4,'#d94e262e','#ff7957',.085);
- if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,2.5,null,'#d1dcb799',.035);
+ if(e.key==='outis'&&e.player&&e.alive)r.circle(e.x,e.y,Bough.outisRadius(g,e),null,'#d1dcb799',.035);
  if(e.key==='honglu'&&e.player&&e.alive&&g.buff(e,'insight'))r.circle(e.x,e.y,6,null,'#87d8c999',.045);
  if(e.state.yanBarrage?.until>g.time){const q=e.state.yanBarrage,a=Math.atan2(q.d.y,q.d.x),c=r.ctx;c.beginPath();c.arc(e.x,e.y,5,a-Math.PI/2,a+Math.PI/2);c.strokeStyle=color;c.lineWidth=.025;c.stroke();}
 }

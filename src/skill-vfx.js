@@ -92,6 +92,7 @@ export class SkillVFX {
    if(key==='ezra'&&fx.weaponIndex===3&&fx.type==='slash')continue;
    if(['ppui','outis'].includes(key)&&fx.slot==='r'&&['slash','thrust'].includes(fx.type))continue;
    const pressure=fx.type==='yanCleave',hit=fx.type==='impact'||fx.type==='nellyProc',s=hit?hitStyle(game,source,fx):combatStyle(key,game,source,{kind:fx.damageKind||'skill',slot:fx.slot||(fx.damageKind!=='basic'?source?.castSlot:undefined),type:fx.type,weaponIndex:fx.weaponIndex});
+   if(fx.augmentOrigin==='arayashiki')Object.assign(s,{color:'#ffffff',accent:'#ffffff',dark:'#7e8996',element:'metal'});
    const angle=fx.angle??(fx.to?Math.atan2(fx.to.y-fx.y,fx.to.x-fx.x):0),shape=hit?null:visualShape(fx),kind=hit?s.shape:fx.type==='yanCleave'?'impact':['ishmael','meursault','heathcliff'].includes(key)?'impact':key==='yan'&&fx.type==='yanWave'?'slash':recipe.kind;
    if(key==='kim'&&fx.spread>2)s.color='#a0cce8';
    observed.add(key);
@@ -115,7 +116,7 @@ export class SkillVFX {
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});
   }
   for(const z of game.zones||[]){
-   if(['waterfall','desireTree'].includes(z.kind)||this.seenZones.has(z))continue;this.seenZones.add(z);if(!visible(z))continue;
+   if(['waterfall','desireTree','arayashiki'].includes(z.kind)||this.seenZones.has(z))continue;this.seenZones.add(z);if(!visible(z))continue;
    const element=({waterfall:'water',ice:'ice',desireTree:'wood',electricBloom:'electric'}[z.kind])||'mirror',s=combatStyle(z.source?.key,game,z.source,{kind:'zone',slot:'r',type:z.kind});
    this.emit('explosion',z,game.time,{...s,element,radius:z.r||3,shape:{kind:'circle',range:z.r||3},count:20,light:.09});
   }

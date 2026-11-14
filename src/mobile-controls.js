@@ -21,7 +21,7 @@ export class MobileControls{
  constructor(api){
   this.api=api;this.axes={x:0,y:0};this.gestures=new Map();this.lastTap=-Infinity;this.enabled=false;this.force=null;this.skillTab=0;this.descriptionMode='summary';
   this.scroll=installTouchScroll(()=>this.enabled);
-  const root=document.createElement('div');root.id='mobile-controls';root.innerHTML='<div id="mobile-stick" role="group" aria-label="이동 조이스틱"><i></i></div><div id="mobile-cancel" aria-hidden="true">×</div><div id="mobile-status" aria-label="효과와 증강 상태"></div>';document.body.append(root);
+  const root=document.createElement('div');root.id='mobile-controls';root.innerHTML='<div id="mobile-stick" role="group" aria-label="이동 조이스틱"><i></i></div><div id="mobile-cancel" aria-hidden="true">×</div><div id="mobile-status" aria-label="효과와 E.G.O 기프트 상태"></div>';document.body.append(root);
   this.status=new MobileStatus($('mobile-status'));
   for(const[kind,label]of Object.entries(ATTACK_CATEGORIES)){const b=document.createElement('button');b.className='mobile-target-btn hidden';b.dataset.targetKind=kind;b.setAttribute('aria-label',label+' 우선 기본공격');b.title=label+' 우선 기본공격';b.innerHTML=targetIcon(kind);root.append(b);this.listen(b,'basic',kind);b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();},true);}
   for(const b of $('ping-controls').querySelectorAll('button')){b.setAttribute('aria-label',{attack:'공격 신호',defend:'도움 신호',danger:'후퇴 신호'}[b.dataset.ping]);b.insertAdjacentHTML('beforeend',pingIcon(b.dataset.ping));}

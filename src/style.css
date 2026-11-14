@@ -447,7 +447,7 @@ body.mobile-ui.in-game #mobile-owned-catalog #owned-list{display:grid;grid-templ
 body.mobile-ui.in-game #mobile-owned-catalog #owned-list button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border:1px solid #526c6c;background:#1a3339}
 body.mobile-ui.in-game #mobile-owned-catalog #owned-list button:after{content:attr(aria-label);font-size:10px;line-height:1.5}
 body.mobile-ui.in-game #mobile-owned-catalog #owned-list .augment-icon{width:42px;height:42px}
-body.mobile-ui.in-game #mobile-owned-catalog #owned-list:empty:after{content:'보유한 증강이 없습니다.';grid-column:1/-1;color:#a5b8bf;font-size:12px;padding:15px 0}
+body.mobile-ui.in-game #mobile-owned-catalog #owned-list:empty:after{content:'보유한 E.G.O 기프트이 없습니다.';grid-column:1/-1;color:#a5b8bf;font-size:12px;padding:15px 0}
 
 @media(orientation:landscape){
  body.mobile-ui.menu-screen .lobby{display:grid;grid-template-columns:1fr minmax(230px,310px);padding:18px max(22px,env(safe-area-inset-right));gap:24px}
@@ -648,7 +648,7 @@ body.mobile-ui.in-game #mobile-shop-owned{flex:1;min-width:0;overflow-x:auto;ove
 body.mobile-ui.in-game #mobile-shop-owned #owned-list{display:flex;flex-wrap:nowrap;align-items:center;gap:9px;width:max-content;min-width:100%;margin:0}
 body.mobile-ui.in-game #mobile-shop-owned #owned-list button{flex:none;padding:0}
 body.mobile-ui.in-game #mobile-shop-owned .augment-icon{width:36px;height:36px}
-body.mobile-ui.in-game #mobile-shop-owned #owned-list:empty:after{content:'보유한 증강이 없습니다.';color:#8da4af;font-size:11px}
+body.mobile-ui.in-game #mobile-shop-owned #owned-list:empty:after{content:'보유한 E.G.O 기프트이 없습니다.';color:#8da4af;font-size:11px}
 body.mobile-ui.in-game .shop #upgrade-list{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 body.mobile-ui.in-game .shop #upgrade-list .shop-option{min-height:145px;padding:8px 5px;gap:9px}
 body.mobile-ui.in-game .shop #upgrade-list .shop-option strong{font-size:11px}
@@ -777,3 +777,11 @@ body.menu-screen:not(.mobile-ui) .lobby{padding-left:clamp(24px,3vw,72px)}
 @media(orientation:portrait) and (max-width:700px){
  body.menu-screen #menu-background{width:100%;height:auto;object-fit:contain;object-position:center bottom;-webkit-mask-image:linear-gradient(180deg,transparent,#000 12%);mask-image:linear-gradient(180deg,transparent,#000 12%)}
 }
+
+/* Special gifts remain available independently of enhancement procedures. */
+#shop-tabs button[data-group=special],.augment-guide-tabs button[data-group=special]{border-color:#c38cff;color:#e5caff}
+#shop-tabs button[data-group=special].selected,.augment-guide-tabs button[data-group=special].active{background:#52316f;box-shadow:inset 0 -2px #c38cff}
+body.mobile-ui.in-game #mobile-shop-tabs button[data-group=special]{--category-glow:#c38cff;background:#38224f;border-color:#c38cff;color:#e5caff}
+body.mobile-ui.in-game #mobile-shop-tabs button[data-group=special].selected{background:#603b81;box-shadow:inset 3px 0 #d9b4ff}
+#shop-toggle>span{white-space:nowrap;font-size:14px}
+#shop-toggle>span{font-size:12px}#shop-toggle>span b{font-size:18px}

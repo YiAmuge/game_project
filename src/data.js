@@ -168,6 +168,7 @@ CHAMPIONS.nelly.range=1.8;CHAMPIONS.alisa.range=2;CHAMPIONS.alisa.healthMultipli
 
 export const AUGMENT_RULES={cost:500,refund:.7,slots:6,categorySlots:2};
 export const AUGMENTS=[
+ {key:'goldenBough',group:'special',cost:1000,name:'황금 가지',text:'구매 즉시 흡수되어 챔피언의 성능을 영구적으로 강화한다. 보유 칸과 카테고리 한도를 차지하지 않으며 다시 구매하거나 판매할 수 없다.'},
  {key:'finalBullet',group:'combat',name:'마탄',text:'7초마다 적 챔피언 적중 시 최종 체력 피해의 7% 고정 피해'},
  {key:'power15',group:'combat',name:'신검합일',text:'전투력 +10% · 방어관통 +20%'},
  {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 관통 또는 범위 공격이 가능한 기본 공격은 사거리 +1.3을 적용'},
@@ -185,7 +186,7 @@ export const AUGMENTS=[
  {key:'battleHaste',group:'tech',name:'사랑과 증오의 이름으로',text:'전투를 3초 이상 유지하면 스킬 가속 +25%. 비전투 시 해제'},
  {key:'cooldown15',group:'tech',name:'주민등록 마이크로칩',text:'전술기·궁극기 기본 재사용 대기시간 −15%'},
  {key:'magazine2',group:'tech',name:'카포를 위하여',text:'최대 탄창 +2'},
- {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:"스킬 가속 +3%·이동속도 +3%. 카테고리별 증강 2개 제한을 해제한다. 구매 즉시 흡수되어 증강 칸을 차지하지 않는다. 판매할 수 없으며 연습장에서만 판매할 수 있다."},
+ {key:'carrier',group:'tech',name:'딜리버리 캐리어',text:"스킬 가속 +3%·이동속도 +3%. 카테고리별 E.G.O 기프트 2개 제한을 해제한다. 구매 즉시 흡수되어 E.G.O 기프트 칸을 차지하지 않는다. 판매할 수 없으며 연습장에서만 판매할 수 있다."},
  {key:'maskDeLu',group:'tech',name:'마스크 드 루',text:'적에게 상태이상·디버프를 부여하면 남은 스킬 재사용 대기시간 20% 감소 및 빈 탄창 1개 충전. 재사용 대기시간 10초'},
  {key:'highRisk',group:'tech',name:'고위험 작전용 장비',text:'전투력 +5% · 방어력 +7%. 귀환 버튼 또는 PC의 B키를 누른 채 왼쪽으로 움직이면 귀환, 오른쪽으로 움직이면 침투를 선택한다. 침투 재사용 대기 중에도 귀환할 수 있다.\n\n침투\n어디서든 1.75초간 준비한 뒤 전장에서 사라진다. 시전 위치 중심 사거리 35 안에서 최대 10초 동안 착지점을 고른다.\nPC는 WASD, 모바일은 이동 조이스틱으로 위치를 옮긴다. 전술기 버튼·우클릭을 유지하면 정밀 이동하며, 기본공격으로 확정하면 0.5초 후 나타난다. 선택시간이 끝나면 선택점 근처의 유효한 지점으로 자동 착지한다.\n위치 선택 중 시야가 30% 넓어지고 정밀 이동 중에는 원래 시야로 돌아온다. 착지 후 2초간 이동속도 +10%. 성공 시 재사용 대기 75초, B 또는 귀환 버튼으로 취소 시 1.5초.'},
  {key:'adaptiveSpeed',group:'tech',name:'초정밀 시간 가속 장치',text:"거리 5를 이동할 때마다 전술기·궁극기의 남은 재사용 대기시간을 1.3초 줄인다. 발동 대기시간 3초."},

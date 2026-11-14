@@ -1,0 +1,26 @@
+{
+  "source": "src/assets/source/ryoshu-arayashiki.png",
+  "sha256": "dfb1fafb112ad9e5fbfea5f656e0bc2928a4debbd904c30b12e095084331d3f5",
+  "originalWeapon": "ryoshuSword",
+  "frames": {
+    "ryoshuArayashiki": {
+      "x": 8,
+      "y": 8,
+      "w": 640,
+      "h": 212,
+      "sheet": 22,
+      "rotation": 0,
+      "grip": [
+        0.15,
+        0.4
+      ],
+      "source": "source/ryoshu-arayashiki.png",
+      "sourceRect": [
+        17,
+        21,
+        2127,
+        703
+      ]
+    }
+  }
+}

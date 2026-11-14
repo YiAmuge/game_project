@@ -13,6 +13,7 @@ export function buildPlan(e){
  return{categories,stats};
 }
 function itemScore(e,a,plan){
+ if(a.group==='special')return 110;
  let score=120-plan.categories.indexOf(a.group)*30+(priorities[a.group].length-priorities[a.group].indexOf(a.key))*2;
  if(Augments.exclusive(e,a.key))score+=40;if(magazineUsers.has(e.key)&&a.key==='magazine2')score+=35;
  if(skillUsers.has(e.key)&&['cooldown15','maskDeLu','battleHaste'].includes(a.key))score+=20;

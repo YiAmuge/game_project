@@ -8,7 +8,7 @@ export const AUGMENT_ART={
  battleHaste:['tech',10,5,400,415],cooldown15:['tech',440,70,325,335],magazine2:['tech',780,55,390,355],carrier:['carrier',0,0,1254,1254],
  maskDeLu:['mask',0,0,1254,1254],highRisk:['tech',505,520,525,400],adaptiveSpeed:['tech',1065,535,430,375],
 };
-export const AUGMENT_COLORS={combat:'#ef7953',survival:'#a4db74',tech:'#8ccff1'};
+export const AUGMENT_COLORS={combat:'#ef7953',survival:'#a4db74',tech:'#8ccff1',special:'#c38cff'};
 export const AUGMENT_ANGLES={wisdom:-Math.PI/4};
 const images=new Map();
 export function artImage(sheet){
@@ -17,7 +17,7 @@ export function artImage(sheet){
 export const artKey=(e,key)=>e?.key==='sora'&&key==='writtenOrder'?'terminalOrder':key;
 export function setChampion(canvas,e){const key=artKey(e,canvas.dataset.augment);if(canvas.dataset.artKey===key)return;canvas.dataset.artKey=key;delete canvas.dataset.painted;drawAugment(canvas,canvas.dataset.augment);}
 export function drawAugment(canvas,key){
- key=canvas.dataset.artKey||key;const f=AUGMENT_ART[key];if(!f)return;const image=artImage(f[0]);if(!image.complete||!image.naturalWidth)return;
+ key=canvas.dataset.artKey||key;if(key==='goldenBough'){const c=canvas.getContext('2d'),n=canvas.width;c.clearRect(0,0,n,n);c.fillStyle='#100d1d';c.fillRect(0,0,n,n);c.strokeStyle='#f5cc64';c.lineWidth=n*.045;c.lineCap='round';for(const points of [[[.32,.86],[.50,.55],[.59,.17]],[[.49,.57],[.28,.37],[.25,.22]],[[.55,.39],[.77,.25]],[[.43,.69],[.70,.51]],[[.34,.43],[.43,.23]],[[.58,.23],[.74,.11]]]){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x*n,y*n):c.moveTo(x*n,y*n));c.stroke();}canvas.dataset.painted=key;return;}const f=AUGMENT_ART[key];if(!f)return;const image=artImage(f[0]);if(!image.complete||!image.naturalWidth)return;
  if(canvas.dataset.painted===key)return;const c=canvas.getContext('2d'),n=canvas.width,angle=AUGMENT_ANGLES[key]||0,co=Math.abs(Math.cos(angle)),si=Math.abs(Math.sin(angle)),scale=.9*n/Math.max(f[3]*co+f[4]*si,f[3]*si+f[4]*co);c.clearRect(0,0,n,n);c.fillStyle='#000000';c.fillRect(0,0,n,n);c.imageSmoothingEnabled=false;
  c.save();c.translate(n/2,n/2);c.rotate(angle);c.drawImage(image,f[1],f[2],f[3],f[4],-f[3]*scale/2,-f[4]*scale/2,f[3]*scale,f[4]*scale);c.restore();canvas.dataset.painted=key;
 }

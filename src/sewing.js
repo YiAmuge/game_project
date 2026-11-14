@@ -81,7 +81,7 @@ export function afterDamage(g,source,target,dealt,{hpBefore,campBonus}={}){
 export function reward(g,team){
  if(![0,1].includes(team)||g.sewingWinner!==null)return;g.sewingWinner=team;g.sewingTeams[team]=true;g.sewingBuffOrder=++g.buffSequence;
  for(const c of g.champions(team))g.award(c,SEWING.rewardXp,SEWING.rewardGold);
- g.log(`${team===0?'아군':'적군'} 바느질의 왕 처치 · 땀수!`,'boss');g.announce('boss-kill','바느질의 왕 처치','팀 전원 125 XP · 200 재화 · 영구 버프 땀수!',{team});
+ g.log(`${team===0?'아군':'적군'} 바느질의 왕 처치 · 땀수!`,'boss');g.announce('boss-kill','바느질의 왕 처치','팀 전원 125 XP · 200 코스트 · 영구 버프 땀수!',{team});
 }
 export function draw(r,e,g){
  const p=e.needleCast;if(!p||!e.alive||e.returning)return;for(const d of p.directions||[p]){const end={x:p.x+d.dx*SEWING.range,y:p.y+d.dy*SEWING.range},nx=-d.dy*.18,ny=d.dx*.18;

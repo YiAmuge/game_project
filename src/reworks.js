@@ -1,3 +1,5 @@
+import * as Bough from './golden-bough.js';
+import * as Debuffs from './debuffs.js';
 import { RULES, WORLD } from './data.js';
 import { clamp,distance,direction,segmentDistance } from './geometry.js';
 import { settleBody } from './collision.js';
@@ -10,7 +12,7 @@ export function rectangle(g,e,d,range,width,damage,hit=()=>{}){
  g.effects.push({type:'strikeRect',source:e.id,theme:e.key,x:e.x,y:e.y,r:range,angle:Math.atan2(d.y,d.x),shape:{kind:'rect',range,width,angle:Math.atan2(d.y,d.x)},slot:e.actionKind==='skill'?e.castSlot:undefined,life:.24,maxLife:.24});
  for(const t of [...g.units])if(g.hostile(e,t)&&g.clearLine(e,t)){
   const x=t.x-e.x,y=t.y-e.y,along=x*d.x+y*d.y,side=Math.abs(y*d.x-x*d.y);
-  if(Math.hypot(Math.max(0,-along,along-range),Math.max(0,side-width/2))<=t.radius){const actual=g.deal(e,t,damage);hit(t,actual);hits.push(t);}
+  if(Math.hypot(Math.max(0,-along,along-range),Math.max(0,side-width/2))<=t.radius){const shield=g.shield(t),actual=g.deal(e,t,damage);hit(t,actual,Math.max(0,shield-g.shield(t)));hits.push(t);}
  }
  return hits;
 }
@@ -35,11 +37,11 @@ export function faust(g,e,slot,p,d){
   g.cone(e,d,5,Math.PI,230,t=>{
    const away=direction(e,t),len=Math.max(0,5+t.radius+.18-distance(e,t));
    g.startMotion(t,away,len,{kind:'knock',source:e,speed:18,forcedMaxSpeed:18});
-   if(e.level===RULES.maxLevel)g.status(t,'slow',.2,1.5,e);
+   if(e.level>=Bough.maxLevel(e))g.status(t,'slow',.2,1.5,e);
   });g.addBuff(e,'explore',4);
  }else{
-  const len=Math.min(10,distance(e,p)),delay=1.25;e.channelUntil=e.level===RULES.maxLevel?g.time:g.time+delay;
-  g.pending.push({type:'burst',source:e,x:e.x+d.x*len,y:e.y+d.y*len,r:4.8,at:g.time+delay,windup:delay,autonomous:e.level===RULES.maxLevel,damage:680});
+  const len=Math.min(10,distance(e,p)),delay=1.25;e.channelUntil=e.level>=Bough.maxLevel(e)?g.time:g.time+delay;
+  g.pending.push({type:'burst',source:e,x:e.x+d.x*len,y:e.y+d.y*len,r:4.8,at:g.time+delay,windup:delay,autonomous:e.level>=Bough.maxLevel(e),damage:680});
  }
  return true;
 }
@@ -66,6 +68,7 @@ export function honglu(g,e,slot,p,d){
   e.state.insightHealingEvent=e.healingEvent;e.state.insightUntil=g.time+1.2;e.state.insightOrigin={x:e.x,y:e.y};e.phaseEnemiesUntil=g.time+1.2;
   g.addShield(e,350,`insight-${e.id}`,1.2);g.addBuff(e,'insight',1.2,{copy:false});
  }else{
+  if(Bough.active(e)){for(const ally of g.champions(e.team).filter(a=>a.alive&&!g.hidden(a))){Debuffs.cleanse(g,ally);const z={kind:'waterfall',source:e,anchor:ally,healingEvent:e.healingEvent,x:ally.x,y:ally.y,r:3.5,until:g.time+4,nextTick:g.time+.3,tickEvery:.3,cleanse:true,cleansed:new Set()};g.zones.push(z);g.emitSound?.('waterfall',e,{slot:'r',x:z.x,y:z.y,duration:4,phase:'waterfall-start'});waterfallPulse(g,z,true);}return true;}
   const z=g.zones.find(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time);
   if(z)z.moving=!z.moving;
   else {const zone={kind:'waterfall',source:e,healingEvent:e.healingEvent,x:p.x,y:p.y,d:{...d},moving:true,r:6.5,until:g.time+3,nextTick:g.time+.5,tickEvery:.5,cleanse:true,cleansed:new Set()};g.zones.push(zone);g.emitSound?.('waterfall',e,{slot:'r',x:zone.x,y:zone.y,duration:3,phase:'waterfall-start'});waterfallPulse(g,zone,true);}
@@ -123,6 +126,7 @@ export function ishmael(g,e,d){
   if(e.state.ishmaelCast!==cast)return;cast.fired=true;
   g.bullet(e,d,300,16,{ishmaelOwner:e.id,speed:28,width:.585,pierce:Infinity,onHit:(t,p)=>{
    if(t.kind!=='champion')return;
+   Bough.harpoonHit(g,e);
    p.remaining=0;p.hit=true;if(!t.alive)return;
    const front=e.radius+t.radius+.15;
    const pulled=g.startMotion(t,direction(t,e),Math.max(0,distance(t,e)-front),{kind:'knock',source:e,follow:e,stopDistance:front,speed:18,forcedMaxSpeed:18});
