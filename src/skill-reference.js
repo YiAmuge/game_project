@@ -1,4 +1,5 @@
 import {CHANGED_ULTIMATES,ultimateNotes,cooldown as boughCooldown} from './golden-bough.js';
+import {GASHARPOON_NAME,GASHARPOON_TEXT,GASHARPOON_SKILLS as GAS} from './ahab-ego-data.js';
 import*as Moses from'./moses.js';
 import{basicFanAngle}from'./data.js';
 import{ARCANA_STAGES}from'./queen.js';
@@ -159,9 +160,18 @@ export function skillTextHTML(text){
 
 
 export function goldenUltimateReference(key){
+ if(key==='ahab')return {title:GASHARPOON_NAME,cooldown:'쿨타임 45초 · 최대 12초 변신',ranges:[row('변신','자신'),row('탄식의 메아리','사거리 9 · 100° 부채꼴'),row('죄책감의 무게','사거리 10 · 135° 부채꼴'),row('탈색된 참회','사거리 무한 · 관통 폭 0.9')],summary:'12초간 변신해 기본공격 5발과 전술기·궁극기를 각각 한 번 사용합니다. 모두 소모하면 변신이 종료됩니다. 변신 궁극기는 정신집중 후 관통 작살을 발사해 적 챔피언에게 피해를 입히고 체력 10% 미만인 대상을 처형합니다.',details:GASHARPOON_TEXT+'\n\n'+GAS.rText,sections:[section('변신',GASHARPOON_TEXT),section(GAS.ultimate,GAS.rText)],summarySections:null};
  if(!CHANGED_ULTIMATES[key])return null;
  const notes=ultimateNotes(key),details=notes.map(n=>n.label+': '+n.text).join('\n\n');
  return {title:CHANGED_ULTIMATES[key],cooldown:'쿨타임 '+boughCooldown({key,goldenBough:true},'r',CHAMPIONS[key].r)+'초'+(key==='ryoshu'?' · 종료 후 시작':''),
   ranges:key==='ryoshu'?[row('순간이동','사거리 5.5'),row('연속 베기','자신 중심 반경 3')]:[row('장판 부착','자신 · 생존 중인 모든 아군 챔피언'),row('장판 범위','각 아군 중심 반경 3.5 · 4초')],
   summary:key==='ryoshu'?'순간이동한 뒤 이동하며 원형 연속 베기를 가합니다. 받는 피해가 70% 감소하고 상태이상에 면역이며, 유지 중 치유 없이 타격마다 같은 양의 자해를 받습니다. 재사용으로 종료하면 최대 체력 15% 이내에서 회복합니다.':'모든 살아 있는 아군에게 이동하는 장판을 부착하고 상태이상을 해제합니다. 각 장판은 적에게 피해를 입히고 아군을 치유합니다.',details,sections:notes.map(n=>({title:n.label,text:n.text})),summarySections:null};
+}
+
+export function goldenSkillReference(key,index){
+ if(key!=='ahab')return index===3?goldenUltimateReference(key):null;
+ if(index===3)return goldenUltimateReference(key);
+ if(index===1)return{title:GAS.basic,cooldown:'고정 탄창 5발 · 장전 불가 · 발사 간격 0.2초',ranges:[row('공격 범위','사거리 9 · 100° 부채꼴')],summary:'외부 효과로 늘어나지 않는 탄창 5발로 범위 안의 모든 적에게 (72 + 대상 최대 체력의 2%) 피해를 입힙니다.',details:GAS.basicText,sections:null,summarySections:null};
+ if(index===2)return{title:GAS.tactical,cooldown:'변신마다 1회 · 쿨타임 없음',ranges:[row('공격 범위','사거리 10 · 135° 부채꼴')],summary:'0.5초 정신집중 후 60 피해를 빠르게 3번 입히고 1초간 기절시킵니다.',details:GAS.qText,sections:null,summarySections:null};
+ return null;
 }

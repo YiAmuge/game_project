@@ -43,10 +43,12 @@ export function combatStyle(key,g,e,{kind='basic',slot,type,weaponIndex}={}){
  if(key==='outis'&&slot==='r')s=style('#ac6442','fire','#d5a36a','#354932');
  if(key==='nelly'&&type==='nellyProc')s=style('#ac343f','metal','#e49b9d','#4e1925');
  if(key==='ppui'&&slot==='r')s=style('#b82e45','metal','#f78d98','#4d1122');
+ if(key==='ahab'&&(e?.state?.gasharpoon||type==='gasharpoon'))s=style('#f7fbff','metal',slot==='q'?'#8bbaff':slot==='r'?'#d6a6ff':'#b1f5c3','#8c9597');
  return s;
 }
 export function hitStyle(g,source,fx){
  const s=combatStyle(source?.key||fx.theme,g,source,{kind:'hit',slot:fx.slot,type:fx.variant||fx.type,weaponIndex:fx.weaponIndex});
+ if(source?.key==='ahab'&&fx.variant==='gasharpoon')return{...s,shape:fx.slot==='q'?'impact':'pierce'};
  if(source?.key==='sinclair'&&fx.slot==='q')return {...NEUTRAL,shape:'pierce'};
  if(source?.key==='ryoshu'&&fx.slot==='q')return {...NEUTRAL,shape:'slash'};
  return {...s,shape:(fx.variant||fx.type)==='nellyProc'?'slash':'impact'};

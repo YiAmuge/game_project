@@ -11,7 +11,8 @@ const activePreviews=new WeakMap();
 const stanceImages=new Map();
 function championStance(key){
  if(stanceImages.has(key))return stanceImages.get(key);
- const base=key==='bloodfiend'?'nosferatu':key==='soraEgo'?'sora':key==='yanDistorted'?'yan':key,f=FRAMES[key],e={id:0,key:base,previewStance:true,alive:true,team:0,x:0,y:0,facing:Math.PI,state:{},status:{},buffs:{},attackAt:-99},g={time:0,buff:(_,k)=>key==='bloodfiend'&&k==='bloodfiend'||key==='soraEgo'&&k==='soraEgo'||key==='yanDistorted'&&k==='yanDistorted',stat:()=>0,attackStyle:()=> 'slash'};
+ const base=key==='ahabGasBody'?'ahab':key==='bloodfiend'?'nosferatu':key==='soraEgo'?'sora':key==='yanDistorted'?'yan':key,f=FRAMES[key],e={id:0,key:base,previewStance:true,alive:true,team:0,x:0,y:0,facing:Math.PI,state:{},status:{},buffs:{},attackAt:-99},g={time:0,buff:(_,k)=>key==='bloodfiend'&&k==='bloodfiend'||key==='soraEgo'&&k==='soraEgo'||key==='yanDistorted'&&k==='yanDistorted',stat:()=>0,attackStyle:()=> 'slash'};
+ if(key==='ahabGasBody')e.state.gasharpoon={};
  const stage=document.createElement('canvas');stage.width=1024;stage.height=768;const c=stage.getContext('2d',{willReadFrequently:true}),r={ctx:c,weaponTrail(){}};c.translate(512,640);c.scale(120,120);c.imageSmoothingEnabled=false;
  drawBackEquipment(r,e,g);const h=spriteHeight(key),w=h*f.w/f.h,origin=spriteOrigin(g,e);c.save();c.translate(origin.x,origin.y);if((Math.cos(bodyFacing(g,e))<0)!==Boolean(f.mirror))c.scale(-1,1);c.drawImage(loadAtlas(f.sheet||0),f.x,f.y,f.w,f.h,-w*(f.foot?.[0]??.5),-h*(f.foot?.[1]??1),w,h);c.restore();drawEquipment(r,e,g);
  // Fit the complete body, ornaments and equipped weapons without clipping.

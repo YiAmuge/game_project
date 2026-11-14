@@ -1,3 +1,4 @@
+import * as AhabEgo from './ahab-ego.js';
 import * as Bough from './golden-bough.js';
 import{initRivalries,refreshPracticeRivalries}from'./rivalries.js';
 import * as Sewing from './sewing.js';
@@ -98,7 +99,7 @@ export function onDeath(g,e){
 }
 export function refreshOptions(g){
  const p=g.player,o=g.practice;if(!p?.alive)return;
- if(o.infiniteAmmo){p.ammo=g.ammoCap(p);p.reloadProgress=0;if(p.state.exhaustedUntil){delete p.state.exhaustedUntil;delete p.status.silence;}}
+ if(o.infiniteAmmo&&!AhabEgo.active(p)){p.ammo=g.ammoCap(p);p.reloadProgress=0;if(p.state.exhaustedUntil){delete p.state.exhaustedUntil;delete p.status.silence;}}
  if(o.noCooldown){
   if(p.key==='yi'&&Bough.active(p)){p.state.yiCharges=2;p.state.yiReady=0;}
   p.qCd=p.rCd=0;
@@ -120,7 +121,7 @@ export function afterStep(g){
  for(const e of g.champions().filter(e=>e.trainingDummy&&e.alive)){if(e.trainingDummy.infinite)e.hp=e.maxHp;if(distance(e,e.trainingDummy.home)>e.trainingDummy.leash)resetDummyPosition(g,e);}
 }
 export function sellAll(g){
- if(!g.training)return false;const p=g.player;p.augments=[];delete p.absorbedCarrier;delete p.goldenBough;for(const z of g.zones)if(z.source===p&&z.kind==='arayashiki')z.until=g.time;delete p.state.yiCharges;delete p.state.yiReady;delete p.buffs.donLifesteal;p.level=Math.min(p.level,Bough.maxLevel(p));p.xp=Math.min(p.xp,Bough.levelXp(Bough.maxLevel(p)));p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
+ if(!g.training)return false;const p=g.player;AhabEgo.end(g,p);p.augments=[];delete p.absorbedCarrier;delete p.goldenBough;for(const z of g.zones)if(z.source===p&&z.kind==='arayashiki')z.until=g.time;delete p.state.yiCharges;delete p.state.yiReady;delete p.buffs.donLifesteal;p.level=Math.min(p.level,Bough.maxLevel(p));p.xp=Math.min(p.xp,Bough.levelXp(Bough.maxLevel(p)));p.shields=p.shields.filter(s=>s.source!==`battery-${p.id}`);for(const u of UPGRADES)p.upgrades[u.key]=0;
  for(const k of ['augReloadStacks','augCombatAt','maskStacks','orderStacks','antimatterNext','duelStacks','duelDecay','accelDistance','accelReady'])delete p.state[k];for(const k of ['augReload','augBattleHaste','maskBoost','writtenOrder'])delete p.buffs[k];
  g.refreshEquipment(p);return true;
 }

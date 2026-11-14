@@ -1,3 +1,4 @@
+import * as AhabEgo from './ahab-ego.js';
 import * as Bough from './golden-bough.js';
 import*as Moses from'./moses.js';
 import{FAN_ANGLE}from'./data.js';
@@ -61,6 +62,7 @@ export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
 export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
 export function skillCharges(g,e,slot){
+ if(AhabEgo.active(e)&&['q','r'].includes(slot))return{current:AhabEgo.available(e,slot)?1:0,max:1,remaining:0};
  if(slot==='r')return Bough.charges(g,e);if(slot!=='q')return null;if(e.key==='moses')return Moses.charges(g,e);if(e.key==='nosferatu')return Nosferatu.charges(g,e);if(e.key==='ppui')return Ppui.charges(g,e);
  const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
  if(!values)return null;const [current,max,ready]=values;return {current,max,remaining:current<max&&Number.isFinite(ready)?Math.max(0,ready-g.time):0};
@@ -75,6 +77,7 @@ function guboTarget(g,e,p,allyOnly=false){
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(AhabEgo.empowered(e)&&slot==='r'||AhabEgo.active(e))return AhabEgo.available(e,slot);
  if(slot==='r'&&Bough.storm(g,e))return true;
  if(Queen.recast(g,e,slot)||Nosferatu.recast(g,e,slot))return true;
  if(Kromer.recast(g,e,slot))return true;
@@ -93,6 +96,7 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))return !AhabEgo.active(e)||AhabEgo.available(e,slot);
  if(e.key==='moses')return Moses.validate(g,e,slot,options);
  if(e.key==='ezra')return Ezra.validate(g,e,slot);
  if(e.key==='queen')return Queen.validate(g,e,slot);
@@ -116,6 +120,7 @@ export function validateSkill(g,e,slot,p,options={}){
  return true;
 }
 export function ammoCap(g,e){
+ if(AhabEgo.active(e))return 5;
  if(e.lcaTrooper)return 16;if(e.key==='jamila')return 16+(has(e,'magazine2')?8:0);
  const extra=(has(e,'magazine2')?2:0)+(e.key==='faust'&&e.level>=Bough.maxLevel(e)?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
  if(e.key==='ezra')return Ezra.EZRA.ammo;
@@ -173,6 +178,7 @@ function shockIshmael(g,e){
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 export function cast(g,e,slot,p,d,options={}){
+ if(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))return AhabEgo.cast(g,e,slot,p);
  if(e.key==='moses'){Moses.cast(g,e,slot,d,options);return true;}
  if(e.key==='ezra'){Ezra.cast(g,e,slot,p,d);return true;}
  if(e.key==='queen'){Queen.cast(g,e,slot,p,d,options);return true;}
@@ -271,7 +277,7 @@ export function gregorStack(g,e,n=1){
 }
 export function takedown(g,e,victim,direct){
  if(!e||e.kind!=='champion')return;
- if(e.key==='ahab'&&direct&&victim.kind==='champion'&&victim.team!==e.team)e.ammo=g.ammoCap(e);
+ if(e.key==='ahab'&&!AhabEgo.active(e)&&direct&&victim.kind==='champion'&&victim.team!==e.team)e.ammo=g.ammoCap(e);
  V06.takedown(g,e,victim,direct);
 
  if(e.key==='gubo'&&victim.kind==='champion')e.qCd=0;
@@ -297,7 +303,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
- Bough.tick(g,e);Moses.tick(g,e,dt);
+ AhabEgo.tick(g,e);Bough.tick(g,e);Moses.tick(g,e,dt);
  Queen.tick(g,e);Nosferatu.tick(g,e);Ezra.tick(g,e,dt);
  Ppui.tick(g,e);Kromer.tick(g,e,dt);
  const s=e.state;

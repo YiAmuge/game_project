@@ -89,7 +89,7 @@ export class ChampionVFX {
     if(e.key==='meursault'&&slot==='q')this.event('chains',e,g,{life:.65});
     if(e.key==='meursault'&&slot==='r')this.event('chainStrike',e,g,{angle:cast.angle,r:8,spread:Math.PI*100/180,life:.65});
     if(e.key==='rudolph')this.event('electricCast',e,g,{life:slot==='r'?1.25:.5});
-    if(e.key==='ahab'&&slot==='q')this.event('shout',e,g,{life:.5});
+    if(e.key==='ahab'&&!e.state.gasharpoon&&slot==='q')this.event('shout',e,g,{life:.5});
     if(e.key==='ppui'&&slot==='q')this.event('petalField',e,g,{x:e.x,y:e.y,r:7,life:.6});
    }
    if(old.reload&&!buff('alisaReload'))this.event('embers',e,g,{life:.7});

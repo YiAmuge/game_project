@@ -1,3 +1,4 @@
+import {GASHARPOON_TEXT,GASHARPOON_NAME} from './ahab-ego-data.js';
 import {RULES,RUNTIME_CHAMPIONS as CHAMPIONS} from './data.js';
 import {distance} from './geometry.js';
 
@@ -8,8 +9,9 @@ export function levelXp(level){if(level<=10)return RULES.xp[level-1];let xp=RULE
 export const voyage=e=>active(e)&&e.key==='ishmael'?Math.min(8,e.ishmaelUltimateHits||0):0;
 export const fistBonus=(g,e)=>active(e)&&e.key==='meursault'&&(e.state.fistGrowthUntil||0)>g.time?(e.state.fistGrowth||0)*.4:0;
 export const outisRadius=(g,e)=>active(e)?g.attackRange(e):2.5;
-export function cooldown(e,slot,base){if(!active(e))return base;if(slot==='q'&&e.key==='meursault')return Math.max(0,base-7);if(slot!=='r')return base;return ({ryoshu:10,honglu:35})[e.key]??Math.max(0,base-({yi:37,don:15,heathcliff:15}[e.key]||0));}
+export function cooldown(e,slot,base){if(!active(e))return base;if(slot==='q'&&e.key==='meursault')return Math.max(0,base-7);if(slot!=='r')return base;return ({ryoshu:10,honglu:35,ahab:45})[e.key]??Math.max(0,base-({yi:37,don:15,heathcliff:15}[e.key]||0));}
 export const TEXT={
+ ahab:GASHARPOON_TEXT,
  yi:'궁극기 기본 재사용 대기시간이 37초 감소하고 최대 2회 비축한다. 사용한 횟수는 순서대로 충전된다.',
  faust:'최대 레벨이 15가 되고 자동 경험치를 포함한 모든 경험치 획득량이 2배가 된다. 최대 레벨에서는 입힌 최종 피해의 7%만큼 추가 고정 피해를 입히고 그 추가 피해의 50%만큼 체력을 회복한다.',
  don:'피갈망을 영구적으로 얻는다. 궁극기로 피갈망을 중복 획득하지 않으며 궁극기 기본 재사용 대기시간이 15초 감소한다.',
@@ -49,7 +51,7 @@ export function abilityInfo(g,e){
 }
 
 
-export const CHANGED_ULTIMATES={ryoshu:'천살성도 - 아라야시키',honglu:'태허환경'};
+export const CHANGED_ULTIMATES={ahab:GASHARPOON_NAME,ryoshu:'천살성도 - 아라야시키',honglu:'태허환경'};
 export function giftNotes(key){
  if(CHANGED_ULTIMATES[key])return [{label:'궁극기 변경',text:CHANGED_ULTIMATES[key]+'로 변경된다. 상세 효과는 궁극기 도감의 황금 가지 항목에서 확인한다.'}];
  const notes={
@@ -67,6 +69,7 @@ export function giftNotes(key){
  return (notes[key]||[]).map(([label,text])=>({label,text}));
 }
 export function ultimateNotes(key){
+ if(key==='ahab')return [{label:'개화 E.G.O',text:GASHARPOON_TEXT},{label:'전용 기술',text:'탄식의 메아리·죄책감의 무게의 상세 효과는 해당 기본공격·전술기 도감의 황금 가지 항목에서 확인한다. 탈색된 참회는 0.5초 정신집중 후 사거리 무한의 관통 작살을 발사해 적 챔피언에게 (200 + 대상의 잃은 체력 10%) 피해를 입히고 피해 적용 후 체력이 10% 미만이면 처형한다.'}];
  if(key==='ryoshu')return [
   {label:'연속 베기',text:'사거리 5.5 안으로 순간이동한 뒤 자신 중심 반경 3의 모든 적에게 0.2초마다 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입힌다. 지속 중 이동속도 +20%·받는 피해량 70% 감소·상태이상 면역을 얻으며 이동과 종료 재사용만 가능하다.'},
   {label:'유지와 종료',text:'유지 중에는 외부 치유·흡혈·자연 회복으로 체력을 회복할 수 없다. 매 타격마다 자신도 적 한 대상에게 주는 피해와 같은 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입으며 사망할 수 있다. 자해 비용은 피해 감소를 적용하지 않는다. 사망하면 해당 위치에 장판이 5초간 남는다. 재사용으로 종료하면 적에게 입힌 총 피해의 30%를 회복하되 자신의 최대 체력 15%를 넘지 않는다. 궁극기 재사용 대기는 유지 중 정지하며 종료·사망 후 시작된다.'},

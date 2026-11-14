@@ -102,7 +102,7 @@ export class SkillVFX {
   }
   for(const p of game.projectiles){
    if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);const origin=p.origin||p.source;if(!origin||!visible(origin))continue;
-   const key=p.theme||p.source?.key;if(key==='moses')continue;if(key==='jamila'&&p.source.state.jamilaQ&&p.source.state.jamilaQ.phase!=='retreat')continue;const s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
+   const key=p.theme||p.source?.key;if(key==='moses'||p.gasharpoon)continue;if(key==='jamila'&&p.source.state.jamilaQ&&p.source.state.jamilaQ.phase!=='retreat')continue;const s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
    let shotOrigin=origin;
    const myo=key==='myo'&&p.slot==='q'&&myoFiring(game,p.source),lca=key==='jamila'&&p.lca,muzzle=key==='gubo'&&p.damageKind==='basic'||myo||lca;
    if((key==='gubo'||myo||lca)&&camera.screenToWorld){const tip=myo||lca?weaponEmissionScreen(game,p.source,camera,origin):guboEffectAxis(game,p.source,camera,origin,{angle:Math.atan2(p.dy,p.dx)}).start,ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}

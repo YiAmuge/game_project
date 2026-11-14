@@ -34,6 +34,7 @@ export const WEAPON_ART={
 export const MIDDLE_GRIP=new Set(['starbuck','don','sinclair','honglu','dongrang','hohenheim','marton','rudolph']);
 export const gripPivot=key=>key==='moses'?.30:key==='queen'?.42:key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
 export function equippedWeapon(g,e){
+ if(e.key==='ahab'&&e.state.gasharpoon)return [e.state.gasharpoon.bladeMissingUntil>g.time?'ahabGasArmEmpty':'ahabGasArm',2.6,FRAMES.ahabGasArm.grip[0]];
  if(e.key==='ezra'){const index=e.state.ezraAttack?.until>g.time?e.state.ezraAttack.weapon:Ezra.currentIndex(g,e),w=Ezra.weapon(g,e,index);return [w.asset,w.length,w.pivot];}
  if(e.key==='ryoshu'&&e.goldenBough&&(e.arayashikiWeapon||g.zones.some(z=>z.kind==='arayashiki'&&z.source===e&&!z.posthumous&&z.until>g.time)))return ['ryoshuArayashiki',2.1,.15];
  const base=WEAPON_ART[e.key];if(!base)return null;
@@ -341,6 +342,7 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
  if(e.state.kromerHeldBy)return true;
+ if(e.key==='ahab'&&e.state.gasharpoon){drawGasharpoonArm(r,e,g,lift);return true;}
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'front');return true;}
  if(e.key==='nosferatu'&&g.buff(e,'bloodfiend')){drawBloodSweep(r,e,g,lift,'front');return true;}
  if(e.key==='yan'&&g.buff(e,'yanDistorted')&&!e.previewStance||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
@@ -454,4 +456,16 @@ function drawBloodSweep(r,e,g,lift,layer){
   const project=v=>{if(!camera)return {x:p.origin.x+v.x,y:p.origin.y-.86+v.y};const at=camera.worldToScreen({x:e.x+v.x,y:e.y+v.y},.075);return {x:p.origin.x+(at.x-origin.x)/camera.scale,y:p.origin.y-.86+(at.y-origin.y)/camera.scale};},hand=project(pose.ground),tip=project({x:Math.cos(pose.angle)*(1.7),y:Math.sin(pose.angle)*1.7}),angle=Math.atan2(tip.y-hand.y,tip.x-hand.x);
   c.save();c.translate(hand.x,hand.y);c.rotate(angle);c.shadowColor='#ed1643';c.shadowBlur=9;drawWeapon(c,pose.asset,pose.length,{pivot:.08,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});r.weaponTrail(e,g,pose.asset,{x:.1,y:0},{x:pose.length*.92,y:0},true);c.restore();
  }
+}
+
+export function gasharpoonArmPose(g,e,lift=0){
+ const s=e.state.gasharpoon,origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,ch=s.channel,thrust=s.thrust,age=thrust?g.time-thrust.at:-Infinity;
+ let angle=ch?.angle??(age>=0&&g.time<thrust.until?thrust.angle:e.facing??0),push=0;
+ if(ch){const progress=Math.max(0,Math.min(1,(g.time-ch.at)/.5));push=ch.slot==='q'?-.42*progress:Math.sin(g.time*(65+progress*70))*.045*progress;}
+ else if(age>=0&&g.time<thrust.until){const duration=thrust.slot==='basic'?.2/3:.24;push=.48*Math.sin((age%duration)/duration*Math.PI);}
+ return {hand:{x:origin.x-.48*flip,y:origin.y-1.05},angle,push};
+}
+export function drawGasharpoonArm(r,e,g,lift=0){
+ const c=r.ctx,pose=gasharpoonArmPose(g,e,lift),[key,len,pivot]=equippedWeapon(g,e),f=FRAMES[key],m=weaponGeometry(key,len);
+ c.save();c.translate(pose.hand.x,pose.hand.y);orientWeapon(c,pose.angle);c.translate(pose.push,-(f.grip[1]-.5)*m.height*m.scale);drawWeapon(c,key,len,{pivot,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
 }

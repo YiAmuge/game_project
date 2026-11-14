@@ -13,6 +13,7 @@ export function mobileAttackTargets(g,e,range=basicAimReach(g,e),{ignoreWalls=fa
  return g.units.filter(t=>t.alive&&g.hostile(e,t)&&!g.hidden(t)&&g.visibleTo(e.team,t)&&(ignoreWalls||g.clearLine(e,t))&&!g.locked(t)&&!t.returning&&!t.state?.posthumous&&!(t.invulnerableUntil>g.time)&&distance(e,t)<=range+(t.radius||0)+1e-8).sort((a,b)=>(b.kind==='champion')-(a.kind==='champion')||(a.kind==='champion'&&b.kind==='champion'?a.hp-b.hp:0)||distance(e,a)-distance(e,b)||a.id-b.id);
 }
 export function nearestMovementAim(g,e,slot){
+ if(e.key==='ahab'&&e.goldenBough&&slot==='r')return false;
  if(e.key==='ezra')return slot==='basic'?Ezra.movementWeapon(g,e):slot==='q'&&e.state.ezraLastWeapon!=null&&Ezra.movementWeapon(g,e,e.state.ezraLastWeapon);
  const moves={nosferatu:['r'],kromer:['r'],don:['basic','r'],myo:['basic'],starbuck:['basic','r'],jamila:['q'],ryoshu:['q','r'],sinclair:['q','r'],heathcliff:['q'],outis:['q','r'],alisa:['q','r'],nelly:['r'],ahab:['r'],dongrang:['r'],hohenheim:['q'],kim:['q'],sora:['q']};
  return Boolean(moves[e.key]?.includes(slot));

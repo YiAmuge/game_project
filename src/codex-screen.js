@@ -1,7 +1,7 @@
 import {giftNotes,CHANGED_ULTIMATES} from './golden-bough.js';
 import{augmentDescriptionHTML}from'./augment-description.js';
 import{championDescription}from'./champion-reference.js';
-import{championReferenceStats,skillReference,goldenUltimateReference,skillTextHTML}from'./skill-reference.js';
+import{championReferenceStats,skillReference,goldenUltimateReference,goldenSkillReference,skillTextHTML}from'./skill-reference.js';
 import{FRAMES}from'./art.js';
 import{CHAMPIONS,CHAMPIONS as PLAYABLE,POSITIONS,RULES,AUGMENTS,AUGMENT_RULES}from'./data.js';
 import{MONSTER_GUIDE,REFERENCE_RULES}from'./reference-content.js';
@@ -29,7 +29,7 @@ export class CodexScreen{
   target.innerHTML=`<div class="skill-description-tools"><span class="skill-kind">${name} <kbd>${hotkey}</kbd></span><nav class="skill-view-toggle" aria-label="설명 방식"><button data-description-mode="summary" aria-pressed="${this.descriptionMode==='summary'}">간단 요약</button><button data-description-mode="details" aria-pressed="${this.descriptionMode==='details'}">상세 설명</button></nav></div>`;
   if(this.skill===3&&!f&&base.baseUltimates)target.insertAdjacentHTML('beforeend',base.baseUltimates.map((_,i)=>article(skillReference(this.key,this.skill,false,i))).join(''));
   else target.insertAdjacentHTML('beforeend',article(skillReference(this.key,this.skill,Boolean(f))));
-  if(this.skill===3&&!f&&CHANGED_ULTIMATES[this.key])target.insertAdjacentHTML('beforeend',`<aside class="golden-skill"><h4>※ 황금 가지 흡수 시</h4>${article(goldenUltimateReference(this.key))}</aside>`);
+  if(!f&&goldenSkillReference(this.key,this.skill)){target.insertAdjacentHTML('beforeend',`<aside class="golden-skill"><h4>※ 황금 가지 흡수 시</h4>${article(goldenSkillReference(this.key,this.skill))}${this.key==='ahab'&&this.skill===3?'<canvas class="golden-form-preview" width="260" height="300" aria-label="개화 E.G.O 에이해브"></canvas>':''}</aside>`);const formPreview=target.querySelector('.golden-form-preview');if(formPreview)preview(formPreview,{key:'ahabGasBody',label:'개화 E.G.O 에이해브',stance:true});}
   target.querySelectorAll('[data-description-mode]').forEach(b=>b.onclick=()=>{this.descriptionMode=b.dataset.descriptionMode;this.championDetail();});
   if(this.skill===0){const effects=exclusiveAugments(this.key).filter(a=>a.key!=='goldenBough');if(effects.length)target.insertAdjacentHTML('beforeend',`<section class="champion-exclusive"><h3>E.G.O 기프트 전용 효과</h3>${effects.map(a=>`<h4>${escape(a.name)}</h4><p>${this.descriptionMode==='details'?skillTextHTML(a.text):a.summary?skillTextHTML(a.summary):this.key==='jamila'?'조건을 무시해 구매할 수 있으며 침투 거리·선봉 투입 효과가 강화됩니다.':this.key==='yan'?'조건 없이 반값에 구매합니다. 뒤틀림 상태가 되면 E.G.O 기프트 칸을 비우고 효과를 상시 패시브로 흡수합니다.':'조건을 무시해 구매할 수 있으며 본국검술 보호막을 주기적으로 얻습니다.'}</p>`).join('')}</section>`);}
   if(this.skill===0&&giftNotes(this.key).length)target.insertAdjacentHTML('beforeend',`<aside class="gift-footnotes champion-golden-notes"><h4>※ 황금 가지</h4><ol>${giftNotes(this.key).map(n=>`<li><b>${escape(n.label)}</b><p>${skillTextHTML(n.text)}</p></li>`).join('')}</ol>${CHANGED_ULTIMATES[this.key]?'<button class="golden-skill-link">궁극기 강화 설명 보기 →</button>':''}</aside>`);

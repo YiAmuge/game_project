@@ -1,3 +1,4 @@
+import * as AhabEgo from './ahab-ego.js';
 import * as Bough from './golden-bough.js';
 import*as Ezra from'./ezra.js';
 import{GAHWAN}from'./gahwan.js';
@@ -17,6 +18,7 @@ import { STARBUCK } from './v10-champions.js';
 import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
+ if(AhabEgo.empowered(e)){if(AhabEgo.active(e))return slot==='q'?{kind:'cone',range:10,radius:135*Math.PI/180,impact:0,confirm:false}:{kind:'line',range:Math.hypot(g.bounds?.w||100,g.bounds?.h||100),radius:.45,impact:0,confirm:false,ignoreWalls:true};if(slot==='r')return{kind:'self',range:0,radius:0,confirm:false};}
  if(slot==='r'&&Bough.active(e)&&e.key==='ryoshu')return Bough.storm(g,e)?{kind:'self',range:0,radius:3,confirm:false}:{kind:'circle',range:5.5,radius:3,confirm:true,ignoreWalls:true};
  if(slot==='r'&&Bough.active(e)&&e.key==='honglu')return {kind:'self',range:0,radius:3.5,confirm:false};
  if(e.key==='gahwan'&&slot==='r')return{kind:'cone',range:GAHWAN.range,radius:GAHWAN.angle,impact:0,confirm:false};
