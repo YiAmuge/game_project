@@ -1,4 +1,6 @@
 import * as Bough from './golden-bough.js';
+import {MEI} from './mei-data.js';
+import {recast as meiRecast} from './mei.js';
 import{stage as queenStage}from'./queen.js';
 import{capacity as bloodCapacity}from'./nosferatu.js';
 import{HEATH}from'./heathcliff.js';
@@ -146,6 +148,7 @@ export function chargePreview(r,e,g){
 
 export function championGroundEffects(r,e,g){
  const c=r.ctx,color='#c5d0d33b',outline=(radius)=>r.circle(e.x,e.y,radius,null,color,.025);
+ if(e.key==='mei'&&e.alive&&meiRecast(g,e))r.circle(e.x,e.y,MEI.kickRadius,'#ff4b2005','#ffba6845',.025);
  if(e.key==='ahab'&&e.alive){c.save();c.globalAlpha=.55;r.circle(e.x,e.y,AHAB.orderRadius,null,e.state.order==='guard'?'#354eab':'#f19c40',.035);c.restore();}
  if(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))outline(4.5);
  if(g.buff(e,'martonDrain'))r.circle(e.x,e.y,5.5,null,'#02ebf770',.035);

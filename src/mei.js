@@ -55,7 +55,7 @@ export function attack(g,e,p){
   if(e.state.meiCombo!==combo)return;combo.dashing=false;combo.until=g.time+count*P.interval;
   for(let i=0;i<count;i++)g.schedule(e,i*P.interval,()=>{
    if(e.state.meiCombo!==combo)return;e.attackAt=e.lastAttackAt=g.time;e.attackFacing=combo.angle;e.state.meiPunch={at:g.time,until:g.time+P.interval,index:i,last:i===count-1,angle:combo.angle};
-   fireSound(g,e);const d={x:Math.cos(combo.angle),y:Math.sin(combo.angle)};for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=P.strikeRange+t.radius&&g.clearLine(e,t)){const v=direction(e,t);if(v.x*d.x+v.y*d.y>=Math.cos(P.strikeAngle/2))hit(g,e,t,P.damage);}
+   fireSound(g,e);for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=P.strikeRange+t.radius&&g.clearLine(e,t))hit(g,e,t,P.damage);
    fx(g,e,'meiPunch',{angle:combo.angle,index:i,last:i===count-1,r:P.strikeRange,life:.3,maxLife:.3});
   });
  };
@@ -64,11 +64,12 @@ export function attack(g,e,p){
 function finishQ(g,e){e.state.meiQPhase='recast';e.state.meiQRecastUntil=g.time+P.qRecast;}
 function cooldownQ(g,e){delete e.state.meiQRecastUntil;delete e.state.meiQPhase;e.qCd=g.cooldown(e,'q');}
 function kick(g,e,d){
- cooldownQ(g,e);e.state.meiKickAt=g.time;const center={x:e.x,y:e.y};
+ cooldownQ(g,e);e.state.meiKickAt=g.time;
  e.state.meiKick={at:g.time,until:g.time+.45,angle:Math.atan2(d.y,d.x)};
+ fx(g,e,'meiFlameField',{r:P.kickRadius,life:.65,maxLife:.65,follow:true});
  for(let i=0;i<2;i++)g.schedule(e,i*P.kickEvery,()=>{
-  fireSound(g,e,'q','mei-kick');fx(g,e,'meiVortex',{...center,r:P.kickRadius,life:.45,maxLife:.45});
-  for(const t of [...g.units])if(g.hostile(e,t)&&distance(center,t)<=P.kickRadius+t.radius&&g.clearLine(center,t)){
+  fireSound(g,e,'q','mei-kick');fx(g,e,'meiVortex',{r:P.kickRadius,life:.45,maxLife:.45,follow:true});
+  for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=P.kickRadius+t.radius&&g.clearLine(e,t)){
    const contact=hit(g,e,t,66+finalArmor(g,e)*.066,{slot:'q'});if(i!==1||!t.alive||!contact)continue;
    const front={x:e.x+d.x*(e.radius+t.radius+.12),y:e.y+d.y*(e.radius+t.radius+.12)},v=direction(t,front),len=distance(t,front);
    const slow=burning(g,t)?.3:.15,applySlow=()=>{if(t.alive)g.status(t,'slow',slow,3,e);};
@@ -88,6 +89,7 @@ export function cast(g,e,slot,p,d){
  if(slot==='q'){
   if(recast(g,e)){const angle=e.state.meiKickFacing??e.facing;delete e.state.meiKickFacing;e.facing=angle;kick(g,e,{x:Math.cos(angle),y:Math.sin(angle)});return;}
   g.addBuff(e,'meiGuard',P.qGuardTime,{copy:false});e.qCd=0;e.state.meiQPhase='dash';fireSound(g,e,'q','mei-dash');
+  e.state.meiQThrust={at:g.time,until:g.time+.23,angle:Math.atan2(d.y,d.x)};
   g.startMotion(e,d,P.qRange,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,actionTag:'meiQ',onComplete:()=>finishQ(g,e),onCollision:({obstacle:t})=>{
    if(!t||!g.hostile(e,t))return;const contact=hit(g,e,t,P.qDamage,{slot:'q'});if(contact>0)g.addShield(e,finalArmor(g,e)*.6,`mei-q-${e.id}`,2);
   }});return;

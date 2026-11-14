@@ -1,3 +1,4 @@
+import {drawMeiGround} from './mei-vfx.js';
 import {maxLevel} from './golden-bough.js';
 import{drawEzraGround}from'./ezra-vfx.js';
 import{FAN_ANGLE,basicFanAngle}from'./data.js';
@@ -248,6 +249,7 @@ export class ChampionVFX {
   c.restore();
  }
  ground(c,camera,g){
+  drawMeiGround(c,camera,g,this.vfx);
   drawEzraGround(c,camera,g);
   v58Ground(c,camera,g);drawAugmentGround(c,camera,g);drawPassiveAugmentGround(c,camera,g);
   const world=(p,h=0)=>camera.worldToScreen(p,h),sprite=(form,color,p,h,size,alpha=.5,angle=0)=>{const at=world(p,h);this.mote(c,form,color,at.x,at.y,size*camera.scale,angle,alpha);};

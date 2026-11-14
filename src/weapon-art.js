@@ -1,4 +1,5 @@
 import {maxLevel,storm} from './golden-bough.js';
+import {MEI} from './mei-data.js';
 import{GAHWAN}from'./gahwan.js';
 import{mosesWeaponPose}from'./moses-vfx.js';
 import{RULES}from'./data.js';
@@ -261,6 +262,7 @@ export function gregorCenterline(u){
 export const myoFiring=(g,e)=>e.key==='myo'&&e.castSlot==='q'&&g.time-(e.castAt??-99)>=0&&g.time-e.castAt<.5;
 export function drawBackEquipment(r,e,g,{lift=0}={}){
  if(e.state.kromerHeldBy)return;
+ if(e.key==='mei'){drawMeiFists(r,e,g,lift,'back');return;}
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'back');return;}
  if(e.key==='nosferatu'&&g.buff(e,'bloodfiend')){drawBloodSweep(r,e,g,lift,'back');return;}
  if(e.key==='jamila'){if(e.lcaTrooper)return;const p=equipmentPose(g,e,lift),c=r.ctx,q=Boolean(e.state.jamilaQ&&e.state.jamilaQ.phase!=='retreat');c.save();c.translate(p.origin.x,p.origin.y-.95);c.scale(p.flip,1);drawWeapon(c,q?'jamilaRifle':'jamilaKopis',q?2.1:1.75,{x:q?.06:.32,rotation:q?.95:1.05,pivot:.5,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();return;}
@@ -473,17 +475,22 @@ export function drawGasharpoonArm(r,e,g,lift=0){
  c.save();c.translate(pose.hand.x,pose.hand.y);orientWeapon(c,pose.angle);c.translate(pose.push,-(f.grip[1]-.5)*m.height*m.scale);drawWeapon(c,key,len,{pivot,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
 }
 
-// Separate anatomical fists keep their idle shoulder anchors until a strike.
+// Both fists orbit the same torso axis; the distant idle hand sits behind it.
 export function meiFistPoses(g,e,lift=0){
- const origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,p=e.state.meiPunch,age=p?g.time-p.at:-1,active=p&&age>=0&&age<.2;
+ const origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,p=e.state.meiPunch,age=p?g.time-p.at:-1,active=p&&age>=0&&g.time<p.until,center={x:origin.x,y:origin.y-.65},q=e.state.meiQThrust,qActive=q&&g.time>=q.at&&g.time<q.until;
  return ['right','left'].map((side,index)=>{
-  let x=origin.x+(index?.31:-.43)*flip,y=origin.y-.76,angle=flip>0?0:Math.PI,on=active&&p.index%2===index,progress=active?age/.2:0;
+  let x=origin.x+(index?.31:-.43)*flip,y=origin.y-.76,angle=flip>0?Math.PI/12:Math.PI-Math.PI/12,on=active&&p.index%2===index,progress=active?age/MEI.interval:0,part=`${e.attackSerial}:${p?.index}`,layer=index?'back':'front';
   if(on){
-   angle=p.last?p.angle:p.angle+(index?1:-1)*(progress-.5)*Math.PI;
-   const reach=p.last?Math.sin(progress*Math.PI)*.85:.56;
-   x+=Math.cos(angle)*reach;y+=Math.sin(angle)*reach;
+   angle=p.last?p.angle:p.angle+(index?1:-1)*swingProgress(progress)*Math.PI*2;
+   const reach=p.last?.25+Math.sin(progress*Math.PI)*.85:.74;
+   x=center.x+Math.cos(angle)*reach;y=center.y+Math.sin(angle)*reach;
+   layer=y<center.y?'back':'front';
   }
-  return{side,key:index?'meiLeftFist':'meiRightFist',x,y,angle,active:Boolean(on),progress,last:Boolean(p?.last),direction:index?1:-1};
+  if(qActive&&!index){
+   progress=(g.time-q.at)/(q.until-q.at);const reach=.95*Math.min(1,progress/.22)*Math.min(1,(1-progress)/.35);
+   angle=q.angle;x=origin.x-.43*flip+Math.cos(angle)*reach;y=origin.y-.76+Math.sin(angle)*reach;on=true;layer='front';part=`q:${q.at}`;
+  }
+  return{side,key:index?'meiLeftFist':'meiRightFist',x,y,angle,active:Boolean(on),progress,last:!qActive&&Boolean(p?.last),direction:index?1:-1,center,layer,part};
  });
 }
 function meiFistFlames(c,time){
@@ -494,15 +501,15 @@ function meiFistFlames(c,time){
   c.fillStyle='#ffcf35';c.beginPath();c.moveTo(x-.035,.07);c.quadraticCurveTo(x-.05,tip*.3,x+sway*.4,tip*.55);c.quadraticCurveTo(x+.02,tip*.2,x+.045,.07);c.closePath();c.fill();
  }c.restore();
 }
-export function drawMeiFists(r,e,g,lift=0){
+export function drawMeiFists(r,e,g,lift=0,layer='front'){
  const c=r.ctx,poses=meiFistPoses(g,e,lift);r.meiTrails??=new Map();let history=r.meiTrails.get(e.id)||[];
  history=history.filter(p=>g.time-p.at>=0&&g.time-p.at<.5);
- for(const p of poses)if(p.active&&(!history.length||g.time-history.at(-1).at>.008))history.push({...p,at:g.time,part:e.attackSerial+':'+e.state.meiPunch.index});
+ for(const p of poses)if(p.active&&(!history.length||g.time-history.at(-1).at>.008))history.push({...p,at:g.time});
  if(history.length>48)history=history.slice(-48);r.meiTrails.set(e.id,history);if(r.meiTrails.size>64)r.meiTrails.delete(r.meiTrails.keys().next().value);
  for(let i=0;i<history.length;i++){
-  const p=history[i],age=g.time-p.at,fade=1-age/.5,prev=history[i-1];c.save();c.globalAlpha*=fade*.7;c.shadowColor='#ff5121';c.shadowBlur=9;
-  if(prev?.part===p.part){c.strokeStyle='#ed4620';c.lineWidth=.065*fade;c.beginPath();c.moveTo(prev.x,prev.y);c.lineTo(p.x,p.y);c.stroke();}
+  const p=history[i],age=g.time-p.at,fade=1-age/.5,prev=history[i-1];if(p.layer!==layer)continue;c.save();c.globalAlpha*=fade*.7;c.shadowColor='#ff5121';c.shadowBlur=9;
+  if(prev?.part===p.part&&prev.layer===layer){c.strokeStyle='#ed4620';c.lineWidth=.065*fade;c.beginPath();c.moveTo(prev.x,prev.y);c.lineTo(p.x,p.y);c.stroke();}
   c.fillStyle=i%4?'#ff5527':'#ffb92b';c.beginPath();c.arc(p.x+Math.sin(i*8)*age*.25,p.y-age*.4,.018*fade,0,Math.PI*2);c.fill();c.restore();
  }
- for(const p of poses){c.save();c.translate(p.x,p.y);orientWeapon(c,p.angle);if(p.active)meiFistFlames(c,g.time);drawWeapon(c,p.key,MEI_FIST_SIZE,{pivot:.08,disabled:Boolean(g.stat(e,'disarm'))});c.restore();}
+ for(const p of poses){if(p.layer!==layer)continue;c.save();c.translate(p.x,p.y);orientWeapon(c,p.angle);if(p.active)meiFistFlames(c,g.time);drawWeapon(c,p.key,MEI_FIST_SIZE,{pivot:.08,disabled:Boolean(g.stat(e,'disarm'))});c.restore();}
 }

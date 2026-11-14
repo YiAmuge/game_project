@@ -12,8 +12,10 @@ import {skillTargeting} from '../src/targeting.js';
 import {nearestMovementAim} from '../src/mobile-aim.js';
 import {SnapshotWriter,applySnapshot} from '../src/online-state.js';
 import {makeOnlineGame,executeCommand} from '../src/online-game.js';
-import {FRAMES,spriteHeight} from '../src/art.js';
-import {meiFistPoses,MEI_FIST_SIZE} from '../src/weapon-art.js';
+import {FRAMES,spriteHeight,drawFace} from '../src/art.js';
+import {meiFistPoses,MEI_FIST_SIZE,spriteOrigin} from '../src/weapon-art.js';
+import {meiEffectCenter,meiRushLean} from '../src/mei-vfx.js';
+import {championGroundEffects} from '../src/overlays.js';
 import {soundVoice} from '../src/sound-profiles.js';
 import {recordingProfile} from '../src/weapon-swings.js';
 import {combatStyle} from '../src/combat-style.js';
@@ -25,12 +27,12 @@ const normal=(g,p,n)=>damageFormula(n,C.mei.power,1,0)*g.powerScale(p);
 function ignite(g,p,t){for(let i=0;i<3;i++)g.deal(p,t,1,{fixed:true});assert.ok(t.meiBurns?.[p.id]);}
 function kickReady(g,p){assert.ok(g.cast(p,'q',g.input.aim));advance(g,.2);assert.ok(Mei.recast(g,p));}
 
-test('Mei is playable with requested stats, roles, top recommendation and precise base reload',()=>{const{g,p}=arena();assert.equal(C.mei.id,39);assert.deepEqual(C.mei.roles,['돌격','암살']);assert.equal(C.mei.recommendedPosition,'top');assert.equal(championBaseHealth('mei'),1900);assert.equal(championBaseSpeed('mei'),3.2);close(g.armor(p),40);close(g.speed(p),3.2);close(g.reloadInterval(p),.75);close(g.attackInterval(p),.2);assert.equal(g.ammoCap(p),4);});
+test('Mei is playable with requested stats, roles, top recommendation and precise base reload',()=>{const{g,p}=arena();assert.equal(C.mei.id,39);assert.deepEqual(C.mei.roles,['돌격','암살']);assert.equal(C.mei.recommendedPosition,'top');assert.equal(championBaseHealth('mei'),1900);assert.equal(championBaseSpeed('mei'),3.2);close(g.armor(p),40);close(g.speed(p),3.2);close(g.reloadInterval(p),.75);close(g.attackInterval(p),.15);assert.equal(g.ammoCap(p),4);});
 test('passive armor increases at levels 3, 6, 9 and tactical adds its six-second level-based rate',()=>{const{g,p}=arena();for(const level of[1,2,3,5,6,9,10]){p.level=level;close(g.armor(p),40*(1+Math.floor(level/3)*.1));}p.level=6;g.cast(p,'q',g.input.aim);close(g.armor(p),40*1.32);advance(g,6.01);close(g.armor(p),48);});
 test('three direct hits are counted per target; burn ticks four times and cannot perpetually proc itself',()=>{const{g,p}=arena(),a=target(g),b=target(g,44);g.deal(p,a,1,{fixed:true});g.deal(p,a,1,{fixed:true});g.deal(p,b,1,{fixed:true});assert.equal(a.meiBurns,undefined);g.deal(p,a,1,{fixed:true});const hp=a.hp;advance(g,2.01);close(hp-a.hp,120);assert.equal(a.meiBurns,undefined);assert.equal(b.meiBurns,undefined);assert.equal(p.state.meiHits[a.id],0);advance(g,2);close(hp-a.hp,120);});
 test('burn samples current final armor and is cleansed, independently of another captains fire',()=>{const{g,p}=arena(),t=target(g);p.level=3;ignite(g,p,t);g.addBuff(p,'meiGuard',6);g.status(p,'armorDown',10,3,t);const hp=t.hp;advance(g,.5);close(hp-t.hp,20+(46.4-10)*.25);const other=g.makeChampion('mei',0,g.nextId,'top');other.x=38;other.y=20;ignite(g,other,t);assert.equal(Object.keys(t.meiBurns).length,2);Debuffs.cleanse(g,t);assert.equal(t.meiBurns,undefined);});
 test('basic dashes to a chosen point, spends the entire remaining magazine and strikes exactly that many times',()=>{const{g,p}=arena(),t=target(g);p.ammo=2;assert.ok(g.attack(p,t));assert.equal(p.ammo,0);assert.ok(p.motion);assert.equal(g.attack(p,t),false);advance(g,.5);close(100000-t.hp,normal(g,p,350));assert.ok(p.x>40&&p.x<=43);assert.equal(g.soundEvents.filter(s=>s.phase==='mei-attack').length,2);assert.equal(p.state.meiCombo,undefined);});
-test('four-round combo pauses reload and alternates fists before its last forward punch',()=>{const{g,p}=arena(),t=target(g);g.attack(p,t);advance(g,.1);assert.equal(p.ammo,0);close(p.reloadProgress,0);assert.equal(p.state.meiPunch.index,0);assert.equal(meiFistPoses(g,p).find(p=>p.active).side,'right');advance(g,.2);assert.equal(p.state.meiPunch.index,1);assert.equal(meiFistPoses(g,p).find(p=>p.active).side,'left');advance(g,.4);assert.equal(p.state.meiPunch.index,3);assert.equal(p.state.meiPunch.last,true);advance(g,.13);close(100000-t.hp,normal(g,p,700));assert.equal(p.ammo,0);advance(g,.8);assert.ok(p.ammo>=1);});
+test('four-round combo pauses reload and alternates fists before its last forward punch',()=>{const{g,p}=arena(),t=target(g);g.attack(p,t);advance(g,.1);assert.equal(p.ammo,0);close(p.reloadProgress,0);assert.equal(p.state.meiPunch.index,0);assert.equal(meiFistPoses(g,p).find(p=>p.active).side,'right');advance(g,.15);assert.equal(p.state.meiPunch.index,1);assert.equal(meiFistPoses(g,p).find(p=>p.active).side,'left');advance(g,.3);assert.equal(p.state.meiPunch.index,3);assert.equal(p.state.meiPunch.last,true);advance(g,.1);close(100000-t.hp,normal(g,p,700));assert.equal(p.ammo,0);advance(g,.8);assert.ok(p.ammo>=1);});
 test('root and captured states reject attack and moving skills without spending ammo or cooldowns',()=>{for(const key of['root','captured']){const{g,p}=arena(),t=target(g);g.status(p,key,1,2,t);assert.equal(g.attack(p,t),false);assert.equal(g.cast(p,'q',t),false);assert.equal(g.cast(p,'r',t),false);assert.equal(p.ammo,4);assert.equal(p.qCd,0);assert.equal(p.rCd,0);}});
 test('Jeongju stops on the first hostile collision and grants exactly sixty percent final armor as a two-second shield',()=>{const{g,p}=arena(),a=target(g,42.5),b=target(g,44);p.level=3;g.cast(p,'q',g.input.aim);advance(g,.2);close(100000-a.hp,normal(g,p,185));close(b.hp,100000);close(g.shield(p),46.4*.6);assert.ok(Mei.recast(g,p));assert.equal(p.qCd,0);advance(g,2.01);assert.equal(g.shield(p),0);assert.ok(p.qCd>8.7&&p.qCd<=9);});
 test('whiffing Jeongju still offers a two-second recast and waiting starts its nine-second cooldown',()=>{const{g,p}=arena();kickReady(g,p);assert.ok(p.x>44.4);assert.equal(skillTargeting(g,p,'q').kind,'self');advance(g,2.01);assert.equal(Mei.recast(g,p),false);assert.ok(p.qCd>8.8);assert.equal(g.cast(p,'q',p),false);});
@@ -53,3 +55,41 @@ test('self-centered Hoichuk keeps the facing direction and pulls targets to that
 test('changing champion clears outgoing Mei burn while keeping other Mei burns',()=>{const{g,p}=arena(),t=target(g);ignite(g,p,t);const other=g.makeChampion('mei',0,g.nextId,'top');other.x=38;other.y=20;ignite(g,other,t);Training.changeChampion(g,'faust');assert.equal(t.meiBurns[p.id],undefined);assert.ok(t.meiBurns[other.id]);});
 
 test('skill cooldown rewinds also move the next stored ultimate recharge',()=>{const{g,p}=arena();g.buyAugment(p,'goldenBough');g.cast(p,'r',g.input.aim);const ready=p.state.meiRReady;g.rewindCooldowns(p,3);close(p.state.meiRReady,ready+3);});
+
+test('basic hits the full circle behind and beside Mei at exactly 0.15-second intervals',()=>{
+ const{g,p}=arena(),rear=target(g,38.5),side=target(g,40,21.5),out=target(g,37.8);
+ g.attack(p,p);advance(g,.01);assert.equal(p.state.meiPunch.index,0);const hp=rear.hp;assert.ok(hp<100000);close(side.hp,hp);close(out.hp,100000);
+ advance(g,.125);close(rear.hp,hp);advance(g,.025);assert.equal(p.state.meiPunch.index,1);close(hp-rear.hp,normal(g,p,175));
+});
+
+test('both swinging fists orbit the same moving torso pivot in opposite directions',()=>{
+ const{g,p}=arena();
+ for(const index of[0,1]){
+  p.state.meiPunch={at:0,until:.15,index,last:false,angle:0};const angles=[];
+  for(const time of[.01,.03,.08,.14]){g.time=time;p.x=40+time;const f=meiFistPoses(g,p).find(f=>f.active),origin=spriteOrigin(g,p);close(f.center.x,origin.x);close(f.center.y,origin.y-.65);close(distance(f,f.center),.74);angles.push(f.angle);}
+  assert.ok(angles.every((a,i)=>!i||(index===0?a<angles[i-1]:a>angles[i-1])));
+ }
+});
+
+test('idle fists angle fifteen degrees downward on both facings and the left palm is behind the body',()=>{
+ const{g,p}=arena();for(const facing of[0,Math.PI]){p.facing=facing;const poses=meiFistPoses(g,p);for(const f of poses){close(Math.sin(f.angle),Math.sin(Math.PI/12));assert.equal(f.active,false);}assert.equal(poses[0].layer,'front');assert.equal(poses[1].layer,'back');}
+});
+
+test('Jeongju extends its front fist while rushing and returns both fists to idle',()=>{
+ const{g,p}=arena();g.cast(p,'q',g.input.aim);advance(g,.05);assert.equal(p.motion.actionTag,'meiQ');const f=meiFistPoses(g,p).find(f=>f.side==='right'),origin=spriteOrigin(g,p);assert.ok(f.active);close(f.angle,0);assert.ok(f.x>origin.x+.45);advance(g,.2);assert.ok(meiFistPoses(g,p).every(f=>!f.active));
+});
+
+test('Hoichuk range appears only during recast; its two hits and visual field follow Mei',()=>{
+ const{g,p}=arena(),rings=[],r={ctx:{},circle:(...a)=>rings.push(a)};championGroundEffects(r,p,g);assert.equal(rings.length,0);kickReady(g,p);championGroundEffects(r,p,g);close(rings[0][2],3.6);
+ const castX=p.x;g.cast(p,'q',p);rings.length=0;championGroundEffects(r,p,g);assert.equal(rings.length,0);advance(g,.01);
+ const floor=g.effects.find(f=>f.type==='meiFlameField'),vortex=g.effects.find(f=>f.type==='meiVortex');assert.ok(floor&&vortex);p.x+=2;const enter=target(g,p.x+3.4),leave=target(g,castX-3.4);advance(g,.12);
+ close(100000-enter.hp,normal(g,p,66+g.armor(p)*.066));close(leave.hp,100000);for(const f of[floor,vortex])close(meiEffectCenter(g,f).x,p.x);advance(g,1);close(100000-enter.hp,normal(g,p,66+g.armor(p)*.066));
+});
+
+test('Cheolsango leans the head toward the dash direction only during the actual rush',()=>{
+ for(const angle of[0,Math.PI,Math.PI/2,-Math.PI/2]){const{g,p}=arena();g.input.aim={x:p.x+Math.cos(angle)*10,y:p.y+Math.sin(angle)*10};g.cast(p,'r',g.input.aim);assert.deepEqual(meiRushLean(g,p),{x:0,y:0});advance(g,.62);assert.equal(p.motion.actionTag,'meiR');const lean=meiRushLean(g,p);close(lean.x,Math.cos(angle)*.12);close(lean.y,Math.sin(angle)*.08);advance(g,.2);assert.deepEqual(meiRushLean(g,p),{x:0,y:0});}
+});
+
+test('Mei shared portraits show the wider head and shoulders crop without stretching',()=>{
+ const f=FRAMES.mei,[x,y,w,h]=f.face;assert.ok(w>220&&h>200);assert.ok(x>=0&&y>=0&&x+w<=f.w&&y+h<=f.h);let draw;const c={save(){},restore(){},drawImage(...a){draw=a;}};drawFace(c,'mei',{complete:true,naturalWidth:272},0,0,120);assert.deepEqual(draw.slice(1,5),[f.x+x,f.y+y,w,h]);close(draw[7]/draw[8],w/h);
+});

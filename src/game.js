@@ -1,4 +1,5 @@
 import * as Mei from './mei.js';
+import {MEI} from './mei-data.js';
 import * as AhabEgo from './ahab-ego.js';
 import {MATCH_MODES,normalizeMode,procedurePrice} from './match-modes.js';
 import {captureDissolve} from './arayashiki-vfx.js';
@@ -238,7 +239,7 @@ export class Game {
     return Math.max(0,ready-this.time);
   }
   cooldown(e,slot){if(AhabEgo.active(e)&&slot==='q')return 0;if(e.key==='yan'&&slot==='q'&&Yan.distorted(this,e))return 5*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e));return (e.key==='sora'&&slot==='q'&&Sora.ego(this,e)?Sora.SORA.egoQCooldown:Bough.cooldown(e,slot,CHAMPIONS[e.key][slot]))*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e))*(1-rivalBonus(e,'cooldown'));}
-  attackInterval(e){if(AhabEgo.active(e))return .2;if(e.key==='moses')return Moses.MOSES.interval;if(Nosferatu.bloodfiend(this,e))return combatSeconds(Nosferatu.NOSFERATU.rAttackEvery);const c=CHAMPIONS[e.key];return combatSeconds(c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier));}
+  attackInterval(e){if(e.key==='mei')return MEI.interval;if(AhabEgo.active(e))return .2;if(e.key==='moses')return Moses.MOSES.interval;if(Nosferatu.bloodfiend(this,e))return combatSeconds(Nosferatu.NOSFERATU.rAttackEvery);const c=CHAMPIONS[e.key];return combatSeconds(c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier));}
   reloadPaused(e){if(Ppui.stormActive(this,e)||e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(e.key==='dongbaek'&&e.state.usedPetal&&e.attackCd>0)return false;if(Sora.ego(this,e)||e.key==='alisa'&&this.buff(e,'alisaReload'))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||Boolean(e.state.donCharge)||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
   ammoCap(e){return Skills.ammoCap(this,e);}
   attackRange(e){if(AhabEgo.active(e))return 9;if(e.key==='moses')return Moses.breath(this,e).range;if(e.key==='ezra')return Ezra.weapon(this,e).range+Augments.rangeBonus(e);if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)+Augments.rangeBonus(e)+Bough.fistBonus(this,e);}

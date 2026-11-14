@@ -3,6 +3,7 @@ import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {decodePNG,encodePNG} from './png.mjs';
+import {PORTRAIT_CROPS} from '../src/portrait-framing.js';
 const root=resolve(import.meta.dirname,'..'),dir=resolve(root,'src/assets'),source='source/mei.png';
 await mkdir(resolve(dir,'source'),{recursive:true});if(process.argv[2])await copyFile(resolve(process.argv[2]),resolve(dir,source));
 const bytes=await readFile(resolve(dir,source)),input=decodePNG(bytes),sprites=[],frames={};
@@ -11,7 +12,7 @@ for(const [key,region]of [['mei',[0,0,900,1024]],['meiRightFist',[930,0,606,510]
  const body=key==='mei',referenceHeight=b-200,scale=body?400/referenceHeight:240/(r-l+1),w=Math.ceil((r-l+1)*scale),h=Math.ceil((b-t+1)*scale),data=new Uint8Array(w*h*4);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const sx=l+Math.min(r-l,Math.floor(x/scale)),sy=t+Math.min(b-t,Math.floor(y/scale)),a=(sy*input.width+sx)*4;if(input.data[a+3]<160)continue;data.set(input.data.subarray(a,a+3),(y*w+x)*4);data[(y*w+x)*4+3]=255;}
  const frame={sheet:24,rotation:0,source,sourceRect:[l,t,r-l+1,b-t+1]};
- if(body)Object.assign(frame,{heightBasis:'crown',referenceHeight:400,crownOffset:h-400,heightScale:h/400,foot:[.56,1],face:[(345-l)*scale,(260-t)*scale,300*scale,280*scale]});
+ if(body)Object.assign(frame,{heightBasis:'crown',referenceHeight:400,crownOffset:h-400,heightScale:h/400,foot:[.56,1],face:PORTRAIT_CROPS.mei});
  else Object.assign(frame,{grip:[.08,.5],side:key==='meiRightFist'?'right':'left',view:key==='meiRightFist'?'back':'palm',thumb:'up'});
  sprites.push({key,w,h,data,frame});
 }

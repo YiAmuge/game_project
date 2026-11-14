@@ -10,8 +10,8 @@ const target=(g,x=42,y=20)=>g.entity({kind:'minion',team:1,x,y,maxHp:100000,armo
 const factor=(p,n)=>damageFormula(n,CHAMPIONS[p.key].power,1);
 function select(p,index){p.state.weapon=index;p.attackCd=0;p.ammo=4;delete p.motion;}
 
-test('actual basic intervals and reload durations share tenth-second clocks for every champion and upgrade',()=>{
- for(const key of Object.keys(CHAMPIONS)){const{g,p}=arena(key);for(const reload of[0,1,2]){p.upgrades.reload=reload;for(const n of[g.attackInterval(p),g.reloadInterval(p)]){assert.ok(n>0,key);if(key==='mei'&&n===g.reloadInterval(p))near(n,.75/g.reloadMultiplier(p));else near(n*10,Math.round(n*10));}}}
+test('basic and reload timings use rounded clocks and Meis precise 0.15/0.75-second clocks',()=>{
+ for(const key of Object.keys(CHAMPIONS)){const{g,p}=arena(key);for(const reload of[0,1,2]){p.upgrades.reload=reload;if(key==='mei'){near(g.attackInterval(p),.15);near(g.reloadInterval(p),.75/g.reloadMultiplier(p));}else for(const n of[g.attackInterval(p),g.reloadInterval(p)]){assert.ok(n>0,key);near(n*10,Math.round(n*10));}}}
  near(combatSeconds(.65),.7);near(combatSeconds(.333333),.3);near(combatSeconds(.075),.1);
  for(const[key,n]of[['jamila',.2],['hohenheim',.7],['ezra',.7],['rudolph',.3]]){const{g,p}=arena(key);near(g.attackInterval(p),n);}
 });
