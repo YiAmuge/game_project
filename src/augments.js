@@ -26,8 +26,8 @@ export const EXCLUSIVE_AUGMENTS={
  jamila:[{key:'highRisk',name:'고위험 작전용 장비',text:'강화시술 구매 조건 없이 구매 가능. 침투 사거리 +10, 위치 선택시간 15초. 전장에서 사라진 동안 궁극기를 사용하면 선택 위치에 0.25초 후 전투원 2명과 함께 나타나며 전투원의 지속시간이 15초가 된다.'}],
  yan:[{key:'writtenOrder',name:'쪽지로 전해진 지령',text:'강화시술 구매 조건 없이 50% 할인된 250 코스트로 구매할 수 있다. 구매 후 뒤틀림 상태가 되면 E.G.O 기프트를 흡수해 보유 칸을 비우고 동일한 효과를 상시 패시브로 얻는다. 뒤틀림 상태에서 구매하면 즉시 흡수한다. 흡수한 효과는 변신 종료·사망·부활 후에도 유지되며 다시 구매하거나 판매할 수 없다.'}],
 };
-export const exclusiveAugments=key=>[...(EXCLUSIVE_AUGMENTS[key]||[]),...(Bough.TEXT[key]?[{key:'goldenBough',name:'황금 가지',summary:Bough.TEXT[key],text:Bough.TEXT[key]}]:[])];
-export function augmentText(e,item){if(!item)return '';if(item.key==='goldenBough')return item.text+(Bough.TEXT[e.key]?'\n'+Bough.TEXT[e.key]:'');const effect=exclusiveAugments(e.key).find(a=>a.key===item.key);if(e.key==='sora'&&item.key==='writtenOrder')return effect.text;return item.text+(effect?'\n'+({kim:'김삿갓',jamila:'자밀라',yan:'얀',sora:'소라',queen:'증오의 여왕'}[e.key])+' 전용: '+effect.text:'');}
+export const exclusiveAugments=key=>[...(EXCLUSIVE_AUGMENTS[key]||[]),...(Bough.TEXT[key]?[{key:'goldenBough',name:'황금 가지',summary:Bough.giftNotes(key).map(n=>n.text).join(' '),text:Bough.giftNotes(key).map((n,i)=>`※ ${i+1}. ${n.label}: ${n.text}`).join('\n')}]:[])];
+export function augmentText(e,item){if(!item)return '';if(item.key==='goldenBough')return item.text+(Bough.giftNotes(e.key).length?'\n'+Bough.giftNotes(e.key).map((n,i)=>`※ ${i+1}. ${n.label}: ${n.text}`).join('\n'):'');const effect=exclusiveAugments(e.key).find(a=>a.key===item.key);if(e.key==='sora'&&item.key==='writtenOrder')return effect.text;return item.text+(effect?'\n'+({kim:'김삿갓',jamila:'자밀라',yan:'얀',sora:'소라',queen:'증오의 여왕'}[e.key])+' 전용: '+effect.text:'');}
 export const categoryCount=(e,group)=>e.augments.filter(key=>AUGMENTS.find(a=>a.key===key)?.group===group).length;
 export const resentment=e=>has(e,'resentment')?Math.min(8,Math.floor((1-e.hp/e.maxHp+1e-8)*10))*.05:0;
 export function tick(g,e,dt=0){

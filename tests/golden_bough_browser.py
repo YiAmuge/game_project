@@ -23,7 +23,7 @@ async def main():
     await page.route('**/*',route)
    await page.goto(url,wait_until='networkidle',timeout=90000)
    await page.click('#training-open');await page.get_by_role('button',name='료슈 선택',exact=True).click();await page.click('#start');await page.wait_for_timeout(500)
-   await page.evaluate(SETUP,'ryoshu');await page.click('#shop-toggle')
+   await page.evaluate(SETUP,'ryoshu');assert '코스트' not in await page.locator('#shop-toggle').inner_text();await page.click('#shop-toggle')
    tab=page.locator('#mobile-shop-tabs [data-group=special]' if mobile else '#shop-tabs [data-group=special]')
    assert await tab.is_enabled();await tab.click();await page.click('#select-augment-goldenBough');await page.click('#detail-buy')
    assert await page.evaluate('__moba.game.player.goldenBough===true && __moba.game.player.augments.length===0')
@@ -34,6 +34,7 @@ async def main():
    await page.evaluate('''()=>{const g=__moba.game,p=g.player;target(43);g.cast(p,'r',p);advance(.21);}''')
    await page.wait_for_timeout(200);assert await page.locator('#r-btn span').inner_text()=='천살성도 - 아라야시키'
    assert await page.evaluate("__moba.game.zones.some(z=>z.kind==='arayashiki')")
+   await page.evaluate('window.activeCd=__moba.game.player.rCd;advance(.5)');assert await page.evaluate('Math.abs(__moba.game.player.rCd-activeCd)<1e-6')
    assert await page.locator('#basic-btn').is_disabled();assert await page.locator('#q-btn').is_disabled();assert await page.locator('#recall-btn').is_disabled()
    await page.screenshot(path=str(ART/f'{label}-storm.png'))
    await page.evaluate('''()=>{const g=__moba.game,p=g.player,t=g.champions(1)[0];p.hp=1;t.hp=1;advance(.2);}''')
@@ -45,7 +46,15 @@ async def main():
    # Codex includes the always-open special category and all twelve upgrades.
    await page.goto(url+'#codex/augments',wait_until='networkidle');await page.reload(wait_until='networkidle');await page.wait_for_timeout(300)
    await page.click('#codex-tabs [data-category=augments]');await page.click('.augment-guide-tabs [data-group=special]')
-   assert await page.locator('.augment-guide-detail h4').count()==12
+   assert await page.locator('.augment-guide-detail h4').count()==0
+   assert '챔피언 도감' in await page.locator('.augment-guide-detail').inner_text()
+   await page.click('#codex-tabs [data-category=champions]')
+   for key,name in [('ryoshu','천살성도 - 아라야시키'),('honglu','태허환경')]:
+    await page.click('#roster-list [data-key='+key+']');assert await page.locator('.champion-golden-notes ol li').count()==1
+    await page.click('#skill-tab-3');assert name in await page.locator('.golden-skill').inner_text()
+    await page.click('[data-description-mode=details]');assert await page.locator('.golden-skill .skill-subsection').count()>=3
+   await page.screenshot(path=str(ART/f'{label}-codex.png'))
+   await page.click('#codex-tabs [data-category=augments]');await page.click('.augment-guide-tabs [data-group=special]')
    assert '1000 코스트' in await page.locator('.augment-guide-detail').inner_text()
    assert not errors,(label,errors)
    if offline:assert not external,external

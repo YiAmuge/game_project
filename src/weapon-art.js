@@ -1,4 +1,4 @@
-import {maxLevel} from './golden-bough.js';
+import {maxLevel,storm} from './golden-bough.js';
 import{GAHWAN}from'./gahwan.js';
 import{mosesWeaponPose}from'./moses-vfx.js';
 import{RULES}from'./data.js';
@@ -143,6 +143,8 @@ export function outisSpinPose(g,e,p){
 }
 export function ultimateOrbitPose(g,e,p){
  if(!['sinclair','ryoshu'].includes(e.key))return null;
+ const activeStorm=storm(g,e);if(activeStorm){const progress=((g.time-(activeStorm.startedAt??0))%.4)/.4,angle=(activeStorm.angle??p.facing)+swingProgress(progress)*Math.PI*2;return {hand:bodyOrbit(p,angle,.5),angle,progress};}
+ if(e.key==='ryoshu'&&e.goldenBough)return null;
  const cast=e.visualCast,start=e.key==='sinclair'?e.state.sinclairSpinAt:cast?.slot==='r'?cast.at:undefined,age=g.time-(start??-99),duration=.4;
  if(age<0||age>=duration)return null;
  const progress=age/duration,angle=(e.key==='sinclair'?e.state.sinclairSpinFacing:cast.angle)??p.facing,turn=angle+swingProgress(progress)*Math.PI*2;

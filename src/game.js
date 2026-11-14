@@ -587,7 +587,7 @@ export class Game {
     if(Skills.isOffensive(e,slot))e.lastAttackAt=this.time;
     if(!duringHarpoon){e.facing=Math.atan2(d.y,d.x);e.castAt=this.time;e.castSlot=slot;e.visualCast={slot,at:this.time,point:{...point},origin:{x:e.x,y:e.y},angle:e.facing,healthy:e.hp/e.maxHp>=.5};}e.healingEvent={key:`cast-${e.id}-${e.castSerial=(e.castSerial||0)+1}`,at:this.time};e.revealedUntil=this.time+1.25;
     if(e.key==='gubo'&&slot==='q')this.emitSound('reload',e,{phase:'gubo-reload'});
-    else if(!['yi','queen','ezra','moses'].includes(e.key)&&!(e.key==='myo'&&slot==='q')&&!(e.key==='gubo'&&slot==='r')&&!(e.key==='hohenheim'&&slot==='r')&&!(e.key==='nelly'&&slot==='q'))this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
+    else if(!(e.key==='ryoshu'&&Bough.active(e)&&slot==='r')&&!['yi','queen','ezra','moses'].includes(e.key)&&!(e.key==='myo'&&slot==='q')&&!(e.key==='gubo'&&slot==='r')&&!(e.key==='hohenheim'&&slot==='r')&&!(e.key==='nelly'&&slot==='q'))this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
     if(e.key!=='moses'&&!(slot==='r'&&['ishmael','marton','ryoshu'].includes(e.key)))this.effects.push({type:'cast',x:e.x,y:e.y,angle:e.facing,r:slot==='r'?(e.key==='meursault'?8:5):3,theme:e.key,slot,life:slot==='r'?.9:.55,maxLife:slot==='r'?.9:.55});
     if(Skills.cast(this,e,slot,point,d,options))return true;
     const destination=(max)=>{const len=Math.min(max,distance(e,point));return {x:clamp(e.x+d.x*len,this.bounds.x+.6,this.bounds.x+this.bounds.w-.6),y:clamp(e.y+d.y*len,this.bounds.y+.6,this.bounds.y+this.bounds.h-.6)};};
@@ -824,7 +824,7 @@ export class Game {
       if(e.trainingDummy){Training.tickDummy(this,e,dt);if(e.alive){Ppui.tick(this,e);Kromer.tick(this,e,dt);CampBuffs.tick(this,e);}continue;}
       if(e.kind==='champion') {
         this.syncDesire(e);
-        e.gold+=dt;this.award(e,(e.key==='faust'?9:RULES.passiveXpPerSecond)*dt,0,{passive:true});e.qCd=Math.max(0,e.qCd-dt*(e.key==='jamila'&&e.hp<e.maxHp*.5?1.5:1));e.rCd=Math.max(0,e.rCd-(e.state.jamilaSummon?0:dt));
+        e.gold+=dt;this.award(e,(e.key==='faust'?9:RULES.passiveXpPerSecond)*dt,0,{passive:true});e.qCd=Math.max(0,e.qCd-dt*(e.key==='jamila'&&e.hp<e.maxHp*.5?1.5:1));e.rCd=Math.max(0,e.rCd-(e.state.jamilaSummon||Bough.storm(this,e)?0:dt));
         if(!e.alive&&this.time>=e.respawnAt){e.alive=true;e.hp=e.maxHp;Object.assign(e,this.spawnPoint(e));e.ammo=this.ammoCap(e);e.reloadProgress=0;e.retreat=false;e.path=[];e.laneEntered=false;e.lastAttackAt=this.time-3;e.lastDamageAt=this.time-3;e.lastCombat=this.time-3;
           if(e.state.executedReturn){Fountain.returnHaste(this,e,'executedHaste',3);delete e.state.executedReturn;}
           if(e.state.fastReturn){Fountain.returnHaste(this,e,'alisaHaste',5);delete e.state.fastReturn;}Skills.onRespawn(this,e);

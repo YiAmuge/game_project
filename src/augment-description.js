@@ -1,5 +1,6 @@
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function augmentDescriptionHTML(item,text=item?.text||'E.G.O 기프트를 선택하면 효과를 확인합니다.'){
+ if(item?.key==='goldenBough'){const[lead,...notes]=text.split('\n').filter(Boolean);return '<p>'+escape(lead)+'</p>'+(notes.length?'<aside class="gift-footnotes"><h4>※ 챔피언 전용 효과</h4><ol>'+notes.map(line=>{const value=line.replace(/^※\s*\d+\.\s*/,''),at=value.indexOf(': ');return '<li>'+(at<0?escape(value):'<b>'+escape(value.slice(0,at))+'</b><p>'+escape(value.slice(at+2))+'</p>')+'</li>';}).join('')+'</ol></aside>':'');}
  if(item?.key!=='highRisk')return '<p>'+escape(text).replaceAll('\n','<br>')+'</p>';
  const[lead,body='']=text.split('\n\n침투\n'),lines=body.split('\n').filter(Boolean);
  return `<p class="augment-lead">${escape(lead)}</p><section class="infiltration-description"><h4>침투</h4>${lines.map(line=>{const split=line.indexOf(' · ');return split<0?`<p>${escape(line)}</p>`:`<p><b>${escape(line.slice(0,split))}</b><span>${escape(line.slice(split+3))}</span></p>`;}).join('')}</section>`;
