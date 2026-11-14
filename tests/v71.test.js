@@ -58,7 +58,7 @@ test('butterfly effect atlas has transparent exterior in both colors and keeps t
  assert.ok(solid>2000&&solid<11000&&whites>1000&&dark>1000&&purple>100);const manifest=JSON.parse(await readFile(new URL('../src/assets/augment-effects-v71.json',import.meta.url)));assert.equal(manifest.sources[0].file,'exec-b92365d1-fcbf-4457-8521-890991894a23.png');
 });
 test('Meursault basic summary omits root and Yan codex exposes his exclusive absorption purchase',()=>{
- const r=skillReference('meursault',1);assert.doesNotMatch(r.summary,/속박/);assert.match(r.summary,/감속/);assert.match(A.exclusiveAugments('yan')[0].text,/250.*흡수/);assert.match(A.augmentText({key:'yan'},A.AUGMENTS.find(a=>a.key==='writtenOrder')),/얀 전용/);assert.doesNotMatch(A.augmentText({key:'faust'},A.AUGMENTS.find(a=>a.key==='writtenOrder')),/흡수/);
+ const r=skillReference('meursault',1);assert.doesNotMatch(r.summary,/속박/);assert.match(r.summary,/감속/);assert.match(A.exclusiveAugments('yan')[0].text,/50%.*흡수/);assert.match(A.augmentText({key:'yan'},A.AUGMENTS.find(a=>a.key==='writtenOrder')),/얀 전용/);assert.doesNotMatch(A.augmentText({key:'faust'},A.AUGMENTS.find(a=>a.key==='writtenOrder')),/흡수/);
 });
 test('Jamila has complete purpose-written summaries and the requested shield wording in both description modes',()=>{
  const passive=skillReference('jamila',0);for(const text of [passive.summary,passive.details]){assert.match(text,/보호막 보유 중엔/);assert.doesNotMatch(text,/보유량과 관계없이/);}

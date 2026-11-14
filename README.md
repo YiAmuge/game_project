@@ -6,7 +6,9 @@ Project Moon 작품을 모티브로 한 비공식 팬 게임입니다. 초대 �
 
 기본포즈 PNG: [모제스](docs/images/basic-poses-v1.0.4/moses-basic-pose.png) · [에즈라](docs/images/basic-poses-v1.0.4/ezra-basic-pose.png)
 
-특수 E.G.O 기프트 [황금 가지](docs/GOLDEN_BOUGH.md)는 1000 코스트로 즉시 흡수되어 챔피언별 영구 강화를 제공합니다.
+특수 E.G.O 기프트 [황금 가지](docs/GOLDEN_BOUGH.md)는 기본 750 코스트(빠른 대전 500)로 즉시 흡수되어 챔피언별 영구 강화를 제공합니다.
+
+대전은 **빠른 대전**(20분·E.G.O 기프트250코스트 및 강화 시술50% 할인)과 **심층 대전**(시간 제한 없음·건물 체력+20%) 중 선택합니다.
 
 전체 효과와 수치는 [현재 구현 규칙](docs/CURRENT_RULES.md) 및 게임 내 도감에 수록합니다.
 

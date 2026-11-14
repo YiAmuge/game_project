@@ -1,3 +1,4 @@
+import {MATCH_MODES,normalizeMode} from '../src/match-modes.js';
 import{WebSocketServer}from'ws';
 import{randomBytes,createHmac}from'node:crypto';
 import{CHAMPIONS}from'../src/data.js';
@@ -18,7 +19,7 @@ export function iceServers(env=process.env){
 export function attachOnline(server,{env=process.env}={}){
  const rooms=new Map(),sessions=new Map(),wss=new WebSocketServer({noServer:true,maxPayload:96*1024,perMessageDeflate:false});
  const send=(ws,value)=>{if(ws?.readyState===1)ws.send(JSON.stringify(value));};
- const view=r=>({code:r.code,hostId:r.hostId,phase:r.phase,version:ONLINE_VERSION,slots:r.slots.map(s=>({...s})),members:[...r.members.values()].map(m=>({id:m.id,name:m.name,slot:m.slot,champion:m.champion,ready:m.ready,connected:m.ws?.readyState===1})),match:r.match,chat:r.chat});
+ const view=r=>({code:r.code,matchMode:r.matchMode,hostId:r.hostId,phase:r.phase,version:ONLINE_VERSION,slots:r.slots.map(s=>({...s})),members:[...r.members.values()].map(m=>({id:m.id,name:m.name,slot:m.slot,champion:m.champion,ready:m.ready,connected:m.ws?.readyState===1})),match:r.match,chat:r.chat});
  const broadcast=r=>{const message={type:'room',room:view(r)};for(const m of r.members.values())send(m.ws,message);};
  const removeRoom=(r,reason)=>{for(const m of r.members.values()){send(m.ws,{type:'closed',message:reason});sessions.delete(m.token);m.room=null;}rooms.delete(r.code);};
  function detach(m,explicit=false){const r=m?.room;if(!r)return;m.ws=null;m.ready=false;
@@ -43,7 +44,7 @@ export function attachOnline(server,{env=process.env}={}){
     }
     let r;if(p.type==='create'){
      if(rooms.size>=200)throw Error('현재 생성 가능한 방 수를 초과했습니다.');let code;do{code=randomBytes(4).toString('hex').slice(0,6).toUpperCase();}while(rooms.has(code));
-     r={code,hostId:null,phase:'lobby',members:new Map(),slots:Array.from({length:8},()=>({bot:'random'})),match:null,chat:[],chatSerial:0};rooms.set(code,r);
+     r={code,matchMode:normalizeMode(p.matchMode),hostId:null,phase:'lobby',members:new Map(),slots:Array.from({length:8},()=>({bot:'random'})),match:null,chat:[],chatSerial:0};rooms.set(code,r);
     }else{r=rooms.get(roomCode(p.code));if(!r)throw Error('방 코드를 확인해 주세요.');requireLobby(r);}
     if(r.members.size>=ROOM_CAPACITY)throw Error('방이 가득 찼습니다.');
     const slot=r.slots.findIndex(s=>!s.memberId);if(slot<0)throw Error('빈자리가 없습니다.');
@@ -64,11 +65,12 @@ export function attachOnline(server,{env=process.env}={}){
     if(!Number.isInteger(p.slot)||!r.slots[p.slot]||r.slots[p.slot].memberId)throw Error('빈 슬롯을 선택해 주세요.');
     if(p.champion!==null&&p.champion!=='random'&&!CHAMPIONS[p.champion])throw Error('유효하지 않은 챔피언입니다.');
     r.slots[p.slot]={bot:p.champion};for(const m of r.members.values())m.ready=false;broadcast(r);
+   }else if(p.type==='matchMode'){requireLobby(r);if(member.id!==r.hostId)throw Error('방장만 대전 모드를 변경할 수 있습니다.');if(!MATCH_MODES[p.matchMode])throw Error('유효하지 않은 대전 모드입니다.');r.matchMode=p.matchMode;for(const m of r.members.values())m.ready=false;broadcast(r);
    }else if(p.type==='ready'){requireLobby(r);member.ready=p.ready===true;broadcast(r);
    }else if(p.type==='start'){
     requireLobby(r);if(member.id!==r.hostId)throw Error('방장만 경기를 시작할 수 있습니다.');
     if([...r.members.values()].some(m=>m.id!==r.hostId&&(!m.ready||m.ws?.readyState!==1)))throw Error('모든 참가자의 준비가 필요합니다.');
-    r.phase='playing';r.match={id:token(),startedAt:Date.now(),seed:randomBytes(4).readUInt32LE(),slots:r.slots.map((s,i)=>{const m=r.members.get(s.memberId);return m?{memberId:m.id,nickname:m.name,champion:m.champion,team:Math.floor(i/4),position:ROOM_POSITIONS[i%4]}:{champion:s.bot,team:Math.floor(i/4),position:ROOM_POSITIONS[i%4]};})};broadcast(r);
+    r.phase='playing';r.match={matchMode:r.matchMode,id:token(),startedAt:Date.now(),seed:randomBytes(4).readUInt32LE(),slots:r.slots.map((s,i)=>{const m=r.members.get(s.memberId);return m?{memberId:m.id,nickname:m.name,champion:m.champion,team:Math.floor(i/4),position:ROOM_POSITIONS[i%4]}:{champion:s.bot,team:Math.floor(i/4),position:ROOM_POSITIONS[i%4]};})};broadcast(r);
    }else if(p.type==='return'){
     if(member.id!==r.hostId)throw Error('방장만 대기실로 돌아갈 수 있습니다.');r.phase='lobby';r.match=null;
     for(const m of [...r.members.values()]){m.ready=false;if(!m.ws){r.members.delete(m.id);sessions.delete(m.token);r.slots[m.slot]={bot:'random'};m.room=null;}}broadcast(r);

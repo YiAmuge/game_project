@@ -78,6 +78,7 @@
   <div id="toast" class="toast hidden" role="status"></div>
   <noscript><p style="position:fixed;inset:20px 20px auto;padding:20px;background:#eed29a;color:#18201a;z-index:100">이 미리보기에서는 게임 실행에 필요한 JavaScript가 꺼져 있습니다. Codespaces의 Ports 탭에서 5173 포트를 Open in Browser로 열어 주세요.</p></noscript>
   <div id="ping-menu" class="ping-menu hidden" role="listbox" aria-label="신호 대상 선택"></div>
-  <script type="module" src="./src/main.js"></script>
+  <dialog id="match-mode-dialog" aria-labelledby="match-mode-title"><div class="dialog-heading"><h2 id="match-mode-title">대전 모드 선택</h2><button id="match-mode-cancel" aria-label="모드 선택 닫기">×</button></div><div class="match-mode-options"><button data-match-mode="quick"><strong>빠른 대전</strong><span>20분 제한</span><small>E.G.O 기프트 250 코스트 할인<br>강화 시술 50% 할인</small></button><button data-match-mode="deep"><strong>심층 대전</strong><span>시간 제한 없음</span><small>건물 체력 +20%<br>기본 상점 가격</small></button></div></dialog>
+<script type="module" src="./src/main.js"></script>
 </body>
 </html>

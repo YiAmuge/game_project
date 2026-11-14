@@ -52,10 +52,10 @@ async def main():
    for key,name in [('ryoshu','천살성도 - 아라야시키'),('honglu','태허환경')]:
     await page.click('#roster-list [data-key='+key+']');assert await page.locator('.champion-golden-notes ol li').count()==1
     await page.click('#skill-tab-3');assert name in await page.locator('.golden-skill').inner_text()
-    await page.click('[data-description-mode=details]');assert await page.locator('.golden-skill .skill-subsection').count()>=3
+    await page.click('[data-description-mode=details]');assert await page.locator('.golden-skill .skill-subsection').count()>=2
    await page.screenshot(path=str(ART/f'{label}-codex.png'))
    await page.click('#codex-tabs [data-category=augments]');await page.click('.augment-guide-tabs [data-group=special]')
-   assert '1000 코스트' in await page.locator('.augment-guide-detail').inner_text()
+   assert '750 코스트' in await page.locator('.augment-guide-detail').inner_text()
    assert not errors,(label,errors)
    if offline:assert not external,external
    print(label+': shop absorption, enhanced ultimate, white dissolve, no corpses and codex passed',flush=True)

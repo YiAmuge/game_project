@@ -4,7 +4,7 @@ export const TRAIL_FADE=.12;
 
 export class MotionTrails {
   constructor(){this.owners=new WeakMap();}
-  sample(owner,part,{time,key,active,anchor,inner,outer}){
+  sample(owner,part,{time,key,active,anchor,inner,outer,frames=TRAIL_FRAMES,fade=TRAIL_FADE}){
     let tracks=this.owners.get(owner),history=tracks?.get(part);
     if(history&&(history.key!==key||time<history.at||active&&Math.hypot(anchor.x-history.anchor.x,anchor.y-history.anchor.y)>3)){
       tracks.delete(part);history=null;
@@ -15,24 +15,24 @@ export class MotionTrails {
       if(time>history.at){
         if(time-history.at>.3)history.samples.length=0;
         history.samples.push({time,anchor:{...anchor},inner:{...inner},outer:{...outer}});
-        if(history.samples.length>TRAIL_FRAMES)history.samples.shift();
+        if(history.samples.length>frames)history.samples.shift();
         history.at=time;history.anchor={...anchor};
       }
     }
-    if(history&&time-history.at>=TRAIL_FADE){tracks.delete(part);history=null;}
+    if(history&&time-history.at>=fade){tracks.delete(part);history=null;}
     return history?.samples||[];
   }
 }
 
 // Oldest section collapses to a transparent point; the newest spans the blade.
-export function ribbonSections(samples,time,project){
+export function ribbonSections(samples,time,project,{fadeDuration=TRAIL_FADE,opacity=.52}={}){
   if(samples.length<2)return [];
-  const fade=Math.max(0,1-(time-samples.at(-1).time)/TRAIL_FADE);
+  const fade=Math.max(0,1-(time-samples.at(-1).time)/fadeDuration);
   if(!fade)return [];
   return samples.map((s,i)=>{
     const {inner,outer}=project(s),t=i/(samples.length-1),width=t**.85;
     const center={x:(inner.x+outer.x)/2,y:(inner.y+outer.y)/2},dx=(outer.x-inner.x)*width/2,dy=(outer.y-inner.y)*width/2;
-    return {inner:{x:center.x-dx,y:center.y-dy},outer:{x:center.x+dx,y:center.y+dy},center,width,alpha:.52*t**1.5*fade};
+    return {inner:{x:center.x-dx,y:center.y-dy},outer:{x:center.x+dx,y:center.y+dy},center,width,alpha:opacity*t**1.5*fade};
   });
 }
 

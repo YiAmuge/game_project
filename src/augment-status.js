@@ -7,6 +7,6 @@ export function augmentStatus(g,e,key){
  if(key==='battleHaste'){const active=battleActive(g,e),remaining=e.state.augCombatAt===undefined?0:Math.max(0,3-(g.time-e.state.augCombatAt));return{label:active?'활성':remaining>0?remaining.toFixed(1)+'s':'대기',ready:active,remaining,total:3};}
  if(key==='forceBattery')return{label:Math.round(g.shield(e)/e.maxHp*100)+'%',ready:true};
  if(key==='duelManual')return{label:(e.state.duelStacks||0)+'/5',ready:(e.state.duelStacks||0)>=5};
- if(key==='wisdom'||key==='adaptiveSpeed'){const total=key==='wisdom'?10:3,remaining=Math.max(0,(e.state[key==='wisdom'?'wisdomReady':'accelReady']||0)-g.time);return{label:remaining?remaining.toFixed(1)+'s':'준비',ready:!remaining,remaining,total};}
+ if(key==='wisdom'||key==='adaptiveSpeed'){const total=key==='wisdom'?10:5,remaining=Math.max(0,(e.state[key==='wisdom'?'wisdomReady':'accelReady']||0)-g.time);return{label:remaining?remaining.toFixed(1)+'s':'준비',ready:!remaining,remaining,total};}
  return{label:'',ready:false};
 }

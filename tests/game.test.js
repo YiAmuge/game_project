@@ -112,10 +112,10 @@ test('shields refresh by source and combined shields cap at 35%',()=>{
   g.addShield(p,2000,'b');close(g.shield(p),p.maxHp*.35);run(g,3.1);close(g.shield(p),0);
 });
 test('shop requires spawn and peace, charges progressive costs, enforces caps',()=>{
-  const g=isolated(),p=g.player;assert.ok(g.buy(p,'power'));assert.equal(p.gold,90);assert.equal(p.upgrades.power,1);
-  assert.equal(g.buy(p,'power'),false);p.gold=5000;p.lastCombat=g.time;assert.equal(g.buy(p,'power'),false);
+  const g=isolated(),p=g.player;assert.ok(g.buy(p,'power'));assert.equal(p.gold,170);assert.equal(p.upgrades.power,1);
+  p.gold=100;assert.equal(g.buy(p,'power'),false);p.gold=5000;p.lastCombat=g.time;assert.equal(g.buy(p,'power'),false);
   p.lastCombat=-99;p.x=20;assert.equal(g.buy(p,'power'),false);Object.assign(p,FOUNTAINS[0]);
-  for(let i=0;i<2;i++)assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,4340);
+  for(let i=0;i<2;i++)assert.ok(g.buy(p,'power'));assert.equal(g.buy(p,'power'),false);assert.equal(p.gold,4670);
   for(let i=0;i<2;i++)assert.ok(g.buy(p,'speed'));assert.equal(g.buy(p,'speed'),false);
 });
 test('experience is personal, caps at level ten and increases max HP',()=>{

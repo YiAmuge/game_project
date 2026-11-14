@@ -143,7 +143,7 @@ export function outisSpinPose(g,e,p){
 }
 export function ultimateOrbitPose(g,e,p){
  if(!['sinclair','ryoshu'].includes(e.key))return null;
- const activeStorm=storm(g,e);if(activeStorm){const progress=((g.time-(activeStorm.startedAt??0))%.4)/.4,angle=(activeStorm.angle??p.facing)+swingProgress(progress)*Math.PI*2;return {hand:bodyOrbit(p,angle,.5),angle,progress};}
+ const activeStorm=storm(g,e);if(activeStorm){const progress=((g.time-(activeStorm.startedAt??0))%.4)/.4,angle=(activeStorm.angle??p.facing)+swingProgress(progress)*Math.PI*2;return {hand:{x:p.origin.x,y:p.origin.y-.8},angle,progress};}
  if(e.key==='ryoshu'&&e.goldenBough)return null;
  const cast=e.visualCast,start=e.key==='sinclair'?e.state.sinclairSpinAt:cast?.slot==='r'?cast.at:undefined,age=g.time-(start??-99),duration=.4;
  if(age<0||age>=duration)return null;
@@ -289,6 +289,8 @@ export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0
 }
 export function hohenheimWeaponCharge(g,e){return e.key==='hohenheim'?Math.max(0,Math.min(1,(e.state.hohenCharge?.progress||0)/1.5)):0;}
 export function drawWeaponCharge(c,r,g,e,m,pivot){
+ if(storm(g,e)&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#ffffff'),w=m.width*m.scale,h=m.height*m.scale;c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.beginPath();c.rect(-w/2+w*.35,-h/2-.15,w*.7,h+.3);c.clip();c.globalCompositeOperation='lighter';c.globalAlpha*=.65+.12*Math.sin(g.time*19);c.shadowColor='#ffffff';c.shadowBlur=18;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
+
  if(e.key==='gahwan'&&e.state.gahwanR&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#fb2044'),progress=Math.min(1,(g.time-e.state.gahwanR.at)/GAHWAN.charge);c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.22+progress*.22;c.shadowColor='#ff193e';c.shadowBlur=12;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
  if(e.key==='faust'&&e.level>=maxLevel(e)&&r.skillVfx){const f=m.frame,atlas=loadAtlas(f.sheet),tint=r.skillVfx.tintFrame(atlas,f,'#ffffff');c.save();c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.globalCompositeOperation='lighter';c.globalAlpha*=.16+.05*Math.sin(g.time*4);c.shadowColor='#e3f4ff';c.shadowBlur=9;const w=m.width*m.scale,h=m.height*m.scale;c.drawImage(tint,-w/2,-h/2,w,h);c.restore();}
  const progress=hohenheimWeaponCharge(g,e);if(!progress||!r.skillVfx)return;

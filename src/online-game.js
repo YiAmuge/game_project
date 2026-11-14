@@ -12,7 +12,7 @@ import{draft}from'./bot-ai.js';
 
 export function makeOnlineGame(match,memberId){
  const own=match.slots.find(s=>s.memberId===memberId);if(!own)throw Error('경기 참가 정보를 찾을 수 없습니다.');
- const g=new Game(own.champion,own.position,{seed:match.seed,bots:[Object.fromEntries(ROOM_POSITIONS.map(p=>[p,null])),Object.fromEntries(ROOM_POSITIONS.map(p=>[p,null]))]});
+ const g=new Game(own.champion,own.position,{seed:match.seed,matchMode:match.matchMode,bots:[Object.fromEntries(ROOM_POSITIONS.map(p=>[p,null])),Object.fromEntries(ROOM_POSITIONS.map(p=>[p,null]))]});
  g.units=g.units.filter(e=>e.kind!=='champion');g.nextId=Math.max(...g.units.map(e=>e.id))+1;g.controllers=new Map();g.online=true;
  for(const s of match.slots){if(s.champion===null)continue;let key=s.champion;if(key==='random'){// Reuse the normal roster's deterministic draft selection.
    key=draft(g,s.position,[...g.champions(s.team).map(e=>e.key),...match.slots.filter(other=>other.team===s.team&&other.champion!=='random').map(other=>other.champion)]);

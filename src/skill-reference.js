@@ -163,5 +163,5 @@ export function goldenUltimateReference(key){
  const notes=ultimateNotes(key),details=notes.map(n=>n.label+': '+n.text).join('\n\n');
  return {title:CHANGED_ULTIMATES[key],cooldown:'쿨타임 '+boughCooldown({key,goldenBough:true},'r',CHAMPIONS[key].r)+'초'+(key==='ryoshu'?' · 종료 후 시작':''),
   ranges:key==='ryoshu'?[row('순간이동','사거리 5.5'),row('연속 베기','자신 중심 반경 3')]:[row('장판 부착','자신 · 생존 중인 모든 아군 챔피언'),row('장판 범위','각 아군 중심 반경 3.5 · 4초')],
-  summary:key==='ryoshu'?'순간이동한 뒤 이동하며 원형 연속 베기를 가합니다. 적의 공격에 면역이지만 자해하며, 재사용으로 종료하면 최대 체력 15% 이내에서 회복합니다.':'모든 살아 있는 아군에게 이동하는 장판을 부착하고 상태이상을 해제합니다. 각 장판은 적에게 피해를 입히고 아군을 치유합니다.',details,sections:notes.map(n=>({title:n.label,text:n.text})),summarySections:null};
+  summary:key==='ryoshu'?'순간이동한 뒤 이동하며 원형 연속 베기를 가합니다. 받는 피해가 70% 감소하고 상태이상에 면역이며, 유지 중 치유 없이 타격마다 같은 양의 자해를 받습니다. 재사용으로 종료하면 최대 체력 15% 이내에서 회복합니다.':'모든 살아 있는 아군에게 이동하는 장판을 부착하고 상태이상을 해제합니다. 각 장판은 적에게 피해를 입히고 아군을 치유합니다.',details,sections:notes.map(n=>({title:n.label,text:n.text})),summarySections:null};
 }

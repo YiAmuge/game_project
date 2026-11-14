@@ -1,3 +1,4 @@
+import {MATCH_MODES,procedurePrice} from './match-modes.js';
 import * as Bough from './golden-bough.js';
 import{showBreathWheel,updateBreathWheel}from'./moses-ui.js';
 import*as Moses from'./moses.js';
@@ -43,6 +44,7 @@ const $=id=>document.getElementById(id);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const clock=t=>`${String(Math.floor(t/60)).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')}`;
 let selected='faust',position='bottom',game=new Game(selected,position),mode='menu',paused=false,speed=1;
+let battleMode='quick';
 let deployment='match',globalKind='ultimate',trainingCollapsed=false,summonChoice=null;
 let online=null,onlineMatch=null,chat=null;
 let keys=new Set(),last=0,accumulator=0,lastHud=0,toastTimer,pointer=null,drag=null,globalTarget=false,globalPoint=null,scoreOpen=false,shopSelection=null,shopGroup='all',mobile=null;
@@ -85,7 +87,7 @@ function renderPortraits(){document.querySelectorAll('.champion-portrait').forEa
 renderer.atlasV36.addEventListener('load',renderPortraits);
 renderer.atlas.addEventListener('load',renderPortraits);renderer.atlasExtra.addEventListener('load',renderPortraits);renderer.atlasV05.addEventListener('load',renderPortraits);renderer.atlasV06.addEventListener('load',renderPortraits);renderer.atlasV08.addEventListener('load',renderPortraits);renderer.atlasV10.addEventListener('load',renderPortraits);renderer.atlasV12.addEventListener('load',renderPortraits);renderer.atlasV13.addEventListener('load',renderPortraits);renderer.atlasV17.addEventListener('load',renderPortraits);
 const pickScreen=new PickScreen($('practice-panel'),{onPlayer:key=>select(key),onPosition:key=>setPosition(key)});
-function select(key){selected=key;game=new Game(key,position,{bots:pickScreen.value()});pickScreen.selectPlayer(key);renderPortraits();updateHud();}
+function select(key){selected=key;game=new Game(key,position,{bots:pickScreen.value(),matchMode:battleMode});pickScreen.selectPlayer(key);renderPortraits();updateHud();}
 function setPosition(key){position=key;pickScreen.setPosition(key);select(selected);}
 function resetView(){chat?.close();presentation.reset(game);if(renderer.scene25d)renderer.scene25d.canvas.hidden=true;clearInput();cancelDrag();cancelGlobal();showScore(false);clearTimeout(toastTimer);$('toast').classList.add('hidden');paused=false;document.body.classList.remove('in-game','training-mode','training-25d');for(const id of ['result','pause-banner','shop','minimap','buff-tray','score-toggle','training-panel','augment-tray'])$(id).classList.add('hidden');$('pause').disabled=true;$('lobby').classList.remove('hidden');pointer=null;}
 function mainMenu(){if(online?.room)online.leave();onlineMatch=null;deployment='match';mode='menu';resetView();document.body.classList.remove('practice-screen','training-selection');document.body.classList.add('menu-screen');$('main-menu').classList.remove('hidden');$('practice-panel').classList.add('hidden');if(!CHAMPIONS[selected])selected='faust';select(selected);}
@@ -93,10 +95,10 @@ function showPractice(kind='match'){
  deployment=kind;mode='practice';resetView();pickScreen.show(kind!=='match');document.body.classList.remove('menu-screen');document.body.classList.add('practice-screen');$('main-menu').classList.add('hidden');$('practice-panel').classList.remove('hidden');if(!CHAMPIONS[selected])selected='faust';setPosition(position);
  const training=kind!=='match';document.body.classList.toggle('training-selection',training);
  $('practice-panel').querySelector('h2').textContent='챔피언 선택';
- $('start').innerHTML=training?'연습장 입장 <span>→</span>':'AI 대전 시작 <span>→</span>';
+ $('start').innerHTML=training?'연습장 입장 <span>→</span>':MATCH_MODES[battleMode].name+' 시작 <span>→</span>';
 }
 function start(onlineGame=null){
- const nextGame=onlineGame instanceof Game?onlineGame:new Game(selected,position,{mode:deployment,bots:pickScreen.value()});try{renderer.prepare(nextGame);}catch(error){toast(error.message);return;}game=nextGame;if(!game.online){try{game.player.nickname=localStorage.getItem('city-border-online-name')||'나';}catch{game.player.nickname='나';}}presentation.start(game);audio.unlock();mode='playing';paused=false;accumulator=0;speed=1;clearInput();cancelDrag();cancelGlobal();showScore(false);
+ const nextGame=onlineGame instanceof Game?onlineGame:new Game(selected,position,{mode:deployment,matchMode:battleMode,bots:pickScreen.value()});try{renderer.prepare(nextGame);}catch(error){toast(error.message);return;}game=nextGame;if(!game.online){try{game.player.nickname=localStorage.getItem('city-border-online-name')||'나';}catch{game.player.nickname='나';}}presentation.start(game);audio.unlock();mode='playing';paused=false;accumulator=0;speed=1;clearInput();cancelDrag();cancelGlobal();showScore(false);
  document.body.classList.remove('practice-screen','menu-screen');document.body.classList.add('in-game');document.body.classList.toggle('training-mode',game.training);document.body.classList.toggle('training-25d',game.training25d);setTrainingCollapsed(Boolean(mobile?.enabled)||matchMedia('(max-width:600px)').matches);
  for(const id of ['minimap','buff-tray','score-toggle','augment-tray'])$(id).classList.remove('hidden');
  pointer=null;game.input.aim={x:game.player.x+(game.player.team?-5:5),y:game.player.y};$('lobby').classList.add('hidden');$('result').classList.add('hidden');$('pause-banner').classList.add('hidden');$('pause').disabled=false;$('pause').textContent='Ⅱ';$('speed').textContent='1×';$('speed').disabled=Boolean(onlineGame instanceof Game);$('arena').focus();mobile?.start();updateHud();
@@ -115,7 +117,9 @@ function skill(slot,options={}){
  const casted=game.cast(p,slot,target,options);if(casted)delete game.targeting;if(!casted)toast('재사용 대기·대상·군중제어 조건을 확인하세요.');updateHud();return casted;
 }
 $('menu-exit').onclick=()=>{clearInput();cancelGlobal();mode='exited';paused=true;for(const d of document.querySelectorAll('dialog[open]'))d.close();if(renderer.scene25d)renderer.scene25d.canvas.hidden=true;const end=document.createElement('section');end.id='exit-screen';end.innerHTML='<h1>도시 경계가 종료되었습니다.</h1><button>다시 시작</button>';end.querySelector('button').onclick=()=>{end.remove();mainMenu();};document.body.append(end);window.close();};
-$('practice-open').onclick=()=>showPractice();$('training-open').onclick=()=>showPractice('training');$('practice-back').onclick=mainMenu;$('start').onclick=()=>start();
+$('practice-open').onclick=()=>{$('match-mode-dialog').showModal();};
+for(const b of $('match-mode-dialog').querySelectorAll('[data-match-mode]'))b.onclick=()=>{battleMode=b.dataset.matchMode;$('match-mode-dialog').close();showPractice();};
+$('match-mode-cancel').onclick=()=>$('match-mode-dialog').close();$('training-open').onclick=()=>showPractice('training');$('practice-back').onclick=mainMenu;$('start').onclick=()=>start();
 $('pause').onclick=togglePause;$('resume').onclick=togglePause;$('restart').onclick=()=>{if(onlineMatch){if(online.isHost)online.send({type:'return'});else{online.show();$('result').classList.add('hidden');online.status('방장이 대기실로 돌아가기를 기다리고 있습니다.');}}else showPractice(deployment);};$('leave').onclick=()=>{if(onlineMatch){online.leave();mainMenu();}else showPractice(deployment);};
 $('home').onclick=e=>{e.preventDefault();mainMenu();};$('speed').onclick=()=>{speed=speed===1?2:speed===2?4:1;$('speed').textContent=`${speed}×`;};
 $('q-btn').onclick=e=>{if(Infiltration.absent(game.player))return;if(chargeTactical(game.player)){if(e.detail===0&&skill('q'))releaseTactical(game,game.player,game.input.aim);}else skill('q');};$('q-btn').addEventListener('pointerdown',e=>{if(e.button===0&&Infiltration.selecting(game.player)){e.preventDefault();$('q-btn').setPointerCapture(e.pointerId);game.input.precision=true;return;}if(e.button===0&&chargeTactical(game.player)){$('q-btn').setPointerCapture(e.pointerId);skill('q');}});$('r-btn').onclick=()=>skill('r');$('basic-btn').onclick=e=>{if(active()&&!globalTarget&&!scoreOpen){if(Infiltration.selecting(game.player)){confirmOrAttack();return;}if(game.player.key==='moses'&&!game.targeting){if(e.detail===0)game.attack(game.player,game.input.aim);return;}if(chargeChampion(game.player)&&!game.targeting){if(e.detail===0){game.attack(game.player,game.input.aim);releaseBasicCharge(game,game.player,game.input.aim);}return;}confirmOrAttack();}};
@@ -199,7 +203,7 @@ function updateTrainingOptions(){
 function updateShopCards(p){
  const available=active()&&game.canUpgrade(p),busy=performance.now()<shopBusyUntil;
  for(const item of UPGRADES){
-  const n=p.upgrades[item.key],cost=game.training?0:RULES.costs[n],b=$('buy-'+item.key);
+  const n=p.upgrades[item.key],cost=game.training?0:procedurePrice(p,n),b=$('buy-'+item.key);
   $('upgrade-state-'+item.key).textContent=`다음 ${n<item.max?'+'+Math.round(item.steps[n]*100)+'%':'완료'} · 총 +${Math.round(upgradeRate(p,item.key)*100)}% · ${n}/${item.max}`;
   b.textContent=n>=item.max?'완료':`구매 ${cost} ◈`;b.disabled=!available||busy||n>=item.max||p.gold<cost;
   [...$('upgrade-meter-'+item.key).children].forEach((bar,i)=>bar.classList.toggle('filled',i<n));
@@ -294,7 +298,7 @@ function updateHud(){
  mobile?.hud();
  const p=game.player,c={...championDescription(p.key,Sora.ego(game,p)||Yan.distorted(game,p)),...Sora.abilityInfo(game,p),...Yan.abilityInfo(game,p),...Hohenheim.abilityInfo(game,p),...Bough.abilityInfo(game,p)};
  const form=visualForm(game,p);if($('hud-face').dataset.form!==form){$('hud-face').dataset.form=form;renderPortraits();}
- $('field-title').innerHTML=game.training?'<i class="live-dot"></i> 연습장 <em>/</em> 입체 실험 정원':'<i class="live-dot"></i> 제13구역 <em>/</em> 경계 전장';$('field-objective').textContent=game.training?'G · 무료 상점 / 우측 상단 연습장 옵션 · 시간 제한 없음':'포탑을 파괴하고 적 본진을 공략하세요.';
+ $('field-title').innerHTML=game.training?'<i class="live-dot"></i> 연습장 <em>/</em> 입체 실험 정원':'<i class="live-dot"></i> 제13구역 <em>/</em> 경계 전장';$('field-objective').textContent=game.training?'G · 무료 상점 / 우측 상단 연습장 옵션 · 시간 제한 없음':MATCH_MODES[game.matchMode].name+' · '+(game.matchMode==='deep'?'시간 제한 없음 · 건물 체력 +20%':'20분 제한')+' · 적 본진을 공략하세요.';
  document.querySelector('.match-clock>span').textContent=game.training?'TRAINING · 2.5D 실험 정원':'4 VS 4 · 2.5D 전장';
  $('clock').textContent=clock(game.training?game.time:Math.max(0,RULES.timeLimit-game.time));$('phase').textContent=!inMatch()?'출격 대기':game.training?'연습장 · 시간 제한 없음':game.winner!==null?'경기 종료':paused?'일시정지':game.bossSpawned?'남은 시간 · 후반전':'남은 시간 · 전반전';
  $('blue-score').textContent=game.kills[game.player.team];$('red-score').textContent=game.kills[1-game.player.team];
@@ -309,7 +313,7 @@ function updateHud(){
  $('basic-btn').querySelector('span').textContent=p.key==='ezra'?Ezra.weapon(game,p).name:c.basic;
  for(const [slot,name,description] of [['q',c.tactical,c.qText],['r',c.ultimate,c.rText]]){const b=$(slot+'-btn');b.querySelector('span').textContent=name;b.title=description;b.disabled=slot==='q'&&Boolean(Bough.storm(game,p))||p.key==='moses'&&slot==='q'&&Boolean(Moses.pending(p).length>=2||p.state.mosesR)||slot==='r'&&(Yan.distorted(game,p)||Sora.ego(game,p))||p.key==='ezra'&&slot==='q'&&(Ezra.ultimate(game,p)||p.state.ezraLastWeapon==null);const cd=p.key==='yan'&&slot==='r'?(Yan.distorted(game,p)?p.buffs.yanDistorted-game.time:Yan.ready(game,p)?0:p.rCd):p.key==='sora'&&slot==='r'?(Sora.ego(game,p)?p.buffs.soraEgo-game.time:Sora.ready(game,p)?0:p.rCd):p[slot+'Cd'];const charges=skillCharges(game,p,slot),displayCd=Math.max(cd,charges?.remaining||0);b.querySelector('small').textContent=charges?`${slot==='q'?'전술기':'궁극기'} · ${charges.current}/${charges.max}`:slot==='q'?'전술기':'궁극기';const recasting=canRecast(game,p,slot);const tracking=slot==='r'&&((p.key==='honglu'&&!Bough.active(p)&&game.zones.find(z=>z.kind==='waterfall'&&z.source===p&&z.until>game.time)));b.querySelector('.cooldown').textContent=p.key==='ahab'&&slot==='r'&&recasting?(p.state.recastUntil-game.time).toFixed(1)+'s':tracking?Math.ceil(tracking.until-game.time):displayCd>0?Math.ceil(displayCd):'';b.classList.toggle('on-cooldown',cd>0&&!tracking&&!recasting);b.classList.toggle('can-recast',Boolean(tracking||recasting));if(p.key==='heathcliff'&&slot==='q'&&p.state.chargeAt!==undefined)b.querySelector('span').textContent=`충전 ${Math.round(Math.min(1,(game.time-p.state.chargeAt)/1.5)*100)}% · 놓기`;if(p.key==='don'&&slot==='q'&&p.state.donCharge)b.querySelector('span').textContent=`충전 ${Math.round(Don.chargeShape(game,p,game.input.aim).progress*100)}% · 놓기`;if(p.key==='sora'&&slot==='q'&&Sora.ego(game,p))b.querySelector('span').textContent=`대행: 말살 · ${p.state.egoQCharges}/2`;}
  $('passive-slot').querySelector('span').textContent=c.passive;$('passive-slot').title=(c.passiveText||c.brief)+(absorbedOrder(p)?'\n'+augmentName(p,AUGMENTS.find(a=>a.key==='writtenOrder'))+': '+augmentText(p,AUGMENTS.find(a=>a.key==='writtenOrder')):'');const passiveCd=game.passiveCooldown(p);$('passive-slot').querySelector('.cooldown').textContent=passiveCd>0?passiveCd.toFixed(1):'';$('passive-slot').classList.toggle('on-cooldown',passiveCd>0);$('basic-btn').title=c.basicText;const shownRange=p.key==='yan'&&!Yan.distorted(game,p)?Yan.chargeShape(game,p,game.input.aim).range:game.attackRange(p)*(p.key==='kim'&&p.state.followSlashUntil>game.time?1.2*1.08:1);$('basic-btn').querySelector('small').textContent=`사거리 ${Number(shownRange.toFixed(2))}`;
- document.querySelector('.match-clock>span').textContent=game.training?'자유 연습':`${game.champions(0).length} VS ${game.champions(1).length} · 두 개의 전선`;$('gold').textContent=Math.floor(p.gold).toLocaleString();updateAnnouncement();updateTeamPortraits();
+ document.querySelector('.match-clock>span').textContent=game.training?'자유 연습':`${MATCH_MODES[game.matchMode].name} · ${game.champions(0).length} VS ${game.champions(1).length}`;$('gold').textContent=Math.floor(p.gold).toLocaleString();updateAnnouncement();updateTeamPortraits();
  $('shop-status').textContent=game.training?'연습장 · 모든 장소·사망 중 이용 가능 · 강화 시술/E.G.O 기프트 무료':game.canUpgrade(p)?(p.alive?'구매 가능 · 부활소 보급':'부활 대기 중 · 능력치 / E.G.O 기프트 변경 가능'):'부활 대기 중 또는 부활소에서 3초 비전투 시 구매 가능합니다.';
  if(!$("shop").classList.contains("hidden"))updateShopCards(p);
 

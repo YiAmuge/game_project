@@ -36,6 +36,7 @@ export function championSkillSoundProfile(v){
   if(v.cue==='waterfall'&&v.phase==='waterfall-start')return profile('waterSplash',-1.4,1.20,1.15,0,.22);
   if(v.cue==='water'&&v.phase==='waterfall-heal')return profile('waterSplash',-.6+tint,.46,.90,0,.11);
  }
+ if(v.key==='ryoshu'&&v.phase==='arayashiki-sweep')return profile('nellyMetal',-.5,.38,.78,0,.08,[.98,1.12,.96]);
  if(v.key==='nelly'&&v.cue==='weapon'){
   if(v.slot==='q')return profile('nellyMetal',1.8+tint,.26,.72,0,.055,[1.08,1.20,.98]);
   if(!v.slot)return profile('nellyMetal',-1.5+tint,.38,.70,0,.085,[.94,1.08,.90]);

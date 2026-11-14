@@ -1,3 +1,4 @@
+import {storm as arayashikiStorm} from './golden-bough.js';
 import {drawDissolve,drawArayashikiCuts} from './arayashiki-vfx.js';
 import{zoom as mosesZoom}from'./moses.js';
 import{deploymentGhosts}from'./jamila.js';
@@ -259,9 +260,9 @@ export class Renderer {
     const c=this.ctx,project=p=>this.camera.worldToScreen(p,this.billboardPass?.075:0),origin=project(e);
     const blade=active?captureBlade(c.getTransform(),this.dpr,this.scale,origin,inner,outer):{};
     const key=[e.key,e.attackSerial,e.attackAt,soraEgo(game,e),game.buff(e,'mutant'),e.state.weapon,equippedWeapon(game,e)?.[0]].join('/');
-    const samples=this.weaponTrails.sample(e,part,{time:game.time,key,active,anchor:{x:e.x,y:e.y},...blade});
-    const sections=ribbonSections(samples,game.time,s=>projectBlade(s,project,this.scale));
-    c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);drawRibbon(c,sections,e.key==='gahwan'&&part.startsWith('skill-')?'#e92a4c':combatStyle(e.key,game,e,{kind:'basic'}).color);c.restore();
+    const arayashiki=Boolean(arayashikiStorm(game,e));const samples=this.weaponTrails.sample(e,part,{time:game.time,key,active,anchor:{x:e.x,y:e.y},...blade,...(arayashiki?{frames:18,fade:.4}:{})});
+    const sections=ribbonSections(samples,game.time,s=>projectBlade(s,project,this.scale),arayashiki?{fadeDuration:.4,opacity:.62}:undefined);
+    c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);if(arayashiki){c.shadowColor='#ffffff';c.shadowBlur=8;}drawRibbon(c,sections,arayashiki?'#ffffff':e.key==='gahwan'&&part.startsWith('skill-')?'#e92a4c':combatStyle(e.key,game,e,{kind:'basic'}).color);c.restore();
   }
   weapon(e,game){
     if(drawEquipment(this,e,game,{lift:championPresentation(game,e).lift}))return;

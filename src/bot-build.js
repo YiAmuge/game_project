@@ -1,3 +1,4 @@
+import {procedurePrice} from './match-modes.js';
 import{AUGMENTS,RULES,UPGRADE_STEPS}from'./data.js';
 import*as Augments from'./augments.js';
 import{distance,direction}from'./geometry.js';
@@ -39,7 +40,7 @@ export function buyEquipment(g,e){
    // Save for an already-unlocked augment before opening another category.
    if(items.length&&e.gold<Math.min(...items.map(a=>Augments.cost(e,a.key))))break;
   }else stat=plan.stats.find(k=>e.upgrades[k]<UPGRADE_STEPS[k].length);
-  if(!stat)break;const price=RULES.costs[e.upgrades[stat]];if(e.gold<price)break;const before=e.gold;if(!g.buy(e,stat))break;if(g.training)e.gold=before-price;bought=true;
+  if(!stat)break;const price=procedurePrice(e,e.upgrades[stat]);if(e.gold<price)break;const before=e.gold;if(!g.buy(e,stat))break;if(g.training)e.gold=before-price;bought=true;
  }
  if(bought){e.aiLastShop=g.time;delete e.aiShopTrip;}return bought;
 }

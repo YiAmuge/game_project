@@ -1,10 +1,11 @@
+import {giftPrice} from './match-modes.js';
 import * as Bough from './golden-bough.js';
 import { distance } from './geometry.js';
 import { AUGMENTS,AUGMENT_RULES } from './data.js';
 export { AUGMENTS,AUGMENT_RULES };
 export const absorbedOrder=e=>['yan','sora'].includes(e.key)&&Boolean(e.absorbedOrder);
 export const has=(e,key)=>Boolean(e.augments?.includes(key)||key==='writtenOrder'&&absorbedOrder(e)||key==='carrier'&&e.absorbedCarrier||key==='goldenBough'&&Bough.active(e));
-export const cost=(e,key)=>(AUGMENTS.find(a=>a.key===key)?.cost??AUGMENT_RULES.cost)*(['yan','sora'].includes(e.key)&&key==='writtenOrder'?.5:1);
+export const cost=(e,key)=>giftPrice(e,AUGMENTS.find(a=>a.key===key)?.cost??AUGMENT_RULES.cost)*(['yan','sora'].includes(e.key)&&key==='writtenOrder'?.5:1);
 export const saleValue=(e,key)=>cost(e,key)*AUGMENT_RULES.refund;
 // A rifle/single projectile keeps the ordinary range bonus; fans, rectangles,
 // radial attacks, piercing projectiles and damaging dashes use the area bonus.
@@ -20,11 +21,11 @@ export const terminalText='공격 적중 시 방어력·장전 속도 +2.5%, 최
 export const augmentName=(e,item)=>e.key==='sora'&&item?.key==='writtenOrder'?'단말기로 전해진 지령':item?.name||'';
 export const battleActive=(g,e)=>Boolean(g.buff(e,'augBattleHaste')||e.key==='queen'&&has(e,'battleHaste')&&e.state.queenR?.phase==='charging');
 export const EXCLUSIVE_AUGMENTS={
- sora:[{key:'writtenOrder',name:'단말기로 전해진 지령',summary:'조건 없이 반값에 구매합니다. 공격으로 방어력·장전 속도 중첩을 얻고, 최대 중첩에서 고정 피해 전환과 보호막을 얻습니다. 개화 E.G.O 진입 시 패시브로 흡수합니다.',text:'강화시술 구매 조건 없이 250 코스트로 구매하며 단말기로 전해진 지령으로 변경된다. '+terminalText+' 개화 E.G.O 상태가 되면 E.G.O 기프트를 흡수해 칸을 비우고 동일한 효과를 상시 패시브로 얻는다. 변신 중 구매하면 즉시 흡수한다. 흡수한 효과는 변신 종료·사망·부활 후에도 유지되며 다시 구매하거나 판매할 수 없다.'}],
+ sora:[{key:'writtenOrder',name:'단말기로 전해진 지령',summary:'조건 없이 반값에 구매합니다. 공격으로 방어력·장전 속도 중첩을 얻고, 최대 중첩에서 고정 피해 전환과 보호막을 얻습니다. 개화 E.G.O 진입 시 패시브로 흡수합니다.',text:'강화시술 구매 조건 없이 현재 모드 기본 가격의 50%로 구매하며 단말기로 전해진 지령으로 변경된다. '+terminalText+' 개화 E.G.O 상태가 되면 E.G.O 기프트를 흡수해 칸을 비우고 동일한 효과를 상시 패시브로 얻는다. 변신 중 구매하면 즉시 흡수한다. 흡수한 효과는 변신 종료·사망·부활 후에도 유지되며 다시 구매하거나 판매할 수 없다.'}],
  queen:[{key:'battleHaste',name:'사랑과 증오의 이름으로',summary:'조건 없이 구매합니다. 활성화 중 전투력 +15%. 궁극기 충전 중에는 즉시 활성화됩니다.',text:'강화시술 구매 조건 없이 구매할 수 있다. E.G.O 기프트 활성화 중 전투력이 15% 증가한다. 궁극기 충전 중에는 전투 지속 조건과 관계없이 활성화된다.'}],
  kim:[{key:'power15',name:'신검합일',text:'강화시술 구매 조건 없이 구매 가능. 2초마다 최대 체력의 1% 보호막을 얻으며 최대 12%까지 누적되고 5초간 유지된다. 이 보호막은 본국검술 보호막으로 취급되어 보유 중 장전 속도와 스킬 가속이 12% 증가한다.'}],
  jamila:[{key:'highRisk',name:'고위험 작전용 장비',text:'강화시술 구매 조건 없이 구매 가능. 침투 사거리 +10, 위치 선택시간 15초. 전장에서 사라진 동안 궁극기를 사용하면 선택 위치에 0.25초 후 전투원 2명과 함께 나타나며 전투원의 지속시간이 15초가 된다.'}],
- yan:[{key:'writtenOrder',name:'쪽지로 전해진 지령',text:'강화시술 구매 조건 없이 50% 할인된 250 코스트로 구매할 수 있다. 구매 후 뒤틀림 상태가 되면 E.G.O 기프트를 흡수해 보유 칸을 비우고 동일한 효과를 상시 패시브로 얻는다. 뒤틀림 상태에서 구매하면 즉시 흡수한다. 흡수한 효과는 변신 종료·사망·부활 후에도 유지되며 다시 구매하거나 판매할 수 없다.'}],
+ yan:[{key:'writtenOrder',name:'쪽지로 전해진 지령',text:'강화시술 구매 조건 없이 현재 모드 기본 가격의 50%로 구매할 수 있다. 구매 후 뒤틀림 상태가 되면 E.G.O 기프트를 흡수해 보유 칸을 비우고 동일한 효과를 상시 패시브로 얻는다. 뒤틀림 상태에서 구매하면 즉시 흡수한다. 흡수한 효과는 변신 종료·사망·부활 후에도 유지되며 다시 구매하거나 판매할 수 없다.'}],
 };
 export const exclusiveAugments=key=>[...(EXCLUSIVE_AUGMENTS[key]||[]),...(Bough.TEXT[key]?[{key:'goldenBough',name:'황금 가지',summary:Bough.giftNotes(key).map(n=>n.text).join(' '),text:Bough.giftNotes(key).map((n,i)=>`※ ${i+1}. ${n.label}: ${n.text}`).join('\n')}]:[])];
 export function augmentText(e,item){if(!item)return '';if(item.key==='goldenBough')return item.text+(Bough.giftNotes(e.key).length?'\n'+Bough.giftNotes(e.key).map((n,i)=>`※ ${i+1}. ${n.label}: ${n.text}`).join('\n'):'');const effect=exclusiveAugments(e.key).find(a=>a.key===item.key);if(e.key==='sora'&&item.key==='writtenOrder')return effect.text;return item.text+(effect?'\n'+({kim:'김삿갓',jamila:'자밀라',yan:'얀',sora:'소라',queen:'증오의 여왕'}[e.key])+' 전용: '+effect.text:'');}
@@ -44,7 +45,7 @@ export function tick(g,e,dt=0){
  if(s.augReloadStacks>0&&g.time+1e-8>=s.augReloadDecay){while(s.augReloadStacks>0&&g.time+1e-8>=s.augReloadDecay){s.augReloadStacks--;s.augReloadDecay+=3;}if(!s.augReloadStacks)delete e.buffs.augReload;}
 }
 export function interceptFatal(g,e,remaining){
- if(e.kind!=='champion'||remaining<e.hp||!has(e,'kAmpule')||(e.state.ampuleReady||0)>g.time)return false;
+ if(Bough.storm(g,e)||e.kind!=='champion'||remaining<e.hp||!has(e,'kAmpule')||(e.state.ampuleReady||0)>g.time)return false;
  e.state.ampuleReady=g.time+60;e.ampuleGrowth=(e.ampuleGrowth||0)+.025;e.maxHp=g.maxHp(e);e.visuals.ampule={at:g.time,until:g.time+1.2};e.hp=e.maxHp*.5;
  for(const key of ['stun','root','silence','slow','disarm','taunt','captured','netCapture','yanLock'])delete e.status[key];
  delete e.state.netCapture;delete e.state.taunt;if(e.motion?.forced)delete e.motion;const owner=g.units.find(a=>a.state?.swordGrab?.target===e);if(owner)delete owner.state.swordGrab;delete e.state.swordHeldBy;
@@ -76,14 +77,14 @@ export const fits=(e,key)=>key==='goldenBough'||key==='carrier'||usedSlots(e)<sl
 export const sellable=(g,key,e=g.player)=>key!=='goldenBough'&&!(key==='writtenOrder'&&absorbedOrder(e))&&(key!=='carrier'||g.training);
 export const liveStacks=(g,e,key)=>(e.state[key]||[]).filter(at=>at>g.time+1e-8);
 function stack(g,e,key,max){const list=liveStacks(g,e,key);if(list.length>=max)list.shift();list.push(g.time+5);e.state[key]=list;}
-export function powerRate(g,e){return (e.key==='queen'&&has(e,'battleHaste')&&battleActive(g,e)?.15:0)+(has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.07:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?(e.state.duelStacks||0)*.05:0);}
-export const speedRate=(g,e)=>(has(e,'duelManual')?.05+(e.state.duelStacks||0)*.02:0)+(has(e,'carrier')?.03:0)+(has(e,'forceBattery')?.1:0);
-export const reloadRate=(g,e)=>(e.key==='sora'&&has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*.025:0);
+export function powerRate(g,e){return (Bough.active(e)?.05:0)+(e.key==='queen'&&has(e,'battleHaste')&&battleActive(g,e)?.15:0)+(has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.07:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?(e.state.duelStacks||0)*.05:0);}
+export const speedRate=(g,e)=>(Bough.active(e)?.05:0)+(has(e,'duelManual')?.05+(e.state.duelStacks||0)*.02:0)+(has(e,'carrier')?.03:0)+(has(e,'forceBattery')?.1:0);
+export const reloadRate=(g,e)=>(Bough.active(e)?.05:0)+(e.key==='sora'&&has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*.025:0);
 export const armorRate=(g,e)=>(has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*(e.key==='sora'?.025:.05):0)+(has(e,'traumaGuard')?.05:0)+(has(e,'highRisk')?.07:0);
 export const armorPen=e=>has(e,'power15')?.2:0;
 export const converts=(g,e)=>has(e,'writtenOrder')&&liveStacks(g,e,'orderStacks').length>=orderLimit(e);
 export const conversionRate=(g,e)=>converts(g,e)?e.key==='sora'?.07:.1:0;
-export const healthRate=e=>(has(e,'antimatter')?.1:0)+(has(e,'traumaGuard')?.05:0)+(has(e,'kAmpule')?.07:0)+(e.ampuleGrowth||0);
+export const healthRate=e=>(Bough.active(e)?.05:0)+(has(e,'antimatter')?.1:0)+(has(e,'traumaGuard')?.05:0)+(has(e,'kAmpule')?.07:0)+(e.ampuleGrowth||0);
 export const cooldownFactor=e=>1;
 export function onCast(){}
 export function onDebuff(g,e,target){
@@ -105,4 +106,4 @@ export function interceptCC(g,e,key,amount,seconds){
 }
 export function cleanup(e){for(const k of ['maskStacks','orderStacks','antimatterNext'])delete e.state[k];}
 
-export function moved(g,e,from){if(!has(e,'adaptiveSpeed')||!from)return;const s=e.state,len=distance(from,e);if(len<=1e-8)return;s.accelDistance=Math.min(5,(s.accelDistance||0)+len);if(s.accelDistance>=5-1e-8&&(s.accelReady||0)<=g.time){s.accelDistance=0;s.accelReady=g.time+3;g.rewindCooldowns(e,-1.3);}}
+export function moved(g,e,from){if(!has(e,'adaptiveSpeed')||!from)return;const s=e.state,len=distance(from,e);if(len<=1e-8)return;s.accelDistance=Math.min(10,(s.accelDistance||0)+len);if(s.accelDistance>=10-1e-8&&(s.accelReady||0)<=g.time){s.accelDistance=0;s.accelReady=g.time+5;g.rewindCooldowns(e,-1.3);}}
