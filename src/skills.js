@@ -203,7 +203,7 @@ export function cast(g,e,slot,p,d,options={}){
   else{
    if(Bough.active(e)){Bough.castStorm(g,e,p);return true;}
    const len=Math.min(7,distance(e,p)),rawDest={x:clamp(e.x+d.x*len,g.bounds.x+.6,g.bounds.x+g.bounds.w-.6),y:clamp(e.y+d.y*len,g.bounds.y+.6,g.bounds.y+g.bounds.h-.6)};
-   const dest=trapPoint(g,e,rawDest);if(!g.blocked(dest.x,dest.y,e.radius)){e.x=dest.x;e.y=dest.y;}
+   const dest=trapPoint(g,e,rawDest);if(!g.blocked(dest.x,dest.y,e.radius))g.teleport(e,dest);
    g.effects.push({type:'ryoshuStorm',source:e.id,x:e.x,y:e.y,r:2.6,theme:e.key,life:.7,maxLife:.7});for(let i=0;i<4;i++)g.schedule(e,i*.12,()=>area(g,e,e,2.6,140,t=>g.status(t,'vulnerable',.2,5,e)));
    e.ammo=ammoCap(g,e);
   }return true;

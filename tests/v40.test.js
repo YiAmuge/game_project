@@ -15,7 +15,7 @@ function target(g,x=44,y=7,team=1){const t=g.makeChampion('faust',team,9);Object
 
 test('Sora claws keep opposite orbital positions and fixed individual orientation through one full turn',()=>{
  const {g,p}=arena('sora');g.addBuff(p,'soraEgo',20);p.attackAt=0;p.attackFacing=.4;let previous;
- for(let i=0;i<=24;i++){g.time=i*.299/24;const pose=equipmentPose(g,p),orbit=soraOrbitPose(p,pose),center={x:pose.origin.x,y:pose.origin.y-.8};assert.ok(orbit.active);close(orbit.left.hand.x+orbit.right.hand.x,2*center.x);close(orbit.left.hand.y+orbit.right.hand.y,2*center.y);const radius=Math.hypot(orbit.right.hand.x-center.x,orbit.right.hand.y-center.y);assert.ok(radius>=.99-1e-7&&radius<=1.21+1e-7);if(i===0)close(radius,.99);if(i===12)assert.ok(radius>1.209);close(orbit.left.angle,.4+Math.PI);close(orbit.right.angle,.4);if(previous)assert.ok(Math.hypot(orbit.right.hand.x-previous.x,orbit.right.hand.y-previous.y)>.02);previous=orbit.right.hand;}
+ for(let i=0;i<=24;i++){g.time=i*.1199/24;const pose=equipmentPose(g,p),orbit=soraOrbitPose(p,pose),center={x:pose.origin.x,y:pose.origin.y-.8};assert.ok(orbit.active);close(orbit.left.hand.x+orbit.right.hand.x,2*center.x);close(orbit.left.hand.y+orbit.right.hand.y,2*center.y);const radius=Math.hypot(orbit.right.hand.x-center.x,orbit.right.hand.y-center.y);assert.ok(radius>=.99-1e-7&&radius<=1.21+1e-7);if(i===0)close(radius,.99);if(i===12)assert.ok(radius>1.209);close(orbit.left.angle,.4+Math.PI);close(orbit.right.angle,.4);if(previous)assert.ok(Math.hypot(orbit.right.hand.x-previous.x,orbit.right.hand.y-previous.y)>.02);previous=orbit.right.hand;}
  g.time=.3;assert.equal(soraOrbitPose(p,equipmentPose(g,p)).active,false);
 });
 test('Outis starts one body-centered orbit only after her tactical dash lands',()=>{

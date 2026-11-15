@@ -33,7 +33,7 @@ export function confirm(g,e,point=e.state?.infiltration?.point){
  if(e.player)g.input.fire=false;return true;
 }
 export function arrive(g,e,point=e.state?.infiltration?.point){
- if(!absent(e)||!valid(g,e,point))return false;Object.assign(e,point);delete e.state.infiltration;e.path=[];e.retreat=false;g.addBuff(e,'infiltrationStride',INFILTRATION.strideDuration,{copy:false});g.effects.push({type:'ring',x:e.x,y:e.y,r:2.5,color:'#8bbfe7',life:.65,maxLife:.65});return true;
+ if(!absent(e)||!valid(g,e,point))return false;g.teleport(e,point);delete e.state.infiltration;e.path=[];e.retreat=false;g.addBuff(e,'infiltrationStride',INFILTRATION.strideDuration,{copy:false});g.effects.push({type:'ring',x:e.x,y:e.y,r:2.5,color:'#8bbfe7',life:.65,maxLife:.65});return true;
 }
 export function cancel(g,e){
  const cast=e.state?.infiltration;if(!cast&&!e.recall?.infiltration)return false;

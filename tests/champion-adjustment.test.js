@@ -65,7 +65,7 @@ test('the fourth axe attack completes one Hong Lu-style turn about Ezra after th
   const aim={x:p.x+Math.cos(facing)*2.5,y:p.y};g.input.aim=aim;g.attack(p,aim);
   advance(g,.1);let pose=ezraWeaponPose(g,p,equipmentPose(g,p));assert.equal(pose.mode,null);assert.equal(pose.trail,false);
   advance(g,.08);const at=p.state.ezraAttack.at,angles=[];
-  for(const age of[0,.05,.15,.299999]){
+  for(const age of[0,.02,.06,.1199996]){
    g.time=at+age;const body=equipmentPose(g,p);pose=ezraWeaponPose(g,p,body);assert.equal(pose.mode,'orbit');assert.equal(pose.weapon,4);near(pose.hand.x,body.origin.x);near(pose.hand.y,body.origin.y-.65);angles.push(pose.angle);assert.equal(equippedWeapon(g,p)[0],'ezraAxe');
   }
   for(let i=1;i<angles.length;i++)assert.ok(angles[i]>angles[i-1]);near(angles.at(-1)-angles[0],Math.PI*2,1e-4);

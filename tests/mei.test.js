@@ -66,7 +66,7 @@ test('both swinging fists orbit the same moving torso pivot in opposite directio
  const{g,p}=arena();
  for(const index of[0,1]){
   p.state.meiPunch={at:0,until:.15,index,last:false,angle:0};const angles=[];
-  for(const time of[.01,.03,.08,.14]){g.time=time;p.x=40+time;const f=meiFistPoses(g,p).find(f=>f.active),origin=spriteOrigin(g,p);close(f.center.x,origin.x);close(f.center.y,origin.y-.65);close(distance(f,f.center),.74);angles.push(f.angle);}
+  for(const time of[.005,.02,.04,.055]){g.time=time;p.x=40+time;const f=meiFistPoses(g,p).find(f=>f.active),origin=spriteOrigin(g,p);close(f.center.x,origin.x);close(f.center.y,origin.y-.65);close(distance(f,f.center),.74);angles.push(f.angle);}
   assert.ok(angles.every((a,i)=>!i||(index===0?a<angles[i-1]:a>angles[i-1])));
  }
 });

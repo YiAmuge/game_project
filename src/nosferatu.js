@@ -37,8 +37,8 @@ export function cast(g,e,slot,p){
   e.state.bloodFeast-=NOSFERATU.cost;const army=g.units.filter(t=>t.bloodBat&&t.owner===e.id&&t.alive).sort((a,b)=>a.id-b.id);while(army.length>=NOSFERATU.bats){const old=army.shift();old.alive=false;old.hp=0;}
   const point=g.safeLanding(e,p,NOSFERATU.qRange),b=g.entity({kind:'trooper',bloodBat:true,key:'nosferatu',owner:e.id,team:e.team,x:point.x,y:point.y,radius:.22,maxHp:e.maxHp*.5,armor:0,until:g.time+NOSFERATU.batDuration,nextStrike:g.time,snapshot:{speed:g.speed(e)*NOSFERATU.batSpeed,power:RULES.power[RUNTIME_CHAMPIONS.nosferatu.power]*.9*g.powerScale(e)*.5},name:'핏빛 박쥐'});ejectBat(g,b);
   for(const t of [...g.units])if(t!==b&&g.hostile(e,t)&&distance(t,b)<=.75+t.radius&&g.clearLine(b,t))g.deal(e,t,NOSFERATU.qDamage,{damageKind:'skill'});
- }else if(bloodfiend(g,e))restore(g,e);
- else{e.state.bloodfiend={radius:e.radius,damage:0,x:e.x,y:e.y,hp:e.hp,feast:e.state.bloodFeast||0,at:g.time,until:g.time+NOSFERATU.rDuration,nextDrain:g.time+NOSFERATU.rEvery,nextAttack:g.time};e.radius*=NOSFERATU.rSize;Object.assign(e,g.safeLanding(e,p,NOSFERATU.rRange));e.hp=e.maxHp;e.phaseEnemiesUntil=g.time+NOSFERATU.rDuration;g.addBuff(e,'bloodfiend',NOSFERATU.rDuration,{copy:false});e.attackCd=0;}
+ }else if(bloodfiend(g,e)){if(restore(g,e))g.usedMobility(e);}
+ else{e.state.bloodfiend={radius:e.radius,damage:0,x:e.x,y:e.y,hp:e.hp,feast:e.state.bloodFeast||0,at:g.time,until:g.time+NOSFERATU.rDuration,nextDrain:g.time+NOSFERATU.rEvery,nextAttack:g.time};e.radius*=NOSFERATU.rSize;g.teleport(e,g.safeLanding(e,p,NOSFERATU.rRange));e.hp=e.maxHp;e.phaseEnemiesUntil=g.time+NOSFERATU.rDuration;g.addBuff(e,'bloodfiend',NOSFERATU.rDuration,{copy:false});e.attackCd=0;}
 }
 export function tick(g,e){
  if(e.key!=='nosferatu'||e.bloodBat)return;if(e.state.bloodSummons?.until<=g.time+1e-8)delete e.state.bloodSummons;e.state.bloodFeast=Math.min(capacity(g,e),e.state.bloodFeast||0);

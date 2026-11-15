@@ -59,25 +59,29 @@ export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
  const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],aim=e.facing??(e.team?Math.PI:0),stance=basicStance(g,e)||(!combatPoseActive(g,e)&&Math.abs(Math.sin(aim))<1e-6?restingStance(g,e,aim):null),facing=stance?.weaponFacing??aim,flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[baseX,y]=HAND_ANCHORS[e.key]||[-.3,-.8],x=baseX*(e.key==='sora'&&g.buff(e,'soraEgo')?1.1:1);
  const duration=e.key==='ryoshu'?.25:.3,age=g.time-(e.attackAt??-99),attacking=age>=0&&age<duration,style=g.attackStyle(e),slash=['slash','sweep'].includes(style),swing=age/duration,side=(e.attackSerial||0)%2?1:-1;
  let angle=attacking?(e.attackFacing??facing):facing;
- if(slash&&attacking)angle+=e.key==='honglu'?swingProgress(swing)*Math.PI*2:(swingProgress(swing)-.5)*2.25*side;
+ if(slash&&attacking)angle+=e.key==='honglu'?swingProgress(swing)*Math.PI*2:(weaponSwingProgress(swing)-.5)*2.25*side;
  if(e.state.donCharge)angle=facing;
  if(e.state.donThrust&&g.time-e.state.donThrust.at<.24)angle=e.state.donThrust.angle;
  if(e.key==='starbuck'&&(e.motion?.kind==='leap'&&e.motion.elapsed/Math.max(.01,e.motion.minDuration)>.5||g.time-(e.state.starbuckLandedAt??-99)<.22))angle=Math.PI/2;
  const handY=y+(['honglu','dongrang'].includes(e.key)?.15:0);
  return {origin,right:{x:origin.x+x*flip,y:origin.y+handY},left:{x:origin.x-x*flip,y:origin.y+handY},angle,age,attacking,slash,swing,flip,facing,resting:Boolean(stance)};
 }
+export const WEAPON_SWING_SPEED=2.5;
+// Animation windows keep their original duration; the completed strike is held.
+export const weaponSwingProgress=t=>Math.max(0,Math.min(1,t*WEAPON_SWING_SPEED));
+export function weaponStrikePulse(t){t=Math.max(0,Math.min(1,t));return t===1?0:Math.sin((t<.5?Math.min(.5,t*WEAPON_SWING_SPEED):t)*Math.PI);}
 export function swingProgress(t){
- t=Math.max(0,Math.min(1,t));const turn=.8/3;return t<=turn?t*3:.8+(t-turn)*(.2/(1-turn));
+ t=weaponSwingProgress(t);const turn=.8/3;return t<=turn?t*3:.8+(t-turn)*(.2/(1-turn));
 }
 export function weaponMotionAccent(key,mode,progress){
- const pulse=mode&&key!=='nelly'&&progress>=0&&progress<=1?Math.sin(progress*Math.PI):0;
+ const phase=weaponSwingProgress(progress),pulse=mode&&key!=='nelly'&&progress>=0&&progress<=1&&phase>0&&phase<1?Math.sin(phase*Math.PI):0;
  return {scale:1+.20*pulse,outward:mode==='swing'?.18*pulse:0};
 }
 export function basicWeaponAccent(g,e,p=equipmentPose(g,e)){
  if(e.key==='rudolph')return {scale:rudolphForwardPose(g,e,p)?.scale??1,outward:0};
  const style=g.attackStyle(e),mode=p.attacking?(p.slash?(e.key==='honglu'||e.key==='sora'?'orbit':'swing'):['thrust','whip'].includes(style)?'thrust':null):null;
  const accent=weaponMotionAccent(e.key,mode,e.key==='yan'?p.age/.15:p.swing);
- if(mode&&e.key==='kim'&&e.state.kimWideSlashSerial===e.attackSerial)accent.scale+=.12*Math.sin(p.swing*Math.PI);
+ if(mode&&e.key==='kim'&&e.state.kimWideSlashSerial===e.attackSerial)accent.scale+=.12*Math.sin(weaponSwingProgress(p.swing)*Math.PI);
  return accent;
 }
 export function rudolphForwardPose(g,e,p=equipmentPose(g,e)){
@@ -90,7 +94,7 @@ export function rudolphChantPose(g,e,p=equipmentPose(g,e)){
  return {hand:{x:p.origin.x,y:p.origin.y-.60},angle:-Math.PI/2};
 }
 export function groundStrikePose(p,length,pivot,age,{impact=.11,recovery=.19,depth=.2,head=.9}={}){
- const down=Math.max(0,Math.min(1,age/impact)),recover=Math.max(0,Math.min(1,(age-impact)/recovery));
+ const down=weaponSwingProgress(age/impact),recover=Math.max(0,Math.min(1,(age-impact)/recovery));
  const headY=p.origin.y-1.1+(1.1+depth)*down**2-.55*recover;
  return {hand:{x:p.right.x,y:headY-(head-pivot)*length},angle:Math.PI/2,headY};
 }
@@ -99,7 +103,7 @@ export function frontGroundPoint(e,p,camera,{distance=.85,angle=e.attackFacing??
  const at=camera.worldToScreen(e,.075),to=camera.worldToScreen(front,.075);return {x:e.x+(to.x-at.x)/camera.scale,y:e.y+feetOffset(e)+(to.y-at.y)/camera.scale};
 }
 export function forwardGroundStrikePose(g,e,p,camera,age,{impact=.11,recovery=.19,depth=.02,head=[.9,.5],progress=age/.3,angle=e.attackFacing??p.facing}={}){
- const point=frontGroundPoint(e,p,camera,{angle}),down=Math.max(0,Math.min(1,age/impact)),recover=Math.max(0,Math.min(1,(age-impact)/recovery)),accent=weaponMotionAccent(e.key,'swing',progress),[key,length]=WEAPON_ART[e.key],m=weaponGeometry(key,length*accent.scale),tip=gripSourcePoint(head,m,gripPivot(e.key)),headY=point.y-1.1+(1.1+depth)*down**2-.55*recover;
+ const point=frontGroundPoint(e,p,camera,{angle}),down=weaponSwingProgress(age/impact),recover=Math.max(0,Math.min(1,(age-impact)/recovery)),accent=weaponMotionAccent(e.key,'swing',progress),[key,length]=WEAPON_ART[e.key],m=weaponGeometry(key,length*accent.scale),tip=gripSourcePoint(head,m,gripPivot(e.key)),headY=point.y-1.1+(1.1+depth)*down**2-.55*recover;
  return {hand:{x:point.x+tip.y,y:headY-tip.x-accent.outward},angle:Math.PI/2,headY,groundY:point.y,impactPoint:point,progress};
 }
 export function ahabSlamPose(g,e,p,camera){
@@ -118,7 +122,7 @@ export function starbuckSlamPose(g,e,p,camera){
 }
 export function guboWeaponPose(g,e,camera,p=equipmentPose(g,e)){
  // Keep the rifle on the anatomical hand, with the shared basic attack push.
- return {hand:p.right,angle:p.angle,thrust:p.attacking?Math.sin(p.swing*Math.PI)*.38:0};
+ return {hand:p.right,angle:p.angle,thrust:p.attacking?weaponStrikePulse(p.swing)*.38:0};
 }
 export function weaponEmissionPoint(g,e,camera){
  if(!['gubo','rudolph','myo','jamila'].includes(e.key)||e.key==='myo'&&!myoFiring(g,e))return null;
@@ -138,7 +142,7 @@ export function bodyOrbit(p,angle,radius=.65){
  return {x:p.origin.x+Math.cos(angle)*radius,y:p.origin.y-.8+Math.sin(angle)*radius};
 }
 export function soraOrbitPose(e,p){
- const facing=(p.attacking?e.attackFacing:undefined)??p.facing,angle=facing+swingProgress(p.swing)*Math.PI*2,radius=(.9+.2*Math.sin(Math.max(0,Math.min(1,p.swing))*Math.PI))*1.1;
+ const facing=(p.attacking?e.attackFacing:undefined)??p.facing,angle=facing+swingProgress(p.swing)*Math.PI*2,radius=(.9+.2*Math.sin(weaponSwingProgress(p.swing)*Math.PI))*1.1;
  return p.attacking?{left:{hand:bodyOrbit(p,angle+Math.PI,radius),angle:facing+Math.PI},right:{hand:bodyOrbit(p,angle,radius),angle:facing},active:true}:{left:{hand:p.left,angle:facing},right:{hand:p.right,angle:facing},active:false};
 }
 export function outisSpinPose(g,e,p){
@@ -176,7 +180,7 @@ export function heathSweepPose(g,e,p=equipmentPose(g,e)){
  if(e.key!=='heathcliff'||!e.alive||!g.buff(e,'heathUlt'))return null;
  const serial=e.state.heathSweepSerial||0,start=(e.state.auraTick??g.time+HEATH.interval)-HEATH.interval;
  const progress=Math.max(0,Math.min(1,(g.time-start)/HEATH.interval)),direction=serial%2?-1:1;
- return {center:{x:p.origin.x,y:p.origin.y-.8},progress,direction,serial,angle:(e.state.heathSweepFacing??p.facing)+direction*Math.PI*2*progress,bend:direction*1.25*Math.sin(progress*Math.PI),radius:HEATH.radius};
+ const visual=weaponSwingProgress(progress);return {center:{x:p.origin.x,y:p.origin.y-.8},progress,direction,serial,angle:(e.state.heathSweepFacing??p.facing)+direction*Math.PI*2*visual,bend:direction*1.25*Math.sin(visual*Math.PI),radius:HEATH.radius};
 }
 export function heathSackPoint(pose,u){
  const angle=pose.angle-pose.bend*Math.max(0,u)**1.4,r=.38+(pose.radius-.38)*u;
@@ -326,7 +330,7 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
  if(index===2&&!active&&!combatPoseActive(g,e)){hand={x:hand.x,y:hand.y+.16};angle=Math.cos(facing)<0?Math.PI+Math.PI/12:-Math.PI/12;}
  if(active){
   if(index===0){
-   const t=Math.min(1,age/.24),smooth=v=>v*v*(3-2*v),reach=.85*(t<.35?smooth(t/.35):t<.55?1:1-smooth((t-.55)/.45));
+   const t=Math.min(1,age/.24),strike=t<.35?Math.min(.35,t*WEAPON_SWING_SPEED):t,smooth=v=>v*v*(3-2*v),reach=.85*(strike<.35?smooth(strike/.35):strike<.55?1:1-smooth((strike-.55)/.45));
    hand={x:hand.x+Math.cos(facing)*reach,y:hand.y+Math.sin(facing)*reach};trail=t<1;
   }else if(index===1){
    angle=facing+(a.spinDirection||1)*swingProgress(progress)*Math.PI*2;hand={x:p.origin.x,y:p.origin.y-.65};mode='orbit';trail=progress<1;
@@ -338,7 +342,7 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
   else if(index===3){
    angle=Math.PI/2;
    if(a.phase==='leap')hand={x:p.right.x,y:p.origin.y-1.5-fistLift};
-   else{const point=frontGroundPoint(e,p,camera,{distance:.6,angle:facing}),t=Math.min(1,age/.10),recover=Math.max(0,(age-.10)/.18),height=Ezra.EZRA_WEAPONS[3].length*.88;hand={x:hand.x+(point.x-hand.x)*t,y:hand.y+(point.y-height-hand.y)*t-.25*recover};}
+   else{const point=frontGroundPoint(e,p,camera,{distance:.6,angle:facing}),t=weaponSwingProgress(age/.10),recover=Math.max(0,(age-.10)/.18),height=Ezra.EZRA_WEAPONS[3].length*.88;hand={x:hand.x+(point.x-hand.x)*t,y:hand.y+(point.y-height-hand.y)*t-.25*recover};}
   }
  }
  return{weapon:index,hand,angle,mode,progress,thrust,trail,gripY,flipY:index===0?-1:1,part:active&&a.fourth?'ezra-axe-orbit':index===1?'ezra-hammer-'+(a?.spinDirection||1):'ezra-'+index};
@@ -404,7 +408,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='ppui'){
   held('ppuiHand',entry[1],p.right,p.facing,.12,{trail:false,part:'palm-right'});held('ppuiHand',entry[1],p.left,p.facing,.12,{trail:false,part:'palm-left'});
  }else if(e.key==='meursault'){
-  for(const [hand,start,part] of [[p.right,0,'fist-right'],[p.left,.1,'fist-left']]){const t=(age-start)/.1,active=t>=0&&t<1;held('meursaultFist',.8,hand,(attacking?e.attackFacing:undefined)??p.facing,.12,{thrust:active?Math.sin(t*Math.PI)*.65:0,trail:active,part});}
+  for(const [hand,start,part] of [[p.right,0,'fist-right'],[p.left,.1,'fist-left']]){const t=(age-start)/.1,active=t>=0&&t<1;held('meursaultFist',.8,hand,(attacking?e.attackFacing:undefined)??p.facing,.12,{thrust:active?weaponStrikePulse(t)*.65:0,trail:active,part});}
  }else if(e.key==='myo'){
   if(myoFiring(g,e)){const shot=myoRiflePose(g,e,p);held('myoRifle',2.15,shot.hand,shot.angle,.32,{mode:null,thrust:shot.thrust,trail:false});}
   else if(g.buff(e,'rabbitFrenzy')){const grip=attacking?0:Math.PI;held('myoDagger',1.45,p.right,p.angle+grip+.25,.12,{part:'dagger-right'});held('myoDagger',1.45,p.left,p.angle+grip-.25,.12,{part:'dagger-left'});}
@@ -424,13 +428,13 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }else if(e.key==='ahab'&&attacking&&!e.state.ahabUlt){
   return true;
  }else{
-  let angle=p.angle,thrust=!slash&&attacking?Math.sin(p.swing*Math.PI)*.38:0;
+  let angle=p.angle,thrust=!slash&&attacking?weaponStrikePulse(p.swing)*.38:0;
   if(e.key==='yan')angle=yanWeaponAngle(e,p);
-  if(e.key==='nelly'&&attacking)thrust=Math.sin(p.swing*Math.PI)*.6;
+  if(e.key==='nelly'&&attacking)thrust=weaponStrikePulse(p.swing)*.6;
   let accent={};
   if(e.key==='don'){
    if(e.state.donCharge){thrust=donChargePull(g,e);accent={mode:null};}
-   else if(g.time-(e.state.donThrust?.at??-99)<.24){const t=(g.time-e.state.donThrust.at)/.24;thrust=-.45*e.state.donThrust.progress*(1-t)+Math.sin(t*Math.PI)*.8;accent={mode:'thrust',progress:t};}
+   else if(g.time-(e.state.donThrust?.at??-99)<.24){const t=(g.time-e.state.donThrust.at)/.24;thrust=-.45*e.state.donThrust.progress*(1-t)+weaponStrikePulse(t)*.8;accent={mode:'thrust',progress:t};}
   }
   held(entry[0],entry[1]*(e.key==='nelly'&&attacking?1.5:1),p.right,angle,undefined,{...accent,thrust,trail:slash&&attacking&&(e.key!=='yan'||age<.15)});
  }
@@ -441,9 +445,9 @@ export const KROMER_WEAPON_MOTION={impaleDuration:.12,torsoDrop:1.05*.3};
 export function kromerWeaponPose(g,e,p=equipmentPose(g,e),camera){
  if(e.state.kromerThrownUntil>g.time)return{hidden:true};
  const grab=e.state.kromerGrab;
- if(grab){const age=g.time-(e.state.kromerStrikeAt??-99),progress=Math.max(0,Math.min(1,age/KROMER_WEAPON_MOTION.impaleDuration)),pulse=age>=0&&age<KROMER_WEAPON_MOTION.impaleDuration?Math.sin(progress*Math.PI):0,side=Math.cos(grab.angle)<0?-1:1,angle=side>0?Math.PI/4:Math.PI*3/4,target=targetTorsoPoint(g,e,grab.target,camera),reach=WEAPON_ART.kromer[1]*(1+.2*pulse)*.5+.15;target.y+=KROMER_WEAPON_MOTION.torsoDrop;return{hand:{x:target.x-Math.cos(angle)*reach,y:target.y-Math.sin(angle)*reach},angle,pivot:.5,mode:'thrust',progress,thrust:.5*pulse,centerGrip:true};}
+ if(grab){const age=g.time-(e.state.kromerStrikeAt??-99),progress=Math.max(0,Math.min(1,age/KROMER_WEAPON_MOTION.impaleDuration)),pulse=age>=0&&age<KROMER_WEAPON_MOTION.impaleDuration?weaponStrikePulse(progress):0,side=Math.cos(grab.angle)<0?-1:1,angle=side>0?Math.PI/4:Math.PI*3/4,target=targetTorsoPoint(g,e,grab.target,camera),reach=WEAPON_ART.kromer[1]*weaponMotionAccent('kromer','thrust',progress).scale*.5+.15;target.y+=KROMER_WEAPON_MOTION.torsoDrop;return{hand:{x:target.x-Math.cos(angle)*reach,y:target.y-Math.sin(angle)*reach},angle,pivot:.5,mode:'thrust',progress,thrust:.5*pulse,centerGrip:true};}
  const qAge=g.time-(e.state.kromerQStrikeAt??-99),q=qAge>=0&&qAge<.25;
- return{hand:p.right,angle:q?e.state.kromerQStrikeFacing:p.angle,pivot:.11,mode:q?'thrust':undefined,progress:q?qAge/.25:undefined,thrust:q?.45*Math.sin(qAge/.25*Math.PI):p.attacking?.38*Math.sin(p.swing*Math.PI):0};
+ return{hand:p.right,angle:q?e.state.kromerQStrikeFacing:p.angle,pivot:.11,mode:q?'thrust':undefined,progress:q?qAge/.25:undefined,thrust:q?.45*weaponStrikePulse(qAge/.25):p.attacking?.38*weaponStrikePulse(p.swing):0};
 }
 
 export function normalBloodClawPose(g,e,p=equipmentPose(g,e)){
@@ -451,7 +455,7 @@ export function normalBloodClawPose(g,e,p=equipmentPose(g,e)){
  return {asset:'bloodClawRight',angle,length:1.5,hand:{x:p.origin.x+Math.cos(angle)*.3,y:p.origin.y-.78+Math.sin(angle)*.3}};
 }
 export function bloodClawPoses(g,e,p=equipmentPose(g,e)){
- const phase=Math.max(0,Math.min(1,(g.time-(e.attackAt??g.time))/.35)),direction=(e.attackSerial||0)%2?-1:1,base=(e.attackFacing??p.facing)+direction*Math.PI*2*phase,scale=1.15;
+ const phase=Math.max(0,Math.min(1,(g.time-(e.attackAt??g.time))/.35)),direction=(e.attackSerial||0)%2?-1:1,base=(e.attackFacing??p.facing)+direction*Math.PI*2*weaponSwingProgress(phase),scale=1.15;
  return ['bloodClawLeft','bloodClawRight'].map((asset,i)=>{const angle=base+i*Math.PI;return {asset,angle,phase,direction,length:1.15*scale,ground:{x:Math.cos(angle)*.58,y:Math.sin(angle)*.58},hand:{x:p.origin.x+Math.cos(angle)*.58,y:p.origin.y-.86+Math.sin(angle)*.58}};});
 }
 function drawBloodSweep(r,e,g,lift,layer){
@@ -484,12 +488,12 @@ export function meiFistPoses(g,e,lift=0){
   let x=origin.x+(index?.31:-.43)*flip,y=origin.y+HAND_ANCHORS.mei[1],angle=flip>0?Math.PI/12:Math.PI-Math.PI/12,on=active&&p.index%2===index,progress=active?age/MEI.interval:0,part=`${e.attackSerial}:${p?.index}`,layer=index?'back':'front';
   if(on){
    angle=p.last?p.angle:p.angle+(index?1:-1)*swingProgress(progress)*Math.PI*2;
-   const reach=p.last?.25+Math.sin(progress*Math.PI)*.85:.74;
+   const reach=p.last?.25+weaponStrikePulse(progress)*.85:.74;
    x=center.x+Math.cos(angle)*reach;y=center.y+Math.sin(angle)*reach;
    layer=y<center.y?'back':'front';
   }
   if(qActive&&!index){
-   progress=(g.time-q.at)/(q.until-q.at);const reach=.95*Math.min(1,progress/.22)*Math.min(1,(1-progress)/.35);
+   progress=(g.time-q.at)/(q.until-q.at);const reach=.95*Math.min(1,progress*WEAPON_SWING_SPEED/.22)*Math.min(1,(1-progress)/.35);
    angle=q.angle;x=origin.x-.43*flip+Math.cos(angle)*reach;y=origin.y+HAND_ANCHORS.mei[1]+Math.sin(angle)*reach;on=true;layer='front';part=`q:${q.at}`;
   }
   return{side,key:index?'meiLeftFist':'meiRightFist',x,y,angle,active:Boolean(on),progress,last:!qActive&&Boolean(p?.last),direction:index?1:-1,center,layer,part};

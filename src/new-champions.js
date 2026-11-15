@@ -96,7 +96,7 @@ export function cast(g,e,slot,p,d){
    s.knifeCharges=(s.knifeCharges??2)-1;if(!Number.isFinite(s.knifeReady))s.knifeReady=g.time+g.cooldown(e,'q');e.qCd=s.knifeCharges>0?0:s.knifeReady-g.time;let refunded=false;
    for(const off of [-.28,-.14,0,.14,.28])g.bullet(e,{x:Math.cos(e.facing+off),y:Math.sin(e.facing+off)},70,7,{speed:18,pierce:Infinity,beforeHit:t=>{e.state.knifeRefundCast=true;if(!refunded&&t.state?.nellyMarks?.[e.id]?.active){refunded=true;refundKnife(g,e);}},onHit:()=>{delete e.state.knifeRefundCast;}});
   }else{
-   e.ammo=Math.min(g.ammoCap(e),e.ammo+2);Object.assign(e,g.safeLanding(e,p,7));const t=targetAt(g,e,e,1.2);
+   e.ammo=Math.min(g.ammoCap(e),e.ammo+2);g.teleport(e,g.safeLanding(e,p,7));const t=targetAt(g,e,e,1.2);
    // Apply the forced mark after the opening strike so the following three hits preserve it.
    if(t){g.deal(e,t,300);if(t.alive){g.status(t,'root',1,.7,e);nellyMark(g,e,t,true);}}g.effects.push({type:'slash',x:e.x,y:e.y,r:2,angle:e.facing,spread:2.8,theme:e.key,life:.5,maxLife:.5});
   }return true;
@@ -108,7 +108,7 @@ export function cast(g,e,slot,p,d){
    const len=Math.min(6.5,distance(e,p)),dest=trapPoint(g,e,{x:e.x+d.x*len,y:e.y+d.y*len}),execute=new Set(g.champions(1-e.team).filter(t=>t.alive&&t.hp/t.maxHp<.1).map(t=>t.id));
    s.ahabUlt={origin:{x:e.x,y:e.y},immune:e.ccImmuneUntil||0,invulnerable:e.invulnerableUntil||0};e.ccImmuneUntil=Infinity;e.invulnerableUntil=Infinity;e.channelUntil=g.time+.45;
    s.ahabSlamAt=g.time+.45;s.ahabTeleportTrail={from:{x:e.x,y:e.y},to:{...dest},at:g.time,facing:e.facing};
-   e.x=dest.x;e.y=dest.y;g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
+   g.teleport(e,dest);g.effects.push({type:'ring',...dest,r:2.5,color:'#e2d6a5',life:.3,maxLife:.3});
    {
     for(let i=0;i<2;i++)g.schedule(e,i*.2,()=>{g.effects.push({source:e.id,theme:e.key,slot:'r',damageKind:'skill',type:'ahabSpin',x:e.x,y:e.y,r:2.5,shape:{kind:'circle',range:2.5},life:.28,maxLife:.28});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){ahabUltimateHit(g,e,t,180,{nonLethal:execute.has(t.id)});}});
     g.schedule(e,.45,()=>{g.emitSound?.('slam',e,{slot:'r',phase:'ahab-slam',family:'spear',element:'fire'});for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=2.5+t.radius&&g.clearLine(e,t)){

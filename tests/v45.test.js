@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Game } from '../src/game.js';
 import { WORLD } from '../src/data.js';
 import { Camera25D } from '../src/camera-25d.js';
-import { swingProgress,weaponMotionAccent,basicWeaponAccent,equipmentPose,skillWeaponPose,targetTorsoPoint,rudolphForwardPose,weaponEmissionPoint,weaponEmissionScreen,WEAPON_ART } from '../src/weapon-art.js';
+import { swingProgress,WEAPON_SWING_SPEED,weaponMotionAccent,basicWeaponAccent,equipmentPose,skillWeaponPose,targetTorsoPoint,rudolphForwardPose,weaponEmissionPoint,weaponEmissionScreen,WEAPON_ART } from '../src/weapon-art.js';
 import { projectileAppearance } from '../src/projectile-vfx.js';
 import { projectileDimensions } from '../src/projectile-rules.js';
 import { ahabMarkPresentation,harpoonBonusReady } from '../src/new-champions.js';
@@ -15,12 +15,14 @@ const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 const run=(g,s)=>{for(let i=0;i<Math.round(s*240);i++)g.step(1/240);};
 function arena(key){const g=new Game(key,'top',{seed:45}),e=g.player;for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};Object.assign(e,{x:30,y:20,facing:0});g.units=[e];g.effects=[];g.minionQueue=[];g.wave=100;g.map={bounds:WORLD,walls:[]};return {g,e};}
 function target(g,x=32,y=20){const t=g.makeChampion('faust',1,9);Object.assign(t,{x,y,hp:100000,maxHp:100000});g.units.push(t);return t;}
-test('sweeps traverse 80 percent at triple speed, then slow sharply and retain their end time',()=>{
- for(const t of [0,.02,.1,.2,.8/3])close(swingProgress(t),3*t);close(swingProgress(.8/3),.8);close(swingProgress(1),1);close(swingProgress(-1),0);close(swingProgress(2),1);
- close((swingProgress(.7)-swingProgress(.6))/.1,.2/(1-.8/3));let last=0;for(let i=0;i<=1000;i++){const p=swingProgress(i/1000);assert.ok(p>=last&&p<=1);last=p;}
+test('sweeps play their original path 2.5 times faster and hold the final pose until the original end time',()=>{
+ for(const t of [0,.02,.1,.2,.8/3])close(swingProgress(t/WEAPON_SWING_SPEED),3*t);
+ const turn=.8/3;for(const t of [.3,.6,.7,1])close(swingProgress(t/WEAPON_SWING_SPEED),.8+(t-turn)*(.2/(1-turn)));
+ for(const t of [.4,.6,.99,1,2])close(swingProgress(t),1);close(swingProgress(-1),0);
+ let last=0;for(let i=0;i<=1000;i++){const p=swingProgress(i/1000);assert.ok(p>=last&&p<=1);last=p;}
 });
 test('swing reach is 0.18 and the general maximum growth is twenty percent',()=>{
- assert.deepEqual(weaponMotionAccent('faust','swing',.5),{scale:1.2,outward:.18});for(const mode of ['thrust','orbit'])assert.deepEqual(weaponMotionAccent('faust',mode,.5),{scale:1.2,outward:0});assert.deepEqual(weaponMotionAccent('nelly','swing',.5),{scale:1,outward:0});
+ assert.deepEqual(weaponMotionAccent('faust','swing',.2),{scale:1.2,outward:.18});for(const mode of ['thrust','orbit'])assert.deepEqual(weaponMotionAccent('faust',mode,.2),{scale:1.2,outward:0});assert.deepEqual(weaponMotionAccent('nelly','swing',.2),{scale:1,outward:0});
 });
 test('Outis basics draw a very thin long sword ray without changing the bullet damage or collision width',()=>{
  const {g,e}=arena('outis');g.attack(e,{x:36,y:20});const p=g.projectiles[0],style=projectileAppearance(p,g),size=projectileDimensions(style);assert.equal(style.type,'swordRay');close(size.width,.15);close(size.length,2.25);assert.ok(size.length/size.width>=15-1e-8);assert.equal(p.damage,215);assert.equal(p.width,.16);assert.equal(p.speed,22);
@@ -29,10 +31,10 @@ test('Outis thrusts on the forward ultimate dash and withdraws after shotgun fir
  const {g,e}=arena('outis');target(g,32.5);g.cast(e,'r',{x:36,y:20});run(g,.04);let pose=skillWeaponPose(g,e);assert.equal(pose.part,'outis-thrust');assert.ok(pose.thrust>0);let guard=0;while(e.state.outisRecoilAt===undefined&&guard++<150)g.step(1/240);assert.ok(guard<150);assert.ok(e.motion?.dx<0);pose=skillWeaponPose(g,e);assert.equal(pose.part,'outis-withdraw');close(pose.angle,0);g.time=e.state.outisRecoilAt+.14;assert.ok(skillWeaponPose(g,e).thrust<0);g.time=e.state.outisRecoilAt+.201;assert.equal(skillWeaponPose(g,e),null);
 });
 test('Faust Q is one broad fast-then-slow sweep within the same 0.36 second window',()=>{
- const {g,e}=arena('faust');g.cast(e,'q',{x:36,y:20});const start=skillWeaponPose(g,e);close(start.angle,-Math.PI/2);g.time=.36*.8/3;const next=skillWeaponPose(g,e);close(next.angle-start.angle,Math.PI*.8);g.time=.361;assert.equal(skillWeaponPose(g,e),null);
+ const {g,e}=arena('faust');g.cast(e,'q',{x:36,y:20});const start=skillWeaponPose(g,e);close(start.angle,-Math.PI/2);g.time=.36*.8/3/WEAPON_SWING_SPEED;const next=skillWeaponPose(g,e);close(next.angle-start.angle,Math.PI*.8);g.time=.361;assert.equal(skillWeaponPose(g,e),null);
 });
 test('Kim wide follow-up grows by thirty-two percent, and the next ordinary attack resets the bonus',()=>{
- const {g,e}=arena('kim');g.attack(e,{x:36,y:20});g.time=.15;close(basicWeaponAccent(g,e).scale,1.2);e.attackCd=0;g.attack(e,{x:36,y:20});g.time=.3;close(basicWeaponAccent(g,e).scale,1.32);assert.equal(e.state.kimWideSlashSerial,e.attackSerial);g.time=2;e.attackCd=0;e.ammo=2;g.attack(e,{x:36,y:20});g.time=2.15;close(basicWeaponAccent(g,e).scale,1.2);
+ const {g,e}=arena('kim');g.attack(e,{x:36,y:20});g.time=.06;close(basicWeaponAccent(g,e).scale,1.2);e.attackCd=0;g.attack(e,{x:36,y:20});g.time=.12;close(basicWeaponAccent(g,e).scale,1.32);assert.equal(e.state.kimWideSlashSerial,e.attackSerial);g.time=2;e.attackCd=0;e.ammo=2;g.attack(e,{x:36,y:20});g.time=2.06;close(basicWeaponAccent(g,e).scale,1.2);
 });
 test('Kim keeps the held torso inside the forward blade while carrying, then sweeps only on the throw',()=>{
  const {g,e}=arena('kim'),t=target(g,32);g.cast(e,'q',t);assert.equal(skillWeaponPose(g,e).part,'kim-thrust');run(g,.2);assert.equal(e.state.swordGrab?.target,t);const camera=new Camera25D();

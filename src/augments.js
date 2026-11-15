@@ -19,6 +19,12 @@ export const unlockedGroup=(e,group)=>unlocked(e,group)||AUGMENTS.some(a=>a.grou
 export const orderLimit=e=>e.key==='sora'?4:5;
 export const terminalText='공격 적중 시 방어력·장전 속도 +2.5%, 최대 4중첩. 각 중첩은 5초 유지된다. 최대 중첩 중 일반 피해의 7%를 고정 피해로 전환하고 해당 고정 피해만큼 5초 보호막을 얻으며 최대 500까지 누적된다.';
 export const augmentName=(e,item)=>e.key==='sora'&&item?.key==='writtenOrder'?'단말기로 전해진 지령':item?.name||'';
+export const WISDOM={cooldown:10,interval:.2,hits:5,baseDamage:100,powerDamage:200,mobilityReduction:.05,mobilityCooldown:2};
+export function onMobility(g,e,event){
+ if(event?.wisdomMovement)return;if(event)event.wisdomMovement=true;
+ if(e.kind!=='champion'||!has(e,'wisdom'))return;
+ const s=e.state,remaining=Math.max(0,(s.wisdomReady||0)-g.time);if(remaining>1e-8&&(s.wisdomMoveReady||0)<=g.time+1e-8){s.wisdomReady=g.time+remaining*(1-WISDOM.mobilityReduction);s.wisdomMoveReady=g.time+WISDOM.mobilityCooldown;}
+}
 export const battleActive=(g,e)=>Boolean(g.buff(e,'augBattleHaste')||e.key==='queen'&&has(e,'battleHaste')&&e.state.queenR?.phase==='charging');
 export const EXCLUSIVE_AUGMENTS={
  sora:[{key:'writtenOrder',name:'단말기로 전해진 지령',summary:'조건 없이 반값에 구매합니다. 공격으로 방어력·장전 속도 중첩을 얻고, 최대 중첩에서 고정 피해 전환과 보호막을 얻습니다. 개화 E.G.O 진입 시 패시브로 흡수합니다.',text:'강화시술 구매 조건 없이 현재 모드 기본 가격의 50%로 구매하며 단말기로 전해진 지령으로 변경된다. '+terminalText+' 개화 E.G.O 상태가 되면 E.G.O 기프트를 흡수해 칸을 비우고 동일한 효과를 상시 패시브로 얻는다. 변신 중 구매하면 즉시 흡수한다. 흡수한 효과는 변신 종료·사망·부활 후에도 유지되며 다시 구매하거나 판매할 수 없다.'}],
@@ -61,7 +67,7 @@ export function afterHit(g,e,t,actual,proc,absorbed=0,origin=null){
  if(e.kind==='champion'&&e.team!==t.team&&has(e,'glaive')&&actual>0)g.heal(e,e,actual*.3,false);
  if(e.kind==='champion'&&e.team!==t.team&&actual+absorbed>0){
   if(has(e,'duelManual')){if(!(e.state.duelStacks>0))e.state.duelDecay=g.time+5;e.state.duelStacks=Math.min(5,(e.state.duelStacks||0)+1);}
-  if(has(e,'wisdom')&&origin!=='wisdom'&&(e.state.wisdomReady||0)<=g.time){e.state.wisdomReady=g.time+10;const damage=150+g.powerScale(e)*50;for(let i=1;i<=3;i++)g.schedule(e,i,()=>{if(t.alive){g.deal(e,t,damage,{fixed:true,proc:false,augmentOrigin:'wisdom'});g.effects.push({type:'wisdomSlash',source:e.id,target:t.id,x:t.x,y:t.y,angle:i%2?.65:-.65,life:.4,maxLife:.4});}},{autonomous:true});}
+  if(has(e,'wisdom')&&origin!=='wisdom'&&(e.state.wisdomReady||0)<=g.time){e.state.wisdomReady=g.time+WISDOM.cooldown;const damage=WISDOM.baseDamage+g.powerScale(e)*WISDOM.powerDamage;for(let i=1;i<=WISDOM.hits;i++)g.schedule(e,i*WISDOM.interval,()=>{if(t.alive){g.deal(e,t,damage,{fixed:true,proc:false,augmentOrigin:'wisdom'});g.effects.push({type:'wisdomSlash',source:e.id,target:t.id,x:t.x,y:t.y,angle:i%2?.65:-.65,life:.4,maxLife:.4});}},{autonomous:true});}
  }
  if(!proc||actual+absorbed<=0)return;
  if(e.kind==='champion'&&e.team!==t.team&&has(e,'writtenOrder')){stack(g,e,'orderStacks',orderLimit(e));g.addBuff(e,'writtenOrder',5,{copy:false});}

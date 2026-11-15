@@ -58,9 +58,9 @@ test('ultimate rotation keeps its phase, alternating direction and sack during t
  assert.equal(p.motion,undefined);assert.ok(g.time-p.state.heathSlamAt<.18);
 });
 test('each sack sweep makes a full turn, alternates direction and bends while its tip stays at range 4.5',()=>{
- const{g,p}=arena();g.cast(p,'r',p);const start=heathSweepPose(g,p);g.time=.15;const middle=heathSweepPose(g,p);assert.equal(middle.direction,1);near(middle.angle-start.angle,Math.PI);assert.ok(Math.abs(middle.bend)>1);
- near(Math.hypot(...Object.values(heathSackPoint(middle,1))),4.5);g.time=.3-1e-8;const end=heathSweepPose(g,p);near(end.angle-start.angle,Math.PI*2-1e-8/.3*Math.PI*2);
- run(g,1/120);g.time=.45;const reversed=heathSweepPose(g,p);assert.equal(reversed.direction,-1);near(reversed.angle-start.angle,-Math.PI);
+ const{g,p}=arena();g.cast(p,'r',p);const start=heathSweepPose(g,p);g.time=.06;const middle=heathSweepPose(g,p);assert.equal(middle.direction,1);near(middle.angle-start.angle,Math.PI);assert.ok(Math.abs(middle.bend)>1);
+ near(Math.hypot(...Object.values(heathSackPoint(middle,1))),4.5);g.time=.3-1e-8;const end=heathSweepPose(g,p);near(end.angle-start.angle,Math.PI*2);
+ run(g,1/120);g.time=.36;const reversed=heathSweepPose(g,p);assert.equal(reversed.direction,-1);near(reversed.angle-start.angle,-Math.PI);
  const copy=arena(),packet=new SnapshotWriter().capture(g,true);assert.ok(applySnapshot(copy.g,packet,p.id));assert.deepEqual(heathSweepPose(copy.g,copy.g.player),heathSweepPose(g,p));
 });
 test('Don uses the spiral from the initial ultimate dash to the end of blood thirst',()=>{

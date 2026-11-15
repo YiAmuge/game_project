@@ -146,8 +146,10 @@ export class Game {
     return ()=>{control.input=this.input;control.mobileAim=this.mobileAim;e.player=previous.flag;this.player=previous.player;this.input=previous.input;this.mobileInput=previous.mobileInput;this.mobileAim=previous.mobileAim;};
   }
   withController(e,fn){const restore=this.enterController(e);try{return fn();}finally{restore?.();}}
-  action(e,kind,fn){const restore=this.controllers?this.enterController(e):null,old=e.actionKind,previous=this.actionSource;e.actionKind=kind;this.actionSource=e;try{return fn();}finally{e.actionKind=old;this.actionSource=previous;restore?.();}}
-  schedule(source,delay,fn,{autonomous=false}={}){const kind=source.actionKind||'skill';this.events.push({source,autonomous,at:this.time+delay,fn:()=>this.action(source,kind,fn)});}
+  action(e,kind,fn,mobility){const restore=this.controllers?this.enterController(e):null,old=e.actionKind,previous=this.actionSource,priorMobility=this.mobilityEvent;this.mobilityEvent=mobility||(previous===e&&priorMobility)||{};e.actionKind=kind;this.actionSource=e;try{return fn();}finally{e.actionKind=old;this.actionSource=previous;this.mobilityEvent=priorMobility;restore?.();}}
+  schedule(source,delay,fn,{autonomous=false}={}){const kind=source.actionKind||'skill',mobility=this.actionSource===source?this.mobilityEvent:undefined;this.events.push({source,autonomous,at:this.time+delay,fn:()=>this.action(source,kind,fn,mobility)});}
+  usedMobility(e,event=this.actionSource===e?this.mobilityEvent:undefined){Augments.onMobility(this,e,event);}
+  teleport(e,point){Object.assign(e,point);this.usedMobility(e);}
   startMotion(e,d,len,{speed=RULES.dashSpeed,maxSpeed=RULES.dashSpeed,kind='dash',onStep,onComplete,onCollision,ignoreWalls=false,minDuration=0,follow=null,stopDistance=0,arcHeight=1.1,phaseEnemies=false,phaseNonChampions=false,source,actionTag,forcedMaxSpeed=RULES.knockSpeed}={}){
     if(!e.alive||['boss','sewingKing'].includes(e.camp)||!['champion','minion','neutral','trooper'].includes(e.kind)||e.returning)return false;
     const forced=kind==='knock';
@@ -157,9 +159,10 @@ export class Game {
     if(forced&&e.state?.kromerHeldBy){const owner=this.units.find(a=>a.id===e.state.kromerHeldBy);if(owner)Kromer.release(this,owner);}
     if(!forced&&(this.stat(e,'root')||this.stat(e,'stun')||this.stat(e,'captured')||e.motion))return false;
     if(forced&&e.state?.swordHeldBy){const owner=this.units.find(a=>a.id===e.state.swordHeldBy);if(owner)V12.releaseGrab(this,owner);}
-    const actionKind=e.actionKind||'skill',wrap=fn=>fn&&((...args)=>this.action(e,actionKind,()=>fn(...args)));
+    const actionKind=e.actionKind||'skill',mobility=this.actionSource===e?this.mobilityEvent:{},wrap=fn=>fn&&((...args)=>this.action(e,actionKind,()=>fn(...args),mobility));
     onStep=wrap(onStep);onComplete=wrap(onComplete);onCollision=wrap(onCollision);
     this.cancelRecall(e);e.motion={actionTag,visualOrigin:{x:e.x,y:e.y},actionKind,phaseEnemies:!forced&&phaseEnemies,phaseNonChampions:!forced&&phaseNonChampions,lastClear:{x:e.x,y:e.y},dx:d.x,dy:d.y,remaining:len,total:len,speed:Math.min(speed,forced?forcedMaxSpeed:maxSpeed),kind,arcHeight,forced,onStep,onComplete,onCollision,ignoreWalls,startedAt:this.time,elapsed:0,minDuration,follow,stopDistance};
+    if(!forced&&len>1e-8)this.usedMobility(e,mobility);
     if(forced&&len>0)this.triggerDisrupt(source,e);
     if(len<.001&&!minDuration){delete e.motion;onComplete?.();}return true;
   }
@@ -607,7 +610,7 @@ export class Game {
     } else {
       if(e.key==='yi') {
         if(Bough.active(e))Bough.spendYi(this,e);
-        const landing=this.safeLanding(e,point,6.4);Object.assign(e,landing);
+        const landing=this.safeLanding(e,point,6.4);this.teleport(e,landing);
         this.emitSound('ultimate',e,{slot:'r',phase:'yi-ultimate'});
         for(const a of this.champions(e.team).filter(a=>a.alive&&distance(a,e)<=5.5)) {this.addBuff(a,'ogamdo',4);this.addShield(a,a.maxHp*.20,`yi-ult-${e.id}`);}
         for(const t of this.units)if(this.hostile(e,t)&&distance(t,e)<=5.5+t.radius&&this.clearLine(e,t))this.deal(e,t,200);this.support(e);this.effects.push({type:'yiBuffRange',source:e.id,theme:'yi',x:e.x,y:e.y,r:5.5,color:'#cdbb87',life:.45,maxLife:.45});

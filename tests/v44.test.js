@@ -10,16 +10,16 @@ import { ProjectileVFX } from '../src/projectile-vfx.js';
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 function arena(key){const g=new Game(key,'top',{seed:44}),e=g.player;for(const f of ['aiChampion','aiMinion','aiNeutral','aiStructure'])g[f]=()=>{};Object.assign(e,{x:30,y:20,facing:0});g.units=[e];g.effects=[];g.minionQueue=[];g.wave=100;g.map={bounds:WORLD,walls:[]};return {g,e};}
 test('weapon attack accents peak briefly, separate swing reach from thrust and orbit, and preserve Nelly',()=>{
- for(const mode of ['swing','thrust','orbit']){const peak=weaponMotionAccent('faust',mode,.5);close(peak.scale,1.20);close(peak.outward,mode==='swing'?.18:0);for(const t of [-1,0,1,2]){close(weaponMotionAccent('faust',mode,t).scale,1);close(weaponMotionAccent('faust',mode,t).outward,0);}assert.deepEqual(weaponMotionAccent('nelly',mode,.5),{scale:1,outward:0});}
+ for(const mode of ['swing','thrust','orbit']){const peak=weaponMotionAccent('faust',mode,.2);close(peak.scale,1.20);close(peak.outward,mode==='swing'?.18:0);for(const t of [-1,0,1,2]){close(weaponMotionAccent('faust',mode,t).scale,1);close(weaponMotionAccent('faust',mode,t).outward,0);}assert.deepEqual(weaponMotionAccent('nelly',mode,.2),{scale:1,outward:0});}
 });
 test('Honglu and Dongrang hold at the lowered waist anchor and Honglu sweeps without extra outward reach',()=>{
- for(const key of ['honglu','dongrang']){const {g,e}=arena(key),p=equipmentPose(g,e);close(p.right.y-p.origin.y,-.65);if(key==='honglu'){e.attackAt=0;e.attackFacing=0;g.time=.15;const a=basicWeaponAccent(g,e);close(a.scale,1.20);close(a.outward,0);}}
+ for(const key of ['honglu','dongrang']){const {g,e}=arena(key),p=equipmentPose(g,e);close(p.right.y-p.origin.y,-.65);if(key==='honglu'){e.attackAt=0;e.attackFacing=0;g.time=.06;const a=basicWeaponAccent(g,e);close(a.scale,1.20);close(a.outward,0);}}
 });
 test('Sinclair spins once at the ultimate landing while Ryoshu spins once at the blink arrival',()=>{
  for(const key of ['sinclair','ryoshu']){const {g,e}=arena(key);g.cast(e,'r',{x:34,y:20});let start=0;if(key==='sinclair'){assert.equal(ultimateOrbitPose(g,e,equipmentPose(g,e)),null);for(let i=0;i<40&&!Number.isFinite(e.state.sinclairSpinAt);i++)g.step(1/120);start=e.state.sinclairSpinAt;assert.ok(Number.isFinite(start));}const angles=[];for(const age of [0,.1,.2,.3,.399]){g.time=start+age;const p=equipmentPose(g,e),spin=ultimateOrbitPose(g,e,p);assert.ok(spin);close(Math.hypot(spin.hand.x-p.origin.x,spin.hand.y-(p.origin.y-.8)),.5);angles.push(spin.angle);}assert.ok(angles.at(-1)-angles[0]>6.26);g.time=start+.401;assert.equal(ultimateOrbitPose(g,e,equipmentPose(g,e)),null);}
 });
 test('Dongbaek ultimate has one bounded fan swing and Don pulls his lance back gradually during charge',()=>{
- const d=arena('dongbaek');d.g.cast(d.e,'r',{x:34,y:20});d.g.time=.02;const a=dongbaekUltSwing(d.g,d.e);d.g.time=.36;const b=dongbaekUltSwing(d.g,d.e);assert.ok(b.angle-a.angle>2);for(const t of [.381,.5,.75,1]){d.g.time=t;assert.equal(dongbaekUltSwing(d.g,d.e),null);}
+ const d=arena('dongbaek');d.g.cast(d.e,'r',{x:34,y:20});d.g.time=.002;const a=dongbaekUltSwing(d.g,d.e);d.g.time=.36;const b=dongbaekUltSwing(d.g,d.e);assert.ok(b.angle-a.angle>2);for(const t of [.381,.5,.75,1]){d.g.time=t;assert.equal(dongbaekUltSwing(d.g,d.e),null);}
  const {g,e}=arena('don');g.cast(e,'q',{x:36,y:20});for(const t of [0,.3,.75,1.49]){g.time=t;close(donChargePull(g,e),-.45*t/1.5);}assert.equal(e.state.donCharge.at,0);
 });
 test('Ryoshu rests in a centered reverse grip and uses the normal attack grip while attacking or casting',()=>{
