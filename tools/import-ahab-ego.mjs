@@ -3,12 +3,27 @@ import {readFile,writeFile,copyFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {decodePNG,encodePNG} from './png.mjs';
+import {SPRITE_FRAMES} from '../src/sprites-v36.js';
 const root=resolve(import.meta.dirname,'..'),dir=resolve(root,'src/assets');
 await mkdir(resolve(dir,'source'),{recursive:true});
 for(const [arg,file]of [[2,'ahab-gasharpoon-body.png'],[3,'ahab-gasharpoon-arm.png']])if(process.argv[arg])await copyFile(resolve(process.argv[arg]),resolve(dir,'source',file));
 const sources={},inputs={};
 for(const key of ['body','arm']){const file=`source/ahab-gasharpoon-${key}.png`,bytes=await readFile(resolve(dir,file));inputs[key]=decodePNG(bytes);sources[key]={file,sha256:createHash('sha256').update(bytes).digest('hex')};}
 const sprites=[];
+// Packed-frame landmarks, with the hat excluded. The whitened eye is absent;
+// registration gives more weight to the visible eye, mouth and chin.
+const faceLandmarks=[
+ {name:'visibleEye',source:[232,145],target:[205,153],weight:3},
+ {name:'nose',source:[269,166],target:[239,170],weight:1},
+ {name:'mouth',source:[256,181],target:[226,184],weight:3},
+ {name:'chin',source:[258,199],target:[229,200],weight:3},
+ {name:'jaw',source:[209,178],target:[186,181],weight:1},
+];
+function faceRegistration(){
+ const weight=faceLandmarks.reduce((n,p)=>n+p.weight,0),center=field=>[0,1].map(i=>faceLandmarks.reduce((n,p)=>n+p[field][i]*p.weight,0)/weight),source=center('source'),target=center('target');let numerator=0,denominator=0;
+ for(const p of faceLandmarks)for(let i=0;i<2;i++){const d=p.source[i]-source[i];numerator+=p.weight*d*(p.target[i]-target[i]);denominator+=p.weight*d*d;}
+ const scale=numerator/denominator;return{reference:'ahab',scale,offset:target.map((v,i)=>v-scale*source[i]),landmarks:faceLandmarks};
+}
 function pack(key,input,{angle=0,anchor,region,withoutBlade=false,height=480}={}){
  const ca=Math.cos(angle),sa=Math.sin(angle);let l=Infinity,t=Infinity,r=-Infinity,b=-Infinity;
  const valid=(x,y)=>input.data[(y*input.width+x)*4+3]>=100&&(!region||x>=region[0]&&y>=region[1]&&x<region[0]+region[2]&&y<region[1]+region[3])&&(!withoutBlade||y<1180);
@@ -25,7 +40,10 @@ function pack(key,input,{angle=0,anchor,region,withoutBlade=false,height=480}={}
  }
  const frame={sheet:23,rotation:0,source:sources[key==='ahabGasBody'?'body':'arm'].file};
  if(anchor){const u=anchor[0]*ca-anchor[1]*sa,v=anchor[0]*sa+anchor[1]*ca;frame.grip=[(u-l)/(r-l+1),(v-t)/(b-t+1)];}
- if(key==='ahabGasBody')Object.assign(frame,{heightScale:1,heightBasis:'crown',referenceHeight:height,foot:[.55,1],face:[w*.52,h*.13,w*.31,h*.29]});
+ if(key==='ahabGasBody'){
+  const base=SPRITE_FRAMES.ahab,alignment=faceRegistration(),heightScale=h*alignment.scale*base.heightScale/base.h;
+  Object.assign(frame,{heightScale,heightBasis:'face-landmarks',referenceHeight:h/heightScale,foot:[(base.foot[0]*base.w-alignment.offset[0])/(alignment.scale*w),(base.foot[1]*base.h-alignment.offset[1])/(alignment.scale*h)],face:[w*.52,h*.13,w*.31,h*.29],faceAlignment:alignment,shoulder:[164,210]});
+ }
  sprites.push({key,w,h,data,frame,bounds:{l,t,r,b}});
 }
 pack('ahabGasBody',inputs.body);

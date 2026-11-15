@@ -48,7 +48,7 @@ test('random echo lances stay inside the actual fan and the penance blade fits t
  const m=weaponGeometry('ahabGasBlade',gasharpoonProjectileLength());near(m.height*m.scale,.9);
 });
 test('EGO arm is mirrored at its shoulder and basic fire uses a small varied tremor',()=>{
- const{g,p}=arena('ahab');Ego.begin(g,p);g.attack(p,g.input.aim);const values=[];for(const t of[.02,.05,.09,.14,.18]){g.time=t;const pose=gasharpoonArmPose(g,p);assert.equal(pose.mirrorX,true);assert.ok(pose.hand.x>p.x);assert.ok(Math.abs(pose.push)<.14);values.push(pose.push);}assert.ok(Math.max(...values)-Math.min(...values)>.005);
+ const{g,p}=arena('ahab');Ego.begin(g,p);g.attack(p,g.input.aim);const values=[];for(const t of[.02,.05,.09,.14,.18]){g.time=t;const pose=gasharpoonArmPose(g,p);assert.equal(pose.mirrorX,true);assert.ok(pose.hand.x<p.x);assert.ok(Math.abs(pose.push)<.14);values.push(pose.push);}assert.ok(Math.max(...values)-Math.min(...values)>.005);
 });
 test('Ahab separate EGO codex keeps four skills while Sora still has three transformed slots',()=>{
  const f=championForms('ahab').transformed;assert.equal(f.name,'개화 E.G.O 상태');assert.equal(f.art,'ahabGasBody');assert.equal(f.skills.length,4);assert.equal(championForms('sora').transformed.skills.length,3);assert.equal(championDescription('sora',true).ultimate,'');
@@ -58,6 +58,6 @@ test('Ahab separate EGO codex keeps four skills while Sora still has three trans
 
 test('Mei idle fists sit between chest and waist; EGO idle blade points downward on both facings',()=>{
  const{g,p}=arena();for(const f of meiFistPoses(g,p))near(f.y,spriteOrigin(g,p).y-.94);
- const a=arena('ahab');Ego.begin(a.g,a.p);for(const facing of[0,Math.PI]){a.p.facing=facing;near(gasharpoonArmPose(a.g,a.p).angle,Math.PI/2);}
- a.g.attack(a.p,a.g.input.aim);advance(a.g,.25);assert.ok(Math.abs(gasharpoonArmPose(a.g,a.p).angle)<.03);advance(a.g,1);near(gasharpoonArmPose(a.g,a.p).angle,Math.PI/2);
+ const a=arena('ahab');Ego.begin(a.g,a.p);for(const facing of[0,Math.PI]){a.p.facing=facing;near(gasharpoonArmPose(a.g,a.p).angle,Math.PI/2-(facing===0?1:-1)*Math.PI/12);}
+ a.g.attack(a.p,a.g.input.aim);advance(a.g,.25);assert.ok(Math.abs(gasharpoonArmPose(a.g,a.p).angle)<.03);advance(a.g,1);near(gasharpoonArmPose(a.g,a.p).angle,Math.PI/2-Math.PI/12);
 });

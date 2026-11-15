@@ -464,12 +464,12 @@ function drawBloodSweep(r,e,g,lift,layer){
 }
 
 export function gasharpoonArmPose(g,e,lift=0){
- const s=e.state.gasharpoon,origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,ch=s.channel,thrust=s.thrust,age=thrust?g.time-thrust.at:-Infinity;
- const holding=age>=0&&g.time<thrust.until+.14,raise=ch?Math.min(1,Math.max(0,(g.time-ch.at)/.07)):holding?Math.min(1,Math.max(0,(g.time-(thrust.poseAt??thrust.at))/.07))*Math.min(1,Math.max(0,(thrust.until+.14-g.time)/.14)):0,aim=ch?.angle??(holding?thrust.angle:Math.PI/2);
- let angle=Math.PI/2+Math.atan2(Math.sin(aim-Math.PI/2),Math.cos(aim-Math.PI/2))*raise,push=0;
+ const s=e.state.gasharpoon,origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,ch=s.channel,thrust=s.thrust,age=thrust?g.time-thrust.at:-Infinity,body=FRAMES.ahabGasBody,height=2.1*body.heightScale,width=height*body.w/body.h,shoulder={x:(body.shoulder[0]/body.w-body.foot[0])*width,y:(body.shoulder[1]/body.h-body.foot[1])*height};
+ const restAngle=Math.PI/2-flip*Math.PI/12,holding=age>=0&&g.time<thrust.until+.14,raise=ch?Math.min(1,Math.max(0,(g.time-ch.at)/.07)):holding?Math.min(1,Math.max(0,(g.time-(thrust.poseAt??thrust.at))/.07))*Math.min(1,Math.max(0,(thrust.until+.14-g.time)/.14)):0,aim=ch?.angle??(holding?thrust.angle:restAngle);
+ let angle=restAngle+Math.atan2(Math.sin(aim-restAngle),Math.cos(aim-restAngle))*raise,push=0;
  if(ch){const progress=Math.max(0,Math.min(1,(g.time-ch.at)/.5));push=ch.slot==='q'?-.42*progress:Math.sin(g.time*(65+progress*70))*.045*progress;}
  else if(age>=0&&g.time<thrust.until){if(thrust.slot==='basic'){const fade=Math.sin(Math.min(1,age/.2)*Math.PI);push=(.09+Math.sin(g.time*83)*.018+Math.sin(g.time*127)*.009)*fade;angle+=Math.sin(g.time*99)*.012*fade;}else push=.48*Math.sin(age/.24*Math.PI);}
- return {hand:{x:origin.x+(.85-.47*raise)*flip,y:origin.y-1.42+.37*raise},angle,push,mirrorX:true};
+ return {hand:{x:origin.x+shoulder.x*flip,y:origin.y+shoulder.y-.08*(1-raise)},angle,push,mirrorX:true};
 }
 export function drawGasharpoonArm(r,e,g,lift=0){
  const c=r.ctx,pose=gasharpoonArmPose(g,e,lift),[key,len,pivot]=equippedWeapon(g,e),f=FRAMES[key],m=weaponGeometry(key,len);

@@ -6,7 +6,7 @@ import * as Ego from '../src/ahab-ego.js';
 import * as Skills from '../src/skills.js';
 import * as Training from '../src/training.js';
 import {skillTargeting} from '../src/targeting.js';
-import {visualForm,FRAMES} from '../src/art.js';
+import {visualForm,FRAMES,spriteHeight} from '../src/art.js';
 import {equippedWeapon,gasharpoonArmPose} from '../src/weapon-art.js';
 import {goldenSkillReference,goldenUltimateReference} from '../src/skill-reference.js';
 import {mobileSkillHelp} from '../src/mobile-score.js';
@@ -34,3 +34,14 @@ test('basic and ultimate impacts use piercing audio; tactical impacts use blunt 
 test('snapshot transfers transformation, single-use flags, channel pose, fixed ammunition and projectile flags',()=>{const{g,p}=arena();transform(g,p);g.attack(p,g.input.aim);advance(g,.21);g.cast(p,'r',g.input.aim);advance(g,.51);const packet=JSON.parse(JSON.stringify(new SnapshotWriter().capture(g,true))),guest=new Game('faust','top',{mode:'training'});assert.ok(applySnapshot(guest,packet,p.id));assert.equal(guest.player.state.gasharpoon.ammo,0);assert.equal(guest.player.state.gasharpoon.rUsed,true);assert.ok(guest.projectiles[0].hitIds instanceof Set);assert.equal(visualForm(guest,guest.player),'ahabGasBody');assert.equal(equippedWeapon(guest,guest.player)[0],'ahabGasArmEmpty');assert.ok(Number.isFinite(gasharpoonArmPose(guest,guest.player).angle));});
 
 test('training sell-all clears the transformed form and its unfinished channel',()=>{const{g,p}=arena();transform(g,p);g.cast(p,'q',g.input.aim);Training.sellAll(g);assert.equal(Ego.active(p),false);assert.equal(p.goldenBough,undefined);advance(g,1);assert.equal(g.projectiles.length,0);assert.equal(visualForm(g,p),'ahab');});
+
+const bodyPoint=(key,[x,y])=>{const f=FRAMES[key],h=spriteHeight(key),w=h*f.w/f.h;return{x:(x/f.w-f.foot[0])*w,y:(y/f.h-f.foot[1])*h};};
+test('EGO face registration aligns the visible eye, nose, mouth and jaw without counting the hat',()=>{
+ const f=FRAMES.ahabGasBody;assert.equal(f.heightBasis,'face-landmarks');assert.notEqual(spriteHeight('ahabGasBody'),spriteHeight('ahab'));
+ for(const p of f.faceAlignment.landmarks){const a=bodyPoint('ahabGasBody',p.source),b=bodyPoint('ahab',p.target);assert.ok(Math.hypot(a.x-b.x,a.y-b.y)<.008,p.name);}
+ const h=spriteHeight('ahabGasBody'),w=h*f.w/f.h;close(w/h,f.w/f.h);
+});
+test('EGO arm stays attached to the near left shoulder when looking right and mirrors when looking left',()=>{
+ const{g,p}=arena();transform(g,p);const shoulder=bodyPoint('ahabGasBody',FRAMES.ahabGasBody.shoulder);
+ for(const facing of[0,Math.PI]){p.facing=facing;const flip=facing===0?1:-1,pose=gasharpoonArmPose(g,p),origin={x:p.x,y:p.y+.3+Math.sin(g.time*3+p.id)*.025};close(pose.hand.x-origin.x,shoulder.x*flip);close(pose.hand.y-origin.y,shoulder.y-.08);close(pose.angle,Math.PI/2-flip*Math.PI/12);assert.ok(-Math.cos(pose.angle)*flip<0);}
+});

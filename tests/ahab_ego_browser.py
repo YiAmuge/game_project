@@ -1,8 +1,11 @@
 """Actual PC/mobile/standalone rendering and input checks for GasHarpoon."""
-import asyncio,os,re
+import asyncio,os,re,json
 from pathlib import Path
 from playwright.async_api import async_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
+BASE_FRAME=json.loads((ROOT/'src/assets/sprites-v36.json').read_text())['frames']['ahab']
+EGO_FRAME=json.loads((ROOT/'src/assets/ahab-gasharpoon.json').read_text())['frames']['ahabGasBody']
+CAPTURE_BODY='''async frame=>{const c=__moba.renderer.ctx,draw=c.drawImage;let bounds=null;c.drawImage=function(...a){if(a.length===9&&a[1]===frame.x&&a[2]===frame.y&&a[3]===frame.w&&a[4]===frame.h)bounds=a.slice(5);return draw.apply(this,a);};try{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));}finally{c.drawImage=draw;}return bounds;}'''
 ART=ROOT/'artifacts/ahab-ego';ART.mkdir(parents=True,exist_ok=True)
 SETUP=re.search(r"SETUP='''(.*?)'''",(ROOT/'tests/champion-refresh_browser.py').read_text(),re.S).group(1)
 async def main():
@@ -24,8 +27,15 @@ async def main():
    await page.goto(url,wait_until='networkidle',timeout=90000)
    await page.click('#training-open');await page.get_by_role('button',name=re.compile(r'^에이해브 선택')).click();await page.click('#start');await page.wait_for_timeout(300)
    await page.evaluate(SETUP,'ahab')
+   base_bounds=await page.evaluate(CAPTURE_BODY,BASE_FRAME)
    await page.evaluate("()=>{const g=__moba.game,p=g.player;g.buyAugment(p,'goldenBough');target(47);g.cast(p,'r',p);}")
    await page.wait_for_timeout(500)
+   ego_bounds=await page.evaluate(CAPTURE_BODY,EGO_FRAME)
+   assert base_bounds and ego_bounds,(base_bounds,ego_bounds)
+   for landmark in EGO_FRAME['faceAlignment']['landmarks']:
+    a=[ego_bounds[i]+landmark['source'][i]/[EGO_FRAME['w'],EGO_FRAME['h']][i]*ego_bounds[i+2] for i in range(2)]
+    b=[base_bounds[i]+landmark['target'][i]/[BASE_FRAME['w'],BASE_FRAME['h']][i]*base_bounds[i+2] for i in range(2)]
+    assert sum((a[i]-b[i])**2 for i in range(2))**.5<.008,(label,landmark['name'],a,b)
    assert await page.locator('#basic-btn span').inner_text()=='탄식의 메아리',(errors,await page.locator('#basic-btn span').inner_text(),await page.evaluate('({state:__moba.game.player.state,training:__moba.game.training,gift:__moba.game.player.goldenBough,mode:__moba.mode})'))
    assert await page.locator('#q-btn span').inner_text()=='죄책감의 무게'
    assert await page.locator('#r-btn span').inner_text()=='탈색된 참회'

@@ -2,7 +2,7 @@
   "sources": {
     "body": {
       "file": "source/ahab-gasharpoon-body.png",
-      "sha256": "a6289938837c8e0ede2b3a00e45ea088b2b3ec89eaea5e1323e98405b601eb10"
+      "sha256": "bc5902047145d5c1f03faeda91c6fa53116b67daf0c266920f5db34719cd9fbe"
     },
     "arm": {
       "file": "source/ahab-gasharpoon-arm.png",
@@ -13,23 +13,97 @@
     "ahabGasBody": {
       "x": 8,
       "y": 8,
-      "w": 345,
+      "w": 379,
       "h": 480,
       "sheet": 23,
       "rotation": 0,
       "source": "source/ahab-gasharpoon-body.png",
-      "heightScale": 1,
-      "heightBasis": "crown",
-      "referenceHeight": 480,
+      "heightScale": 1.052319264521521,
+      "heightBasis": "face-landmarks",
+      "referenceHeight": 456.135334762926,
       "foot": [
-        0.55,
-        1
+        0.6469081889223237,
+        1.0028801952001325
       ],
       "face": [
-        179.4,
+        197.08,
         62.400000000000006,
-        106.95,
+        117.49,
         139.2
+      ],
+      "faceAlignment": {
+        "reference": "ahab",
+        "scale": 0.8769327204346009,
+        "offset": [
+          2.113702845420363,
+          25.378737226000084
+        ],
+        "landmarks": [
+          {
+            "name": "visibleEye",
+            "source": [
+              232,
+              145
+            ],
+            "target": [
+              205,
+              153
+            ],
+            "weight": 3
+          },
+          {
+            "name": "nose",
+            "source": [
+              269,
+              166
+            ],
+            "target": [
+              239,
+              170
+            ],
+            "weight": 1
+          },
+          {
+            "name": "mouth",
+            "source": [
+              256,
+              181
+            ],
+            "target": [
+              226,
+              184
+            ],
+            "weight": 3
+          },
+          {
+            "name": "chin",
+            "source": [
+              258,
+              199
+            ],
+            "target": [
+              229,
+              200
+            ],
+            "weight": 3
+          },
+          {
+            "name": "jaw",
+            "source": [
+              209,
+              178
+            ],
+            "target": [
+              186,
+              181
+            ],
+            "weight": 1
+          }
+        ]
+      },
+      "shoulder": [
+        164,
+        210
       ]
     },
     "ahabGasArm": {
