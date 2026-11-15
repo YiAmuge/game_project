@@ -33,7 +33,8 @@ async def main():
    await page.screenshot(path=str(ART/f'{label}-form.png'))
    await page.evaluate("()=>{const g=__moba.game;g.attack(g.player,g.input.aim);advance(.025);}")
    await page.wait_for_timeout(80);await page.screenshot(path=str(ART/f'{label}-echo.png'))
-   await page.evaluate("advance(.2)")
+   await page.evaluate("advance(.8)")
+   assert await page.evaluate("__moba.game.player.ammo===0&&!__moba.game.player.state.gasharpoon.volley&&__moba.game.soundEvents.filter(s=>s.phase==='gasharpoon-thrust').length===5")
    if not mobile:
     await page.click('#q-btn')
    else:
@@ -43,21 +44,35 @@ async def main():
    await page.evaluate('advance(.25)');await page.wait_for_timeout(80);await page.screenshot(path=str(ART/f'{label}-charge.png'))
    await page.evaluate('advance(.3)');await page.wait_for_timeout(80);await page.screenshot(path=str(ART/f'{label}-weight.png'))
    assert await page.locator('#q-btn').is_disabled()
-   await page.evaluate("()=>{advance(.2);const g=__moba.game;g.cast(g.player,'r',g.input.aim);advance(.51);}")
+   await page.evaluate(SETUP,'ahab')
+   await page.evaluate("()=>{const g=__moba.game,p=g.player;g.buyAugment(p,'goldenBough');target(47);g.cast(p,'r',p);g.cast(p,'r',g.input.aim);advance(.51);}")
    await page.wait_for_timeout(80);await page.screenshot(path=str(ART/f'{label}-penance.png'))
    assert await page.evaluate("__moba.game.projectiles.some(p=>p.gasharpoon)&&__moba.game.player.state.gasharpoon.bladeMissingUntil>__moba.game.time")
    assert await page.locator('#r-btn').is_disabled()
-   await page.evaluate("()=>{const g=__moba.game,p=g.player;advance(.5);for(let i=0;i<4;i++){g.attack(p,g.input.aim);advance(.21);}}")
+   await page.evaluate("()=>{const g=__moba.game,p=g.player;g.cast(p,'q',g.input.aim);advance(.7);g.attack(p,g.input.aim);advance(.81);}")
    assert await page.evaluate('!__moba.game.player.state.gasharpoon')
    await page.wait_for_timeout(100)
    await expect(page.locator('#r-btn span')).to_have_text('개화 E.G.O::가스하푼',timeout=5000)
    assert not errors,(label,errors)
    await page.goto(url+'#codex/champions',wait_until='networkidle');await page.reload(wait_until='networkidle');await page.wait_for_timeout(200)
    await page.click('#roster-list [data-key=ahab]')
-   for index,name in [(1,'탄식의 메아리'),(2,'죄책감의 무게'),(3,'개화 E.G.O::가스하푼')]:
-    await page.click(f'#skill-tab-{index}');assert name in await page.locator('.golden-skill').inner_text()
-   await page.click('[data-description-mode=details]');await page.locator('.golden-skill').scroll_into_view_if_needed();await page.wait_for_timeout(300);await page.screenshot(path=str(ART/f'{label}-codex.png'))
-   assert await page.locator('.golden-skill .skill-subsection').count()==2
+   await page.click('#skill-tab-3');assert '개화 E.G.O::가스하푼' in await page.locator('.golden-skill').inner_text()
+   assert await page.locator('.golden-form-preview').count()==0
+   await page.click('#skill-tab-0');await page.click('.golden-skill-link')
+   await expect(page.locator('[data-form=transformed]')).to_have_attribute('aria-pressed','true')
+   await page.click('[data-description-mode=details]')
+   for index,name in [(1,'탄식의 메아리'),(2,'죄책감의 무게'),(3,'탈색된 참회')]:
+    await page.click(f'#skill-tab-{index}');assert name in await page.locator('#skill-description').inner_text()
+    assert await page.locator('#skill-description .skill-record').count()==1
+    assert await page.locator('#skill-description .golden-skill').count()==0
+    if index==1:
+     text=await page.locator('#skill-description').inner_text();assert '1발' in text and '5회' in text
+   await page.screenshot(path=str(ART/f'{label}-codex.png'))
+   await page.click('[data-form=base]');await expect(page.locator('[data-form=base]')).to_have_attribute('aria-pressed','true')
+   for key in ['mei','queen','nosferatu']:
+    await page.click(f'#roster-list [data-key={key}]');await page.screenshot(path=str(ART/f'{label}-{key}-shoulders.png'))
+   await page.click('#roster-list [data-key=sora]');await page.click('[data-form=transformed]')
+   assert await page.locator('.empty-skill').count()==1
    assert not errors,(label,errors)
    if offline:assert not external,external
    print(label,'passed: transform, fixed ammo, UI input, three white effects, codex, no page errors',flush=True)

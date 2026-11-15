@@ -124,7 +124,7 @@ export function validateSkill(g,e,slot,p,options={}){
  return true;
 }
 export function ammoCap(g,e){
- if(AhabEgo.active(e))return 5;
+ if(AhabEgo.active(e))return AhabEgo.PARAMETERS.ammo;
  if(e.lcaTrooper)return 16;if(e.key==='jamila')return 16+(has(e,'magazine2')?8:0);
  const extra=(has(e,'magazine2')?2:0)+(e.key==='faust'&&e.level>=Bough.maxLevel(e)?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
  if(e.key==='ezra')return Ezra.EZRA.ammo;

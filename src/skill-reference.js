@@ -1,4 +1,5 @@
 import {CHANGED_ULTIMATES,ultimateNotes,cooldown as boughCooldown} from './golden-bough.js';
+import * as AhabEgo from './ahab-ego.js';
 import {GASHARPOON_NAME,GASHARPOON_TEXT,GASHARPOON_SKILLS as GAS} from './ahab-ego-data.js';
 import*as Moses from'./moses.js';
 import{basicFanAngle}from'./data.js';
@@ -24,6 +25,7 @@ const section=(title,text)=>{text=text.trim();return{title,text:text.startsWith(
 function referenceArena(key,transformed){
  const id=key+':'+transformed;if(cache.has(id))return cache.get(id);
  const g=new Game(key,'bottom',{mode:'training',seed:70}),e=g.player;g.time=0;g.units=[e];e.lastCombat=0;if(key==='dongbaek')e.qCd=1;
+ if(transformed&&key==='ahab'){g.buyAugment(e,'goldenBough');AhabEgo.begin(g,e);}
  if(transformed&&key==='sora'){e.buffs.soraEgo=Infinity;e.state.egoQCharges=SORA.egoQCharges;}
  if(transformed&&key==='nosferatu')e.state.bloodfiend={until:10,at:0,hp:e.hp,feast:0,x:e.x,y:e.y};
  if(transformed&&key==='yan')e.buffs.yanDistorted=Infinity;
@@ -144,6 +146,7 @@ export function cleanBasicDetails(text){
 }
 export function skillReference(key,index,transformed=false,variant){
  const {g,e}=referenceArena(key,transformed),c=championDescription(key,transformed),[title,field]=fields[index];
+ if(key==='ahab'&&transformed)return gasharpoonSkillReference(index,c);
  const alternate=index===3&&variant!==undefined?c.baseUltimates?.[variant]:null;
  const summaryKey=transformed?(key==='sora'?'soraEgo':key==='nosferatu'?'bloodfiend':'yanDistorted'):key;
  let summary=SKILL_SUMMARIES[summaryKey]?.[index]||c[field]?.split(/[.!?]/u)[0]||'';
@@ -166,7 +169,7 @@ export function skillTextHTML(text){
 
 
 export function goldenUltimateReference(key){
- if(key==='ahab')return {title:GASHARPOON_NAME,cooldown:'쿨타임 45초 · 최대 12초 변신',ranges:[row('변신','자신'),row('탄식의 메아리','사거리 9 · 100° 부채꼴'),row('죄책감의 무게','사거리 10 · 135° 부채꼴'),row('탈색된 참회','사거리 무한 · 관통 폭 0.9')],summary:'12초간 변신해 기본공격 5발과 전술기·궁극기를 각각 한 번 사용합니다. 모두 소모하면 변신이 종료됩니다. 변신 궁극기는 정신집중 후 관통 작살을 발사해 적 챔피언에게 피해를 입히고 체력 10% 미만인 대상을 처형합니다.',details:GASHARPOON_TEXT+'\n\n'+GAS.rText,sections:[section('변신',GASHARPOON_TEXT),section(GAS.ultimate,GAS.rText)],summarySections:null};
+ if(key==='ahab')return {title:GASHARPOON_NAME,cooldown:'쿨타임 45초 · 최대 12초 변신',ranges:[row('변신','자신')],summary:GASHARPOON_TEXT,details:GASHARPOON_TEXT,sections:null,summarySections:null};
  if(!CHANGED_ULTIMATES[key])return null;
  const notes=ultimateNotes(key),details=notes.map(n=>n.label+': '+n.text).join('\n\n');
  return {title:CHANGED_ULTIMATES[key],cooldown:'쿨타임 '+boughCooldown({key,goldenBough:true},'r',CHAMPIONS[key].r)+'초'+(key==='ryoshu'?' · 종료 후 시작':''),
@@ -177,7 +180,13 @@ export function goldenUltimateReference(key){
 export function goldenSkillReference(key,index){
  if(key!=='ahab')return index===3?goldenUltimateReference(key):null;
  if(index===3)return goldenUltimateReference(key);
- if(index===1)return{title:GAS.basic,cooldown:'고정 탄창 5발 · 장전 불가 · 발사 간격 0.2초',ranges:[row('공격 범위','사거리 9 · 100° 부채꼴')],summary:'외부 효과로 늘어나지 않는 탄창 5발로 범위 안의 모든 적에게 (72 + 대상 최대 체력의 2%) 피해를 입힙니다.',details:GAS.basicText,sections:null,summarySections:null};
- if(index===2)return{title:GAS.tactical,cooldown:'변신마다 1회 · 쿨타임 없음',ranges:[row('공격 범위','사거리 10 · 135° 부채꼴')],summary:'0.5초 정신집중 후 60 피해를 빠르게 3번 입히고 1초간 기절시킵니다.',details:GAS.qText,sections:null,summarySections:null};
+ if(index===1||index===2)return gasharpoonSkillReference(index);
  return null;
+}
+
+export function gasharpoonSkillReference(index,c=championDescription('ahab',true)){
+ const [title,field]=fields[index],details=c[field]||'';
+ const cooldown=index===0?'상시':index===1?'고정 탄창 1발 · 장전 불가 · 0.2초 간격 5회 자동 공격':'변신마다 1회 · 쿨타임 없음';
+ const ranges=index===0?[row('적용 대상','자신 · 처치에 관여한 아군 최대 3명')]:index===1?[row('공격 범위','사거리 9 · 100° 부채꼴')]:index===2?[row('공격 범위','사거리 10 · 135° 부채꼴')]:[row('관통 작살','사거리 무한 · 관통 폭 0.9')];
+ return{title:c[title],cooldown,ranges,summary:details,details,sections:null,summarySections:null};
 }

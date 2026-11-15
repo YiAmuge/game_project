@@ -3,40 +3,40 @@ export const MEI_FRAMES={
   "mei": {
     "x": 8,
     "y": 8,
-    "w": 256,
-    "h": 428,
+    "w": 233,
+    "h": 429,
     "sheet": 24,
     "rotation": 0,
     "source": "source/mei.png",
     "sourceRect": [
-      252,
-      151,
-      462,
-      774
+      288,
+      188,
+      401,
+      738
     ],
     "heightBasis": "crown",
     "referenceHeight": 400,
-    "crownOffset": 28,
-    "heightScale": 1.07,
+    "crownOffset": 29,
+    "heightScale": 1.0725,
     "foot": [
       0.56,
       1
     ],
     "face": [
+      4,
       15,
-      20,
-      234,
-      220
+      224,
+      186
     ]
   },
   "meiRightFist": {
     "x": 8,
-    "y": 444,
+    "y": 445,
     "w": 240,
     "h": 223,
     "sheet": 24,
     "rotation": 0,
-    "source": "source/mei.png",
+    "source": "source/mei-hands.png",
     "sourceRect": [
       1016,
       144,
@@ -53,12 +53,12 @@ export const MEI_FRAMES={
   },
   "meiLeftFist": {
     "x": 8,
-    "y": 675,
+    "y": 676,
     "w": 240,
     "h": 212,
     "sheet": 24,
     "rotation": 0,
-    "source": "source/mei.png",
+    "source": "source/mei-hands.png",
     "sourceRect": [
       1010,
       592,

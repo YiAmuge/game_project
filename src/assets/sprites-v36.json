@@ -71,10 +71,26 @@
     },
     "mei": {
       "file": "source/mei.png",
-      "sha256": "ed8bfba34f1d9282864d21de7b71dca6962cab2b08fea5aed27365c2ecb39a32",
+      "sha256": "0611b22751fb7a1fb9f740265fecf956d1765a0281b62e7d1a7f986146a855cb",
       "atlas": "mei.png",
       "metadata": "mei.json",
-      "note": "Latest approved 2.25-head proportions, cat mouth, simplified fists"
+      "note": "Matched champion head ratio, slightly larger cat-mouth face, coat shoulders; fists preserved in source/mei-hands.png"
+    },
+    "meiHands": {
+      "file": "source/mei-hands.png",
+      "sha256": "ed8bfba34f1d9282864d21de7b71dca6962cab2b08fea5aed27365c2ecb39a32"
+    },
+    "arcanaBodies": {
+      "file": "source/arcana-bodies-v102.png",
+      "sha256": "b93f95a8a5f3fe2457bcda471a688656fd7bcb9148cef82190902d524df7e1bc",
+      "atlas": "arcana-v102.png",
+      "metadata": "arcana-v102.json"
+    },
+    "ahabEgoBody": {
+      "file": "source/ahab-gasharpoon-body.png",
+      "sha256": "a6289938837c8e0ede2b3a00e45ea088b2b3ec89eaea5e1323e98405b601eb10",
+      "atlas": "ahab-gasharpoon.png",
+      "metadata": "ahab-gasharpoon.json"
     }
   },
   "frames": {

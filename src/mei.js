@@ -1,5 +1,5 @@
 import {MEI as P} from './mei-data.js';
-import {distance,direction} from './geometry.js';
+import {distance,direction,segmentDistance} from './geometry.js';
 export const armorRate=(g,e)=>e.key==='mei'?Math.floor(e.level/3)*(.1+(g.buff(e,'meiGuard')?.06:0)):0;
 export const finalArmor=(g,e)=>Math.max(0,g.armor(e)-g.stat(e,'armorDown'));
 export const burning=(g,t)=>t.burn?.until>g.time||Object.values(t.meiBurns||{}).some(b=>b.until>g.time);
@@ -77,22 +77,22 @@ function kick(g,e,d){
   }
  });
 }
+function throughTargets(g,e,contact){
+ const hits=new Set();return(from,to)=>{for(const t of [...g.units])if(t.kind!=='champion'&&!hits.has(t.id)&&g.hostile(e,t)&&segmentDistance(t,from,to)<=e.radius+t.radius&&g.clearLine(from,t)){hits.add(t.id);contact(t);}};
+}
 function rush(g,e,d,fast){
  delete e.state.meiRCharge;e.channelUntil=Math.min(e.channelUntil||0,g.time);const scale=fast?.5:1;
  e.state.meiRush={at:g.time,until:g.time+.3,angle:Math.atan2(d.y,d.x),fast};fireSound(g,e,'r','mei-rush');
- g.startMotion(e,d,P.rRange*scale,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,actionTag:'meiR',onCollision:({obstacle:t})=>{
-  if(!t||!g.hostile(e,t))return;
-  const contact=hit(g,e,t,(60+finalArmor(g,e)*3)*scale,{slot:'r',fixed:true});if(contact>0&&t.alive)g.status(t,'stun',1,P.rStun*scale,e);fx(g,e,'meiCollision',{x:t.x,y:t.y,r:1.3,life:.55,maxLife:.55});
- }});
+ const strike=t=>{const contact=hit(g,e,t,(60+finalArmor(g,e)*3)*scale,{slot:'r',fixed:true});if(t.kind==='champion'&&contact>0&&t.alive)g.status(t,'stun',1,P.rStun*scale,e);fx(g,e,'meiCollision',{x:t.x,y:t.y,r:1.3,life:.55,maxLife:.55});};
+ g.startMotion(e,d,P.rRange*scale,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,phaseNonChampions:true,actionTag:'meiR',onStep:throughTargets(g,e,strike),onCollision:({obstacle:t})=>{if(t&&g.hostile(e,t))strike(t);}});
 }
 export function cast(g,e,slot,p,d){
  if(slot==='q'){
   if(recast(g,e)){const angle=e.state.meiKickFacing??e.facing;delete e.state.meiKickFacing;e.facing=angle;kick(g,e,{x:Math.cos(angle),y:Math.sin(angle)});return;}
   g.addBuff(e,'meiGuard',P.qGuardTime,{copy:false});e.qCd=0;e.state.meiQPhase='dash';fireSound(g,e,'q','mei-dash');
   e.state.meiQThrust={at:g.time,until:g.time+.23,angle:Math.atan2(d.y,d.x)};
-  g.startMotion(e,d,P.qRange,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,actionTag:'meiQ',onComplete:()=>finishQ(g,e),onCollision:({obstacle:t})=>{
-   if(!t||!g.hostile(e,t))return;const contact=hit(g,e,t,P.qDamage,{slot:'q'});if(contact>0)g.addShield(e,finalArmor(g,e)*.6,`mei-q-${e.id}`,2);
-  }});return;
+  const strike=t=>{const contact=hit(g,e,t,P.qDamage,{slot:'q'});if(contact>0)g.addShield(e,finalArmor(g,e)*.6,`mei-q-${e.id}`,2);};
+  g.startMotion(e,d,P.qRange,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,phaseNonChampions:true,actionTag:'meiQ',onStep:throughTargets(g,e,strike),onComplete:()=>finishQ(g,e),onCollision:({obstacle:t})=>{if(t&&g.hostile(e,t))strike(t);}});return;
  }
  const fast=quickR(g,e);spendR(g,e,fast);
  if(fast){rush(g,e,d,true);return;}

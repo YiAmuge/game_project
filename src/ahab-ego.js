@@ -3,6 +3,7 @@ import {GASHARPOON as P,GASHARPOON_NAME,GASHARPOON_SKILLS,GASHARPOON_TEXT} from 
 export {GASHARPOON as PARAMETERS} from './ahab-ego-data.js';
 export const empowered=e=>e?.key==='ahab'&&Boolean(e.goldenBough);
 export const active=e=>e?.key==='ahab'&&Boolean(e.state?.gasharpoon);
+export const ordersActive=e=>e?.key==='ahab'&&!active(e);
 export const remaining=e=>e.state?.gasharpoon?.ammo??0;
 export const available=(e,slot)=>active(e)&&['q','r'].includes(slot)&&!e.state.gasharpoon[slot+'Used'];
 const hitSound=slot=>({family:slot==='q'?'punch':'spear',element:'metal',slot,phase:'gasharpoon-'+(slot||'basic')+'-hit',cue:'impact',periodic:false});
@@ -14,7 +15,7 @@ export function end(g,e){
  e.ammo=Math.min(g.ammoCap(e),s.normal.ammo);e.reloadProgress=s.normal.reloadProgress;e.qCd=Math.max(0,s.normal.qCd-(g.time-s.at));
  effect(g,e,'gasharpoonTransform',{life:.45,maxLife:.45});
 }
-function complete(g,e){const s=e.state.gasharpoon;if(s&&s.ammo===0&&s.qUsed&&s.rUsed&&!s.channel&&!(s.burstUntil>g.time))end(g,e);}
+function complete(g,e){const s=e.state.gasharpoon;if(s&&s.ammo===0&&s.qUsed&&s.rUsed&&!s.channel&&!s.volley&&!(s.burstUntil>g.time))end(g,e);}
 export function begin(g,e){
  delete e.state.recastUntil;
  e.state.gasharpoon={at:g.time,until:g.time+P.duration,ammo:P.ammo,qUsed:false,rUsed:false,normal:{ammo:e.ammo,reloadProgress:e.reloadProgress,qCd:e.qCd}};
@@ -29,14 +30,20 @@ function cone(g,e,origin,dir,range,angle,damage,slot){
  }
 }
 export function attack(g,e,point){
- const s=e.state.gasharpoon;if(!s||g.time>=s.until||s.ammo<=0||s.channel)return false;
+ const s=e.state.gasharpoon;if(!s||g.time>=s.until||s.ammo<=0||s.channel||s.volley)return false;
  const d=g.aim(e,point);g.cancelRecall(e);s.ammo--;e.ammo=s.ammo;e.reloadProgress=0;e.attackCd=P.interval;e.attackSerial=(e.attackSerial||0)+1;
  e.attackAt=e.lastAttackAt=g.time;e.attackFacing=e.facing=Math.atan2(d.y,d.x);e.revealedUntil=g.time+1.25;
- s.thrust={at:g.time,until:g.time+P.interval,angle:e.facing,slot:'basic'};
  e.healingEvent={key:`gasharpoon-basic-${e.id}-${e.attackSerial}`,at:g.time};
- for(let i=0;i<3;i++)g.schedule(e,i*P.interval/3,()=>{if(e.state.gasharpoon===s)g.emitSound('swing',e,{family:'spear',element:'metal',damageKind:'basic',phase:'gasharpoon-thrust'});});
- effect(g,e,'gasharpoonVolley',{r:P.range,spread:P.angle,seed:e.attackSerial,life:P.interval,maxLife:P.interval});
- cone(g,e,e,d,P.range,P.angle,t=>72+t.maxHp*.02);complete(g,e);return true;
+ const volley=s.volley={at:g.time,angle:e.facing,index:0};
+ const shot=i=>{
+  if(e.state.gasharpoon!==s||!e.alive||g.time>=s.until)return;
+  volley.index=i;e.attackAt=e.lastAttackAt=g.time;s.thrust={at:g.time,poseAt:volley.at,until:g.time+P.interval,angle:volley.angle,slot:'basic'};
+  g.emitSound('swing',e,{family:'spear',element:'metal',damageKind:'basic',phase:'gasharpoon-thrust'});
+  effect(g,e,'gasharpoonVolley',{angle:volley.angle,r:P.range,spread:P.angle,seed:e.attackSerial*P.hits+i,life:P.interval,maxLife:P.interval});
+  g.action(e,'basic',()=>cone(g,e,e,d,P.range,P.angle,t=>72+t.maxHp*.02));
+  if(i===P.hits-1){delete s.volley;complete(g,e);}
+ };
+ shot(0);for(let i=1;i<P.hits;i++)g.schedule(e,i*P.interval,()=>shot(i));return true;
 }
 export function cast(g,e,slot,point){
  if(!active(e)){if(slot!=='r')return false;begin(g,e);return true;}
@@ -46,7 +53,7 @@ export function cast(g,e,slot,point){
  effect(g,e,'gasharpoonCharge',{slot,angle:s.channel.angle,r:slot==='q'?P.qRange:Math.hypot(g.bounds.w,g.bounds.h),spread:slot==='q'?P.qAngle:0,life:P.channel,maxLife:P.channel});return true;
 }
 function fire(g,e,s,ch){
- const d={x:Math.cos(ch.angle),y:Math.sin(ch.angle)},origin={x:e.x,y:e.y};s.thrust={at:g.time,until:g.time+.24,angle:ch.angle,slot:ch.slot};
+ const d={x:Math.cos(ch.angle),y:Math.sin(ch.angle)},origin={x:e.x,y:e.y};s.thrust={at:g.time,poseAt:ch.at,until:g.time+.24,angle:ch.angle,slot:ch.slot};
  g.emitSound('swing',e,{slot:ch.slot,family:'spear',element:'metal',phase:'gasharpoon-thrust'});
  if(ch.slot==='q'){
   s.burstUntil=g.time+P.qEvery*2;

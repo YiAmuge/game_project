@@ -1,7 +1,7 @@
 import{readFile,writeFile,mkdir,copyFile}from'node:fs/promises';import{resolve}from'node:path';import{createHash}from'node:crypto';import{decodePNG,encodePNG}from'./png.mjs';
 const root=resolve(import.meta.dirname,'..'),dir=resolve(root,'src/assets/source');await mkdir(dir,{recursive:true});
 const paths={bodies:'arcana-bodies-v102.png',props:'arcana-props-v102.png',wand:'queen-wand-v102.png',seed:'champion-avatar-seed.png',blood:'bloodfiend-v102.png'};
-const defaults=['exec-fe5dadc6-c697-4e83-949a-eeaab5ff86ac.png','exec-a90481ba-c1c1-43d6-a690-488f9215d56a.png','exec-327c8384-ba9a-490c-8f9f-b613654eba54.png','exec-2fd8ba2c-8429-4de3-a6f5-6af038e8ffb0.png','exec-8cc567e9-5e4e-43e2-890a-62ca0fd5ee0f.png'];
+const defaults=['exec-bd624e65-c4d0-4b5c-86a1-2851e4055a43.png','exec-a90481ba-c1c1-43d6-a690-488f9215d56a.png','exec-327c8384-ba9a-490c-8f9f-b613654eba54.png','exec-2fd8ba2c-8429-4de3-a6f5-6af038e8ffb0.png','exec-8cc567e9-5e4e-43e2-890a-62ca0fd5ee0f.png'];
 if(process.argv.includes('--import'))for(const[k,file]of Object.entries(paths))await copyFile('/workspace/generated_images/'+defaults[Object.keys(paths).indexOf(k)],resolve(dir,file));
 const inputs={},provenance={};for(const[k,file]of Object.entries(paths)){const bytes=await readFile(resolve(dir,file));provenance[k]={file:'source/'+file,sha256:createHash('sha256').update(bytes).digest('hex')};if(k!=='seed')inputs[k]=decodePNG(bytes);}
 const specs=[

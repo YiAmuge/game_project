@@ -3,7 +3,7 @@ export const AHAB_EGO_FRAMES={
   "ahabGasBody": {
     "x": 8,
     "y": 8,
-    "w": 379,
+    "w": 345,
     "h": 480,
     "sheet": 23,
     "rotation": 0,
@@ -16,9 +16,9 @@ export const AHAB_EGO_FRAMES={
       1
     ],
     "face": [
-      197.08,
+      179.4,
       62.400000000000006,
-      117.49,
+      106.95,
       139.2
     ]
   },

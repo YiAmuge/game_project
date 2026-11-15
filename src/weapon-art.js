@@ -53,7 +53,7 @@ export const SORA_CLAW_LENGTH=1.65*.8*.88;
 export const ISHMAEL_SHIELD_LENGTH=.38;
 export const EMISSION_ANCHORS={gubo:[.99,.32],rudolph:[.94,.48],myo:[.995,.50],jamila:[.99,.23]};
 // Anatomical hands in crown-to-sole world units, independent of hair/ornaments.
-export const HAND_ANCHORS={mei:[-.43,-.76],moses:[-.30,-.75],ezra:[-.30,-.72],queen:[-.35,-.88],nosferatu:[-.35,-.7],kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
+export const HAND_ANCHORS={mei:[-.43,-.94],moses:[-.30,-.75],ezra:[-.30,-.72],queen:[-.35,-.88],nosferatu:[-.35,-.7],kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
 export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
  const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],aim=e.facing??(e.team?Math.PI:0),stance=basicStance(g,e)||(!combatPoseActive(g,e)&&Math.abs(Math.sin(aim))<1e-6?restingStance(g,e,aim):null),facing=stance?.weaponFacing??aim,flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[baseX,y]=HAND_ANCHORS[e.key]||[-.3,-.8],x=baseX*(e.key==='sora'&&g.buff(e,'soraEgo')?1.1:1);
@@ -465,21 +465,23 @@ function drawBloodSweep(r,e,g,lift,layer){
 
 export function gasharpoonArmPose(g,e,lift=0){
  const s=e.state.gasharpoon,origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,ch=s.channel,thrust=s.thrust,age=thrust?g.time-thrust.at:-Infinity;
- let angle=ch?.angle??(age>=0&&g.time<thrust.until?thrust.angle:e.facing??0),push=0;
+ const holding=age>=0&&g.time<thrust.until+.14,raise=ch?Math.min(1,Math.max(0,(g.time-ch.at)/.07)):holding?Math.min(1,Math.max(0,(g.time-(thrust.poseAt??thrust.at))/.07))*Math.min(1,Math.max(0,(thrust.until+.14-g.time)/.14)):0,aim=ch?.angle??(holding?thrust.angle:Math.PI/2);
+ let angle=Math.PI/2+Math.atan2(Math.sin(aim-Math.PI/2),Math.cos(aim-Math.PI/2))*raise,push=0;
  if(ch){const progress=Math.max(0,Math.min(1,(g.time-ch.at)/.5));push=ch.slot==='q'?-.42*progress:Math.sin(g.time*(65+progress*70))*.045*progress;}
- else if(age>=0&&g.time<thrust.until){const duration=thrust.slot==='basic'?.2/3:.24;push=.48*Math.sin((age%duration)/duration*Math.PI);}
- return {hand:{x:origin.x-.48*flip,y:origin.y-1.05},angle,push};
+ else if(age>=0&&g.time<thrust.until){if(thrust.slot==='basic'){const fade=Math.sin(Math.min(1,age/.2)*Math.PI);push=(.09+Math.sin(g.time*83)*.018+Math.sin(g.time*127)*.009)*fade;angle+=Math.sin(g.time*99)*.012*fade;}else push=.48*Math.sin(age/.24*Math.PI);}
+ return {hand:{x:origin.x+(.85-.47*raise)*flip,y:origin.y-1.42+.37*raise},angle,push,mirrorX:true};
 }
 export function drawGasharpoonArm(r,e,g,lift=0){
  const c=r.ctx,pose=gasharpoonArmPose(g,e,lift),[key,len,pivot]=equippedWeapon(g,e),f=FRAMES[key],m=weaponGeometry(key,len);
- c.save();c.translate(pose.hand.x,pose.hand.y);orientWeapon(c,pose.angle);c.translate(pose.push,-(f.grip[1]-.5)*m.height*m.scale);drawWeapon(c,key,len,{pivot,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
+ // Reflect the arm, then turn its blade back toward the attack direction.
+ c.save();c.translate(pose.hand.x,pose.hand.y);orientWeapon(c,pose.angle);c.translate(pose.push,(f.grip[1]-.5)*m.height*m.scale);c.scale(-1,1);drawWeapon(c,key,len,{rotation:Math.PI,pivot:1-pivot,disabled:Boolean(g.stat(e,'disarm'))});c.restore();
 }
 
 // Both fists orbit the same torso axis; the distant idle hand sits behind it.
 export function meiFistPoses(g,e,lift=0){
  const origin=spriteOrigin(g,e,lift),flip=Math.cos(bodyFacing(g,e))<0?-1:1,p=e.state.meiPunch,age=p?g.time-p.at:-1,active=p&&age>=0&&g.time<p.until,center={x:origin.x,y:origin.y-.65},q=e.state.meiQThrust,qActive=q&&g.time>=q.at&&g.time<q.until;
  return ['right','left'].map((side,index)=>{
-  let x=origin.x+(index?.31:-.43)*flip,y=origin.y-.76,angle=flip>0?Math.PI/12:Math.PI-Math.PI/12,on=active&&p.index%2===index,progress=active?age/MEI.interval:0,part=`${e.attackSerial}:${p?.index}`,layer=index?'back':'front';
+  let x=origin.x+(index?.31:-.43)*flip,y=origin.y+HAND_ANCHORS.mei[1],angle=flip>0?Math.PI/12:Math.PI-Math.PI/12,on=active&&p.index%2===index,progress=active?age/MEI.interval:0,part=`${e.attackSerial}:${p?.index}`,layer=index?'back':'front';
   if(on){
    angle=p.last?p.angle:p.angle+(index?1:-1)*swingProgress(progress)*Math.PI*2;
    const reach=p.last?.25+Math.sin(progress*Math.PI)*.85:.74;
@@ -488,7 +490,7 @@ export function meiFistPoses(g,e,lift=0){
   }
   if(qActive&&!index){
    progress=(g.time-q.at)/(q.until-q.at);const reach=.95*Math.min(1,progress/.22)*Math.min(1,(1-progress)/.35);
-   angle=q.angle;x=origin.x-.43*flip+Math.cos(angle)*reach;y=origin.y-.76+Math.sin(angle)*reach;on=true;layer='front';part=`q:${q.at}`;
+   angle=q.angle;x=origin.x-.43*flip+Math.cos(angle)*reach;y=origin.y+HAND_ANCHORS.mei[1]+Math.sin(angle)*reach;on=true;layer='front';part=`q:${q.at}`;
   }
   return{side,key:index?'meiLeftFist':'meiRightFist',x,y,angle,active:Boolean(on),progress,last:!qActive&&Boolean(p?.last),direction:index?1:-1,center,layer,part};
  });

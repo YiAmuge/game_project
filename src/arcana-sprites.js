@@ -3,20 +3,20 @@ export const ARCANA_FRAMES={
   "queen": {
     "x": 8,
     "y": 8,
-    "w": 292,
-    "h": 425,
+    "w": 291,
+    "h": 426,
     "sheet": 19,
     "rotation": 0,
     "source": "source/arcana-bodies-v102.png",
     "sourceRect": [
       14,
-      99,
+      97,
       584,
-      852
+      855
     ],
     "referenceHeight": 400,
-    "crownOffset": 25,
-    "heightScale": 1.0625,
+    "crownOffset": 26,
+    "heightScale": 1.065,
     "heightBasis": "crown",
     "foot": [
       0.56,
@@ -24,13 +24,13 @@ export const ARCANA_FRAMES={
     ],
     "face": [
       33,
-      18,
-      240,
+      19,
+      239,
       185
     ]
   },
   "nosferatu": {
-    "x": 308,
+    "x": 307,
     "y": 8,
     "w": 240,
     "h": 403,
@@ -38,10 +38,10 @@ export const ARCANA_FRAMES={
     "rotation": 0,
     "source": "source/arcana-bodies-v102.png",
     "sourceRect": [
-      565,
-      139,
+      564,
+      138,
       482,
-      808
+      811
     ],
     "referenceHeight": 400,
     "crownOffset": 3,
@@ -54,12 +54,12 @@ export const ARCANA_FRAMES={
     "face": [
       5,
       0,
-      232,
+      231,
       182
     ]
   },
   "bloodfiend": {
-    "x": 556,
+    "x": 555,
     "y": 8,
     "w": 323,
     "h": 459,
@@ -88,7 +88,7 @@ export const ARCANA_FRAMES={
     ]
   },
   "bloodBat": {
-    "x": 887,
+    "x": 886,
     "y": 8,
     "w": 310,
     "h": 180,
@@ -103,7 +103,7 @@ export const ARCANA_FRAMES={
     ]
   },
   "queenWand": {
-    "x": 1205,
+    "x": 1204,
     "y": 8,
     "w": 376,
     "h": 800,
@@ -118,7 +118,7 @@ export const ARCANA_FRAMES={
     ]
   },
   "nosWine": {
-    "x": 1589,
+    "x": 1588,
     "y": 8,
     "w": 90,
     "h": 180,
@@ -133,7 +133,7 @@ export const ARCANA_FRAMES={
     ]
   },
   "bloodClawLeft": {
-    "x": 1687,
+    "x": 1686,
     "y": 8,
     "w": 284,
     "h": 192,

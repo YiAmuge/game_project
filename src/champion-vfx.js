@@ -1,3 +1,4 @@
+import {ordersActive} from './ahab-ego.js';
 import {drawMeiGround} from './mei-vfx.js';
 import {maxLevel} from './golden-bough.js';
 import{drawEzraGround}from'./ezra-vfx.js';
@@ -66,7 +67,7 @@ export function championPresentation(g,e){
  if(buff('mutant'))set('#5c412d');if(buff('alisaReload'))set('#b86132','flame',.75);
  if(buff('flowerStride')||buff('flowerReload'))set('#dcc66e','petal');
  if(buff('ishmaelSurvive'))set('#d29b59','glow',.75);
- if(buff('ahabCover')||e.key==='ahab'&&s.order==='guard'||g.champions(e.team).some(a=>a.key==='ahab'&&a.alive&&guardAlly(g,a)===e))set('#3d7472');
+ if(buff('ahabCover')||ordersActive(e)&&s.order==='guard'||g.champions(e.team).some(a=>a.key==='ahab'&&a.alive&&guardAlly(g,a)===e))set('#3d7472');
  if(e.key==='kim'&&s.counter){set('#233a5d','smoke',.8);dim=.7;}
  if(e.key==='rudolph'&&s.exhaustedUntil>g.time)dim=.67;
  if(e.key==='dongbaek'&&status('disarm'))dim=.7;

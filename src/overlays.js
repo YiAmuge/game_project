@@ -1,3 +1,4 @@
+import {ordersActive} from './ahab-ego.js';
 import * as Bough from './golden-bough.js';
 import {MEI} from './mei-data.js';
 import {recast as meiRecast} from './mei.js';
@@ -26,7 +27,7 @@ import { heathCharge,guardAlly } from './skills.js';
 export function stackInfo(e,g){
  if(e.key==='mei'&&e.state.meiQRecastUntil>g.time)return{label:'회축 '+(e.state.meiQRecastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffbd49'};
  if(e.key==='mei'&&e.state.meiKickAt!==undefined&&g.time-e.state.meiKickAt<=1.3)return{label:'철산고 연계 '+Math.max(0,1.3-g.time+e.state.meiKickAt).toFixed(1)+'s',textOnly:true,color:'#ff783d'};
- if(e.key==='ahab'&&e.state.gasharpoon)return{label:'개화 '+Math.max(0,e.state.gasharpoon.until-g.time).toFixed(1)+'s · 탄식 '+e.state.gasharpoon.ammo+'/5',textOnly:true,color:'#f0f7ff'};
+ if(e.key==='ahab'&&e.state.gasharpoon)return{label:'개화 '+Math.max(0,e.state.gasharpoon.until-g.time).toFixed(1)+'s · 탄식 '+e.state.gasharpoon.ammo+'/1',textOnly:true,color:'#f0f7ff'};
  if(e.key==='ishmael'&&Bough.active(e))return{label:'항해',value:Bough.voyage(e),max:8,color:'#e8cc71',textOnly:true};
  if(e.key==='ppui')return{label:'맥동',value:pulse(e),max:PPUI.pulseCap,color:'#f4a9bb',textOnly:true};
  if(e.key==='ahab'&&e.state.recastUntil>g.time)return{label:'재사용 '+(e.state.recastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffcf7c'};
@@ -149,7 +150,7 @@ export function chargePreview(r,e,g){
 export function championGroundEffects(r,e,g){
  const c=r.ctx,color='#c5d0d33b',outline=(radius)=>r.circle(e.x,e.y,radius,null,color,.025);
  if(e.key==='mei'&&e.alive&&meiRecast(g,e))r.circle(e.x,e.y,MEI.kickRadius,'#ff4b2005','#ffba6845',.025);
- if(e.key==='ahab'&&e.alive){c.save();c.globalAlpha=.55;r.circle(e.x,e.y,AHAB.orderRadius,null,e.state.order==='guard'?'#354eab':'#f19c40',.035);c.restore();}
+ if(ordersActive(e)&&e.alive){c.save();c.globalAlpha=.55;r.circle(e.x,e.y,AHAB.orderRadius,null,e.state.order==='guard'?'#354eab':'#f19c40',.035);c.restore();}
  if(e.key==='ishmael'&&g.buff(e,'ishmaelShield'))outline(4.5);
  if(g.buff(e,'martonDrain'))r.circle(e.x,e.y,5.5,null,'#02ebf770',.035);
  if(g.buff(e,'heathUlt'))outline(HEATH.radius);

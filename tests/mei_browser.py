@@ -1,9 +1,10 @@
 """Mei's latest separate art, fire fists/combo UI, codex and offline assets."""
-import asyncio,os,re
+import asyncio,os,re,json
 from pathlib import Path
 from playwright.async_api import async_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 ART=ROOT/'artifacts/mei';ART.mkdir(parents=True,exist_ok=True)
+MEI_META=json.loads((ROOT/'src/assets/mei.json').read_text())['frames']
 SETUP=re.search(r"SETUP='''(.*?)'''",(ROOT/'tests/champion-refresh_browser.py').read_text(),re.S).group(1)
 async def main():
  async with async_playwright() as pw:
@@ -25,9 +26,9 @@ async def main():
    await page.click('#training-open');await page.get_by_role('button',name=re.compile(r'^메이 선택')).click();await page.click('#start');await page.wait_for_timeout(300)
    await page.evaluate(SETUP,'mei');await page.wait_for_timeout(400)
    await expect(page.locator('#basic-btn span')).to_have_text('연무권');await page.screenshot(path=str(ART/f'{label}-idle.png'))
-   order=await page.evaluate("""async()=>{const c=__moba.renderer.ctx,draw=c.drawImage,calls=[];c.drawImage=function(...a){if(a.length===9&&a[0]?.naturalWidth===272)calls.push(a[2]);return draw.apply(this,a);};try{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));}finally{c.drawImage=draw;}return calls;}""")
-   assert 675 in order and 8 in order and 444 in order,(label,order)
-   assert order.index(675)<order.index(8)<order.index(444),(label,order)
+   order=await page.evaluate("""async()=>{const c=__moba.renderer.ctx,draw=c.drawImage,calls=[];c.drawImage=function(...a){if(a.length===9&&a[0]?.naturalWidth===256)calls.push(a[2]);return draw.apply(this,a);};try{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));}finally{c.drawImage=draw;}return calls;}""")
+   assert MEI_META['meiLeftFist']['y'] in order and 8 in order and MEI_META['meiRightFist']['y'] in order,(label,order)
+   assert order.index(MEI_META['meiLeftFist']['y'])<order.index(8)<order.index(MEI_META['meiRightFist']['y']),(label,order)
    await page.evaluate("()=>{const g=__moba.game,p=g.player,t=target(43);g.attack(p,t);advance(.1);}")
    for _ in range(5):await page.evaluate('advance(.02)');await page.wait_for_timeout(30)
    await page.screenshot(path=str(ART/f'{label}-fire-fist.png'))

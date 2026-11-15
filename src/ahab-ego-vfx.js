@@ -1,6 +1,13 @@
 import {drawWeapon} from './weapon-art.js';
+import {FRAMES} from './art.js';
+import {GASHARPOON as P} from './ahab-ego-data.js';
 const noise=n=>{const v=Math.sin(n*91.17)*43758.5453;return v-Math.floor(v);};
 const point=(camera,f,a,r,h=.95)=>camera.worldToScreen({x:f.x+Math.cos(a)*r,y:f.y+Math.sin(a)*r},h);
+export function gasharpoonRays(f,age){
+ const progress=Math.max(0,Math.min(1,age/f.maxLife));return Array.from({length:24},(_,i)=>{const seed=f.seed*89+i*13,a=f.angle+(noise(seed)-.5)*f.spread,travel=Math.max(0,Math.min(1,(progress-noise(seed+3)*.18)/.72)),tip=f.r*(.03+.97*travel),tail=Math.max(.03,tip-2.2-noise(seed+9)*2.8);return{angle:a,tip,tail,alpha:.65+noise(seed+4)*.35};});
+}
+export const gasharpoonProjectileLength=()=>P.projectileWidth*2*FRAMES.ahabGasBlade.w/FRAMES.ahabGasBlade.h;
+function clipCone(c,camera,f,height){const p=point(camera,f,f.angle,0,height);c.beginPath();c.moveTo(p.x,p.y);for(let i=0;i<=64;i++){const v=point(camera,f,f.angle-f.spread/2+f.spread*i/64,f.r,height);c.lineTo(v.x,v.y);}c.closePath();c.clip();}
 function lance(c,a,b,color,width){
  const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,px=-dy/len,py=dx/len;
  c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
@@ -15,15 +22,16 @@ export function drawGasharpoonScene(c,camera,g){
    const p=camera.worldToScreen(owner||f,.9),radius=camera.scale*(.25+age*2.5);c.shadowColor='#ffffff';c.shadowBlur=18;c.strokeStyle='#ffffff';c.lineWidth=2;c.beginPath();c.ellipse(p.x,p.y,radius,radius*.7,0,0,Math.PI*2);c.stroke();
    for(let i=0;i<16;i++){const a=i*Math.PI/8+f.source,len=camera.scale*(.4+age*2),x=p.x+Math.cos(a)*len,y=p.y+Math.sin(a)*len;c.strokeStyle='#ffffff';c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*5,y+Math.sin(a)*5);c.stroke();}
   }else if(f.type==='gasharpoonVolley'){
-   const pulse=Math.min(2,Math.floor(age/(.2/3))),phase=(age%(.2/3))/(.2/3);
+   clipCone(c,camera,f,.95);
    c.shadowColor='#a5ffca';c.shadowBlur=8;
-   for(let i=0;i<24;i++){
-    const seed=f.seed*89+pulse*71+i*13,a=f.angle+(i/23-.5)*f.spread,reach=f.r*(.55+.45*phase),tip=point(camera,f,a,reach),tail=point(camera,f,a,Math.max(.2,reach-(2.2+noise(seed)*2.8)));
-    c.globalAlpha=alpha*(.65+noise(seed+4)*.35);lance(c,tail,tip,'#a8e7bc',3);lance(c,tail,tip,'#ffffff',1.35);
+   for(const ray of gasharpoonRays(f,age)){
+    const tip=point(camera,f,ray.angle,ray.tip),tail=point(camera,f,ray.angle,ray.tail);
+    c.globalAlpha=alpha*ray.alpha;lance(c,tail,tip,'#a8e7bc',2.2);lance(c,tail,tip,'#ffffff',1.35);
    }
   }else if(f.type==='gasharpoonShock'){
+   clipCone(c,camera,f,.55);
    const radius=f.r*Math.min(1,age/.2),pts=[];for(let i=0;i<=40;i++)pts.push(point(camera,f,f.angle-f.spread/2+f.spread*i/40,radius,.55));
-   c.shadowColor='#67aaff';c.shadowBlur=14;for(const[color,width]of[['#7daeff',7],['#ffffff',2.5]]){c.strokeStyle=color;c.lineWidth=width;c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();}
+   c.shadowColor='#ffffff';c.shadowBlur=11;for(const[color,width]of[['#ffffff',7],['#99c4ff',1.2]]){c.strokeStyle=color;c.lineWidth=width;c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();}
    for(let i=0;i<12;i++){const a=f.angle+(i/11-.5)*f.spread;lance(c,point(camera,f,a,radius*.55,.55),point(camera,f,a,radius,.55),'#f7fbff',1.2);}
   }else if(f.type==='gasharpoonCharge'&&owner?.state.gasharpoon?.channel){
    const ch=owner.state.gasharpoon.channel,progress=Math.min(1,age/.5),p=camera.worldToScreen(owner,1.1);c.globalAlpha=.25+progress*.55;c.shadowColor=ch.slot==='q'?'#77b5ff':'#d392ff';c.shadowBlur=10+progress*14;
@@ -35,6 +43,6 @@ export function drawGasharpoonScene(c,camera,g){
  }
  for(const p of g.projectiles){
   if(!p.gasharpoon)continue;const at=camera.worldToScreen(p,1),ahead=camera.worldToScreen({x:p.x+p.dx,y:p.y+p.dy},1),tail=camera.worldToScreen({x:p.x-p.dx*3,y:p.y-p.dy*3},1);
-  c.save();c.shadowColor='#c186ff';c.shadowBlur=24;c.globalAlpha=.75;lance(c,tail,at,'#bc8cff',7);c.globalAlpha=1;c.translate(at.x,at.y);c.rotate(Math.atan2(ahead.y-at.y,ahead.x-at.x));drawWeapon(c,'ahabGasBlade',camera.scale*3.8,{pivot:.65});c.restore();
+  c.save();c.shadowColor='#c186ff';c.shadowBlur=12;c.globalAlpha=.55;lance(c,tail,at,'#bc8cff',Math.min(7,camera.scale*P.projectileWidth));c.globalAlpha=1;c.translate(at.x,at.y);c.rotate(Math.atan2(ahead.y-at.y,ahead.x-at.x));drawWeapon(c,'ahabGasBlade',camera.scale*gasharpoonProjectileLength(),{pivot:1});c.restore();
  }
 }

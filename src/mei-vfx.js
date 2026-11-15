@@ -1,5 +1,6 @@
 const rand=n=>{const x=Math.sin(n*93.71)*43758.5453;return x-Math.floor(x);};
 export const MEI_COLORS={main:'#ff4b20',accent:'#ffce39',dark:'#a32615'};
+export function meiRushGlow(g,e){const s=e.key==='mei'&&e.state.meiRush;if(!s)return 0;return .65*Math.max(0,Math.min(1,(g.time-s.at)/.035,(s.until-g.time)/.18));}
 export const meiEffectCenter=(g,f)=>f.follow||f.type==='meiGather'?g.units.find(e=>e.id===f.source&&e.alive)||f:f;
 export function meiRushLean(g,e){
  if(e.key!=='mei'||e.motion?.actionTag!=='meiR'||!e.state.meiRush)return{x:0,y:0};

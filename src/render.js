@@ -1,4 +1,4 @@
-import {drawMeiScene,meiRushLean} from './mei-vfx.js';
+import {drawMeiScene,meiRushLean,meiRushGlow} from './mei-vfx.js';
 import {drawGasharpoonScene} from './ahab-ego-vfx.js';
 import {storm as arayashikiStorm} from './golden-bough.js';
 import {drawDissolve,drawArayashikiCuts} from './arayashiki-vfx.js';
@@ -173,7 +173,7 @@ export class Renderer {
     c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);const lean=meiRushLean(game,e);if(lean.x||lean.y)c.transform(1,0,-lean.x,1-lean.y,0,0);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
       c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);drawResentmentBody(c,game,e,f,atlas,{left,top,w,h});
-      if(e.key==='mei'&&e.state.meiRush?.until>game.time&&this.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=.65;c.shadowColor='#ff5122';c.shadowBlur=18;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#ff5221'),left,top,w,h);c.restore();}
+      if(meiRushGlow(game,e)>0&&this.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=meiRushGlow(game,e);c.shadowColor='#ff5122';c.shadowBlur=18*meiRushGlow(game,e)/.65;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#ff5221'),left,top,w,h);c.restore();}
       if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),left,top,w,h);c.restore();}
       if(game.buff(e,'queequegUlt')&&this.skillVfx){c.save();c.globalAlpha*=.22;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#c44034'),left,top,w,h);c.restore();}
       if(e.visuals?.ampule?.until>game.time&&this.skillVfx){c.save();c.globalCompositeOperation='multiply';c.globalAlpha*=.65*Math.min(1,(e.visuals.ampule.until-game.time)/.35);c.drawImage(this.skillVfx.tintFrame(atlas,f,'#22c65e'),left,top,w,h);c.restore();}
