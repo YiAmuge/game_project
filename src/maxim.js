@@ -3,6 +3,7 @@ import {distance,direction,segmentDistance} from './geometry.js';
 
 export const rushing=e=>e.key==='maxim'&&Boolean(e.state?.maximQ);
 export const speedBonus=(g,e)=>rushing(e)?Math.min(P.qSpeedCap,Math.floor((g.time-e.state.maximQ.at+1e-8)/P.qStep)*P.qSpeedStep):0;
+export const startupFactor=(g,e)=>rushing(e)&&g.time-e.state.maximQ.at<P.qStartup-1e-8?.2:1;
 export const rushDamage=length=>P.qDamage+Math.min(P.qBonusCap,Math.max(0,length)/P.qDistance*P.qBonus);
 const sound=(g,e,kind,slot,phase)=>g.emitSound(kind,e,{slot,family:'hammer',element:'physical',phase,weight:1.4});
 const fx=(g,e,type,values={})=>g.effects.push({type,source:e.id,theme:'maxim',x:e.x,y:e.y,angle:e.facing,life:.45,maxLife:.45,...values});
@@ -41,21 +42,21 @@ export function attack(g,e,point){
 }
 export function stop(g,e){
  if(!rushing(e))return false;
- delete e.state.maximQ;if(e.motion?.actionTag==='maximQ')delete e.motion;return true;
+ delete e.state.maximQ;e.qCd=g.cooldown(e,'q');if(e.motion?.actionTag==='maximQ')delete e.motion;return true;
 }
 export const release=(g,e)=>stop(g,e);
 export function validate(g,e,slot){return !rushing(e)&&!e.state.maximR&&(slot!=='q'||!g.stat(e,'root')&&!g.stat(e,'captured'));}
 export function cast(g,e,slot,point,d){
  if(slot==='q'){
-  const q=e.state.maximQ={at:g.time,until:g.time+P.qDuration,distance:0,target:point.id};sound(g,e,'charge','q','maxim-rush');
+  e.qCd=0;const q=e.state.maximQ={at:g.time,until:g.time+P.qDuration,distance:0,target:point.id};sound(g,e,'charge','q','maxim-rush');
   if(!g.startMotion(e,d,1000000,{speed:g.speed(e),maxSpeed:1000,phaseCreeps:true,actionTag:'maximQ',onStep:(from,to)=>{if(e.state.maximQ===q)q.distance+=distance(from,to);},onCollision:({obstacle:t})=>{
    if(e.state.maximQ!==q)return;
    const duration=g.time-q.at;stop(g,e);
    if(t?.kind==='champion'&&g.hostile(e,t))impact(g,e,'q',rushDamage(q.distance),P.qRadius,duration+1e-8>=P.qStunAfter?P.qStun:0);
-  },onComplete:()=>stop(g,e)}))delete e.state.maximQ;
+  },onComplete:()=>stop(g,e)}))stop(g,e);
   return;
  }
- e.state.maximR={at:g.time,until:g.time+P.rWindup,angle:Math.atan2(d.y,d.x)};e.channelUntil=g.time+P.rWindup;sound(g,e,'charge','r','maxim-raise');
+ delete e.state.maximRFade;e.state.maximR={at:g.time,until:g.time+P.rWindup,angle:Math.atan2(d.y,d.x)};e.channelUntil=g.time+P.rWindup;sound(g,e,'charge','r','maxim-raise');
  fx(g,e,'maximWindup',{area:maximUltimateArea(e,e.facing),r:P.rRange,spread:P.rAngle,life:P.rWindup,maxLife:P.rWindup});
 }
 export function prepare(g,e,dt){
@@ -69,7 +70,7 @@ export function tick(g,e){
  if(e.key!=='maxim')return;
  if(e.state.maximQ?.finished||e.state.maximQ&&e.motion?.actionTag!=='maximQ')stop(g,e);
  const r=e.state.maximR;if(!r)return;
- if(g.stat(e,'stun')||g.stat(e,'silence')||e.motion?.forced||e.channelUntil+1e-8<r.until){delete e.state.maximR;e.channelUntil=Math.min(e.channelUntil||0,g.time);return;}
+ if(g.stat(e,'stun')||g.stat(e,'silence')||e.motion?.forced||e.channelUntil+1e-8<r.until){e.state.maximRFade={at:g.time,from:r.at};delete e.state.maximR;e.channelUntil=Math.min(e.channelUntil||0,g.time);return;}
  if(g.time+1e-8<r.until)return;
  delete e.state.maximR;e.channelUntil=Math.min(e.channelUntil||0,g.time);e.state.maximSlam={at:g.time,angle:r.angle};const area=maximUltimateArea(e,r.angle);
  g.action(e,'skill',()=>{sound(g,e,'slam','r','maxim-earth');g.cone(e,{x:Math.cos(area.angle),y:Math.sin(area.angle)},area.range,area.spread,P.rDamage,t=>{if(t.alive){g.status(t,'stun',1,P.rStun,e);g.status(t,'armorWeak',P.rArmorDown,P.rStun,e);}},{sound:{family:'hammer',element:'physical',slot:'r'},visual:false});});

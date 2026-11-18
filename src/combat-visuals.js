@@ -1,5 +1,6 @@
 import * as Bough from './golden-bough.js';
 import {MEI} from './mei-data.js';
+import {MAXIM} from './maxim-data.js';
 import{breath as mosesBreath}from'./moses.js';
 import{basicFanAngle}from'./data.js';
 import*as Ezra from'./ezra.js';
@@ -13,6 +14,14 @@ export function front(){}
 export function preview(r,e,g){
  const angle=Math.atan2(g.input.aim.y-e.y,g.input.aim.x-e.x),d={x:Math.cos(angle),y:Math.sin(angle)},ctx=r.ctx;
  const polygon=(range,width)=>{const s={x:-d.y*width/2,y:d.x*width/2},to={x:e.x+d.x*range,y:e.y+d.y*range};r.polygon([[e.x+s.x,e.y+s.y],[to.x+s.x,to.y+s.y],[to.x-s.x,to.y-s.y],[e.x-s.x,e.y-s.y]],'#b8d8d313','#c3e8df66');};
+ if(e.key==='maxim'){
+  r.circle(e.x,e.y,MAXIM.nearRange,null,'#ffae5888',.04);
+  ctx.setLineDash([.1,.18]);r.circle(e.x,e.y,g.attackRange(e),null,'#ffe0a366',.035);ctx.setLineDash([]);
+  if(Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y)<=MAXIM.nearRange&&e.motion?.actionTag!=='maximBasic'){
+   ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,MAXIM.nearRange,angle-Math.PI/2,angle+Math.PI/2);ctx.closePath();ctx.fillStyle='#ffae5810';ctx.fill();
+  }
+  return;
+ }
  if(e.key==='ahab'&&e.state.gasharpoon){ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,9,angle-50*Math.PI/180,angle+50*Math.PI/180);ctx.closePath();ctx.fillStyle='#ffffff0b';ctx.fill();ctx.strokeStyle='#d2ffe28c';ctx.lineWidth=.035;ctx.stroke();return;}
  if(e.key==='mei'){const at=g.safeLanding(e,g.input.aim,g.attackRange(e));r.line([{x:e.x,y:e.y},at],'#ffbf684d',.035,[.1,.14]);r.circle(at.x,at.y,MEI.strikeRange,'#ffb54610','#ffd59177',.035);return;}
  if(e.key==='ezra'){

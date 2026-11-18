@@ -9,7 +9,7 @@ export const CHAMPION_SKILL_SAMPLES=[
  {id:'iceAxeImpact',file:'yodguard-iced-magic-6-378606.mp3',start:.015,end:1.60},
  {id:'earthImpact',file:'yodguard-earth-magic-5-378598.mp3',start:0,end:2.05},
 ];
-const landings=new Set(['heath-landing','sora-landing','starbuck-landing','ezra-landing']);
+const landings=new Set(['heath-landing','sora-landing','starbuck-landing','ezra-landing','maxim-impact']);
 export function championSkillSoundProfile(v){
  const variant=((Math.trunc(v.variant)||0)%4+4)%4,tint=[-.25,.15,-.1,.25][variant];
  const profile=(id,pitch,duration,gain,offset=0,fadeOut=.10,rates=[.98,1.04,.96])=>({id,pitch,duration,gain,offset,fadeOut,rates,dry:true});
@@ -26,6 +26,7 @@ export function championSkillSoundProfile(v){
    ?{...profile('dongbaekChimes',-.9+tint,2.60,1.05,0,.5,[.94,1.01,.94]),attack:.035,fadeStart:.08}
    :{...profile('dongbaekChimes',.6+tint,1.05,.48,.04,.25,[1.03,1.07,1]),attack:.02,fadeStart:.12};
  }
+ if(v.key==='maxim'&&v.cue==='slam'&&v.phase==='maxim-earth')return profile('groundImpact',-2.5+tint,.95,1.05,0,.2,[.9,.97,.9]);
  if(v.cue==='slam'&&landings.has(v.phase))return profile('groundImpact',-1+tint,.75,.82,0,.16);
  if(v.key==='rudolph'){
   if(v.cue==='weapon'&&!v.slot)return profile('hohenElectrocute',.5+tint,.24,.55,.055,.065);

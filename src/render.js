@@ -1,4 +1,4 @@
-import {drawMaximScene,maximUltimateBody} from './maxim-vfx.js';
+import {drawMaximScene} from './maxim-vfx.js';
 import {drawMeiScene,meiRushLean,meiRushGlow} from './mei-vfx.js';
 import {drawGasharpoonScene} from './ahab-ego-vfx.js';
 import {storm as arayashikiStorm} from './golden-bough.js';
@@ -171,7 +171,7 @@ export class Renderer {
     if(!this.billboardPass&&(game.buff(e,'marks')||game.buff(e,'resolve')))this.circle(e.x,e.y,1,null,'#d9be78aa',.09);
     drawBackEquipment(this,e,game,{lift:championPresentation(game,e).lift});
     const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual)*(e.state.bloodfiend?1.15:1),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
-    c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);const lean=meiRushLean(game,e);if(lean.x||lean.y)c.transform(1,0,-lean.x,1-lean.y,0,0);const maximBody=maximUltimateBody(game,e);if(maximBody.lean||maximBody.compression)c.transform(1,0,-maximBody.lean,1-maximBody.compression,0,0);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
+    c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);const lean=meiRushLean(game,e);if(lean.x||lean.y)c.transform(1,0,-lean.x,1-lean.y,0,0);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
       c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);drawResentmentBody(c,game,e,f,atlas,{left,top,w,h});
       if(e.key==='maxim'&&e.state.maximQ&&this.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=.14;c.shadowColor='#f5a13d';c.shadowBlur=8;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f5a13d'),left,top,w,h);c.restore();}
@@ -226,7 +226,7 @@ export class Renderer {
         else this.yanChargePreview(p,game);
       }else if(p.key==='sora'&&!soraEgo(game,p)){
         const impact=soraImpact(game,p,{x:Math.cos(theta),y:Math.sin(theta)});this.circle(impact.x,impact.y,impact.r,'#9ddce80b','#b7d3c766',.035);this.line([{x:p.x,y:p.y},impact],'#dfcfaa50',.04,[.18,.2]);
-      }else if(p.key!=='ezra'){
+      }else if(!['ezra','maxim'].includes(p.key)){
         c.setLineDash([.1,.24]);this.circle(p.x,p.y,game.attackRange(p),null,'#b7d3c727',.035);c.setLineDash([]);
         this.line([{x:p.x+Math.cos(theta),y:p.y+Math.sin(theta)},{x:p.x+Math.cos(theta)*game.attackRange(p),y:p.y+Math.sin(theta)*game.attackRange(p)}],'#dfcfaa50',.04,[.18,.2]);
       }

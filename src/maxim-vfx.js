@@ -1,10 +1,3 @@
-export function maximUltimateBody(g,e){
- if(e.key!=='maxim')return {lean:0,compression:0};
- const r=e.state.maximR,slam=e.state.maximSlam;
- if(r){const side=Math.cos(r.angle)<0?-1:1,progress=Math.min(1,Math.max(0,(g.time-r.at)/.18)),swing=Math.min(1,Math.max(0,1-(r.until-g.time)/.08));return {lean:side*(-.055*progress+.215*swing*swing),compression:.025*progress+.105*swing*swing};}
- const age=g.time-(slam?.at??-99);if(age>=0&&age<.24){const recovery=1-Math.min(1,Math.max(0,(age-.1)/.14)),side=Math.cos(slam.angle)<0?-1:1;return {lean:side*.16*recovery,compression:.13*recovery};}
- return {lean:0,compression:0};
-}
 const ground=(camera,x,y,h=0)=>camera.worldToScreen({x,y},h);
 const path=(c,camera,points)=>{c.beginPath();points.forEach((p,i)=>{const q=ground(camera,p.x,p.y);if(i)c.lineTo(q.x,q.y);else c.moveTo(q.x,q.y);});};
 const fanArc=(a,r,reverse=false)=>Array.from({length:41},(_,i)=>{const angle=a.angle-a.spread/2+a.spread*(reverse?40-i:i)/40;return{x:a.x+Math.cos(angle)*r,y:a.y+Math.sin(angle)*r};});
@@ -37,7 +30,7 @@ export function drawMaximScene(c,camera,g){
   else if(f.type==='maximImpact'||f.type==='maximDust'){
    const radius=(f.r||1)*(.3+.7*t),points=[];
    for(let i=0;i<=40;i++){const a=i/40*Math.PI*2;points.push({x:f.x+Math.cos(a)*radius,y:f.y+Math.sin(a)*radius});}
-   path(c,camera,points);c.strokeStyle='#edb368a0';c.lineWidth=2;c.stroke();
+   if(f.type==='maximImpact'){path(c,camera,points);c.strokeStyle='#edb368a0';c.lineWidth=2;c.stroke();}
    for(let i=0;i<14;i++){const a=i*2.4,r=radius*(.4+(i%3)*.2),at=ground(camera,f.x+Math.cos(a)*r,f.y+Math.sin(a)*r,.1+Math.sin(t*Math.PI)*.35);c.fillStyle=i%3?'#665449aa':'#f9b758bb';c.fillRect(at.x,at.y,2+(i%3),2+(i%3));}
   }
   c.restore();

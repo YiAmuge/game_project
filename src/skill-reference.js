@@ -62,7 +62,7 @@ function basicRanges(key,g,e,transformed){
  return[row('공격 범위','사거리 '+r+' · 직선'+(widths[key]?' 폭 '+number(widths[key]):''))];
 }
 function skillRanges(key,index,g,e,transformed,variant){
- if(key==='maxim'){if(index===0)return[row('발동','7.5 이동 · 최대 5초마다 1회')];if(index===2)return[row('돌진','최대 5초 · 커서 방향 조작'),row('충돌','자신 중심 반경 2.8')];if(index===3)return[row('충격파','사거리 12 · 부채꼴 150°')];}
+ if(key==='maxim'){if(index===0)return[row('발동','7.5 이동 · 최대 5초마다 1회')];if(index===2)return[row('돌진','최대 7초 · 커서 방향 조작'),row('충돌','자신 중심 반경 2.8')];if(index===3)return[row('충격파','사거리 12 · 부채꼴 150°')];}
  if(key==='mei'&&index===0)return[row('화상','같은 적 3회 피해 · 2초간 0.5초마다')];
  if(key==='mei'&&index===2)return[row('정주','지정 방향으로 4.5 돌진'),row('회축','자신 중심 반경 3.6 · 2초 내 재사용')];
  if(key==='mei'&&index===3)return[row('철산고','3.6 돌진 · 0.6초 정신집중'),row('회축 연계','1.3초 이내 · 거리 1.8 · 즉시 돌진')];

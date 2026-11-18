@@ -1,3 +1,4 @@
+import {MAXIM_HEAD,maximHammerPoint,maximWeaponState,drawMaximCurrent} from './maxim-weapon.js';
 import {maxLevel,storm} from './golden-bough.js';
 import {MEI} from './mei-data.js';
 import{GAHWAN}from'./gahwan.js';
@@ -284,11 +285,15 @@ export function drawDisarmChains(c,m,pivot){
  const count=Math.max(5,Math.min(24,Math.ceil(m.span/.15))),height=Math.min(.16,m.height*m.scale*.35+.04);c.save();c.lineWidth=.055;c.strokeStyle='#242b35';
  for(let i=0;i<count;i++){const x=m.span*(i/(count-1)-pivot),y=Math.sin(i*1.8)*height;c.beginPath();c.ellipse(x,y,.105,.045,i%2?.65:-.65,0,Math.PI*2);c.stroke();c.strokeStyle='#aeb8c4';c.lineWidth=.025;c.stroke();c.strokeStyle='#242b35';c.lineWidth=.055;}c.restore();
 }
-export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0,disabled=false}={}){
+export function drawWeapon(c,key,length,{x=0,y=0,rotation=0,pivot=0,straighten=0,disabled=false,headScale=1}={}){
  const m=weaponGeometry(key,length);if(!m)return false;const f=m.frame,image=loadAtlas(f.sheet);if(!image.complete||!image.naturalWidth)return false;
  c.save();if(disabled)c.filter='grayscale(1) brightness(.7)';c.imageSmoothingEnabled=false;c.translate(x,y);c.rotate(rotation);c.translate((.5-pivot)*m.span,0);c.rotate(m.angle);c.scale(m.scale,m.scale);
  let dx=-m.width/2;
- if(key==='gregorClaw'&&straighten>0){
+ if(key==='maximHammer'&&headScale!==1){
+  const {joint,axis}=MAXIM_HEAD;
+  c.drawImage(image,f.x,f.y,joint,f.h,dx,-f.h/2,joint,f.h);
+  c.drawImage(image,f.x+joint,f.y,f.w-joint,f.h,dx+joint,-f.h/2+axis*(1-headScale),(f.w-joint)*headScale,f.h*headScale);
+ }else if(key==='gregorClaw'&&straighten>0){
   c.scale(1,WEAPON_ART.gregor[1]/length);
   for(let sx=0;sx<f.w;sx+=3){const w=Math.min(3,f.w-sx),u=(sx+w/2)/f.w,bend=(gregorCenterline(u)-.5)*f.h*straighten;c.drawImage(image,f.x+sx,f.y,w,f.h,-f.w/2+sx,-f.h/2-bend,w+.15,f.h);}
  }else if(m.extension){
@@ -350,23 +355,24 @@ export function ezraWeaponPose(g,e,p=equipmentPose(g,e),camera){
 }
 export const MAXIM_SLAM_SWING=.08;
 export const MAXIM_CRYSTAL_TIP=[.84,.985];
-export function maximCrystalVector(){return gripSourcePoint(MAXIM_CRYSTAL_TIP,weaponGeometry('maximHammer',WEAPON_ART.maxim[1]),gripPivot('maxim'));}
-export function maximCrystalOrientation(axis,flip){const tip=maximCrystalVector();return {flip,angle:Math.atan2(Math.sin(axis),flip*Math.cos(axis))-Math.atan2(tip.y,tip.x)};}
-export function maximGroundPose(g,e,p,camera,age,angle){
- const point=frontGroundPoint(e,p,camera,{distance:1,angle}),tip=maximCrystalVector(),reach=Math.hypot(tip.x,tip.y),down=weaponSwingProgress(age/.2),recover=Math.max(0,Math.min(1,(age-.18)/.14)),flip=Math.cos(angle)<0?-1:1,startAngle=-Math.PI/2-flip*.32;
+export function maximCrystalVector(headScale=1){return gripSourcePoint(maximHammerPoint(MAXIM_CRYSTAL_TIP,headScale),weaponGeometry('maximHammer',WEAPON_ART.maxim[1]),gripPivot('maxim'));}
+export function maximCrystalOrientation(axis,flip,headScale=1){const tip=maximCrystalVector(headScale);return {flip,angle:Math.atan2(Math.sin(axis),flip*Math.cos(axis))-Math.atan2(tip.y,tip.x)};}
+export function maximGroundPose(g,e,p,camera,age,angle,headScale=1){
+ const point=frontGroundPoint(e,p,camera,{distance:1,angle}),tip=maximCrystalVector(headScale),reach=Math.hypot(tip.x,tip.y),down=weaponSwingProgress(age/.2),recover=Math.max(0,Math.min(1,(age-.18)/.14)),flip=Math.cos(angle)<0?-1:1,startAngle=-Math.PI/2-flip*.32;
  const start={x:p.right.x-flip*.18+Math.cos(startAngle)*reach,y:p.right.y-.65+Math.sin(startAngle)*reach},turn=Math.atan2(Math.sin(Math.PI/2-startAngle),Math.cos(Math.PI/2-startAngle)),axis=startAngle+turn*down,headX=start.x+(point.x-start.x)*down,headY=start.y+(point.y+.02-start.y)*down**2-.55*recover;
- return {hand:{x:headX-Math.cos(axis)*reach,y:headY-Math.sin(axis)*reach},angle:axis,orientation:maximCrystalOrientation(axis,flip),headY,groundY:point.y,impactPoint:point,mode:null,part:'maxim-slam',trail:true};
+ return {hand:{x:headX-Math.cos(axis)*reach,y:headY-Math.sin(axis)*reach},angle:axis,orientation:maximCrystalOrientation(axis,flip,headScale),headY,groundY:point.y,impactPoint:point,mode:null,part:'maxim-slam',trail:true};
 }
-export function maximWeaponPose(g,e,p=equipmentPose(g,e),camera){
+function maximPose(g,e,p,camera,headScale){
  const r=e.state.maximR,side=Math.cos(r?.angle??p.facing)<0?-1:1;
- if(r){const age=g.time-r.at,remaining=r.until-g.time;if(remaining<MAXIM_SLAM_SWING)return maximGroundPose(g,e,p,camera,MAXIM_SLAM_SWING-remaining,r.angle);const t=Math.min(1,age/.18),u=t*t*(3-2*t),tip=maximCrystalVector(),initial=r.angle+side*Math.atan2(tip.y,tip.x),end=-Math.PI/2-side*.32,turn=Math.atan2(Math.sin(end-initial),Math.cos(end-initial)),angle=initial+turn*u;return {hand:{x:p.right.x-side*.18*u,y:p.right.y-.65*u},angle,orientation:maximCrystalOrientation(angle,side),mode:null,part:'maxim-raise',trail:false};}
- const slam=e.state.maximSlam,age=g.time-(slam?.at??-99);if(age>=0&&age<.24)return maximGroundPose(g,e,p,camera,age+MAXIM_SLAM_SWING,slam.angle);
- const a=e.state.maximAttack,tip=maximCrystalVector(),reach=Math.hypot(tip.x,tip.y),center={x:p.origin.x,y:p.origin.y-.78};
- if(a?.near&&g.time>=a.at&&g.time<a.until){const progress=(g.time-a.at)/(a.until-a.at),flip=Math.cos(a.angle)<0?-1:1,angle=a.angle+(swingProgress(progress)-.5)*Math.PI*flip;return {hand:{x:center.x+Math.cos(angle)*(2-reach),y:center.y+Math.sin(angle)*(2-reach)},angle,orientation:maximCrystalOrientation(angle,flip),mode:null,progress,part:'maxim-sweep',trail:true};}
- if(e.motion?.actionTag==='maximBasic'&&a){const progress=Math.min(1,(g.time-a.at)/.28),extend=.95+.65*weaponStrikePulse(progress);return {hand:{x:center.x+Math.cos(a.angle)*(extend-reach),y:center.y+Math.sin(a.angle)*(extend-reach)},angle:a.angle,orientation:maximCrystalOrientation(a.angle,side),mode:null,progress,part:'maxim-ram',trail:false};}
- if(e.state.maximQ)return {angle:p.facing,orientation:maximCrystalOrientation(p.facing,side),mode:null,part:'maxim-rush',trail:false};
+ if(r){const age=g.time-r.at,remaining=r.until-g.time;if(remaining<MAXIM_SLAM_SWING)return maximGroundPose(g,e,p,camera,MAXIM_SLAM_SWING-remaining,r.angle,headScale);const t=Math.min(1,age/Math.max(.01,r.until-r.at-MAXIM_SLAM_SWING-.04)),u=t*t*(3-2*t),tip=maximCrystalVector(headScale),initial=r.angle+side*Math.atan2(tip.y,tip.x),end=-Math.PI/2-side*.32,turn=Math.atan2(Math.sin(end-initial),Math.cos(end-initial)),angle=initial+turn*u;return {hand:{x:p.right.x-side*.18*u,y:p.right.y-.65*u},angle,orientation:maximCrystalOrientation(angle,side,headScale),mode:null,part:'maxim-raise',trail:false};}
+ const slam=e.state.maximSlam,age=g.time-(slam?.at??-99);if(age>=0&&age<.24)return maximGroundPose(g,e,p,camera,age+MAXIM_SLAM_SWING,slam.angle,headScale);
+ const a=e.state.maximAttack,tip=maximCrystalVector(headScale),reach=Math.hypot(tip.x,tip.y),center={x:p.origin.x,y:p.origin.y-.78};
+ if(a?.near&&g.time>=a.at&&g.time<a.until){const progress=(g.time-a.at)/(a.until-a.at),flip=Math.cos(a.angle)<0?-1:1,angle=a.angle+(swingProgress(progress)-.5)*Math.PI*flip;return {hand:{x:center.x+Math.cos(angle)*(2-reach),y:center.y+Math.sin(angle)*(2-reach)},angle,orientation:maximCrystalOrientation(angle,flip,headScale),mode:null,progress,part:'maxim-sweep',trail:true};}
+ if(e.motion?.actionTag==='maximBasic'&&a){const progress=Math.min(1,(g.time-a.at)/.28),extend=.95+.65*weaponStrikePulse(progress);return {hand:{x:center.x+Math.cos(a.angle)*(extend-reach),y:center.y+Math.sin(a.angle)*(extend-reach)},angle:a.angle,orientation:maximCrystalOrientation(a.angle,side,headScale),mode:null,progress,part:'maxim-ram',trail:false};}
+ if(e.state.maximQ)return {angle:p.facing,orientation:maximCrystalOrientation(p.facing,side,headScale),mode:null,part:'maxim-rush',trail:false};
  return {angle:p.facing,mode:null,part:'maxim-hammer',trail:false};
 }
+export function maximWeaponPose(g,e,p=equipmentPose(g,e),camera){const appearance=maximWeaponState(g,e);return {...maximPose(g,e,p,camera,appearance.headScale),...appearance};}
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  if(e.key==='mei'){drawMeiFists(r,e,g,lift);return true;}
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
@@ -376,10 +382,10 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  if(e.key==='nosferatu'&&g.buff(e,'bloodfiend')){drawBloodSweep(r,e,g,lift,'front');return true;}
  if(e.key==='yan'&&g.buff(e,'yanDistorted')&&!e.previewStance||e.key==='nelly'&&e.visualCast?.slot==='q'&&g.time-e.visualCast.at>=0&&g.time-e.visualCast.at<.24)return true;
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
- const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0,orientation}={})=>{
+ const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0,orientation,headScale=1,hands,offHandOpacity=1,energy=0}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);if(orientation){c.scale(orientation.flip,1);c.rotate(orientation.angle);}else orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();if(key==='ezraDrill')drawEzraDrillEffect(c,g,e,m,pivot);drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip});
-  r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},{x:m.span*(1-pivot),y:0},trail);c.restore();
+  c.save();c.translate(hand.x,hand.y);if(orientation){c.scale(orientation.flip,1);c.rotate(orientation.angle);}else orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip,hands,offHandOpacity});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,headScale,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();if(key==='maximHammer')drawMaximCurrent(c,loadAtlas(m.frame.sheet),m,pivot,headScale,energy,g.time);if(key==='ezraDrill')drawEzraDrillEffect(c,g,e,m,pivot);drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip,hands,offHandOpacity});
+  r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},key==='maximHammer'?maximCrystalVector(headScale):{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){const body=FRAMES.yanDistorted,height=2.1*body.heightScale,right=height*body.w/body.h*(1-body.foot[0]);c.save();c.translate(p.origin.x+right+1.72,p.origin.y-.6);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
  if(e.key==='queen'){const side=p.flip,hand={x:p.origin.x+side*.48,y:p.origin.y-.88};held(entry[0],entry[1],hand,attacking?p.angle:p.resting?(side>0?-1.12:Math.PI+1.12):p.facing,.42,{mode:attacking?'swing':null,progress:p.swing,trail:attacking});return true;}
@@ -390,7 +396,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }
  if(e.key==='moses'){const pose=mosesWeaponPose(g,e,p);held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:null,trail:false,gripY:pose.gripY});return true;}
  if(e.key==='gahwan'&&e.state.gahwanR){const pose=gahwanChargePose(g,e,p);c.save();c.shadowColor='#ff193e';c.shadowBlur=14;held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:null,trail:false,centerGrip:true});c.restore();return true;}
- if(e.key==='maxim'){const pose=maximWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand??p.right,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust||0,trail:pose.trail,part:pose.part,orientation:pose.orientation});return true;}
+ if(e.key==='maxim'){const pose=maximWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand??p.right,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust||0,trail:pose.trail,part:pose.part,orientation:pose.orientation,headScale:pose.headScale,hands:pose.hands,offHandOpacity:pose.offHandOpacity,energy:pose.energy});return true;}
  if(e.key==='ezra'){const pose=ezraWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,gripY:pose.gripY,flipY:pose.flipY,part:pose.part});return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}
  if(e.key==='kromer'){
