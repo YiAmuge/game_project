@@ -1,4 +1,5 @@
 import{GAHWAN}from'./gahwan.js';
+import {drawChargeFan} from './charge-telegraph.js';
 
 function ground(c,camera,p,draw){
  const o=camera.worldToScreen(p,.12),x=camera.worldToScreen({x:p.x+1,y:p.y},.12),y=camera.worldToScreen({x:p.x,y:p.y+1},.12);
@@ -8,7 +9,7 @@ function sector(c,r){c.beginPath();c.moveTo(0,0);c.arc(0,0,r,-Math.PI/2,Math.PI/
 export function drawGahwanEffects(c,camera,g){
  for(const e of g.champions())if(e.key==='gahwan'&&e.alive&&e.state.gahwanR&&g.visibleTo(g.player.team,e)&&!g.hidden(e)){
   const r=e.state.gahwanR,progress=Math.min(1,(g.time-r.at)/GAHWAN.charge);
-  ground(c,camera,e,()=>{c.rotate(r.angle);sector(c,GAHWAN.range);c.fillStyle='#9c15301c';c.fill();c.strokeStyle='#e44966b0';c.lineWidth=.035;c.stroke();c.clip();c.strokeStyle='#ff3e6077';c.lineWidth=.04;c.beginPath();c.arc(0,0,GAHWAN.range*progress,-Math.PI/2,Math.PI/2);c.stroke();});
+  drawChargeFan(c,camera,{x:e.x,y:e.y,angle:r.angle,range:GAHWAN.range,spread:GAHWAN.angle},progress);
  }
  for(const f of g.effects){
   if(!['gahwanCut','gahwanWave'].includes(f.type)||f.life<=0)continue;const e=g.units.find(e=>e.id===f.source);if(e&&!g.visibleTo(g.player.team,e))continue;

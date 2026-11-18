@@ -1,3 +1,4 @@
+import {MAXIM} from './maxim-data.js';
 import {MAXIM_HEAD,maximHammerPoint,maximWeaponState,drawMaximCurrent} from './maxim-weapon.js';
 import {maxLevel,storm} from './golden-bough.js';
 import {MEI} from './mei-data.js';
@@ -367,7 +368,7 @@ function maximPose(g,e,p,camera,headScale){
  if(r){const age=g.time-r.at,remaining=r.until-g.time;if(remaining<MAXIM_SLAM_SWING)return maximGroundPose(g,e,p,camera,MAXIM_SLAM_SWING-remaining,r.angle,headScale);const t=Math.min(1,age/Math.max(.01,r.until-r.at-MAXIM_SLAM_SWING-.04)),u=t*t*(3-2*t),tip=maximCrystalVector(headScale),initial=r.angle+side*Math.atan2(tip.y,tip.x),end=-Math.PI/2-side*.32,turn=Math.atan2(Math.sin(end-initial),Math.cos(end-initial)),angle=initial+turn*u;return {hand:{x:p.right.x-side*.18*u,y:p.right.y-.65*u},angle,orientation:maximCrystalOrientation(angle,side,headScale),mode:null,part:'maxim-raise',trail:false};}
  const slam=e.state.maximSlam,age=g.time-(slam?.at??-99);if(age>=0&&age<.24)return maximGroundPose(g,e,p,camera,age+MAXIM_SLAM_SWING,slam.angle,headScale);
  const a=e.state.maximAttack,tip=maximCrystalVector(headScale),reach=Math.hypot(tip.x,tip.y),center={x:p.origin.x,y:p.origin.y-.78};
- if(a?.near&&g.time>=a.at&&g.time<a.until){const progress=(g.time-a.at)/(a.until-a.at),flip=Math.cos(a.angle)<0?-1:1,angle=a.angle+(swingProgress(progress)-.5)*Math.PI*flip;return {hand:{x:center.x+Math.cos(angle)*(2-reach),y:center.y+Math.sin(angle)*(2-reach)},angle,orientation:maximCrystalOrientation(angle,flip,headScale),mode:null,progress,part:'maxim-sweep',trail:true};}
+ if(a?.near&&g.time>=a.at&&g.time<a.until){const progress=(g.time-a.at)/(a.until-a.at),flip=Math.cos(a.angle)<0?-1:1,angle=a.angle+(swingProgress(progress)-.5)*Math.PI*flip;return {hand:{x:center.x+Math.cos(angle)*(MAXIM.nearRange-reach),y:center.y+Math.sin(angle)*(MAXIM.nearRange-reach)},angle,orientation:maximCrystalOrientation(angle,flip,headScale),mode:null,progress,part:'maxim-sweep',trail:true};}
  if(e.motion?.actionTag==='maximBasic'&&a){const progress=Math.min(1,(g.time-a.at)/.28),extend=.95+.65*weaponStrikePulse(progress);return {hand:{x:center.x+Math.cos(a.angle)*(extend-reach),y:center.y+Math.sin(a.angle)*(extend-reach)},angle:a.angle,orientation:maximCrystalOrientation(a.angle,side,headScale),mode:null,progress,part:'maxim-ram',trail:false};}
  if(e.state.maximQ)return {angle:p.facing,orientation:maximCrystalOrientation(p.facing,side,headScale),mode:null,part:'maxim-rush',trail:false};
  return {angle:p.facing,mode:null,part:'maxim-hammer',trail:false};

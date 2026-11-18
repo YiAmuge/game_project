@@ -1,3 +1,4 @@
+import {isTextEntry,syncEscapeLock} from './keyboard-input.js';
 import{RUNTIME_CHAMPIONS}from'./data.js';
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 import{cleanChat}from'./chat-wire.js';
@@ -12,15 +13,15 @@ export class MatchChat{
   this.editor.querySelector('#chat-close').onclick=()=>this.close();this.editor.querySelector('form').onsubmit=e=>{e.preventDefault();this.submit();};
   window.addEventListener('keydown',e=>{if(!this.api.playing()||e.isComposing)return;
    if(this.opened){if(e.code==='Escape'||e.code==='Enter'){e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape')this.close();else this.submit();}else e.stopImmediatePropagation();return;}
-   if(e.code==='Enter'&&!e.repeat&&!e.target.closest?.('input,textarea,select,[contenteditable=true]')){e.preventDefault();e.stopImmediatePropagation();this.open();}
+   if(e.code==='Enter'&&!e.repeat&&!isTextEntry(e.target)&&e.target.tagName!=='SELECT'){e.preventDefault();e.stopImmediatePropagation();this.open();}
   },true);
   const resize=()=>this.position();window.visualViewport?.addEventListener('resize',resize);window.visualViewport?.addEventListener('scroll',resize);window.addEventListener('resize',resize);
  }
  receive(m){if(!m||!m.id||this.ids.has(m.id))return;this.ids.add(m.id);this.messages.push({...m,type:'chat'});if(this.messages.length>100){this.ids.delete(this.messages[0].id);this.messages.shift();}this.render();}
  open(){if(this.opened||!this.api.playing()||this.api.moving())return;this.api.clear();this.opened=true;this.editor.classList.remove('hidden');document.body.classList.add('chat-open');this.position();this.render();this.input.focus({preventScroll:true});
-  if(document.fullscreenElement&&navigator.keyboard?.lock)navigator.keyboard.lock(['Escape']).then(()=>{if(!this.opened)navigator.keyboard.unlock();}).catch(()=>{});
+  syncEscapeLock();
  }
- close(){if(!this.opened)return;this.opened=false;this.input.value='';this.input.blur();this.editor.classList.add('hidden');document.body.classList.remove('chat-open');navigator.keyboard?.unlock?.();this.api.clear();}
+ close(){if(!this.opened)return;this.opened=false;this.input.value='';this.input.blur();this.editor.classList.add('hidden');document.body.classList.remove('chat-open');syncEscapeLock();this.api.clear();document.getElementById('arena')?.focus({preventScroll:true});}
  submit(){const text=cleanChat(this.input.value);if(text){const online=this.api.online(),g=this.api.game();if(online?.room){if(!online.send({type:'chat',text}))return;}else this.receive({id:'local-'+ ++this.localSerial,text,nickname:g.player.nickname||'나',champion:g.player.key,team:g.player.team,localGame:g,at:Date.now()});}this.close();}
  entries(){const g=this.api.game(),match=this.api.online()?.room?.match?.id;return[...this.messages.filter(m=>match?m.matchId===match:m.localGame===g),...this.system].sort((a,b)=>a.at-b.at);}
  tick(){const g=this.api.game(),visible=this.api.playing()&&!g.presentation;this.root.classList.toggle('hidden',!visible);if(!this.api.playing()&&this.opened)this.close();if(!visible)return;

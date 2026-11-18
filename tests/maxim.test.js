@@ -1,3 +1,4 @@
+import {SkillVFX} from '../src/skill-vfx.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -47,7 +48,7 @@ test('forced movement and respawn do not grant Rhino distance or shields',()=>{
  const{g,p}=arena();const from={x:p.x,y:p.y};p.x+=20;M.moved(g,p,from,{forced:true});near(g.shield(p),0);assert.equal(p.state.rhinoDistance,undefined);g.kill(p,p);p.respawnAt=g.time+.01;run(g,.02);near(g.shield(p),0);
 });
 test('near basic consumes one round and hits the exact forward semicircle for 200 damage',()=>{
- const{g,p}=arena(),front=target(g,41.5),side=target(g,40,21.9),back=target(g,39),far=target(g,42.2,20,{radius:.01});assert.ok(g.attack(p,{x:42,y:20}));assert.equal(p.ammo,2);assert.equal(p.motion,undefined);near(100000-front.hp,damage(g,p,200));near(100000-side.hp,damage(g,p,200));near(back.hp,100000);near(far.hp,100000);assert.equal(g.attack(p,front),false);near(p.attackCd,.7);
+ const{g,p}=arena(),front=target(g,42.45),side=target(g,40,22.45),back=target(g,39),far=target(g,42.7,20,{radius:.01});assert.ok(g.attack(p,{x:42.5,y:20}));assert.equal(p.ammo,2);assert.equal(p.motion,undefined);near(100000-front.hp,damage(g,p,200));near(100000-side.hp,damage(g,p,200));near(back.hp,100000);near(far.hp,100000);assert.equal(g.attack(p,front),false);near(p.attackCd,.7);
 });
 test('far basic drives through enemies, hits each once for 155 and ends at the designated distance',()=>{
  const{g,p}=arena(),a=target(g,41.5),b=target(g,43),off=target(g,42,22);assert.ok(g.attack(p,{x:44.5,y:20}));assert.equal(p.motion.actionTag,'maximBasic');run(g,.3);near(p.x,44.5,.01);near(100000-a.hp,damage(g,p,155));near(100000-b.hp,damage(g,p,155));near(off.hp,100000);assert.equal(p.ammo,2);
@@ -59,7 +60,7 @@ test('normal reload restores one round every 0.9 seconds after attack recovery',
  const{g,p}=arena();g.attack(p,{x:41,y:20});run(g,1.59);assert.equal(p.ammo,2);run(g,.02);assert.equal(p.ammo,3);
 });
 test('rush briefly slows its startup, gains fifteen percent per tenth second and lasts seven seconds',()=>{
- const{g,p}=arena();assert.ok(g.cast(p,'q',g.input.aim));near(g.speed(p),.8);g.time=.049;near(g.speed(p),.8);g.time=.05;near(g.speed(p),4);g.time=.099;near(g.speed(p),4);g.time=.1;near(g.speed(p),4.6);g.time=1;near(g.speed(p),10);g.time=2;near(g.speed(p),16);g.time=6.9;near(g.speed(p),16);g.time=0;g.input.aim={x:179,y:20};run(g,7.01);assert.equal(p.state.maximQ,undefined);assert.equal(p.motion,undefined);near(g.speed(p),4);near(p.qCd,10.99,.01);
+ const{g,p}=arena();assert.ok(g.cast(p,'q',g.input.aim));near(g.speed(p),.8);g.time=.049;near(g.speed(p),.8);g.time=.05;near(g.speed(p),4);g.time=.099;near(g.speed(p),4);g.time=.1;near(g.speed(p),4.6);g.time=1;near(g.speed(p),10);g.time=2;near(g.speed(p),10);g.time=6.9;near(g.speed(p),10);g.time=0;g.input.aim={x:179,y:20};run(g,7.01);assert.equal(p.state.maximQ,undefined);assert.equal(p.motion,undefined);near(g.speed(p),4);near(p.qCd,10.99,.01);
 });
 test('rush follows cursor changes and blocks other actions until released',()=>{
  const{g,p}=arena();g.cast(p,'q',g.input.aim);assert.equal(g.attack(p,{x:41,y:20}),false);assert.equal(g.cast(p,'r',g.input.aim),false);assert.equal(g.recall(p),false);run(g,.2);const x=p.x;g.input.aim={x:p.x,y:80};run(g,.2);near(p.x,x,.03);assert.ok(p.y>20.8);assert.ok(M.release(g,p));assert.equal(p.motion,undefined);assert.equal(M.release(g,p),false);near(g.speed(p),4);
@@ -101,7 +102,7 @@ test('shockwave bounds stay identical to the hit fan at every animation stage an
  }
 });
 test('crystal tip leads the near swing and ram for all aim angles',()=>{
- for(const angle of [0,Math.PI/2,Math.PI,-Math.PI/2,1.2])for(const isNear of [true,false]){const{g,p}=arena();const radius=isNear?1.5:4;g.attack(p,{x:p.x+Math.cos(angle)*radius,y:p.y+Math.sin(angle)*radius});g.time=.06;const body=equipmentPose(g,p),pose=maximWeaponPose(g,p,body),tip=crystal(pose),center={x:body.origin.x,y:body.origin.y-.78};near((tip.x-center.x)*Math.sin(pose.angle)-(tip.y-center.y)*Math.cos(pose.angle),0);if(isNear)near(Math.hypot(tip.x-center.x,tip.y-center.y),2);else assert.ok(Math.hypot(tip.x-center.x,tip.y-center.y)>1.5);}
+ for(const angle of [0,Math.PI/2,Math.PI,-Math.PI/2,1.2])for(const isNear of [true,false]){const{g,p}=arena();const radius=isNear?1.5:4;g.attack(p,{x:p.x+Math.cos(angle)*radius,y:p.y+Math.sin(angle)*radius});g.time=.06;const body=equipmentPose(g,p),pose=maximWeaponPose(g,p,body),tip=crystal(pose),center={x:body.origin.x,y:body.origin.y-.78};near((tip.x-center.x)*Math.sin(pose.angle)-(tip.y-center.y)*Math.cos(pose.angle),0);if(isNear)near(Math.hypot(tip.x-center.x,tip.y-center.y),2.5);else assert.ok(Math.hypot(tip.x-center.x,tip.y-center.y)>1.5);}
 });
 test('ultimate raises the hammer and makes its orange crystal point contact the ground',()=>{
  for(const angle of [0,Math.PI,Math.PI/2,-Math.PI/2]){const{g,p}=arena();g.cast(p,'r',{x:p.x+Math.cos(angle)*10,y:p.y+Math.sin(angle)*10});g.time=.8;assert.equal(maximWeaponPose(g,p).part,'maxim-raise');g.time=1;const pose=maximWeaponPose(g,p),tip=crystal(pose);near(tip.x,pose.impactPoint.x);near(tip.y,pose.groundY+.02);}
@@ -156,11 +157,38 @@ test('head enlargement preserves shaft and pommel geometry and the actual drawn 
  }}finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });
 test('basic guide separates both ranges without drawing a dash-area polygon or an arrival ring',()=>{
- const{g,p}=arena(),circles=[],c={setLineDash(){}};preview({ctx:c,circle(x,y,r){circles.push(r);},polygon(){assert.fail('dash area should not be drawn');}},p,g);assert.deepEqual(circles,[2,4.5]);g.attack(p,{x:44.5,y:20});run(g,.3);
+ const{g,p}=arena(),circles=[],c={setLineDash(){}};preview({ctx:c,circle(x,y,r){circles.push(r);},polygon(){assert.fail('dash area should not be drawn');}},p,g);assert.deepEqual(circles,[2.5,4.5]);g.attack(p,{x:44.5,y:20});run(g,.3);
  let rings=0;drawMaximScene({save(){},restore(){},fillRect(){},beginPath(){rings++;}}, {worldToScreen:p=>p},g);assert.equal(rings,0);
 });
 test('rush collision reuses Heathcliff landing audio and the ultimate delivers a stronger version at impact',()=>{
  const{g,p}=arena();target(g,44,20,{champion:true});g.soundEvents=[];g.cast(p,'q',g.input.aim);run(g,1);const hits=g.soundEvents.filter(e=>e.kind==='slam');assert.equal(hits.length,1);const q=recordingProfile(soundVoice(hits[0]));assert.equal(q.id,'groundImpact');
  const heath=recordingProfile(soundVoice({...hits[0],key:'heathcliff',phase:'heath-landing'}));assert.deepEqual(q,heath);
  g.soundEvents=[];g.cast(p,'r',g.input.aim);run(g,.995);assert.ok(!g.soundEvents.some(e=>e.kind==='slam'));run(g,.01);const slams=g.soundEvents.filter(e=>e.kind==='slam');assert.equal(slams.length,1);const r=recordingProfile(soundVoice(slams[0]));assert.equal(r.id,'groundImpact');assert.ok(r.gain>q.gain);assert.ok(r.duration>q.duration);
+});
+
+test('aiming at exactly 2.5 swings; aiming past 2.5 starts the dash',()=>{
+ for(const [length,dashes] of [[2.5,false],[2.5001,true]]){
+  const{g,p}=arena(),t=target(g,42);g.attack(p,{x:p.x+length,y:p.y});assert.equal(p.motion?.actionTag==='maximBasic',dashes);run(g,.2);near(100000-t.hp,damage(g,p,dashes?155:200));
+ }
+});
+test('ultimate charge keeps its full fan visible while its inner arc advances, then clears on interruption',()=>{
+ const{g,p}=arena();g.cast(p,'r',g.input.aim);
+ for(const progress of [0,.25,.75,.995]){
+  g.time=progress;p.x=40+progress;const arcs=[],origins=[];
+  const c={save(){},restore(){},translate(x,y){origins.push([x,y]);},transform(){},rotate(a){near(a,0);},beginPath(){},moveTo(){},arc(x,y,r,a,b){arcs.push({r,a,b});},closePath(){},fill(){},stroke(){},clip(){}};
+  drawMaximScene(c,{worldToScreen:p=>p},g);assert.equal(arcs.length,2);near(arcs[0].r,12);near(arcs[0].b-arcs[0].a,150*Math.PI/180);near(arcs[1].r,12*progress);assert.deepEqual(origins,[[p.x,p.y]]);
+ }
+ g.status(p,'stun',1,1,p);M.tick(g,p);drawMaximScene({save(){assert.fail('cancelled charge must not render');}},{worldToScreen:p=>p},g);
+});
+
+test('dash basics never create an automatic full-range attack field, including empty swings and hits',()=>{
+ const camera={width:1920,height:1200,worldToScreen:p=>({x:p.x*20,y:p.y*20})};
+ for(const withTarget of [false,true]){
+  const{g,p}=arena(),v=new SkillVFX(),t=withTarget?target(g,42):null;v.sync(g,camera);g.attack(p,{x:44.5,y:20});v.sync(g,camera);
+  for(let i=0;i<30;i++){g.step(.01);v.sync(g,camera);assert.ok(v.emitters.every(e=>!e.shape),JSON.stringify(v.emitters.map(e=>e.shape)));}
+  if(t){assert.ok(t.hp<100000);assert.ok(v.emitters.some(e=>e.body),'real contact still shows hit effects');}
+ }
+});
+test('near hammer swings retain their real 2.5-range semicircle effect',()=>{
+ const{g,p}=arena(),v=new SkillVFX();g.attack(p,{x:42.5,y:20});v.sync(g,{width:1920,height:1200,worldToScreen:p=>({x:p.x*20,y:p.y*20})});const slash=v.emitters.find(e=>e.kind==='slash'&&e.shape);assert.ok(slash);near(slash.shape.range,2.5);near(slash.shape.spread,Math.PI);
 });

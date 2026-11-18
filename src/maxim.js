@@ -57,7 +57,6 @@ export function cast(g,e,slot,point,d){
   return;
  }
  delete e.state.maximRFade;e.state.maximR={at:g.time,until:g.time+P.rWindup,angle:Math.atan2(d.y,d.x)};e.channelUntil=g.time+P.rWindup;sound(g,e,'charge','r','maxim-raise');
- fx(g,e,'maximWindup',{area:maximUltimateArea(e,e.facing),r:P.rRange,spread:P.rAngle,life:P.rWindup,maxLife:P.rWindup});
 }
 export function prepare(g,e,dt){
  if(!rushing(e))return;const q=e.state.maximQ,m=e.motion;

@@ -110,7 +110,8 @@ export class SkillVFX {
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
-   if(!e.attackSerial||e.trainingDummy||['moses','ezra','dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
+   // Maxim emits its near swing explicitly. Its ram has contact effects only.
+   if(!e.attackSerial||e.trainingDummy||['maxim','moses','ezra','dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
    const attack=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'impact'})[attack];if(!kind)continue;
    const s=combatStyle(e.key,game,e,{kind:'basic'}),angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),shape={kind:attack==='sweep'?'circle':attack==='punch'?'rect':'cone',range:radius,width:radius,spread:basicFanAngle(e.key),angle};
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});

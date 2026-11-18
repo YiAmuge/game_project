@@ -1,3 +1,4 @@
+import {MAXIM} from './maxim-data.js';
 import {CHANGED_ULTIMATES,ultimateNotes,cooldown as boughCooldown} from './golden-bough.js';
 import * as AhabEgo from './ahab-ego.js';
 import {GASHARPOON_NAME,GASHARPOON_TEXT,GASHARPOON_SKILLS as GAS} from './ahab-ego-data.js';
@@ -49,7 +50,7 @@ function basicRanges(key,g,e,transformed){
  if(key==='yi')return[row('기본','사거리 '+r+' · 관통 파편 3개'),row('오감도','사거리 '+number(range+1)+' · 관통 파편 7개')];
  if(key==='gahwan')return[row('전체 공격','사거리 '+r+' · 직선 폭 1.5'),row('근접 추가 공격','같은 직선 안 거리 3.25 이내')];
  if(key==='rudolph')return[row('공격 범위','중심점 사거리 '+r+' · 반경 2.1675')];
- if(key==='maxim')return[row('돌진','지정 위치까지 '+r),row('근접 휘두르기','조준 거리 2 이내 · 반경 2 · 전방 반원')];
+ if(key==='maxim')return[row('돌진','조준 거리 '+number(MAXIM.nearRange)+' 초과 · 지정 위치까지 '+r),row('근접 휘두르기','조준 거리 '+number(MAXIM.nearRange)+' 이내 · 반경 '+number(MAXIM.nearRange)+' · 전방 반원')];
  if(key==='mei')return[row('돌진','지정 위치까지 '+r),row('연타','자신 중심 반경 1.6 · 탄창 수만큼')];
  if(key==='ahab')return[row('직격','사거리 '+r+' · 직선 투사체'),row('폭발','적중 지점 반경 2')];
  if(key==='honglu')return[row('공격 범위','자신 중심 반경 '+r)];
