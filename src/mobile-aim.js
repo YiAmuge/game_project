@@ -1,3 +1,5 @@
+import {dashBasic} from './skills.js';
+import {DASH_ATTACK_REACH} from './dash-hit.js';
 import * as Mei from './mei.js';
 import*as Ezra from'./ezra.js';
 import{distance,direction}from'./geometry.js';
@@ -9,7 +11,7 @@ export const ATTACK_CATEGORIES={champion:'챔피언',minion:'미니언',structur
 export const autoAimReach=spec=>(spec.range||0)+(spec.kind==='circle'||spec.kind==='self'?(spec.radius||0):spec.kind==='line'?(spec.impact||0):0);
 export const attackCategory=t=>t.kind==='champion'?'champion':['minion','trooper'].includes(t.kind)?'minion':['tower','core'].includes(t.kind)?'structure':t.kind==='neutral'?'creep':null;
 // Endpoint areas extend target acquisition, never the actual cast/projectile range.
-export const basicAimReach=(g,e)=>e.key==='ezra'?Ezra.attackReach(g,e):e.key==='nosferatu'&&!e.state?.bloodfiend?6.8+g.attackRange(e)-1.7:distorted(g,e)?YAN.handLeash:g.attackRange(e)+(e.key==='rudolph'?2.1675:e.key==='marton'?2.2:0);
+export const basicAimReach=(g,e)=>dashBasic(g,e)?(e.key==='ezra'?Ezra.attackReach(g,e):g.attackRange(e)+(e.key==='mei'?1.6:0))+DASH_ATTACK_REACH:e.key==='ezra'?Ezra.attackReach(g,e):e.key==='nosferatu'&&!e.state?.bloodfiend?6.8+(e.goldenBough?1.7:0)+g.attackRange(e)-1.7:distorted(g,e)?YAN.handLeash:g.attackRange(e)+(e.key==='rudolph'?2.1675:e.key==='marton'?2.2:0);
 export function mobileAttackTargets(g,e,range=basicAimReach(g,e),{ignoreWalls=false}={}){
  return g.units.filter(t=>t.alive&&g.hostile(e,t)&&!g.hidden(t)&&g.visibleTo(e.team,t)&&(ignoreWalls||g.clearLine(e,t))&&!g.locked(t)&&!t.returning&&!t.state?.posthumous&&!(t.invulnerableUntil>g.time)&&distance(e,t)<=range+(t.radius||0)+1e-8).sort((a,b)=>(b.kind==='champion')-(a.kind==='champion')||(a.kind==='champion'&&b.kind==='champion'?a.hp-b.hp:0)||distance(e,a)-distance(e,b)||a.id-b.id);
 }

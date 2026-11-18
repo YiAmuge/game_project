@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{basicFanAngle}from'./data.js';
 import { RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { distance,direction } from './geometry.js';
@@ -8,7 +9,7 @@ export const dongbaekRadius=hit=>DONGBAEK_R.minRadius+(DONGBAEK_R.maxRadius-DONG
 export function init(g,e){if(e.key==='dongbaek'){e.state.petals=3;e.state.petalReady=Infinity;}if(e.key==='dongrang'){e.totalHealingReceived=0;}}
 export function ultGrowth(e){const n=Math.floor((e.totalHealingReceived||0)/1000);return {radius:3.2+Math.min(2,Math.floor(n/3)*.1),damage:180+n*25};}
 export function validate(g,e,slot,p){
- if(e.key==='myo'&&slot==='q')return e.ammo>=1&&!g.buff(e,'rabbitFrenzy');
+ if(e.key==='myo'&&slot==='q')return (Effects.empowered(e)?(e.state.myoTacticalAmmo??g.ammoCap(e)):e.ammo)>=1&&!g.buff(e,'rabbitFrenzy');
  if(e.key==='dongrang'&&slot==='r')return !g.stat(e,'root')&&!g.blocked(p.x,p.y,e.radius);
  if(e.key==='dongrang'&&slot==='q')return !g.blocked(p.x,p.y,.15);
  return true;
@@ -17,7 +18,7 @@ export function beforeBasic(g,e){
  if(e.key==='myo'&&g.stat(e,'root'))return false;
  if(e.key==='dongbaek'){
   e.state.usedPetal=false;
-  if(e.ammo<1){if((e.state.petals??3)<1)return false;e.state.petals=(e.state.petals??3)-1;e.state.usedPetal=true;if(!Number.isFinite(e.state.petalReady))e.state.petalReady=g.time+10;e.ammo=1;e.qCd+=2.5;e.rCd+=2.5;}
+  if(e.ammo<1){if((e.state.petals??3)<1)return false;e.state.petals=(e.state.petals??3)-1;e.state.usedPetal=true;if(!Number.isFinite(e.state.petalReady))e.state.petalReady=g.time+(Effects.empowered(e)?3:10);e.ammo=1;e.qCd+=2.5;e.rCd+=2.5;}
  }
  return true;
 }
@@ -34,7 +35,7 @@ export function basic(g,e,p,d){
    const shield=g.shield(t),actual=g.deal(e,t,damage);if(actual>0||g.shield(t)<shield)hit=true;
   }
   if(hit){chain.n=Math.min(4,chain.n+1);chain.at=g.time;}
-  if(e.state.usedPetal&&e.state.petals===0)e.status.disarm={amount:1,until:g.time+2.85,theme:e.key};
+  if(e.state.usedPetal&&e.state.petals===0)e.status.disarm={amount:1,until:g.time+(Effects.empowered(e)?1.75:2.85),theme:e.key};
   g.effects.push({source:e.id,damageKind:'basic',type:'petalFan',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),spread:basicFanAngle(e.key),r:g.attackRange(e),shape:{kind:'cone',range:g.attackRange(e),spread:basicFanAngle(e.key),angle:Math.atan2(d.y,d.x)},theme:e.key,life:.48,maxLife:.48});return true;
  }
  if(e.key==='dongrang'){for(const z of g.zones)if(z.kind==='desireTree'&&z.source===e&&z.golden&&z.until>g.time&&distance(e,z)<=g.attackRange(e)&&g.clearLine(e,z)){const v=direction(e,z);if(v.x*d.x+v.y*d.y>=Math.cos(basicFanAngle(e.key)/2)){z.until=g.time;g.heal(e,e,e.maxHp*.07,false);}}g.zones=g.zones.filter(z=>z.until>g.time);g.cone(e,d,g.attackRange(e),1.9,260);return true;}
@@ -44,7 +45,7 @@ export function cast(g,e,slot,p,d){
  const s=e.state;
  if(e.key==='myo'){
   if(slot==='q'){
-   e.qCd=Math.max(e.qCd,.15);e.ammo-=1;e.attackCd=Math.max(e.attackCd,.35);e.lastAttackAt=g.time;
+   e.qCd=Math.max(e.qCd,.15);if(Effects.empowered(e))e.state.myoTacticalAmmo=(e.state.myoTacticalAmmo??g.ammoCap(e))-1;else e.ammo-=1;e.attackCd=Math.max(e.attackCd,.35);e.lastAttackAt=g.time;
    for(let i=0;i<4;i++)g.schedule(e,i*.075,()=>{const a=Math.atan2(d.y,d.x)+(i-1.5)*.045;e.state.myoShotAt=g.time;e.state.myoShotFacing=a;g.bullet(e,{x:Math.cos(a),y:Math.sin(a)},65,7,{slot:'q',speed:24,width:.14,onHit:t=>{if(t.kind==='champion'&&!g.debuffImmune?.(t)){t.state.rabbitMark??={};t.state.rabbitMark[e.id]=g.time+3;t.visuals.rabbitMark={until:g.time+3,theme:'myo'};}}});});
   }else{g.addBuff(e,'rabbitFrenzy',4.5,{copy:false});s.frenzyWas=true;e.ammo=Math.min(g.ammoCap(e),e.ammo+1);}return true;
  }
@@ -70,5 +71,5 @@ export function takedown(g,e,victim,direct){
 }
 export function tick(g,e){
  if(e.key==='myo'){if(e.state.frenzyWas&&!g.buff(e,'rabbitFrenzy'))e.ammo=Math.min(e.ammo,g.ammoCap(e));e.state.frenzyWas=g.buff(e,'rabbitFrenzy');}
- if(e.key==='dongbaek'){const s=e.state;s.petals??=3;s.petalReady??=Infinity;if(s.petals<3&&g.time+1e-8>=s.petalReady){s.petals=3;s.petalReady=Infinity;}}
+ if(e.key==='dongbaek'){const s=e.state;s.petals??=3;s.petalReady??=Infinity;if(Effects.empowered(e)){while(s.petals<3&&g.time+1e-8>=s.petalReady){s.petals++;s.petalReady=s.petals<3?s.petalReady+3:Infinity;}}else if(s.petals<3&&g.time+1e-8>=s.petalReady){s.petals=3;s.petalReady=Infinity;}}
 }

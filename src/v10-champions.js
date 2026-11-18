@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import { distance,direction } from './geometry.js';
 import { dash,area,dashLength } from './skills.js';
 import { canOccupy,settleBody } from './collision.js';
@@ -34,8 +35,8 @@ export function cast(g,e,slot,p,d){
    const candidates=[];area(g,e,e,STARBUCK.rRadius,0,t=>{const before=t.hp+g.shield(t);g.deal(e,t,STARBUCK.rDamage);if(t.kind==='champion'&&t.alive&&t.hp+g.shield(t)<before)candidates.push(t);});
    const target=candidates.sort((a,b)=>a.hp-b.hp||a.id-b.id)[0];
    if(target&&!(target.ccImmuneUntil>g.time)&&!(target.invulnerableUntil>g.time)){
-    g.status(target,'netCapture',1,STARBUCK.trapDuration,e);
-    if(g.stat(target,'netCapture'))target.state.netTrap={x:e.x,y:e.y,r:STARBUCK.rRadius,until:target.status.netCapture.until,source:e.id};
+    g.status(target,Effects.empowered(e)?'root':'netCapture',1,STARBUCK.trapDuration,e);
+    if(!Effects.empowered(e)&&g.stat(target,'netCapture'))target.state.netTrap={x:e.x,y:e.y,r:STARBUCK.rRadius,until:target.status.netCapture.until,source:e.id};
     g.status(target,'armorWeak',.1,STARBUCK.trapDuration,e);
    }
    e.qCd=0;e.ammo=g.ammoCap(e);e.reloadProgress=0;g.effects.push({type:'burst',x:e.x,y:e.y,r:STARBUCK.rRadius,theme:e.key,life:.6,maxLife:.6});

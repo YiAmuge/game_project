@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{distance,direction,segmentDistance}from'./geometry.js';
 import{canOccupy,settleBody}from'./collision.js';
 import{carried}from'./attachments.js';
@@ -12,7 +13,7 @@ export function basic(g,e,d){const to={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.at
 export function afterDamage(g,e,t,actual,proc,kind,absorbed=0){
  if(!proc||actual+absorbed<=0||e.key!=='kromer'||t.kind!=='champion'||e.team===t.team||!t.alive||t.hp<=0)return;
  const marks=t.state.kromerNails??={},old=marks[e.id],n=old?.until>g.time?old.n:0;
- if(n>=2){delete marks[e.id];g.effects.push({type:'kromerNailBreak',source:e.id,target:t.id,x:t.x,y:t.y,life:.32,maxLife:.32});g.emitSound?.('hit',e,{phase:'kromer-nail-break',element:'blood'});const dealt=g.deal(e,t,t.maxHp*KROMER.nailRatio,{proc:false,rawPower:true,damageKind:kind});g.heal(e,e,dealt,false);}
+ if(n>=2){delete marks[e.id];g.effects.push({type:'kromerNailBreak',source:e.id,target:t.id,x:t.x,y:t.y,life:.32,maxLife:.32});g.emitSound?.('hit',e,{phase:'kromer-nail-break',element:'blood'});const dealt=g.deal(e,t,t.maxHp*(KROMER.nailRatio+(Effects.empowered(e)?.02:0)),{proc:false,fixed:Effects.empowered(e),rawPower:true,damageKind:kind});g.heal(e,e,dealt,false);}
  else if(!g.debuffImmune(t)){marks[e.id]={n:n+1,until:g.time+KROMER.nailDuration};g.triggerDisrupt(e,t);}
 }
 function startGrab(g,e,t,d){
@@ -34,7 +35,7 @@ export function cast(g,e,slot,p,d){
  if(slot==='q'){
   const target=qTarget(g,e);
   if(target){delete e.state.kromerQMark;g.startMotion(e,direction(e,target),distance(e,target),{speed:30,maxSpeed:30,ignoreWalls:true,phaseEnemies:true,follow:target,stopDistance:e.radius+target.radius+.05,actionTag:'kromerQDash',onComplete:()=>{if(target.alive&&distance(e,target)<=e.radius+target.radius+.6){e.state.kromerQStrikeAt=g.time;e.state.kromerQStrikeFacing=Math.atan2(target.y-e.y,target.x-e.x);g.deal(e,target,KROMER.qDashDamage,{armorPen:KROMER.qPen});g.status(target,'stun',1,KROMER.qStun,e);}}});}
-  else{e.state.kromerThrownUntil=g.time+KROMER.qRange/24;g.bullet(e,d,KROMER.qDamage,KROMER.qRange,{speed:24,width:.22,championsOnly:true,theme:'kromerNail',beforeHit:(t,p)=>{p.beforeShield=g.shield(t);},onHit:(t,p,actual)=>{if(t.alive&&(actual>0||p.beforeShield>g.shield(t))){e.state.kromerQMark={targetId:t.id,until:g.time+KROMER.qMarkDuration};t.revealedUntil=Math.max(t.revealedUntil||0,g.time+KROMER.qMarkDuration);}e.state.kromerThrownUntil=g.time;},onEnd:()=>{e.state.kromerThrownUntil=g.time;}});}
+  else{e.state.kromerThrownUntil=g.time+(KROMER.qRange+(Effects.empowered(e)?1:0))/24;g.bullet(e,d,KROMER.qDamage,KROMER.qRange+(Effects.empowered(e)?1:0),{speed:24,width:.22,championsOnly:true,theme:'kromerNail',beforeHit:(t,p)=>{p.beforeShield=g.shield(t);},onHit:(t,p,actual)=>{if(t.alive&&(actual>0||p.beforeShield>g.shield(t))){e.state.kromerQMark={targetId:t.id,until:g.time+KROMER.qMarkDuration};t.revealedUntil=Math.max(t.revealedUntil||0,g.time+KROMER.qMarkDuration);}e.state.kromerThrownUntil=g.time;},onEnd:()=>{e.state.kromerThrownUntil=g.time;}});}
  }else{g.startMotion(e,d,KROMER.rRange,{speed:30,maxSpeed:30,phaseEnemies:true,actionTag:'kromerRDash',onStep:(from,to)=>{for(const t of g.champions(1-e.team).filter(t=>t.alive&&!g.hidden(t)&&segmentDistance(t,from,to)<=t.radius+e.radius+.08&&g.clearLine(e,t))){if(startGrab(g,e,t,d))break;}}});}
 }
 export function tick(g,e,dt){

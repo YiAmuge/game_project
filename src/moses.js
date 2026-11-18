@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{distance}from'./geometry.js';
 import{rangeBonus}from'./augments.js';
 import{MOSES,BREATHS}from'./moses-data.js';
@@ -5,19 +6,19 @@ export{MOSES,BREATHS};
 export const rawBonus=(g,e)=>Math.max(0,g.rawPowerScale(e)*(1+g.buffValue(e,'power',.12))*(g.buff(e,'marks')?1.12:1)-1);
 export const passiveRate=(g,e)=>e.key==='moses'?rawBonus(g,e)*.15:0;
 export const pending=e=>e.state.smokeQueue||[];
-export const airCap=(g,e)=>MOSES.airMax+Math.max(0,g.ammoCap(e))*MOSES.extraAir;
+export const airCap=(g,e)=>MOSES.airMax+(Effects.empowered(e)?20:0)+Math.max(0,g.ammoCap(e))*MOSES.extraAir;
 export const air=(g,e)=>Math.max(0,Math.min(airCap(g,e),e.state.mosesAir??airCap(g,e)));
 export const refillRate=(g,e)=>Math.max(.1,1+(g.reloadMultiplier(e)-1)/3);
 export function breath(g,e){const b=BREATHS[pending(e)[0]];return{color:b?.color||'#b6bdb9',range:(b?.range??MOSES.range)+rangeBonus(e),angle:b?.angle??MOSES.angle};}
-export function init(g,e){if(e.key!=='moses')return;cancel(g,e);Object.assign(e.state,{smoke:null,smokeQueue:[],mosesLastSmoke:null,mosesCharges:2,mosesReady:Infinity,mosesAir:airCap(g,e),mosesAirProgress:0,mosesLastShot:g.time-MOSES.regenDelay});}
-export function charges(g,e){const current=e.state.mosesCharges??2;return{current,max:2,remaining:current<2&&Number.isFinite(e.state.mosesReady)?Math.max(0,e.state.mosesReady-g.time):0};}
-export function validate(g,e,slot,options={}){return slot==='r'?!e.state.mosesR:charges(g,e).current>0&&pending(e).length<MOSES.queueMax&&!e.state.mosesR&&Boolean(BREATHS[options.direction]);}
+export function init(g,e){if(e.key!=='moses')return;cancel(g,e);Object.assign(e.state,{smoke:null,smokeQueue:[],mosesLastSmoke:null,mosesCharges:Effects.qCapacity(e),mosesReady:Infinity,mosesAir:airCap(g,e),mosesAirProgress:0,mosesLastShot:g.time-MOSES.regenDelay});}
+export function charges(g,e){const current=e.state.mosesCharges??Effects.qCapacity(e);return{current,max:Effects.qCapacity(e),remaining:current<Effects.qCapacity(e)&&Number.isFinite(e.state.mosesReady)?Math.max(0,e.state.mosesReady-g.time):0};}
+export function validate(g,e,slot,options={}){return slot==='r'?!e.state.mosesR:charges(g,e).current>0&&pending(e).length<Effects.qCapacity(e)&&!e.state.mosesR&&Boolean(BREATHS[options.direction]);}
 export function selectInput(g,e,active,direction){return g.netCommand?g.netCommand({action:'mosesChoose',active,direction}):choose(g,e,active,direction);}
 function lowerPipe(g,e){const s=e.state,pose=s.mosesChoosing||s.mosesSmoking;if(pose)s.mosesPipeLowering={at:s.mosesChoosing?Math.max(g.time,pose.at+.25):g.time,raisedAt:pose.at};delete s.mosesChoosing;delete s.mosesSmoking;}
 export function choose(g,e,active,direction){
  if(e.key!=='moses')return false;
  if(!active){lowerPipe(g,e);return true;}
- if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.hidden(e)||e.channelUntil>g.time||pending(e).length>=MOSES.queueMax||!charges(g,e).current)return false;
+ if(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.hidden(e)||e.channelUntil>g.time||pending(e).length>=Effects.qCapacity(e)||!charges(g,e).current)return false;
  if(!e.state.mosesChoosing){e.state.mosesChoosing={at:g.time};g.emitSound('breath',e,{slot:'q',phase:'moses-inhale'});}
  e.state.mosesChoosing.direction=BREATHS[direction]?direction:null;return true;
 }
@@ -87,7 +88,7 @@ export function onDamage(g,source,target,amount){
 }
 export function tick(g,e,dt=0){
  if(e.key==='moses'){
-  const s=e.state;resetExhale(g,e);while((s.mosesCharges??2)<2&&s.mosesReady<=g.time+1e-8){s.mosesCharges++;s.mosesReady=s.mosesCharges<2?s.mosesReady+g.cooldown(e,'q'):Infinity;}sync(g,e);
+  const s=e.state;resetExhale(g,e);while((s.mosesCharges??Effects.qCapacity(e))<Effects.qCapacity(e)&&s.mosesReady<=g.time+1e-8){s.mosesCharges++;s.mosesReady=s.mosesCharges<Effects.qCapacity(e)?s.mosesReady+g.cooldown(e,'q'):Infinity;}sync(g,e);
   if(s.mosesChoosing&&(!e.alive||g.stat(e,'stun')||g.stat(e,'silence')||g.hidden(e)||g.time-s.mosesChoosing.at>15))lowerPipe(g,e);
   if(s.mosesPipeLowering&&g.time-s.mosesPipeLowering.at>=.12)delete s.mosesPipeLowering;
   refill(g,e,dt);

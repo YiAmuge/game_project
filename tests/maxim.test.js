@@ -68,11 +68,11 @@ test('rush follows cursor changes and blocks other actions until released',()=>{
 test('rush passes minions and creeps without damaging them before champion collision',()=>{
  const{g,p}=arena(),a=target(g,42),b=target(g,44);b.kind='neutral';b.team=2;g.cast(p,'q',g.input.aim);run(g,1);assert.ok(p.x>44.8);assert.ok(M.rushing(p));near(a.hp,100000);near(b.hp,100000);
 });
-test('early champion collision deals distance-based area damage without stun',()=>{
- const{g,p}=arena(),t=target(g,44,20,{champion:true}),nearby=target(g,44,21.5);g.cast(p,'q',g.input.aim);run(g,1);assert.equal(p.state.maximQ,undefined);assert.equal(p.motion,undefined);assert.ok(t.hp<100000);near(t.hp,nearby.hp);near(g.stat(t,'stun'),0);const length=p.x-40;near(100000-t.hp,damage(g,p,M.rushDamage(length)),.1);
+test('early champion collision deals distance-based area damage with a one-second stun',()=>{
+ const{g,p}=arena(),t=target(g,44,20,{champion:true}),nearby=target(g,44,21.5);g.cast(p,'q',g.input.aim);while(p.state.maximQ)g.step(.005);assert.equal(p.state.maximQ,undefined);assert.equal(p.motion,undefined);assert.ok(t.hp<100000);near(t.hp,nearby.hp);near(t.status.stun.until-g.time,1,.01);const length=p.x-40;near(100000-t.hp,damage(g,p,M.rushDamage(length)),.1);
 });
-test('after two seconds a champion collision stuns every enemy in the impact circle for 1.5 seconds',()=>{
- const{g,p}=arena(),t=target(g,75,20,{champion:true}),nearby=target(g,75,21.5);g.cast(p,'q',g.input.aim);let guard=0;while(p.state.maximQ&&guard++<1000)g.step(.005);assert.ok(guard<1000);assert.ok(g.time>=2);near(g.stat(t,'stun'),1);near(g.stat(nearby,'stun'),1);near(t.status.stun.until-g.time,1.5);near(t.hp,nearby.hp);near(M.rushDamage(5),190);near(M.rushDamage(100),540);
+test('after two seconds a champion collision stuns every enemy in the impact circle for 2.5 seconds',()=>{
+ const{g,p}=arena(),t=target(g,75,20,{champion:true}),nearby=target(g,75,21.5);g.cast(p,'q',g.input.aim);let guard=0;while(p.state.maximQ&&guard++<1000)g.step(.005);assert.ok(guard<1000);assert.ok(g.time>=2);near(g.stat(t,'stun'),1);near(g.stat(nearby,'stun'),1);near(t.status.stun.until-g.time,2.5);near(t.hp,nearby.hp);near(M.rushDamage(5),190);near(M.rushDamage(100),540);
 });
 test('walls stop the rush without an explosion or damage through terrain',()=>{
  const{g,p}=arena(),t=target(g,45);g.map.walls=[{x:42,y:18,w:.4,h:4}];g.cast(p,'q',g.input.aim);run(g,1);assert.equal(p.state.maximQ,undefined);assert.ok(p.x<42);near(t.hp,100000);assert.ok(!g.effects.some(f=>f.type==='maximImpact'));
@@ -157,7 +157,7 @@ test('head enlargement preserves shaft and pommel geometry and the actual drawn 
  }}finally{globalThis.Image=oldImage;globalThis.document=oldDocument;}
 });
 test('basic guide separates both ranges without drawing a dash-area polygon or an arrival ring',()=>{
- const{g,p}=arena(),circles=[],c={setLineDash(){}};preview({ctx:c,circle(x,y,r){circles.push(r);},polygon(){assert.fail('dash area should not be drawn');}},p,g);assert.deepEqual(circles,[2.5,4.5]);g.attack(p,{x:44.5,y:20});run(g,.3);
+ const{g,p}=arena(),circles=[],c={setLineDash(){}};preview({ctx:c,line(){},circle(x,y,r){circles.push(r);},polygon(){assert.fail('dash area should not be drawn');}},p,g);assert.deepEqual(circles,[2.5,4.5]);g.attack(p,{x:44.5,y:20});run(g,.3);
  let rings=0;drawMaximScene({save(){},restore(){},fillRect(){},beginPath(){rings++;}}, {worldToScreen:p=>p},g);assert.equal(rings,0);
 });
 test('rush collision reuses Heathcliff landing audio and the ultimate delivers a stronger version at impact',()=>{
@@ -185,8 +185,8 @@ test('dash basics never create an automatic full-range attack field, including e
  const camera={width:1920,height:1200,worldToScreen:p=>({x:p.x*20,y:p.y*20})};
  for(const withTarget of [false,true]){
   const{g,p}=arena(),v=new SkillVFX(),t=withTarget?target(g,42):null;v.sync(g,camera);g.attack(p,{x:44.5,y:20});v.sync(g,camera);
-  for(let i=0;i<30;i++){g.step(.01);v.sync(g,camera);assert.ok(v.emitters.every(e=>!e.shape),JSON.stringify(v.emitters.map(e=>e.shape)));}
-  if(t){assert.ok(t.hp<100000);assert.ok(v.emitters.some(e=>e.body),'real contact still shows hit effects');}
+  let contact=false;for(let i=0;i<30;i++){g.step(.01);v.sync(g,camera);contact ||= v.emitters.some(e=>e.body);assert.ok(v.emitters.every(e=>!e.shape),JSON.stringify(v.emitters.map(e=>e.shape)));}
+  if(t){assert.ok(t.hp<100000);assert.ok(contact,'real contact still shows hit effects');}
  }
 });
 test('near hammer swings retain their real 2.5-range semicircle effect',()=>{

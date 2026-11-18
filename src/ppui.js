@@ -28,6 +28,6 @@ export function cast(g,e){const s=e.state;s.ppuiCharges=(s.ppuiCharges??2)-1;if(
 function syncCooldown(g,e){e.qCd=(e.state.ppuiCharges??2)>0?0:Math.max(0,e.state.ppuiReady-g.time);}
 export function tick(g,e){
  if(e.key==='ppui'){const s=e.state;while((s.ppuiCharges??2)<2&&s.ppuiReady<=g.time+1e-8){s.ppuiCharges++;s.ppuiReady=s.ppuiCharges<2?s.ppuiReady+g.cooldown(e,'q'):Infinity;}syncCooldown(g,e);}
- for(const [id,b]of Object.entries(e.state.ppuiMending||{})){while(e.alive&&b.next<=Math.min(g.time,b.until)+1e-8){b.next+=PPUI.qEvery;g.heal(b.source,e,PPUI.qHeal+e.maxHp*PPUI.healthRatio,true,{skillHeal:true,healingKey:b.healingEvent?.key,startedAt:b.healingEvent?.at});}if(b.next>b.until+1e-8)delete e.state.ppuiMending[id];}
+ for(const [id,b]of Object.entries(e.state.ppuiMending||{})){while(e.alive&&b.next<=Math.min(g.time,b.until)+1e-8){b.next+=PPUI.qEvery;g.heal(b.source,e,(PPUI.qHeal+e.maxHp*PPUI.healthRatio)*(1+(b.source.goldenBough?Math.floor(pulse(b.source)/10)*.05:0)),true,{skillHeal:true,healingKey:b.healingEvent?.key,startedAt:b.healingEvent?.at});}if(b.next>b.until+1e-8)delete e.state.ppuiMending[id];}
  if(e.state.ppuiMending&&!Object.keys(e.state.ppuiMending).length){delete e.state.ppuiMending;delete e.buffs.ppuiMending;}
 }

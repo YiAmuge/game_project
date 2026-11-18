@@ -1,3 +1,5 @@
+import {forwardEnd} from './dash-hit.js';
+import * as Effects from './bough-effects.js';
 import {MAXIM as P,maximUltimateArea} from './maxim-data.js';
 import {distance,direction,segmentDistance} from './geometry.js';
 
@@ -35,14 +37,14 @@ export function attack(g,e,point){
  if(near){g.cone(e,d,P.nearRange,Math.PI,P.swingDamage,()=>{},{sound:{family:'hammer',element:'physical'}});fx(g,e,'maximSwing',{r:P.nearRange,life:.25,maxLife:.25});return true;}
  const len=Math.min(g.attackRange(e),distance(e,point)),hits=new Set();
  return g.startMotion(e,d,len,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,phaseEnemies:true,actionTag:'maximBasic',onStep:(from,to)=>{
-  for(const t of [...g.units])if(g.hostile(e,t)&&!hits.has(t.id)&&segmentDistance(t,from,to)<=t.radius+e.radius+.18&&g.clearLine(from,t)){
+  for(const t of [...g.units])if(g.hostile(e,t)&&!hits.has(t.id)&&segmentDistance(t,from,forwardEnd(to,d))<=t.radius+e.radius+.18&&g.clearLine(from,t)){
    hits.add(t.id);g.deal(e,t,P.dashDamage,{damageKind:'basic',sound:{family:'hammer',element:'physical'}});
   }
  },onComplete:()=>fx(g,e,'maximDust',{x:e.x,y:e.y,from:origin,r:.8,life:.3,maxLife:.3})});
 }
 export function stop(g,e){
  if(!rushing(e))return false;
- delete e.state.maximQ;e.qCd=g.cooldown(e,'q');if(e.motion?.actionTag==='maximQ')delete e.motion;return true;
+ if(Effects.empowered(e))e.state.boughMaximGuardUntil=g.time+2.5;delete e.state.maximQ;e.qCd=g.cooldown(e,'q');if(e.motion?.actionTag==='maximQ')delete e.motion;return true;
 }
 export const release=(g,e)=>stop(g,e);
 export function validate(g,e,slot){return !rushing(e)&&!e.state.maximR&&(slot!=='q'||!g.stat(e,'root')&&!g.stat(e,'captured'));}
@@ -52,7 +54,7 @@ export function cast(g,e,slot,point,d){
   if(!g.startMotion(e,d,1000000,{speed:g.speed(e),maxSpeed:1000,phaseCreeps:true,actionTag:'maximQ',onStep:(from,to)=>{if(e.state.maximQ===q)q.distance+=distance(from,to);},onCollision:({obstacle:t})=>{
    if(e.state.maximQ!==q)return;
    const duration=g.time-q.at;stop(g,e);
-   if(t?.kind==='champion'&&g.hostile(e,t))impact(g,e,'q',rushDamage(q.distance),P.qRadius,duration+1e-8>=P.qStunAfter?P.qStun:0);
+   if(t?.kind==='champion'&&g.hostile(e,t))impact(g,e,'q',rushDamage(q.distance),P.qRadius,duration+1e-8>=P.qStunAfter?P.qStun:P.qBaseStun);
   },onComplete:()=>stop(g,e)}))stop(g,e);
   return;
  }

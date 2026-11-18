@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{absorbOrder}from'./augments.js';
 import{championDescription}from'./champion-reference.js';
 import { distance,direction,segmentDistance } from './geometry.js';
@@ -36,7 +37,7 @@ export function validate(g,e,slot){
 function restoreGuard(e){const s=e.state.soraGuard;if(!s)return;delete e.state.soraGuard;e.invulnerableUntil=s.previous;}
 function transform(g,e){
  const fraction=e.hp/e.maxHp;e.state.unlock=0;e.rCd=0;e.state.egoActive=true;
- g.addBuff(e,'soraEgo',SORA.egoDuration,{copy:false});e.maxHp=g.maxHp(e);e.hp=e.maxHp*fraction;
+ e.soraTransforms=(e.soraTransforms||0)+1;e.state.soraPermanent=Effects.empowered(e)&&e.soraTransforms>=4;if(e.state.soraPermanent)e.soraPermanentUnlocked=true;g.addBuff(e,'soraEgo',e.state.soraPermanent?Infinity:SORA.egoDuration,{copy:false});e.maxHp=g.maxHp(e);e.hp=e.maxHp*fraction;
  absorbOrder(g,e);e.state.egoQCharges=SORA.egoQCharges;e.state.egoQReady=Infinity;e.qCd=0;
  g.effects.push({type:'burst',x:e.x,y:e.y,r:3.2,theme:'sora',life:.75,maxLife:.75});
 }
@@ -117,7 +118,7 @@ export function tick(g,e){
  const target=g.units.filter(t=>['neutral','champion'].includes(t.kind)&&g.hostile(e,t)&&g.visibleTo(e.team,t)&&t.alive&&!t.returning&&!marked(g,e,t)&&distance(e,t)<=SORA.passiveRange+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(e,a)-distance(e,b))[0];
  mark(g,e,target);
 }
-export function onRespawn(g,e){if(e.key==='sora')init(g,e);}
+export function onRespawn(g,e){if(e.key==='sora'){init(g,e);if(e.soraPermanentUnlocked&&Effects.empowered(e))transform(g,e);}}
 export function onDeath(g,e){if(e.key==='sora')restoreGuard(e);}
 export function abilityInfo(g,e){
  if(e.key!=='sora')return {};const transformed=ego(g,e),c=championDescription(e.key,transformed);

@@ -1,3 +1,5 @@
+import * as Yan from './yan.js';
+import * as Effects from './bough-effects.js';
 import {MAXIM} from './maxim-data.js';
 import * as Mei from './mei.js';
 import * as AhabEgo from './ahab-ego.js';
@@ -20,6 +22,9 @@ import { STARBUCK } from './v10-champions.js';
 import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
+ if(e.key==='yan'&&slot==='r'&&Effects.empowered(e)&&Yan.distorted(g,e))return{kind:'circle',range:10,radius:3.5,confirm:false};
+ if(e.key==='alisa'&&slot==='r'&&Effects.empowered(e))return{kind:'circle',range:8.6,radius:4,ignoreWalls:true,confirm:true};
+ if(e.key==='queequeg'&&slot==='q'&&Effects.empowered(e))return{kind:'self',range:0,radius:8,confirm:false};
  if(e.key==='maxim')return slot==='q'?{kind:'quick',range:0,radius:MAXIM.qRadius,confirm:false}:{kind:'cone',range:MAXIM.rRange,radius:MAXIM.rAngle,confirm:false};
  if(e.key==='mei')return slot==='q'?(Mei.recast(g,e)?{kind:'self',range:0,radius:3.6,confirm:false}:{kind:'quick',range:4.5,radius:.6,confirm:false}):{kind:'quick',range:Mei.quickR(g,e)?1.8:3.6,radius:.6,confirm:false};
  if(AhabEgo.empowered(e)){if(AhabEgo.active(e))return slot==='q'?{kind:'cone',range:10,radius:135*Math.PI/180,impact:0,confirm:false}:{kind:'line',range:Math.hypot(g.bounds?.w||100,g.bounds?.h||100),radius:.45,impact:0,confirm:false,ignoreWalls:true};if(slot==='r')return{kind:'self',range:0,radius:0,confirm:false};}
@@ -29,10 +34,10 @@ export function skillTargeting(g,e,slot){
  if(e.key==='dongbaek'&&slot==='r')return{kind:'circle',range:DONGBAEK_R.range,radius:DONGBAEK_R.maxRadius,innerRadius:DONGBAEK_R.minRadius,impact:0,confirm:true};
  if(e.key==='ezra'){if(slot==='r')return{kind:'self',range:0,radius:3,impact:0,confirm:false};const index=e.state.ezraLastWeapon??0,w=Ezra.weapon(g,e,index),bonus=g.attackRange(e)-Ezra.weapon(g,e).range;return index===0?{kind:'quick',range:w.dash+bonus,radius:.6,impact:0,confirm:false}:index===1?{kind:'self',range:0,radius:Ezra.attackReach(g,e,index),impact:0,confirm:false}:index===2?{kind:'cone',range:w.range+bonus,radius:w.angle,impact:0,confirm:false}:{kind:'circle',range:w.dash,radius:w.range+bonus,impact:0,confirm:false};}
  if(e.key==='queen')return slot==='q'?{kind:'line',range:QUEEN.qRange,radius:QUEEN.qWidth/2,impact:0,confirm:false}:{kind:'line',range:ARCANA_STAGES[stage(g,e)].range,radius:ARCANA_STAGES[stage(g,e)].width/2,impact:0,confirm:false,ignoreWalls:true};
- if(e.key==='nosferatu')return slot==='q'?{kind:'circle',range:NOSFERATU.qRange,radius:.75,impact:0,confirm:false}:{kind:'circle',range:NOSFERATU.rRange,radius:0,impact:0,confirm:!e.state.bloodfiend,ignoreWalls:true};
+ if(e.key==='nosferatu')return slot==='q'?{kind:'circle',range:(NOSFERATU.qRange+(Effects.empowered(e)?1.7:0)),radius:.75,impact:0,confirm:false}:{kind:'circle',range:(NOSFERATU.rRange+(Effects.empowered(e)?1.5:0)),radius:0,impact:0,confirm:!e.state.bloodfiend,ignoreWalls:true};
  if(slot==='r'&&['nelly','sinclair'].includes(e.key))return{kind:'circle',range:e.key==='nelly'?7:6,radius:e.key==='nelly'?1.2:3.8,impact:0,ignoreWalls:true,confirm:true};
  if(e.key==='ppui'&&slot==='q')return{kind:'self',range:0,radius:7,impact:0,confirm:false};
- if(e.key==='kromer')return slot==='q'?(Kromer.recast(g,e,slot)?{kind:'self',range:0,radius:1,impact:0,confirm:false}:{kind:'line',range:Kromer.KROMER.qRange,radius:.22,impact:0,confirm:false}):{kind:'quick',range:3,radius:1,impact:0,confirm:false};
+ if(e.key==='kromer')return slot==='q'?(Kromer.recast(g,e,slot)?{kind:'self',range:0,radius:1,impact:0,confirm:false}:{kind:'line',range:Kromer.KROMER.qRange+(Effects.empowered(e)?1:0),radius:.22,impact:0,confirm:false}):{kind:'quick',range:3,radius:1,impact:0,confirm:false};
  if(e.key==='dongrang'&&slot==='r')return{kind:'circle',range:8.5,radius:ultGrowth(e).radius,impact:0,confirm:true};
  if(e.key==='jamila')return slot==='q'?{kind:'quick',range:3.5,radius:Math.PI,impact:0,confirm:false}:{kind:'self',range:0,radius:2,impact:0,confirm:false};
  if(e.key==='don'&&slot==='q')return {kind:'quick',range:6.5,radius:1.05,impact:0,confirm:false};

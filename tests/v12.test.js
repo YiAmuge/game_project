@@ -57,8 +57,8 @@ test('Don ultimate accepts an empty coordinate and applies seven-second lifestea
 test('Yi basic projectiles are 50% larger and pierce multiple enemies',()=>{
  const {g,p,t}=quiet('yi');t.x=42;const second=g.makeChampion('faust',1,10);Object.assign(second,{x:44,y:7,hp:10000,maxHp:10000});g.attack(p,{x:48,y:7});assert.ok(g.projectiles.every(b=>b.width===.27&&b.pierce===Infinity));run(g,.3);assert.ok(t.hp<10000&&second.hp<10000);
 });
-test('Yi ground effect spends ammo once per target per zone and stacks 3.5% slow on damage ticks',()=>{
- const {g,p,t}=quiet('yi');t.ammo=3;t.attackCd=10;g.cast(p,'q',t);run(g,.52);close(t.ammo,2);close(g.stat(t,'slow'),.035);run(g,1);close(t.ammo,2);close(g.stat(t,'slow'),.105);assert.ok(g.stat(t,'silence'));
+test('Yi ground effect spends ammo once per target per zone without applying slow',()=>{
+ const {g,p,t}=quiet('yi');t.ammo=3;t.attackCd=10;g.cast(p,'q',t);run(g,.52);close(t.ammo,2);close(g.stat(t,'slow'),0);run(g,1);close(t.ammo,2);close(g.stat(t,'slow'),0);assert.ok(g.stat(t,'silence'));
 });
 test('Myo Q deals 65 per shot and frenzy lasts 4.5 with fifty percent basic-dash reduction',()=>{
  const {g,p,t}=quiet('myo');g.cast(p,'q',t);run(g,.25);assert.ok(g.projectiles.every(b=>b.damage===65));p.qCd=0;g.cast(p,'r',p);close(p.buffs.rabbitFrenzy-g.time,4.5);p.attackCd=0;g.attack(p,{x:47,y:7});const hp=p.hp;g.deal(t,p,100);close(hp-p.hp,100*1.12*.9*.5/1.1);

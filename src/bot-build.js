@@ -6,7 +6,10 @@ const healthUsers=new Set(['maxim','ezra','nosferatu','marton','kim','yi','hongl
 const skillUsers=new Set(['moses','queen','yi','rudolph','hohenheim','gahwan','dongbaek','honglu','ppui','queequeg','kromer','nelly','yan']);
 const magazineUsers=new Set(['mei','ezra','rudolph','hohenheim','jamila','yan']);
 const priorities={combat:['power15','range7','blackOrb','reloadStacks','wisdom','finalBullet','duelManual'],survival:['glaive','forceBattery','traumaGuard','writtenOrder','resentment','kAmpule','antimatter'],tech:['cooldown15','maskDeLu','magazine2','battleHaste','carrier','adaptiveSpeed','highRisk']};
+export const goldenLane=e=>['ryoshu','gahwan'].includes(e.key)?e.position==='top':e.key==='yi'?e.position==='bottom':true;
 export function buildPlan(e){
+ if(['ryoshu','gahwan'].includes(e.key)&&e.position==='top')return{categories:['survival','tech','combat'],stats:['health','haste','speed','reload','power']};
+ if(e.key==='yi'&&e.position==='bottom')return{categories:['combat','tech','survival'],stats:['power','reload','haste','speed','health']};
  let categories=e.position==='top'?['survival','combat','tech']:e.position==='support'?['survival','tech','combat']:['combat','tech','survival'];
  if(healthUsers.has(e.key))categories=['survival','tech','combat'];if(skillUsers.has(e.key))categories=['tech','survival','combat'];if(e.key==='nosferatu')categories=['survival','combat','tech'];if(['dongrang','kim'].includes(e.key))categories=['combat','survival','tech'];
  const stats=e.key==='ezra'?['health','reload','haste','power','speed']:e.key==='dongrang'?['power','health','haste','reload','speed']:magazineUsers.has(e.key)?['reload','haste','power','health','speed']:healthUsers.has(e.key)?['health','haste','power','speed','reload']:skillUsers.has(e.key)?['haste','reload','power','health','speed']:['power','reload','health','speed','haste'];
@@ -14,7 +17,7 @@ export function buildPlan(e){
  return{categories,stats};
 }
 function itemScore(e,a,plan){
- if(a.group==='special')return 110;
+ if(a.group==='special')return ['ryoshu','gahwan','yi'].includes(e.key)&&goldenLane(e)?220:110;
  let score=120-plan.categories.indexOf(a.group)*30+(priorities[a.group].length-priorities[a.group].indexOf(a.key))*2;
  if(Augments.exclusive(e,a.key))score+=40;if(magazineUsers.has(e.key)&&a.key==='magazine2')score+=35;
  if(skillUsers.has(e.key)&&['cooldown15','maskDeLu','battleHaste'].includes(a.key))score+=20;
@@ -30,7 +33,7 @@ export function buyEquipment(g,e){
  if(e.player||e.trainingDummy||!(g.inSpawn(e)||!e.alive)||!g.canUpgrade(e)||g.time<(e.aiShopAt||0))return false;e.aiShopAt=g.time+.75;
  const plan=buildPlan(e);let bought=false;
  for(let n=0;n<12;n++){
-  const items=AUGMENTS.filter(a=>!Augments.has(e,a.key)&&Augments.unlockedItem(e,a.key)&&Augments.fits(e,a.key)&&Augments.categoryFits(e,a.key)).sort((a,b)=>itemScore(e,b,plan)-itemScore(e,a,plan));
+  const items=AUGMENTS.filter(a=>(a.key!=='goldenBough'||goldenLane(e))&&!Augments.has(e,a.key)&&Augments.unlockedItem(e,a.key)&&Augments.fits(e,a.key)&&Augments.categoryFits(e,a.key)).sort((a,b)=>itemScore(e,b,plan)-itemScore(e,a,plan));
   const item=items.find(a=>Augments.cost(e,a.key)<=e.gold);
   if(item&&(e.augments.length<4||plan.stats.every(k=>e.upgrades[k]>=UPGRADE_STEPS[k].length))){const before=e.gold,price=Augments.cost(e,item.key);if(!g.buyAugment(e,item.key))break;if(g.training)e.gold=before-price;bought=true;continue;}
   let stat;

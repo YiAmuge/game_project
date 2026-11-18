@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import {giftPrice} from './match-modes.js';
 import * as Bough from './golden-bough.js';
 import { distance } from './geometry.js';
@@ -19,7 +20,7 @@ export const unlockedGroup=(e,group)=>unlocked(e,group)||AUGMENTS.some(a=>a.grou
 export const orderLimit=e=>e.key==='sora'?4:5;
 export const terminalText='공격 적중 시 방어력·장전 속도 +2.5%, 최대 4중첩. 각 중첩은 5초 유지된다. 최대 중첩 중 일반 피해의 7%를 고정 피해로 전환하고 해당 고정 피해만큼 5초 보호막을 얻으며 최대 500까지 누적된다.';
 export const augmentName=(e,item)=>e.key==='sora'&&item?.key==='writtenOrder'?'단말기로 전해진 지령':item?.name||'';
-export const WISDOM={cooldown:10,interval:.2,hits:5,baseDamage:100,powerDamage:200,mobilityReduction:.05,mobilityCooldown:2};
+export const WISDOM={cooldown:10,interval:.2,hits:5,baseDamage:75,powerDamage:140,mobilityReduction:.05,mobilityCooldown:2};
 export function onMobility(g,e,event){
  if(event?.wisdomMovement)return;if(event)event.wisdomMovement=true;
  if(e.kind!=='champion'||!has(e,'wisdom'))return;
@@ -51,8 +52,8 @@ export function tick(g,e,dt=0){
  if(s.augReloadStacks>0&&g.time+1e-8>=s.augReloadDecay){while(s.augReloadStacks>0&&g.time+1e-8>=s.augReloadDecay){s.augReloadStacks--;s.augReloadDecay+=3;}if(!s.augReloadStacks)delete e.buffs.augReload;}
 }
 export function interceptFatal(g,e,remaining){
- if(Bough.storm(g,e)||e.kind!=='champion'||remaining<e.hp||!has(e,'kAmpule')||(e.state.ampuleReady||0)>g.time)return false;
- e.state.ampuleReady=g.time+60;e.ampuleGrowth=(e.ampuleGrowth||0)+.025;e.maxHp=g.maxHp(e);e.visuals.ampule={at:g.time,until:g.time+1.2};e.hp=e.maxHp*.5;
+ if(e.kind!=='champion'||remaining<e.hp||!has(e,'kAmpule')||(e.state.ampuleReady||0)>g.time)return false;
+ const oldBonus=g.bonusHealth(e);e.state.ampuleReady=g.time+60;e.ampuleGrowth=(e.ampuleGrowth||0)+.025;e.maxHp=g.maxHp(e);e.visuals.ampule={at:g.time,until:g.time+1.2};e.hp=e.maxHp*.5;if(e.key==='alisa')for(const t of g.units)if(t.burn?.source===e)t.burn.damage+=Math.max(0,g.bonusHealth(e)-oldBonus)*(t.burn.explosion?.025:.015);
  for(const key of ['stun','root','silence','slow','disarm','taunt','captured','netCapture','yanLock'])delete e.status[key];
  delete e.state.netCapture;delete e.state.taunt;if(e.motion?.forced)delete e.motion;const owner=g.units.find(a=>a.state?.swordGrab?.target===e);if(owner)delete owner.state.swordGrab;delete e.state.swordHeldBy;
  e.ccImmuneUntil=Math.max(e.ccImmuneUntil||0,g.time+1);g.addBuff(e,'ampuleStride',1,{copy:false});
@@ -83,19 +84,19 @@ export const fits=(e,key)=>key==='goldenBough'||key==='carrier'||usedSlots(e)<sl
 export const sellable=(g,key,e=g.player)=>key!=='goldenBough'&&!(key==='writtenOrder'&&absorbedOrder(e))&&(key!=='carrier'||g.training);
 export const liveStacks=(g,e,key)=>(e.state[key]||[]).filter(at=>at>g.time+1e-8);
 function stack(g,e,key,max){const list=liveStacks(g,e,key);if(list.length>=max)list.shift();list.push(g.time+5);e.state[key]=list;}
-export function powerRate(g,e){return (Bough.active(e)?.05:0)+(e.key==='queen'&&has(e,'battleHaste')&&battleActive(g,e)?.15:0)+(has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.07:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?(e.state.duelStacks||0)*.05:0);}
+export function powerRate(g,e){return Effects.powerRate(e)+ (Bough.active(e)?.05:0)+(e.key==='queen'&&has(e,'battleHaste')&&battleActive(g,e)?.15:0)+(has(e,'power15')?.1:0)+(has(e,'glaive')?.1:0)+(has(e,'blackOrb')?.1:0)+(has(e,'wisdom')?.07:0)+(has(e,'highRisk')?.05:0)+(has(e,'duelManual')?(e.state.duelStacks||0)*.05:0);}
 export const speedRate=(g,e)=>(Bough.active(e)?.05:0)+(has(e,'duelManual')?.05+(e.state.duelStacks||0)*.02:0)+(has(e,'carrier')?.03:0)+(has(e,'forceBattery')?.1:0);
 export const reloadRate=(g,e)=>(Bough.active(e)?.05:0)+(e.key==='sora'&&has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*.025:0);
 export const armorRate=(g,e)=>(has(e,'writtenOrder')?liveStacks(g,e,'orderStacks').length*(e.key==='sora'?.025:.05):0)+(has(e,'traumaGuard')?.05:0)+(has(e,'highRisk')?.07:0);
 export const armorPen=e=>has(e,'power15')?.2:0;
 export const converts=(g,e)=>has(e,'writtenOrder')&&liveStacks(g,e,'orderStacks').length>=orderLimit(e);
 export const conversionRate=(g,e)=>converts(g,e)?e.key==='sora'?.07:.1:0;
-export const healthRate=e=>(Bough.active(e)?.05:0)+(has(e,'antimatter')?.1:0)+(has(e,'traumaGuard')?.05:0)+(has(e,'kAmpule')?.07:0)+(e.ampuleGrowth||0);
+export const healthRate=e=>Effects.healthRate(e)+(Bough.active(e)?.05:0)+(has(e,'antimatter')?.1:0)+(has(e,'traumaGuard')?.05:0)+(has(e,'kAmpule')?.07:0)+(e.ampuleGrowth||0);
 export const cooldownFactor=e=>1;
-export function onCast(){}
+export function onCast(g,e){Effects.onCast(g,e,e.castSlot);}
 export function onDebuff(g,e,target){
  if(!e||e.kind!=='champion'||!e.alive||e.team===target.team||!has(e,'maskDeLu')||(e.state.maskReady||0)>g.time)return;
- e.state.maskReady=g.time+10;g.effects.push({type:'maskSplash',source:e.id,x:e.x,y:e.y,life:.65,maxLife:.65});e.qCd*=.8;e.rCd*=.8;
+ e.state.maskReady=g.time+10;g.effects.push({type:'maskSplash',source:e.id,x:e.x,y:e.y,life:.65,maxLife:.65});e.qCd*=.8;e.rCd*=.8;for(const stock of Object.values(e.state.boughStocks||{}))if(Number.isFinite(stock.ready)&&stock.ready>g.time)stock.ready=g.time+(stock.ready-g.time)*.8;
  for(const key of ['yiReady','knifeReady','treeReady','egoQReady','ppuiReady','qDelayUntil'])if(Number.isFinite(e.state[key])&&e.state[key]>g.time)e.state[key]=g.time+(e.state[key]-g.time)*.8;
  g.changeAmmo(e,e.key==='rudolph'?15:1);
 }

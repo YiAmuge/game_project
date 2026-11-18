@@ -1,3 +1,4 @@
+import {SOLEIL_TEXT,BOUGH_EXPANSION_TEXT,BOUGH_SKILL_SLOTS} from './bough-expansion-data.js';
 import {MAXIM} from './maxim-data.js';
 import {CHANGED_ULTIMATES,ultimateNotes,cooldown as boughCooldown} from './golden-bough.js';
 import * as AhabEgo from './ahab-ego.js';
@@ -182,6 +183,9 @@ export function goldenUltimateReference(key){
 }
 
 export function goldenSkillReference(key,index){
+ if(key==='meursault'&&index===1)return{title:'SOLEIL',cooldown:'탄창 1개 · 장전 1초 · 공격 간격 1초',ranges:[row('기본','사거리 3 · 폭 3'),row('Garde','사거리 6 · 폭 3 · 1.5초 충전')],summary:SOLEIL_TEXT,details:SOLEIL_TEXT,sections:null,summarySections:null};
+ if(key==='yan'&&index===3)return{title:'황금 가지 — 뒤틀림',cooldown:'뒤틀림 23초',ranges:[row('손 조작','각 손 조작 거리 10 · 공격 반경 3.5')],summary:BOUGH_EXPANSION_TEXT.yan,details:BOUGH_EXPANSION_TEXT.yan,sections:null,summarySections:null};
+ if(BOUGH_SKILL_SLOTS[key]?.includes(index)){const c=CHAMPIONS[key],slot=index===2?'q':'r',base=index===1?(key==='ezra'?'기본 장전 시간 −0.5초':'기본공격 강화'):('기본 재사용 '+boughCooldown({key,goldenBough:true},slot,c[slot])+'초');return{title:c[fields[index][0]],cooldown:base,ranges:[],summary:BOUGH_EXPANSION_TEXT[key],details:BOUGH_EXPANSION_TEXT[key],sections:null,summarySections:null};}
  if(key!=='ahab')return index===3?goldenUltimateReference(key):null;
  if(index===3)return goldenUltimateReference(key);
  if(index===1||index===2)return gasharpoonSkillReference(index);

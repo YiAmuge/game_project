@@ -18,7 +18,7 @@ function arena(key='faust'){
 function enemy(g){return g.entity({kind:'minion',team:1,x:43,y:20,maxHp:100000,hp:100000,armor:99999,radius:.1,range:0,lastDamageAt:999,lastAttackAt:999});}
 
 test('Wisdom deals five armor-independent hits at 0.2-second intervals using activation power',()=>{
- const{g,p}=arena(),t=enemy(g),hits=[],deal=g.deal.bind(g),amount=100+g.powerScale(p)*200;
+ const{g,p}=arena(),t=enemy(g),hits=[],deal=g.deal.bind(g),amount=75+g.powerScale(p)*140;
  g.deal=(s,target,n,o={})=>{if(o.augmentOrigin==='wisdom')hits.push({at:g.time,n,fixed:o.fixed});return deal(s,target,n,o);};
  g.deal(p,t,1,{fixed:true});p.upgrades.power=3;run(g,.19);assert.equal(hits.length,0);run(g,.82);
  assert.equal(hits.length,5);hits.forEach((h,i)=>{near(h.at,(i+1)*.2);near(h.n,amount);assert.equal(h.fixed,true);});
@@ -26,7 +26,7 @@ test('Wisdom deals five armor-independent hits at 0.2-second intervals using act
  g.deal(p,t,1,{fixed:true});assert.equal(g.events.length,0);g.time=10;g.deal(p,t,1,{fixed:true});assert.equal(g.events.length,5);
 });
 test('Wisdom pending hits survive source death but stop when their target dies',()=>{
- const{g,p}=arena(),t=enemy(g),amount=100+g.powerScale(p)*200;g.deal(p,t,1,{fixed:true});g.kill(p,t);run(g,1.01);near(100000-t.hp,1+5*amount);
+ const{g,p}=arena(),t=enemy(g),amount=75+g.powerScale(p)*140;g.deal(p,t,1,{fixed:true});g.kill(p,t);run(g,1.01);near(100000-t.hp,1+5*amount);
  const second=arena(),victim=enemy(second.g);second.g.deal(second.p,victim,1,{fixed:true});second.g.kill(victim,second.p);run(second.g,1.01);assert.equal(second.g.effects.filter(f=>f.type==='wisdomSlash').length,0);
 });
 test('dash and teleport share the two-second reduction gate and reduce remaining cooldown by five percent',()=>{

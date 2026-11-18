@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{combatSeconds}from'./combat-timing.js';
 import {RULES} from './data.js';
 import {distance,direction} from './geometry.js';
@@ -66,7 +67,7 @@ export function tactical(g,e,d){
  if(!g.startMotion(e,d,JAMILA.qRange,{speed:JAMILA.qSpeed,maxSpeed:JAMILA.qSpeed,actionTag:'jamila-dash',onCollision:c=>{attack=c.kind==='unit'&&g.hostile(e,c.obstacle);},onComplete:()=>attack?slash(g,e,q):retreat(g,e,q)})){endQ(e);return false;}
  if(e.ammo<1){delete e.state.lcaReload;e.reloadProgress=0;}return true;
 }
-export function formationPoint(e,index){const side=index?1:-1,a=e.facing||0;return {x:e.x+Math.cos(a)*side*1.7-Math.sin(a)*.9,y:e.y+Math.sin(a)*side*1.7+Math.cos(a)*.9};}
+export function formationPoint(e,index){const side=index%2?1:-1,a=e.facing||0;return {x:e.x+Math.cos(a)*side*(1.7+Math.floor(index/2)*1.1)-Math.sin(a)*.9,y:e.y+Math.sin(a)*side*(1.7+Math.floor(index/2)*1.1)+Math.cos(a)*.9};}
 function spawnPoint(g,e,index){
  const desired=formationPoint(e,index),dummy={...e,kind:'trooper',radius:.38};
  if(canOccupy(g,dummy,desired))return desired;
@@ -76,7 +77,7 @@ function spawnPoint(g,e,index){
 function deployArmy(g,e,{infiltrationBonus=false}={}){
  for(const u of army(g,e)){u.alive=false;u.hp=0;}
  const snapshot={maxHp:e.maxHp*.45,armor:g.armor(e)*.45,power:g.combatPower(e)*.2,damagePower:RULES.power[1]*.9*g.powerScale(e)*(1-g.powerWeak(e))*.2,reload:g.reloadMultiplier(e),speed:g.speed(e)},duration=infiltrationBonus?JAMILA.infiltrationDuration:JAMILA.duration;
- for(let i=0;i<2;i++){
+ for(let i=0;i<(Effects.empowered(e)?4:2);i++){
   const u=g.entity({kind:'trooper',key:'jamila',name:'LCA 우제트 전투원',lcaTrooper:true,owner:e.id,formation:i,team:e.team,...spawnPoint(g,e,i),maxHp:snapshot.maxHp,armor:snapshot.armor,snapshot:{...snapshot},until:g.time+duration,range:JAMILA.range,radius:.38,ammo:16,level:e.level,path:[],facing:e.facing||0,attackSerial:0,attackAt:-99,lastAttackAt:-99,lastDamageAt:-99,state:{lcaShotAt:g.time},buffs:{},buffHistory:{},buffPotency:{},visuals:{},supporters:{},contributors:{},augments:[],upgrades:{power:0,health:0,speed:0,haste:0,reload:0},reloadProgress:0});
   u.visuals.deployment={at:g.time,until:g.time+JAMILA.releaseTime};g.effects.push({type:'ring',x:u.x,y:u.y,r:.9,color:'#e5c75d',life:.45,maxLife:.45});
  }e.state.udjatUntil=g.time+duration;return true;
@@ -84,7 +85,7 @@ function deployArmy(g,e,{infiltrationBonus=false}={}){
 export function ultimate(g,e,{infiltrationBonus=false,point}={}){
  if(e.state.jamilaSummon)return false;
  const at={x:point?.x??e.x,y:point?.y??e.y},ghostOwner={...e,...at};
- e.state.jamilaSummon={at:g.time,readyAt:g.time+JAMILA.summonTime,point:at,facing:e.facing||0,infiltrationBonus,cooldown:e.rCd,positions:[spawnPoint(g,ghostOwner,0),spawnPoint(g,ghostOwner,1)]};
+ e.state.jamilaSummon={at:g.time,readyAt:g.time+JAMILA.summonTime,point:at,facing:e.facing||0,infiltrationBonus,cooldown:e.rCd,positions:Array.from({length:Effects.empowered(e)?4:2},(_,i)=>spawnPoint(g,ghostOwner,i))};
  e.channelUntil=Math.max(e.channelUntil||0,g.time+JAMILA.summonTime);return true;
 }
 export function tickDeployment(g,e){

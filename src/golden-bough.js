@@ -1,23 +1,27 @@
+import * as Yan from './yan.js';
+import {BOUGH_EXPANSION_TEXT,SOLEIL_TEXT} from './bough-expansion-data.js';
+import * as Effects from './bough-effects.js';
+import * as Soleil from './soleil.js';
 import * as Mei from './mei.js';
 import {GASHARPOON_TEXT,GASHARPOON_NAME} from './ahab-ego-data.js';
 import {RULES,RUNTIME_CHAMPIONS as CHAMPIONS} from './data.js';
 import {distance} from './geometry.js';
 
 export const active=e=>Boolean(e?.goldenBough);
-export const maxLevel=e=>RULES.maxLevel+(active(e)&&e.key==='faust'?5:0);
+export const maxLevel=e=>RULES.maxLevel+(active(e)&&e.key==='faust'?2:0);
 // Continue the existing XP curve's second difference (+150) beyond level ten.
 export function levelXp(level){if(level<=10)return RULES.xp[level-1];let xp=RULES.xp[9],gap=RULES.xp[9]-RULES.xp[8];for(let n=11;n<=level;n++){gap+=150;xp+=gap;}return xp;}
 export const voyage=e=>active(e)&&e.key==='ishmael'?Math.min(8,e.ishmaelUltimateHits||0):0;
-export const fistBonus=(g,e)=>active(e)&&e.key==='meursault'&&(e.state.fistGrowthUntil||0)>g.time?(e.state.fistGrowth||0)*.4:0;
+export const fistBonus=()=>0;
 export const outisRadius=(g,e)=>active(e)?g.attackRange(e):2.5;
-export function cooldown(e,slot,base){if(!active(e))return base;if(slot==='q'&&e.key==='meursault')return Math.max(0,base-7);if(slot!=='r')return base;return ({ryoshu:10,honglu:35,ahab:45})[e.key]??Math.max(0,base-({yi:37,don:15,heathcliff:15}[e.key]||0));}
+export function cooldown(e,slot,base){if(!active(e))return base;if(slot==='q'&&e.key==='maxim')return Math.max(0,base-3);if(slot!=='r')return base;return ({ryoshu:12,honglu:35,ahab:45})[e.key]??Math.max(0,base-({yi:37,don:15,heathcliff:15}[e.key]||0));}
 export const TEXT={
  mei:'궁극기를 최대 2회 비축한다. 사용한 횟수는 순서대로 충전되며 회축 연계로 사용한 궁극기는 해당 충전의 재사용 대기시간을 50% 환급한다.',
  ahab:GASHARPOON_TEXT,
  yi:'궁극기 기본 재사용 대기시간이 37초 감소하고 최대 2회 비축한다. 사용한 횟수는 순서대로 충전된다.',
- faust:'최대 레벨이 15가 되고 자동 경험치를 포함한 모든 경험치 획득량이 2배가 된다. 최대 레벨에서는 입힌 최종 피해의 7%만큼 추가 고정 피해를 입히고 그 추가 피해의 50%만큼 체력을 회복한다.',
+ faust:'최대 레벨이 12가 되고 자동 경험치를 포함한 모든 경험치 획득량이 2배가 된다. 최대 레벨에서는 입힌 최종 피해의 7%만큼 추가 고정 피해를 입히고 그 추가 피해의 50%만큼 체력을 회복한다.',
  don:'피갈망을 영구적으로 얻는다. 궁극기로 피갈망을 중복 획득하지 않으며 궁극기 기본 재사용 대기시간이 15초 감소한다.',
- ryoshu:'궁극기가 천살성도 - 아라야시키로 변경된다. 기본 재사용 대기시간 10초. 유지 중에는 궁극기 재사용 대기가 진행되지 않으며 종료·사망 후 시작한다. 사거리 5.5 안의 지점으로 순간이동한 뒤 자신 중심 반경 3의 모든 적에게 0.2초마다 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입힌다. 지속 중 체력을 회복할 수 없으며 이동속도 +20%를 얻고 이동과 궁극기 종료 재사용만 가능하다. 받는 피해량이 70% 감소하고 상태이상에 면역이며 매 타격마다 자신도 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입어 사망할 수 있다. 사망하면 해당 위치에 장판이 5초간 남는다. 재사용하면 종료하고 적에게 입힌 총 피해의 30%만큼 회복하며 최대 자신의 최대 체력 15%까지만 회복한다.',
+ ryoshu:'추가 전투력을 같은 비율의 추가 체력으로 모두 전환한다. 궁극기가 천살성도 - 아라야시키로 변경된다. 기본 재사용 대기시간 12초. 유지 중에는 궁극기 재사용 대기가 진행되지 않으며 종료·사망 후 시작한다. 사거리 5.5 안의 지점으로 순간이동한 뒤 자신 중심 반경 3의 모든 적에게 0.2초마다 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입힌다. 지속 중 체력을 회복할 수 없으며 이동속도 +20%를 얻고 이동과 궁극기 종료 재사용만 가능하다. 받는 피해량이 70% 감소하고 상태이상에 면역이며 매 타격마다 자신도 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입어 사망할 수 있다. 사망하면 해당 위치에 장판이 5초간 남는다. 재사용하면 종료하고 적에게 입힌 총 피해의 30%만큼 회복하며 최대 자신의 최대 체력 35%까지만 회복한다.',
  meursault:'기본공격이 적중하면 3초간 폭과 사거리가 각각 0.4 증가한다. 3초 안에 다시 적중하면 중첩하고 시간을 갱신하며 최대 1.6까지 증가한다. 전술기 기본 재사용 대기시간이 7초 감소한다.',
  honglu:'궁극기가 태허환경으로 변경된다. 기본 재사용 대기시간 35초. 자신과 살아 있는 모든 아군 챔피언의 상태이상을 해제하고 각각을 따라가는 반경 3.5의 장판을 4초간 부착한다. 0.3초마다 적을 공격하고 아군을 치유한다. 시전 즉시 첫 타격으로 120 피해와 120 회복을 적용하며 추가 체력 1%마다 첫 회복량이 20 증가한다. 이후 타격은 60 피해와 75 회복이며 추가 체력 1%마다 회복량이 7 증가한다. 아군이 장판에 처음 닿으면 상태이상을 정화한다.',
  heathcliff:'궁극기 기본 재사용 대기시간이 15초 감소하고 지속시간이 1.2초 증가한다.',
@@ -27,39 +31,48 @@ export const TEXT={
  outis:'패시브의 근접 피해 강화와 보호막 발동 반경이 현재 기본공격 사거리와 같아진다.',
  gregor:'변이 중 기본공격 시 2.5칸 돌진한 뒤 공격한다. 변이 재사용 대기시간이 5초 감소한다.',
 };
-export function purchase(g,e){e.goldenBough=true;if(e.key==='mei'){e.state.meiRCharges=2;e.state.meiRReady=0;e.state.meiRQueue=[];e.rCd=0;}if(e.key==='yi'){e.state.yiCharges=2;e.state.yiReady=0;e.rCd=0;}if(e.key==='gregor'&&e.state.mutateReady>g.time)e.state.mutateReady=Math.max(g.time,e.state.mutateReady-5);}
+Object.assign(TEXT,BOUGH_EXPANSION_TEXT);
+export function purchase(g,e){e.goldenBough=true;Effects.purchase(g,e);if(e.key==='yan'&&g.buff(e,'yanDistorted')){Yan.addSecondHand(g,e);e.buffs.yanDistorted+=3;}if(e.key==='mei'){e.state.meiRCharges=2;e.state.meiRReady=0;e.state.meiRQueue=[];e.rCd=0;}if(e.key==='yi'){e.state.yiCharges=2;e.state.yiReady=0;e.rCd=0;}if(e.key==='gregor'&&e.state.mutateReady>g.time)e.state.mutateReady=Math.max(g.time,e.state.mutateReady-5);}
 export function charges(g,e){if(e.key==='mei')return Mei.charges(g,e);if(e.key!=='yi'||!active(e))return null;return {current:e.state.yiCharges??2,max:2,remaining:(e.state.yiCharges??2)<2?Math.max(0,(e.state.yiReady||0)-g.time):0};}
-export function tick(g,e){if(e.key==='mei'){Mei.tickCharges(g,e);return;}if(!charges(g,e))return;const s=e.state;s.yiCharges??=2;while(s.yiCharges<2&&s.yiReady<=g.time+1e-8){s.yiCharges++;s.yiReady+=g.cooldown(e,'r');}e.rCd=s.yiCharges>0?0:Math.max(0,s.yiReady-g.time);}
+export function tick(g,e,dt=0){Effects.tick(g,e,dt);Soleil.tick(g,e);if(e.key==='mei'){Mei.tickCharges(g,e);return;}if(!charges(g,e))return;const s=e.state;s.yiCharges??=2;while(s.yiCharges<2&&s.yiReady<=g.time+1e-8){s.yiCharges++;s.yiReady+=g.cooldown(e,'r');}e.rCd=s.yiCharges>0?0:Math.max(0,s.yiReady-g.time);}
 export function spendYi(g,e){const s=e.state;s.yiCharges??=2;if(s.yiCharges===2)s.yiReady=g.time+g.cooldown(e,'r');s.yiCharges--;e.rCd=s.yiCharges>0?0:Math.max(0,s.yiReady-g.time);}
-export function fistHit(g,e){if(!active(e)||e.key!=='meursault')return;if(!(e.state.fistGrowthUntil>g.time))e.state.fistGrowth=0;e.state.fistGrowth=Math.min(4,(e.state.fistGrowth||0)+1);e.state.fistGrowthUntil=g.time+3;}
+export function fistHit(){}
 export function harpoonHit(g,e){e.ishmaelUltimateHits=(e.ishmaelUltimateHits||0)+1;if(active(e))g.refreshEquipment(e);}
 export const storm=(g,e)=>e.key==='ryoshu'&&active(e)?g.zones.find(z=>z.kind==='arayashiki'&&z.source===e&&!z.posthumous&&z.until>g.time):null;
-export function castStorm(g,e,p){const old=storm(g,e);if(old){old.until=g.time;e.rCd=g.cooldown(e,'r');g.heal(e,e,Math.min(old.dealt*.3,e.maxHp*.15),false);return;}g.teleport(e,g.safeLanding(e,p,5.5));g.zones.push({kind:'arayashiki',source:e,x:e.x,y:e.y,r:3,startedAt:g.time,angle:e.facing,until:Infinity,nextTick:g.time+.2,nextSwing:g.time+.4,dealt:0});g.emitSound('swing',e,{slot:'r',damageKind:'skill',family:'katana',element:'metal',phase:'arayashiki-sweep'});}
-export function onDeath(g,e){const z=storm(g,e);if(z){z.x=e.x;z.y=e.y;z.posthumous=true;z.until=g.time+5;e.rCd=g.cooldown(e,'r');}}
+export function castStorm(g,e,p){const old=storm(g,e);if(old){old.until=g.time;e.rCd=g.cooldown(e,'r');g.heal(e,e,Math.min(old.dealt*.3,e.maxHp*.35),false);return;}g.teleport(e,g.safeLanding(e,p,5.5));g.zones.push({kind:'arayashiki',source:e,x:e.x,y:e.y,r:3,startedAt:g.time,angle:e.facing,until:Infinity,nextTick:g.time+.2,nextSwing:g.time+.4,dealt:0});g.emitSound('swing',e,{slot:'r',damageKind:'skill',family:'katana',element:'metal',phase:'arayashiki-sweep'});}
+export function onDeath(g,e){Effects.onDeath(g,e);Soleil.cancel(e);const z=storm(g,e);if(z){z.x=e.x;z.y=e.y;z.posthumous=true;z.until=g.time+5;e.rCd=g.cooldown(e,'r');}}
 export function updateStorm(g,z){if(!z.posthumous){z.x=z.source.x;z.y=z.source.y;}while((z.nextSwing??Infinity)<=Math.min(g.time,z.until)+1e-8){z.nextSwing+=.4;g.emitSound('swing',z.source,{slot:'r',damageKind:'skill',family:'katana',element:'metal',phase:'arayashiki-sweep',x:z.x,y:z.y});}while(z.nextTick<=Math.min(g.time,z.until)+1e-8){z.nextTick+=.2;const e=z.source;g.effects.push({type:'arayashikiCuts',source:e.id,x:z.x,y:z.y,r:3,seed:Math.round(z.nextTick*1000)+e.id*7919,theme:'ryoshu',life:.26,maxLife:.26});for(const t of [...g.units])if(g.hostile(e,t)&&distance(z,t)<=3+t.radius&&g.clearLine(z,t)){const shield=g.shield(t);z.dealt+=g.deal(e,t,35+e.maxHp*.015,{fixed:true,proc:false,augmentOrigin:'arayashiki',sound:{slot:'r',family:'katana',element:'metal',phase:'arayashiki-hit',cue:'impact',periodic:false}})+Math.max(0,shield-g.shield(t));}if(!z.posthumous&&e.alive)g.selfDamage(e,35+e.maxHp*.015,{cause:'arayashiki'});}}
 
 export function abilityInfo(g,e){
  if(!active(e))return {};
  const c=CHAMPIONS[e.key],info={passiveText:c.passiveText+' '+giftNotes(e.key).map(n=>'※ '+n.label+': '+n.text).join(' ')};
- if(e.key==='faust'){info.passiveText=info.passiveText.replaceAll('최대 레벨 10','최대 레벨 15').replace('초당 자동 경험치 9','초당 자동 경험치 18');info.rText=c.rText.replaceAll('최대 레벨 10','최대 레벨 15');}
+ if(e.key==='faust'){info.passiveText=info.passiveText.replaceAll('최대 레벨 10','최대 레벨 12').replace('초당 자동 경험치 9','초당 자동 경험치 18');info.rText=c.rText.replaceAll('최대 레벨 10','최대 레벨 12');}
  if(e.key==='don')info.rText=c.rText.replace('사용 시 7초간 피갈망을 얻는다.','피갈망은 영구 적용된다.');
  if(e.key==='rodya')info.passiveText=c.passiveText.replace('전투력이 1%','전투력이 3%');
  if(['mei','yi','heathcliff','sinclair'].includes(e.key))info.rText=c.rText+' 황금 가지: '+TEXT[e.key];
- if(['meursault','rodya'].includes(e.key))info.qText=c.qText+' 황금 가지: '+TEXT[e.key];
- if(['meursault','gregor'].includes(e.key))info.basicText=c.basicText+' 황금 가지: '+TEXT[e.key];
+ if(['rodya'].includes(e.key))info.qText=c.qText+' 황금 가지: '+TEXT[e.key];
+ if(['gregor'].includes(e.key))info.basicText=c.basicText+' 황금 가지: '+TEXT[e.key];
  if(e.key==='ryoshu')Object.assign(info,{ultimate:'천살성도 - 아라야시키',rText:TEXT.ryoshu});
  if(e.key==='honglu')Object.assign(info,{ultimate:'태허환경',rText:TEXT.honglu});
+ if(e.key==='moses')info.qText=c.qText.replaceAll('2회','3회').replaceAll('2개','3개');
+ if(e.key==='starbuck')info.rText='사거리 8의 지정 위치로 도약해 반경 1.8에 320 피해를 준다. 적중한 적 챔피언 중 체력이 가장 낮은 한 명에게 2.5초 속박과 방어력 10% 감소를 부여한다. 전술기 재사용 대기시간을 초기화하고 탄창을 모두 장전한다. 궁극기는 2회 비축하며 사용 후 3초 동안 재사용할 수 없다.';
+ if(e.key==='alisa')info.rText='열화 5중첩에서 사용한다. 사거리 8.6 안의 지정 위치로 지형을 넘어 도약하고 착지 즉시 자폭한다. 반경 4에 고정 피해 750과 자폭 화상을 부여한다. 자폭 후 사망하면 3초 뒤 부활한다.';
+ if(e.key==='queequeg')info.qText='반경 8의 살아 있는 모든 아군 챔피언과 연결한다. 연결된 아군은 방어력 +30·방어력 +10%를 얻고 자신도 방어력 +10%를 얻는다. 아군이 받는 피해의 30%를 대신 받으며 아군이 행동 방해를 받는 중에는 50%를 대신 받는다. 연결 1초마다 해당 아군의 상태이상 지속시간 감소가 5%씩 쌓여 최대 20%가 된다. 거리가 8을 초과한 상태가 1.5초 지속되면 해당 연결이 해제된다. 연결된 아군 1명당 이동속도와 장전속도 +15%를 얻는다.';
+ if(e.key==='meursault')Object.assign(info,{basic:'SOLEIL',basicText:SOLEIL_TEXT});
+ if(e.key==='yan'&&g.buff(e,'yanDistorted'))Object.assign(info,{ultimate:'추가 손 조작',rText:TEXT.yan});
  return info;
 }
 
 
 export const CHANGED_ULTIMATES={ahab:GASHARPOON_NAME,ryoshu:'천살성도 - 아라야시키',honglu:'태허환경'};
 export function giftNotes(key){
- if(CHANGED_ULTIMATES[key])return [{label:'궁극기 변경',text:CHANGED_ULTIMATES[key]+'로 변경된다. 상세 효과는 궁극기 도감의 황금 가지 항목에서 확인한다.'}];
+ if(key==='meursault')return[{label:'기본공격 변경',text:'SOLEIL로 변경된다. 기본공격 도감의 황금 가지 항목에서 상세 효과를 확인한다.'},{label:'Garde',text:'전술기·궁극기 사용 후 다음 기본공격은 충전 없이 Garde로 발동한다.'}];
+ if(BOUGH_EXPANSION_TEXT[key])return[{label:key==='meursault'?'기본공격 변경':'전용 강화',text:TEXT[key]}];
+ if(CHANGED_ULTIMATES[key])return [...(key==='ryoshu'?[{label:'능력치 전환',text:'추가 전투력을 같은 비율의 추가 체력으로 모두 전환한다.'}]:[]),{label:'궁극기 변경',text:CHANGED_ULTIMATES[key]+'로 변경된다. 상세 효과는 궁극기 도감의 황금 가지 항목에서 확인한다.'}];
  const notes={
   mei:[['궁극기 비축','최대 2회 비축하며 사용한 횟수는 순서대로 충전한다. 회축 연계는 해당 충전의 재사용 대기시간을 50% 환급한다.']],
   yi:[['궁극기 재사용','기본 재사용 대기시간 −37초. 최대 2회 비축하며 사용한 횟수는 순서대로 충전된다.']],
-  faust:[['성장','최대 레벨 15. 자동 경험치를 포함한 모든 경험치 획득량 2배.'],['최대 레벨 효과','최종 피해의 7% 추가 고정 피해. 해당 추가 피해의 50%만큼 회복한다.']],
+  faust:[['성장','최대 레벨 12. 자동 경험치를 포함한 모든 경험치 획득량 2배.'],['최대 레벨 효과','최종 피해의 7% 추가 고정 피해. 해당 추가 피해의 50%만큼 회복한다.']],
   don:[['피갈망','영구 적용되며 궁극기로 중복 획득하지 않는다.'],['궁극기 재사용','기본 재사용 대기시간 −15초.']],
   meursault:[['기본공격','적중마다 3초간 폭·사거리 +0.4, 최대 +1.6. 재적중 시 지속시간을 갱신한다.'],['전술기 재사용','기본 재사용 대기시간 −7초.']],
   heathcliff:[['궁극기','기본 재사용 대기시간 −15초. 지속시간 +1.2초.']],
@@ -75,7 +88,7 @@ export function ultimateNotes(key){
  if(key==='ahab')return [{label:'개화 E.G.O',text:GASHARPOON_TEXT},{label:'전용 기술',text:'탄식의 메아리·죄책감의 무게의 상세 효과는 개화 E.G.O 상태 도감의 각 기술 항목에서 확인한다. 탈색된 참회는 0.5초 정신집중 후 사거리 무한의 관통 작살을 발사해 적 챔피언에게 (200 + 대상의 잃은 체력 10%) 피해를 입히고 피해 적용 후 체력이 10% 미만이면 처형한다.'}];
  if(key==='ryoshu')return [
   {label:'연속 베기',text:'사거리 5.5 안으로 순간이동한 뒤 자신 중심 반경 3의 모든 적에게 0.2초마다 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입힌다. 지속 중 이동속도 +20%·받는 피해량 70% 감소·상태이상 면역을 얻으며 이동과 종료 재사용만 가능하다.'},
-  {label:'유지와 종료',text:'유지 중에는 외부 치유·흡혈·자연 회복으로 체력을 회복할 수 없다. 매 타격마다 자신도 적 한 대상에게 주는 피해와 같은 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입으며 사망할 수 있다. 자해 비용은 피해 감소를 적용하지 않는다. 사망하면 해당 위치에 장판이 5초간 남는다. 재사용으로 종료하면 적에게 입힌 총 피해의 30%를 회복하되 자신의 최대 체력 15%를 넘지 않는다. 궁극기 재사용 대기는 유지 중 정지하며 종료·사망 후 시작된다.'},
+  {label:'유지와 종료',text:'유지 중에는 외부 치유·흡혈·자연 회복으로 체력을 회복할 수 없다. 매 타격마다 자신도 적 한 대상에게 주는 피해와 같은 (35 + 자신의 최대 체력 1.5%) 고정 피해를 입으며 사망할 수 있다. 자해 비용은 피해 감소를 적용하지 않는다. 사망하면 해당 위치에 장판이 5초간 남는다. 재사용으로 종료하면 적에게 입힌 총 피해의 30%를 회복하되 자신의 최대 체력 35%를 넘지 않는다. 궁극기 재사용 대기는 유지 중 정지하며 종료·사망 후 시작된다.'},
  ];
  if(key==='honglu')return [
   {label:'장판 부착',text:'자신과 살아 있는 모든 아군 챔피언의 상태이상을 해제하고 각각을 따라가는 반경 3.5 장판을 4초간 부착한다.'},

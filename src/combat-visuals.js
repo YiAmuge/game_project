@@ -1,3 +1,4 @@
+import {DASH_ATTACK_REACH} from './dash-hit.js';
 import * as Bough from './golden-bough.js';
 import {MEI} from './mei-data.js';
 import {MAXIM} from './maxim-data.js';
@@ -15,6 +16,7 @@ export function preview(r,e,g){
  const angle=Math.atan2(g.input.aim.y-e.y,g.input.aim.x-e.x),d={x:Math.cos(angle),y:Math.sin(angle)},ctx=r.ctx;
  const polygon=(range,width)=>{const s={x:-d.y*width/2,y:d.x*width/2},to={x:e.x+d.x*range,y:e.y+d.y*range};r.polygon([[e.x+s.x,e.y+s.y],[to.x+s.x,to.y+s.y],[to.x-s.x,to.y-s.y],[e.x-s.x,e.y-s.y]],'#b8d8d313','#c3e8df66');};
  if(e.key==='maxim'){
+  const reach=g.attackRange(e),tip={x:e.x+d.x*(reach+DASH_ATTACK_REACH),y:e.y+d.y*(reach+DASH_ATTACK_REACH)};r.line([{x:e.x+d.x*reach,y:e.y+d.y*reach},tip],'#ffcf7c77',.05);
   r.circle(e.x,e.y,MAXIM.nearRange,null,'#ffae5888',.04);
   ctx.setLineDash([.1,.18]);r.circle(e.x,e.y,g.attackRange(e),null,'#ffe0a366',.035);ctx.setLineDash([]);
   if(Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y)<=MAXIM.nearRange&&e.motion?.actionTag!=='maximBasic'){
@@ -41,14 +43,14 @@ export function preview(r,e,g){
  if(e.key==='hohenheim'){const shape=Hohenheim.chargeShape(g,e,g.input.aim);polygon(shape.range,shape.width*2);}
  if(dashBasic(g,e)){
   const len=e.key==='myo'?g.attackRange(e):dashLength(e,{don:3.5,rodya:2.4,starbuck:3.75}[e.key]||g.attackRange(e));
-  polygon(len,['don','starbuck'].includes(e.key)?1.5:.6*2*1.2);
+  polygon(len+DASH_ATTACK_REACH,['don','starbuck'].includes(e.key)?1.5:.6*2*1.2);
  }
  if(e.key==='moses'){const b=mosesBreath(g,e);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,b.range,angle-b.angle/2,angle+b.angle/2);ctx.closePath();ctx.fillStyle=b.color+'21';ctx.fill();ctx.strokeStyle=b.color+'bd';ctx.lineWidth=.05;ctx.stroke();}
  const cones={sinclair:Math.PI,ryoshu:Math.PI,heathcliff:1.7,ishmael:1.6,gregor:g.buff(e,'mutant')?1.8*1.3*1.2:1.8,nelly:1.2,dongbaek:1.3,dongrang:1.9,alisa:1.1,kim:e.state.followSlashUntil>g.time?1.9*1.3*1.2*1.08:1.2*1.3};
  if(cones[e.key]||e.key==='nosferatu'&&!e.state.bloodfiend){const range=g.attackRange(e)*(e.key==='kim'&&e.state.followSlashUntil>g.time?1.2*1.08:1);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,range,angle-basicFanAngle(e.key)/2,angle+basicFanAngle(e.key)/2);ctx.closePath();ctx.fillStyle='#bddfd20b';ctx.fill();ctx.strokeStyle='#bddfd255';ctx.lineWidth=.035;ctx.stroke();}
 
  if(e.key==='marton'){const len=Math.hypot(g.input.aim.x-e.x,g.input.aim.y-e.y);if(len<2.5){ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,2.5,angle-basicFanAngle(e.key)/2,angle+basicFanAngle(e.key)/2);ctx.closePath();ctx.fillStyle='#c9b58915';ctx.fill();ctx.strokeStyle='#c9b58988';ctx.lineWidth=.04;ctx.stroke();}r.circle(e.x,e.y,2.5,null,'#02ebf799',.04);r.circle(e.x,e.y,g.attackRange(e),null,'#8bffff77',.04);const dx=g.input.aim.x-e.x,dy=g.input.aim.y-e.y;if(len>=2.5){const cap=Math.min(g.attackRange(e),len);r.circle(e.x+dx/(len||1)*cap,e.y+dy/(len||1)*cap,2.2,'#02ebf70e','#8bffff77',.045);}}
- if(e.key==='meursault'){const a=e.facing||0,d={x:Math.cos(a),y:Math.sin(a)},s={x:-d.y*(2.6+Bough.fistBonus(g,e))/2,y:d.x*(2.6+Bough.fistBonus(g,e))/2},end={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};r.polygon([[e.x+s.x,e.y+s.y],[end.x+s.x,end.y+s.y],[end.x-s.x,end.y-s.y],[e.x-s.x,e.y-s.y]],'#c2d5e90b','#c2d5e95a');}
+ if(e.key==='meursault'){const a=e.facing||0,d={x:Math.cos(a),y:Math.sin(a)},s={x:-d.y*(e.goldenBough?3:2.6+Bough.fistBonus(g,e))/2,y:d.x*(e.goldenBough?3:2.6+Bough.fistBonus(g,e))/2},end={x:e.x+d.x*g.attackRange(e),y:e.y+d.y*g.attackRange(e)};r.polygon([[e.x+s.x,e.y+s.y],[end.x+s.x,end.y+s.y],[end.x-s.x,end.y-s.y],[e.x-s.x,e.y-s.y]],'#c2d5e90b','#c2d5e95a');}
 }
 export function meter(r,e,g){
  const m=metric(g,e);if(!m)return;const healing=m.kind==='healing',labels=healing?['초당 치유량','총 치유량','마지막 치유기 치유량']:['초당 피해량','총 피해량','마지막 공격 피해량'],values=[m.perSecond,m.total,m.last],c=r.ctx;

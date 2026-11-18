@@ -336,7 +336,7 @@ export class ChampionVFX {
     this.areaMaterial(c,camera,e,HEATH.radius,'#63455f','#b780a6',.6);c.save();clipShape(c,camera,{...e,shape:{kind:'circle',range:HEATH.radius}});
     for(let i=0;i<18;i++){const shifted=g.time*4+i*.137,tick=Math.floor(shifted),phase=shifted%1;if(phase>.75)continue;const a=i*2.4+tick,r=HEATH.radius*Math.sqrt(noise(i,tick,5)),p={x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r},at=world(p,.2),alpha=1-phase/.75;this.smallImpact(c,camera,p,.6+phase*2,a,i%3?'#b97ba5':'#dfa4aa',alpha);this.mote(c,'glow','#cb92b4',at.x,at.y,camera.scale*.4,a,alpha*.2);for(let j=0;j<3;j++)this.mote(c,'chip','#dfc7dc',at.x+Math.cos(j*2.4)*phase*camera.scale,at.y-Math.sin(j*2.4)*phase*camera.scale,camera.scale*.07,j,alpha);}c.restore();
    }
-   if(e.state.tether){const target=g.units.find(t=>t.id===e.state.tether.target&&t.alive);if(target)this.rope(c,camera,e,target);}
+   for(const tie of e.state.tethers||[e.state.tether].filter(Boolean)){const target=g.units.find(t=>t.id===tie.target&&t.alive);if(target)this.rope(c,camera,e,target);}
    if(e.state.swordGrab?.target?.alive)this.sword(c,camera,e,e.state.swordGrab.target);
    if(e.key==='marton'&&e.state.fairy?.until>g.time){
     c.save();clipShape(c,camera,{...e,shape:{kind:'circle',range:6.8}});for(const wave of inwardWaves(g.time,e.state.fairy.at??e.state.fairy.until-2.5,6.8))this.smallImpact(c,camera,e,wave.r,0,FAIRY_COLORS.main,wave.alpha);

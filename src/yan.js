@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{combatSeconds}from'./combat-timing.js';
 import{championDescription}from'./champion-reference.js';
 import { settleBody } from './collision.js';
@@ -81,10 +82,11 @@ function safeHandPoint(g,e,point){
  for(let r=.3;r<=3;r+=.3)for(let i=0;i<16;i++){const a=i*Math.PI/8,q={x:p.x+Math.cos(a)*r,y:p.y+Math.sin(a)*r};if(fits(q))return q;}
  return {x:e.x,y:e.y};
 }
-export function hand(g,e){return g.units.find(t=>t.kind==='summon'&&t.owner===e.id&&t.alive);}
-export function command(g,e,p){
+export function hands(g,e){return g.units.filter(t=>t.kind==='summon'&&t.key==='yanHand'&&t.owner===e.id&&t.alive);}
+export function hand(g,e,index=0){return hands(g,e)[index];}
+export function command(g,e,p,index=0){
  if(g.netCommand&&p===e)return g.netCommand({action:'handReturn'});
- const h=hand(g,e);if(!h)return false;
+ const h=hand(g,e,index);if(!h)return false;
  if(distance(e,p)<=e.radius+.35){h.attached=true;delete h.targetId;delete h.goal;return true;}
  h.attached=false;h.goal=safeHandPoint(g,e,p);delete h.targetId;
  const target=g.units.filter(t=>g.hostile(e,t)&&!enemyWell(g,e,t,0)&&g.visibleTo(e.team,t)&&distance(t,p)<=t.radius+.65&&distance(e,t)<=YAN.handLeash+t.radius).sort((a,b)=>distance(a,p)-distance(b,p))[0];
@@ -92,17 +94,18 @@ export function command(g,e,p){
 }
 function transform(g,e){
  cancelCharge(e);delete e.state.yanBarrage;const ratio=e.hp/e.maxHp;e.state.ominous=0;e.state.yanActive=true;e.rCd=0;e.qCd=0;
- g.addBuff(e,'yanDistorted',YAN.duration,{copy:false});e.maxHp=g.maxHp(e);e.hp=e.maxHp*ratio;e.radius=.48*1.1;settleBody(g,e);
+ g.addBuff(e,'yanDistorted',YAN.duration+(Effects.empowered(e)?3:0),{copy:false});e.maxHp=g.maxHp(e);e.hp=e.maxHp*ratio;e.radius=.48*1.1;settleBody(g,e);
  const d={x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)},p=safeHandPoint(g,e,{x:e.x+d.x*1.6,y:e.y+d.y*1.6});
- g.entity({kind:'summon',key:'yanHand',name:'뒤틀린 전령의 손',team:e.team,owner:e.id,...p,maxHp:1,radius:.25,invulnerableUntil:Infinity,ccImmuneUntil:Infinity,attached:true,nextStrike:g.time+YAN.handEvery});
+ for(let index=0;index<(Effects.empowered(e)?2:1);index++)g.entity({kind:'summon',key:'yanHand',name:'뒤틀린 전령의 손',team:e.team,owner:e.id,handIndex:index,...safeHandPoint(g,e,{x:p.x-d.y*index*1.4,y:p.y+d.x*index*1.4}),maxHp:1,radius:.25,invulnerableUntil:Infinity,ccImmuneUntil:Infinity,attached:true,nextStrike:g.time+YAN.handEvery});
  g.effects.push({type:'burst',x:e.x,y:e.y,r:3,theme:'yan',life:.7,maxLife:.7});
 }
 export function removeHand(g,e){for(const h of g.units.filter(t=>t.kind==='summon'&&t.owner===e.id))h.alive=false;}
 function endTransform(g,e){const ratio=e.hp/e.maxHp;delete e.buffs.yanDistorted;delete e.state.yanActive;removeHand(g,e);e.maxHp=g.maxHp(e);e.hp=Math.min(e.maxHp,e.maxHp*ratio);e.radius=.48;e.qCd=e.rCd=0;}
-export function validate(g,e,slot){return e.key!=='yan'||(slot!=='r'||!distorted(g,e));}
+export function validate(g,e,slot){return e.key!=='yan'||(slot!=='r'||!distorted(g,e)||Effects.empowered(e));}
 export function cast(g,e,slot,p){
  if(e.key!=='yan')return false;cancelCharge(e);
  if(slot==='r'){
+  if(distorted(g,e)&&Effects.empowered(e))return command(g,e,p,1);
   if(ready(g,e))transform(g,e);
   else{for(const m of orders(g,e))m.until=g.time+6;for(const t of g.champions(1-e.team).filter(t=>g.hostile(e,t)&&distance(e,t)<=YAN.radius+t.radius&&g.visibleTo(e.team,t)&&g.clearLine(e,t)))mark(g,e,t,{ultimate:true});}
  }else if(distorted(g,e)){
@@ -121,7 +124,7 @@ export function tickHand(g,h,dt){
  ejectHand(g,h);
  const d={x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)},target=g.units.find(t=>t.id===h.targetId&&g.hostile(e,t)&&!enemyWell(g,e,t,0)&&g.visibleTo(e.team,t));
  if(h.targetId&&!target)delete h.targetId;
- let desired=h.attached?{x:e.x+d.x*1.6,y:e.y+d.y*1.6}:target||h.goal||h;
+ let desired=h.attached?{x:e.x+d.x*1.6-d.y*(h.handIndex||0)*1.4,y:e.y+d.y*1.6+d.x*(h.handIndex||0)*1.4}:target||h.goal||h;
  desired=safeHandPoint(g,e,desired);if(distance(h,e)>YAN.handLeash){Object.assign(h,safeHandPoint(g,e,h));h.path=[];}
  let goal=desired;
  if(!g.clearLine(h,desired,h.radius)){
@@ -135,7 +138,7 @@ export function tickHand(g,h,dt){
  if(g.time+1e-8>=h.nextStrike){
   h.nextStrike=g.time+combatSeconds(YAN.handEvery/reloadRate(g,e));h.struckAt=g.time;
   g.action(e,'skill',()=>{for(const t of [...g.units])if(g.hostile(e,t)&&distance(h,t)<=YAN.handRadius+t.radius&&g.clearLine(h,t)){
-   g.deal(e,t,YAN.handDamage*ammoBonus(g,e));if(t.id===h.targetId)g.status(t,'yanLock',.3,YAN.lockDuration,e);
+   const ticks=e.state.yanHandHits??={},last=ticks[t.id];if(Effects.empowered(e)&&last!==undefined&&g.time-last<combatSeconds(YAN.handEvery/reloadRate(g,e))-1e-8){if(t.id===h.targetId&&!g.stat(t,'yanLock'))g.status(t,'yanLock',.3,YAN.lockDuration,e);continue;}ticks[t.id]=g.time;g.deal(e,t,YAN.handDamage*ammoBonus(g,e));if(t.id===h.targetId)g.status(t,'yanLock',.3,YAN.lockDuration,e);
   }});
  }
 }
@@ -161,3 +164,5 @@ export function abilityInfo(g,e){
  if(e.key!=='yan')return {};const transformed=distorted(g,e),c=championDescription(e.key,transformed);
  return {basic:c.basic,tactical:c.tactical,ultimate:transformed?'':ready(g,e)?'enlxmfflsdis':'도시의 의지',qText:c.qText,rText:transformed?'':ready(g,e)?c.baseUltimates[1].description:c.baseUltimates[0].description};
 }
+
+export function addSecondHand(g,e){if(hands(g,e).length>=2)return;const d={x:Math.cos(e.facing||0),y:Math.sin(e.facing||0)},p=safeHandPoint(g,e,{x:e.x+d.x*1.6-d.y*1.4,y:e.y+d.y*1.6+d.x*1.4});g.entity({kind:"summon",key:"yanHand",name:"뒤틀린 전령의 손",team:e.team,owner:e.id,handIndex:1,...p,maxHp:1,radius:.25,invulnerableUntil:Infinity,ccImmuneUntil:Infinity,attached:true,nextStrike:g.time+YAN.handEvery});}

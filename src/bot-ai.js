@@ -4,7 +4,7 @@ import*as Moses from'./moses.js';
 import*as Ezra from'./ezra.js';
 import{CHAMPIONS,CORE_POSITIONS,FOUNTAIN_AREAS,UPGRADE_STEPS}from'./data.js';
 import{distance,direction}from'./geometry.js';
-import{DRAG_KEYS}from'./skills.js';
+import{DRAG_KEYS,dashBasic}from'./skills.js';
 import{skillTargeting,castPoint}from'./targeting.js';
 import{shoppingTrip,rallyPing,buyEquipment}from'./bot-build.js';
 export{buyEquipment,rallyPing};
@@ -16,7 +16,7 @@ export function frame(g){
  frames.set(g,f);return f;
 }
 const enemyTowers=(g,e)=>frame(g).towers[1-e.team];
-export const basicReach=(g,e)=>e.key==='ezra'?Ezra.attackReach(g,e):g.attackRange(e)+(e.key==='marton'?2.2:e.key==='rudolph'?2.1675:0);
+export const basicReach=(g,e)=>dashBasic(g,e)?(e.key==='ezra'?Ezra.attackReach(g,e):g.attackRange(e)+(e.key==='mei'?1.6:0))+1.2:e.key==='ezra'?Ezra.attackReach(g,e):g.attackRange(e)+(e.key==='marton'?2.2:e.key==='rudolph'?2.1675:0);
 export function canSiege(g,e,tower){
  if(e.hp/e.maxHp<.55||tower.aggro===e.id||tower.targetId===e.id)return false;
  const f=frame(g);let memo=f.cover.get(e.id);if(!memo){memo=new Map();f.cover.set(e.id,memo);}if(memo.has(tower.id))return memo.get(tower.id);
@@ -130,7 +130,7 @@ export function waitForWave(g,e,dt){
  let point;if(wave){const d=direction(wave,goal);point={x:wave.x-d.x*1.8,y:wave.y-d.y*1.8};}else point=f.towers[e.team].find(t=>t.alive&&t.lane===e.lane)||g.spawnPoint(e);
  e.objective='wave';if(distance(e,point)>1.5)g.moveToward(e,point,dt);return true;
 }
-export function draft(g,position,used=[]){const pool=Object.keys(CHAMPIONS).filter(key=>!used.includes(key)&&CHAMPIONS[key].recommendedPosition===position);const choices=pool.length?pool:Object.keys(CHAMPIONS).filter(key=>!used.includes(key));return choices[Math.floor(g.random()*choices.length)];}
+export function draft(g,position,used=[]){const pool=Object.keys(CHAMPIONS).filter(key=>!used.includes(key)&&(CHAMPIONS[key].recommendedPosition===position||position==='top'&&['ryoshu','gahwan'].includes(key)||position==='bottom'&&key==='yi'));const choices=pool.length?pool:Object.keys(CHAMPIONS).filter(key=>!used.includes(key));return choices[Math.floor(g.random()*choices.length)];}
 export function supportAnchor(g,e){return frame(g).champions[e.team].find(a=>a!==e&&a.alive&&a.hp>0&&a.position==='bottom'&&!a.retreat&&!g.inSpawn(a));}
 export function formation(g,e,anchor,objective){const forward=direction(anchor,objective||CORE_POSITIONS[1-e.team]);return{x:anchor.x-forward.x*1.8,y:anchor.y-forward.y*1.8-2.1};}
 export function bossObjective(g,e,dt){const f=frame(g),living=team=>f.champions[team].filter(c=>c.alive&&c.hp>0&&!c.state.posthumous).length,boss=g.units.find(u=>u.camp==='boss'&&u.alive);if(!boss||living(e.team)<=living(1-e.team))return false;const radius=Math.max(2.1,Math.min(6,g.attackRange(e)*.8+boss.radius)),a=(e.team?0:Math.PI)+(e.index-1.5)*.38,point={x:boss.x+Math.cos(a)*radius,y:boss.y+Math.sin(a)*radius};e.objective='boss';if(distance(e,boss)>g.attackRange(e)+boss.radius||!g.clearLine(e,boss))g.moveToward(e,point,dt);else{g.attack(e,boss);combatSkills(g,e,boss);}return true;}

@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import {ordersActive} from './ahab-ego.js';
 import * as Bough from './golden-bough.js';
 import {MEI} from './mei-data.js';
@@ -28,6 +29,9 @@ export function stackInfo(e,g){
  if(e.key==='mei'&&e.state.meiQRecastUntil>g.time)return{label:'회축 '+(e.state.meiQRecastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffbd49'};
  if(e.key==='mei'&&e.state.meiKickAt!==undefined&&g.time-e.state.meiKickAt<=1.3)return{label:'철산고 연계 '+Math.max(0,1.3-g.time+e.state.meiKickAt).toFixed(1)+'s',textOnly:true,color:'#ff783d'};
  if(e.key==='ahab'&&e.state.gasharpoon)return{label:'개화 '+Math.max(0,e.state.gasharpoon.until-g.time).toFixed(1)+'s · 탄식 '+e.state.gasharpoon.ammo+'/1',textOnly:true,color:'#f0f7ff'};
+ if(e.key==='gubo'&&Effects.empowered(e))return{label:'찢어진 추억',value:Math.min(7,e.guboAllyKills||0),max:7,color:'#b5cee1',textOnly:true};
+ if(e.key==='rudolph'&&Effects.empowered(e))return{label:'생환',value:e.rudolphReturns||0,max:20,color:'#f5bd78',textOnly:true};
+ if(e.key==='sora'&&Effects.permanentSora(e))return{label:'영구 개화 E.G.O · 말살 '+e.state.egoQCharges+'/2',color:'#e7cb80',textOnly:true};
  if(e.key==='ishmael'&&Bough.active(e))return{label:'항해',value:Bough.voyage(e),max:8,color:'#e8cc71',textOnly:true};
  if(e.key==='ppui')return{label:'맥동',value:pulse(e),max:PPUI.pulseCap,color:'#f4a9bb',textOnly:true};
  if(e.key==='ahab'&&e.state.recastUntil>g.time)return{label:'재사용 '+(e.state.recastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffcf7c'};
@@ -50,7 +54,7 @@ export function stackInfo(e,g){
  if(e.key==='honglu'&&g.buff(e,'insight'))return {label:`통찰 ${Math.max(0,(e.state.insightUntil||0)-g.time).toFixed(1)}s`,textOnly:true,color:'#8aead8'};
  if(e.key==='faust'&&g.buff(e,'faustUlt'))return {label:'권태',value:e.ultStacks||0,max:4,color:'#b8edf2',shape:'mirror'};
  if(e.key==='ezra'&&g.buff(e,'ezraUlt'))return {label:'총공',value:e.state.ultAttacks||0,max:4,color:'#f4cd96',shape:'claw'};
- if(e.key==='don'&&g.buff(e,'donLifesteal'))return {label:'피갈망',textOnly:true,color:'#e59ba7'};
+ if(e.key==='don'&&!Effects.empowered(e)&&g.buff(e,'donLifesteal'))return {label:'피갈망',textOnly:true,color:'#e59ba7'};
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt'))return {label:'시체자루 연장',value:e.state.heathExtensions||0,max:4,color:'#c9a5e5',shape:'flame'};
 
  return null;
@@ -89,6 +93,7 @@ export function championHud(r,e,g){
   const gap=.075,w=(width-gap*(cap-1))/cap;
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)&&e.key!=='ezra'?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
  }
+ if(e.key==='myo'&&Effects.empowered(e)){const ratio=(e.state.myoTacticalAmmo??cap)/cap,gy=resourceY+.3;c.fillStyle='#1c2935';c.fillRect(x,gy,width,.15);c.fillStyle='#91c8df';c.fillRect(x,gy,width*ratio,.15);r.text('Q '+Math.floor(e.state.myoTacticalAmmo??cap)+' / '+cap,e.x,gy+.075,'#e7f5ff',.17);}
  if(e.key==='maxim'&&e.state.maximQ){const q=e.state.maximQ,ratio=Math.max(0,Math.min(1,(q.until-g.time)/(q.until-q.at))),gy=resourceY+.30;c.fillStyle='#312116';c.fillRect(x,gy,width,.13);c.fillStyle='#f6ab4c';c.fillRect(x,gy,width*ratio,.13);c.strokeStyle='#ba8749';c.lineWidth=.025;c.strokeRect(x,gy,width,.13);}
  if(e.key==='ezra'&&e.state.ezraReloading){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*Math.min(1,e.reloadProgress/EZRA.reload),.10);}
  if(e.key==='jamila'&&e.state.lcaReload){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*reloadFraction(e),.10);}
@@ -162,6 +167,8 @@ export function championGroundEffects(r,e,g){
 }
 
 export function stackGauge(e,g){
+ if(e.key==='don'&&Effects.empowered(e)||e.key==='sora'&&Effects.permanentSora(e))return null;
+ if(e.state.soleilCharge)return{color:'#ffd279',ratio:Math.min(1,(g.time-e.state.soleilCharge.at)/1.5),label:'Garde',timer:false,max:1};
  if(e.key==='ppui'){const full=pulse(e)>=PPUI.pulseCap,value=(e.ppuiHealing||0)%1000;return{color:'#ef637e',ratio:full?1:value/1000,label:full?'맥동 최대':`다음 맥동까지 ${Math.ceil(1000-value)} 치유`,max:1};}
  if(e.key==='nosferatu'){const s=e.state.bloodfiend;return{ratio:s?Math.max(0,(s.until-g.time)/10):(e.state.bloodFeast||0)/bloodCapacity(g,e),color:'#ed3c65',label:s?'':`혈찬 ${Math.floor(e.state.bloodFeast||0)} / ${Math.floor(bloodCapacity(g,e))}`,timer:Boolean(s),max:s?0:bloodCapacity(g,e)/200};}
  if(e.key==='queen'&&e.state.queenR){const s=e.state.queenR;return{ratio:s.phase==='charging'?Math.min(1,(g.time-s.at)/3.75):s.stage/3,color:'#ff91dc',label:'',timer:false,max:3};}

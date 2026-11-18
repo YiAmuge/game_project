@@ -1,3 +1,4 @@
+import {forwardDistance} from './dash-hit.js';
 import {MEI as P} from './mei-data.js';
 import {distance,direction,segmentDistance} from './geometry.js';
 export const armorRate=(g,e)=>e.key==='mei'?Math.floor(e.level/3)*(.1+(g.buff(e,'meiGuard')?.06:0)):0;
@@ -55,7 +56,7 @@ export function attack(g,e,p){
   if(e.state.meiCombo!==combo)return;combo.dashing=false;combo.until=g.time+count*P.interval;
   for(let i=0;i<count;i++)g.schedule(e,i*P.interval,()=>{
    if(e.state.meiCombo!==combo)return;e.attackAt=e.lastAttackAt=g.time;e.attackFacing=combo.angle;e.state.meiPunch={at:g.time,until:g.time+P.interval,index:i,last:i===count-1,angle:combo.angle};
-   fireSound(g,e);for(const t of [...g.units])if(g.hostile(e,t)&&distance(e,t)<=P.strikeRange+t.radius&&g.clearLine(e,t))hit(g,e,t,P.damage);
+   fireSound(g,e);for(const t of [...g.units])if(g.hostile(e,t)&&forwardDistance(t,e,{x:Math.cos(combo.angle),y:Math.sin(combo.angle)})<=P.strikeRange+t.radius&&g.clearLine(e,t))hit(g,e,t,P.damage);
    fx(g,e,'meiPunch',{angle:combo.angle,index:i,last:i===count-1,r:P.strikeRange,life:.3,maxLife:.3});
   });
  };

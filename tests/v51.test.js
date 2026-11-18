@@ -21,10 +21,10 @@ test('Ishmael respects debuff immunity and weakness from separate owners expires
  const{g,p}=arena('ishmael'),t=target(g,31,'meursault');g.addBuff(t,'resolve',3);g.attack(p,t);near(g.powerWeak(t),0);delete t.buffs.resolve;
  const other=g.makeChampion('ishmael',0,2);Object.assign(other,{x:30,y:20});p.attackCd=0;p.ammo=2;g.attack(p,t);g.time=11;g.attack(other,t);g.time=11.6;near(g.powerWeak(t),.02);g.time=12.5;near(g.powerWeak(t),0);
 });
-test('Ryoshu Q recharges at base eight seconds and refills one round per distinct damaged enemy, including shields',()=>{
+test('Ryoshu Q recharges at base eight seconds and refills one round on cast regardless of enemy contact',()=>{
  const{g,p}=arena('ryoshu'),t=target(g,32);g.addShield(t,5000,'test',10);p.ammo=0;assert.equal(CHAMPIONS.ryoshu.q,8);near(g.cooldown(p,'q'),8);assert.ok(g.cast(p,'q',{x:34,y:20}));near(p.qCd,8);run(g,.55);near(p.ammo,1);near(t.hp,t.maxHp);run(g,.5);near(p.ammo,1);
- const b=arena('ryoshu'),immune=target(b.g,32);immune.invulnerableUntil=100;b.p.ammo=0;b.g.cast(b.p,'q',{x:34,y:20});run(b.g,.55);near(b.p.ammo,0);
- const c=arena('ryoshu');target(c.g,31.2);target(c.g,33);c.p.ammo=0;c.g.cast(c.p,'q',{x:34,y:20});run(c.g,.55);near(c.p.ammo,2);
+ const b=arena('ryoshu'),immune=target(b.g,32);immune.invulnerableUntil=100;b.p.ammo=0;b.g.cast(b.p,'q',{x:34,y:20});run(b.g,.55);near(b.p.ammo,1);
+ const c=arena('ryoshu');target(c.g,31.2);target(c.g,33);c.p.ammo=0;c.g.cast(c.p,'q',{x:34,y:20});run(c.g,.55);near(c.p.ammo,1);
 });
 test('Ryoshu ultimate applies twenty-percent vulnerability for five seconds with four hits',()=>{
  const{g,p}=arena('ryoshu'),t=target(g,34);assert.ok(g.cast(p,'r',{x:34,y:20}));run(g,.5);near(g.stat(t,'vulnerable'),.2);near(g.stat(t,'armorDown'),0);const until=t.status.vulnerable.until;assert.ok(until-g.time>4.8&&until-g.time<=5);near(t.maxHp-t.hp,damageFormula(140,CHAMPIONS.ryoshu.power,1)*(1+3*1.2));g.time=until;near(g.stat(t,'vulnerable'),0);

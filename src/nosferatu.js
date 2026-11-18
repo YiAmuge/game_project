@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{RULES,RUNTIME_CHAMPIONS,FOUNTAIN_AREAS,upgradeRate}from'./data.js';
 import{distance,direction,clamp}from'./geometry.js';
 import{settleBody,moveBody}from'./collision.js';
@@ -24,7 +25,7 @@ export const basicBonus=e=>1+Math.min(5,Math.floor((e.state.bloodFeast||0)/200))
 export function basic(g,e,d){
  const bonus=basicBonus(e);
  if(bloodfiend(g,e)){const form=e.state.bloodfiend;e.state.bloodStriking=true;try{for(const t of [...g.units]){if(e.state.bloodfiend!==form)break;if(g.hostile(e,t)&&distance(e,t)<=g.attackRange(e)+t.radius&&g.clearLine(e,t))g.deal(e,t,NOSFERATU.rDamage*bonus,{damageKind:'basic'});}}finally{delete e.state.bloodStriking;}g.effects.push({type:'bloodCleave',source:e.id,theme:e.key,x:e.x,y:e.y,r:g.attackRange(e),angle:e.facing,shape:{kind:'circle',range:g.attackRange(e)},life:.3,maxLife:.3});}
- else{g.cone(e,d,g.attackRange(e),Math.PI,NOSFERATU.basicDamage*bonus);g.bullet(e,d,NOSFERATU.bladeDamage*bonus,NOSFERATU.bladeRange+(g.attackRange(e)-NOSFERATU.basicRange),{bloodBlade:true,speed:17,width:(NOSFERATU.bladeWidth/2+Math.max(0,g.attackRange(e)-NOSFERATU.basicRange)*Math.sin(165*Math.PI/360))/1.1});}
+ else{g.cone(e,d,g.attackRange(e),Math.PI,NOSFERATU.basicDamage*bonus);g.bullet(e,d,NOSFERATU.bladeDamage*bonus,(NOSFERATU.bladeRange+(Effects.empowered(e)?1.7:0))+(g.attackRange(e)-NOSFERATU.basicRange),{bloodBlade:true,speed:17,width:(NOSFERATU.bladeWidth/2+Math.max(0,g.attackRange(e)-NOSFERATU.basicRange)*Math.sin(165*Math.PI/360))/1.1});}
 }
 export function restore(g,e){
  if(e.key!=='nosferatu')return false;const s=e.state?.bloodfiend;if(!s)return false;delete e.state.bloodfiend;delete e.buffs.bloodfiend;e.phaseEnemiesUntil=0;delete e.motion;e.hp=Math.min(e.maxHp,s.hp);e.radius=s.radius??.48;e.state.bloodFeast=Math.min(capacity(g,e),s.feast+(s.damage||0)*NOSFERATU.rFeast);e.attackCd=0;
@@ -35,10 +36,10 @@ export function cast(g,e,slot,p){
  if(slot==='q'){
   if(recast(g,e,'q'))e.state.bloodSummons.remaining--;else e.state.bloodSummons={until:g.time+NOSFERATU.qWindow,remaining:NOSFERATU.qRecasts};
   e.state.bloodFeast-=NOSFERATU.cost;const army=g.units.filter(t=>t.bloodBat&&t.owner===e.id&&t.alive).sort((a,b)=>a.id-b.id);while(army.length>=NOSFERATU.bats){const old=army.shift();old.alive=false;old.hp=0;}
-  const point=g.safeLanding(e,p,NOSFERATU.qRange),b=g.entity({kind:'trooper',bloodBat:true,key:'nosferatu',owner:e.id,team:e.team,x:point.x,y:point.y,radius:.22,maxHp:e.maxHp*.5,armor:0,until:g.time+NOSFERATU.batDuration,nextStrike:g.time,snapshot:{speed:g.speed(e)*NOSFERATU.batSpeed,power:RULES.power[RUNTIME_CHAMPIONS.nosferatu.power]*.9*g.powerScale(e)*.5},name:'핏빛 박쥐'});ejectBat(g,b);
+  const point=g.safeLanding(e,p,(NOSFERATU.qRange+(Effects.empowered(e)?1.7:0))),b=g.entity({kind:'trooper',bloodBat:true,key:'nosferatu',owner:e.id,team:e.team,x:point.x,y:point.y,radius:.22,maxHp:e.maxHp*.5,armor:0,until:g.time+NOSFERATU.batDuration,nextStrike:g.time,snapshot:{speed:g.speed(e)*NOSFERATU.batSpeed,power:RULES.power[RUNTIME_CHAMPIONS.nosferatu.power]*.9*g.powerScale(e)*.5},name:'핏빛 박쥐'});ejectBat(g,b);
   for(const t of [...g.units])if(t!==b&&g.hostile(e,t)&&distance(t,b)<=.75+t.radius&&g.clearLine(b,t))g.deal(e,t,NOSFERATU.qDamage,{damageKind:'skill'});
  }else if(bloodfiend(g,e)){if(restore(g,e))g.usedMobility(e);}
- else{e.state.bloodfiend={radius:e.radius,damage:0,x:e.x,y:e.y,hp:e.hp,feast:e.state.bloodFeast||0,at:g.time,until:g.time+NOSFERATU.rDuration,nextDrain:g.time+NOSFERATU.rEvery,nextAttack:g.time};e.radius*=NOSFERATU.rSize;g.teleport(e,g.safeLanding(e,p,NOSFERATU.rRange));e.hp=e.maxHp;e.phaseEnemiesUntil=g.time+NOSFERATU.rDuration;g.addBuff(e,'bloodfiend',NOSFERATU.rDuration,{copy:false});e.attackCd=0;}
+ else{e.state.bloodfiend={radius:e.radius,damage:0,x:e.x,y:e.y,hp:e.hp,feast:e.state.bloodFeast||0,at:g.time,until:g.time+NOSFERATU.rDuration,nextDrain:g.time+NOSFERATU.rEvery,nextAttack:g.time};e.radius*=NOSFERATU.rSize;g.teleport(e,g.safeLanding(e,p,(NOSFERATU.rRange+(Effects.empowered(e)?1.5:0))));e.hp=e.maxHp;e.phaseEnemiesUntil=g.time+NOSFERATU.rDuration;g.addBuff(e,'bloodfiend',NOSFERATU.rDuration,{copy:false});e.attackCd=0;}
 }
 export function tick(g,e){
  if(e.key!=='nosferatu'||e.bloodBat)return;if(e.state.bloodSummons?.until<=g.time+1e-8)delete e.state.bloodSummons;e.state.bloodFeast=Math.min(capacity(g,e),e.state.bloodFeast||0);

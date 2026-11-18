@@ -172,7 +172,7 @@ export const CHAMPION_ROLES={
  yi:['지원','방해','support'],faust:['저격','bottom'],sinclair:['암살','jungle'],don:['돌격','암살','top'],meursault:['보호','방해','top'],gubo:['저격','bottom'],kim:['보호','top'],queequeg:['지원','보호','support'],ppui:['지원','support'],gahwan:['방해','저격','support'],hohenheim:['저격','방해','bottom'],alisa:['암살','돌격','jungle'],marton:['보호','방해','top'],nelly:['암살','jungle'],myo:['암살','jungle'],rudolph:['저격','bottom'],dongbaek:['저격','bottom'],dongrang:['보호','top'],outis:['저격','암살','bottom'],heathcliff:['돌격','top'],ryoshu:['암살','jungle'],ishmael:['방해','보호','support'],honglu:['지원','support'],rodya:['방해','support'],gregor:['보호','top'],ahab:['저격','암살','bottom'],starbuck:['암살','방해','jungle'],sora:['암살','돌격','jungle'],yan:['방해','보호','support']
 };
 for(const [key,values] of Object.entries(CHAMPION_ROLES)){const c=CHAMPIONS[key];c.roles=values.slice(0,-1);c.role=c.roles[0];c.recommendedPosition=values.at(-1);}
-CHAMPIONS.nelly.range=1.8;CHAMPIONS.alisa.range=2;CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
+CHAMPIONS.ryoshu.ammo=3;CHAMPIONS.nelly.range=1.8;CHAMPIONS.alisa.range=2;CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
 
 export const AUGMENT_RULES={cost:500,refund:.7,slots:6,categorySlots:2};
 export const AUGMENTS=[
@@ -182,10 +182,10 @@ export const AUGMENTS=[
  {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 관통 또는 범위 공격이 가능한 기본 공격은 사거리 +1.3을 적용'},
  {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소. 최대 중첩 중 공격 중에도 장전이 15% 속도로 진행'},
  {key:'glaive',group:'survival',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
- {key:'wisdom',group:'combat',name:'지혜성도',text:"전투력 +7%. 10초마다 적에게 피해를 입히면 0.2초 간격으로 (100 + 현재 전투력 5%당 10) 고정 피해를 총 5회 입힌다. 돌진·도약·순간이동 기술을 사용하면 남은 지혜성도 쿨타임이 5% 감소한다. 쿨타임 감소는 2초마다 1회 발동한다."},
+ {key:'wisdom',group:'combat',name:'지혜성도',text:"전투력 +7%. 10초마다 적에게 피해를 입히면 0.2초 간격으로 (75 + 현재 전투력 5%당 7) 고정 피해를 총 5회 입힌다. 돌진·도약·순간이동 기술을 사용하면 남은 지혜성도 쿨타임이 5% 감소한다. 쿨타임 감소는 2초마다 1회 발동한다."},
  {key:'duelManual',group:'combat',name:'듀엘교본 3권',text:"이동속도 +5%. 적에게 피해를 입힐 때마다 이동속도 +2%·전투력 +5%를 얻으며 최대 5중첩이다. 5초마다 1중첩 감소한다."},
  {key:'resentment',group:'survival',name:'원한 문신',text:'잃은 체력 10%마다 전투력·방어력·장전속도 +5%, 최대 8중첩. 현재 체력에 따라 실시간 적용'},
- {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:"최대 체력 +7%. 치명적인 피해를 받으면 최대 체력의 50%로 체력을 복구하고 군중제어를 해제한다. 1초간 군중제어 면역·이동속도 +30%. 복구할 때마다 최대 체력이 영구적으로 2.5% 증가한다. 재사용 대기시간 60초."},
+ {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:"최대 체력 +7%. 자신의 기술을 포함한 치명적인 피해를 받으면 최대 체력의 50%로 체력을 복구하고 군중제어를 해제한다. 1초간 군중제어 면역·이동속도 +30%. 복구할 때마다 최대 체력이 영구적으로 2.5% 증가한다. 재사용 대기시간 60초."},
  {key:'forceBattery',group:'survival',name:'휴대용 역장 배터리',text:"스킬 가속 +10%·이동속도 +10%. 2초간 피해를 받지 않으면 초당 최대 체력의 3%만큼 보호막을 충전하며 최대 12%까지 누적한다."},
  {key:'blackOrb',group:'combat',name:'흑수환',text:'전투력·이동속도·장전속도 +10%'},
  {key:'antimatter',group:'survival',name:'반물질 옷',text:'최대 체력 +10% · 사거리 1.6의 적에게 0.5초마다 20 고정 피해'},

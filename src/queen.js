@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import{has}from'./augments.js';
 import{RULES,RUNTIME_CHAMPIONS}from'./data.js';
 import{damageBonus}from'./skills.js';
@@ -53,7 +54,7 @@ export function release(g,e,aim){const s=e.state.queenR;if(s?.phase!=='charging'
 export function cast(g,e,slot,p,d,options={}){
  if(slot==='q'){
   const old=e.state.queenQ;if(old?.phase==='preparing'&&!old.redirected){old.angle=angleFrom(g,e,old,p);old.redirected=true;return;}
-  e.state.queenQ={phase:'preparing',at:g.time,next:g.time+QUEEN.qDelay,x:e.x+d.x*.75,y:e.y+d.y*.75,angle:Math.atan2(d.y,d.x),hits:0,redirected:false};g.addBuff(e,'arcanaStride',QUEEN.qSpeedTime);
+  e.state.queenQ={phase:'preparing',at:g.time,next:g.time+(Effects.empowered(e)?0:QUEEN.qDelay),x:e.x+d.x*.75,y:e.y+d.y*.75,angle:Math.atan2(d.y,d.x),hits:0,redirected:false};g.addBuff(e,'arcanaStride',QUEEN.qSpeedTime);if(Effects.empowered(e))tick(g,e);
  }else if(recast(g,e,'r')){if(options.manual)delete e.state.queenR.mobileTargetId;release(g,e,p);}
  else{e.state.queenR={phase:'charging',x:e.x,y:e.y,angle:Math.atan2(d.y,d.x),aim:{...p},at:g.time};e.channelUntil=g.time+QUEEN.stageTime*3+1;if(has(e,'battleHaste')){g.addBuff(e,'augBattleHaste',.1,{copy:false});e.visuals.battleHaste={at:g.time,until:g.time+1};}}
 }
@@ -69,7 +70,7 @@ export function tick(g,e){
 // Shared by local and network renderers; only Q's footprint has delayed enemy visibility.
 export function telegraph(g,e,slot,viewerTeam=g.player.team){
  const s=e.state[slot==='q'?'queenQ':'queenR'];if(!s)return null;
- if(slot==='q'&&viewerTeam!==e.team&&g.time<s.at+QUEEN.qDelay-.5-1e-8)return null;
+ if(slot==='q'&&viewerTeam!==e.team&&g.time<s.at+(Effects.empowered(e)?0:QUEEN.qDelay)-.5-1e-8)return null;
  const spec=slot==='q'?{range:QUEEN.qRange,width:QUEEN.qWidth}:ARCANA_STAGES[s.phase==='charging'?stage(g,e):s.stage];
  return {x:s.x,y:s.y,angle:s.angle,range:spec.range,width:spec.width,slot};
 }

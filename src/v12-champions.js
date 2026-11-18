@@ -1,3 +1,4 @@
+import * as Effects from './bough-effects.js';
 import * as Ppui from './ppui.js';
 import { RULES,RUNTIME_CHAMPIONS as CHAMPIONS } from './data.js';
 import { carried } from './attachments.js';
@@ -30,8 +31,8 @@ export function releaseGrab(g,e,throwDirection){
  if(throwDirection&&t.alive){e.state.kimThrowAt=g.time;e.state.kimThrowFacing=Math.atan2(throwDirection.y,throwDirection.x);g.deal(e,t,KIM.throwDamage);g.startMotion(t,throwDirection,2.5,{kind:'knock'});}
 }
 function counterWave(g,e,counter){
- const s=e.state.counter;if(!s)return;if(counter)g.effects.push({type:'counterSignal',source:e.id,theme:'kim',x:e.x,y:e.y,r:1,life:.25,maxLife:.25});delete e.state.counter;e.channelUntil=0;e.ccImmuneUntil=s.immune;
- const fire=()=>{e.state.kimWaveAt=g.time;e.state.kimWaveFacing=s.angle;e.state.kimWaveDuration=counter?.115:.24;e.state.kimWaveSerial=(e.state.kimWaveSerial||0)+1;g.bullet(e,{x:Math.cos(s.angle),y:Math.sin(s.angle)},counter?KIM.counterDamage:KIM.rDamage,counter?8:6,{slot:'r',damageKind:'skill',width:counter?KIM_COUNTER_HALF_WIDTH:KIM_WAVE_HALF_WIDTH,pierce:Infinity,theme:'kim',swordWave:true,onHit:t=>{if(counter)g.status(t,'slow',.25,1.5,e);}});};
+ const s=e.state.counter;if(!s)return;if(counter)g.effects.push({type:'counterSignal',source:e.id,theme:'kim',x:e.x,y:e.y,r:1,life:.25,maxLife:.25});if(counter&&Effects.empowered(e))e.rCd*=.5;delete e.state.counter;e.channelUntil=0;e.ccImmuneUntil=s.immune;
+ const fire=()=>{e.state.kimWaveAt=g.time;e.state.kimWaveFacing=s.angle;e.state.kimWaveDuration=counter?.115:.24;e.state.kimWaveSerial=(e.state.kimWaveSerial||0)+1;g.bullet(e,{x:Math.cos(s.angle),y:Math.sin(s.angle)},counter?KIM.counterDamage:KIM.rDamage,counter?8:6,{slot:'r',damageKind:'skill',width:counter?KIM_COUNTER_HALF_WIDTH:KIM_WAVE_HALF_WIDTH,pierce:Infinity,theme:'kim',swordWave:true,fixedRatio:counter&&Effects.empowered(e)?.2:0,onHit:t=>{if(counter)g.status(t,'slow',.25,1.5,e);}});};
  fire();if(counter)for(let i=1;i<4;i++)g.schedule(e,i*.125,fire);
  g.effects.push({source:e.id,slot:'r',damageKind:'skill',type:'slash',x:e.x,y:e.y,r:(counter?5:3)/1.5,angle:s.angle,spread:counter?2.2:1.1,theme:'kim',life:.5,maxLife:.5});
 }
@@ -48,7 +49,7 @@ export function cast(g,e,slot,p,d){
     if(t.state.swordGrab)releaseGrab(g,t);
     delete t.motion;t.status.stun.grabOwner=e.id;t.state.swordHeldBy=e.id;e.state.swordGrab={target:t,until:t.status.stun.until,at:g.time,nextEmber:g.time};
    });
-  }else{releaseGrab(g,e);e.state.counter={until:g.time+.5,angle:Math.atan2(d.y,d.x),immune:e.ccImmuneUntil||0};e.channelUntil=g.time+.5;e.ccImmuneUntil=g.time+.5;const counter=e.state.counter;g.schedule(e,.5,()=>{if(e.state.counter===counter)counterWave(g,e,false);});}
+  }else{releaseGrab(g,e);const preparation=Effects.empowered(e)?1:.5;e.state.counter={until:g.time+preparation,angle:Math.atan2(d.y,d.x),immune:e.ccImmuneUntil||0};e.channelUntil=g.time+preparation;e.ccImmuneUntil=g.time+preparation;const counter=e.state.counter;g.schedule(e,preparation,()=>{if(e.state.counter===counter)counterWave(g,e,false);});}
   return true;
  }
  if(e.key==='ppui'){
