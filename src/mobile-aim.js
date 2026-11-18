@@ -14,6 +14,7 @@ export function mobileAttackTargets(g,e,range=basicAimReach(g,e),{ignoreWalls=fa
  return g.units.filter(t=>t.alive&&g.hostile(e,t)&&!g.hidden(t)&&g.visibleTo(e.team,t)&&(ignoreWalls||g.clearLine(e,t))&&!g.locked(t)&&!t.returning&&!t.state?.posthumous&&!(t.invulnerableUntil>g.time)&&distance(e,t)<=range+(t.radius||0)+1e-8).sort((a,b)=>(b.kind==='champion')-(a.kind==='champion')||(a.kind==='champion'&&b.kind==='champion'?a.hp-b.hp:0)||distance(e,a)-distance(e,b)||a.id-b.id);
 }
 export function nearestMovementAim(g,e,slot){
+ if(e.key==='maxim')return slot==='basic'||slot==='q';
  if(e.key==='mei')return slot==='basic'||slot==='r'||slot==='q'&&!Mei.recast(g,e);
  if(e.key==='ahab'&&e.goldenBough&&slot==='r')return false;
  if(e.key==='ezra')return slot==='basic'?Ezra.movementWeapon(g,e):slot==='q'&&e.state.ezraLastWeapon!=null&&Ezra.movementWeapon(g,e,e.state.ezraLastWeapon);
@@ -23,7 +24,7 @@ export function nearestMovementAim(g,e,slot){
 export const movementAim=(g,e,slot)=>nearestMovementAim(g,e,slot)||e.key==='yi'&&slot==='r';
 export function dashSlidePriority(g,e,slot){
  if(e.key==='ezra')return nearestMovementAim(g,e,slot);
- if(slot==='basic')return ['mei','don','myo','starbuck'].includes(e.key);
+ if(slot==='basic')return ['maxim','mei','don','myo','starbuck'].includes(e.key);
  if(e.key==='mei')return slot==='r'||slot==='q'&&!Mei.recast(g,e);
  return slot==='q'&&['sinclair','ryoshu','outis','jamila','heathcliff','hohenheim','kim','sora','alisa'].includes(e.key)||slot==='r'&&['kromer','don','outis','alisa'].includes(e.key);
 }

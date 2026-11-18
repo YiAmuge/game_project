@@ -4,6 +4,7 @@ import{FAN_ANGLE,basicFanAngle}from'./data.js';
 export const NEUTRAL={color:'#e6e7e9',accent:'#ffffff',dark:'#45484f',element:'metal'};
 const style=(color,element='metal',accent=color,dark='#33353b')=>({color,element,accent,dark});
 export const CHAMPION_STYLES={
+ maxim:style('#ed9d42','metal','#ffe0a1','#57412a'),
  mei:style('#ff4b20','fire','#ffce39','#a32615'),
  queen:style('#f16ac0','arcane','#fff2ab','#701b6a'),nosferatu:style('#cd173d','blood','#ff767a','#420b23'),
  kromer:style('#a19a8e','metal','#f3e7cf','#222227'),kromerNail:style('#56545a','metal','#c1c0c5','#09090c'),

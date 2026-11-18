@@ -74,7 +74,7 @@ export class MobileControls{
   const rect=$('mobile-cancel').getBoundingClientRect();s.cancel=s.manual&&s.x>=rect.left&&s.x<=rect.right&&s.y>=rect.top&&s.y<=rect.bottom;document.body.classList.add('mobile-aiming');document.body.classList.toggle('mobile-canceling',Boolean(s.cancel));
   if(s.cancel){g.input.fire=false;return;}
   // A held button remains queued when an automatic discharge/cancel ends a charge.
-  if(this.chargeGesture(s,p)&&s.started){const active=s.slot==='q'?(p.key==='don'?p.state.donCharge:p.state.chargeAt!==undefined):(p.key==='yan'?p.state.yanCharge:p.state.hohenCharge);if(!active)s.started=false;}
+  if(this.chargeGesture(s,p)&&s.started){const active=s.slot==='q'?(p.key==='maxim'?p.state.maximQ:p.key==='don'?p.state.donCharge:p.state.chargeAt!==undefined):(p.key==='yan'?p.state.yanCharge:p.state.hohenCharge);if(!active)s.started=false;}
   if(!s.started){if(s.slot==='basic'&&['yan','hohenheim'].includes(p.key)&&!distorted(g,p)){s.beganBasic=g.attack(p,s.point);s.started=Boolean(s.beganBasic);}else if(this.api.chargeTactical(p)&&s.slot==='q'){if(p.qCd<=0)s.started=Boolean(this.api.skill('q',{point:s.point,confirm:true}));}else s.started=true;}
   if(s.slot==='basic'&&distorted(g,p)){g.attack(p,s.point);s.handMoved=true;}if(!s.autoHeld)g.input.fire=false;
  }

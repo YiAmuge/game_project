@@ -89,6 +89,7 @@ export function championHud(r,e,g){
   const gap=.075,w=(width-gap*(cap-1))/cap;
   for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)&&e.key!=='ezra'?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
  }
+ if(e.key==='maxim'&&e.state.maximQ){const q=e.state.maximQ,ratio=Math.max(0,Math.min(1,(q.until-g.time)/(q.until-q.at))),gy=resourceY+.30;c.fillStyle='#312116';c.fillRect(x,gy,width,.13);c.fillStyle='#f6ab4c';c.fillRect(x,gy,width*ratio,.13);c.strokeStyle='#ba8749';c.lineWidth=.025;c.strokeRect(x,gy,width,.13);}
  if(e.key==='ezra'&&e.state.ezraReloading){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*Math.min(1,e.reloadProgress/EZRA.reload),.10);}
  if(e.key==='jamila'&&e.state.lcaReload){c.fillStyle='#25251e';c.fillRect(x,resourceY+.30,width,.10);c.fillStyle='#e5cc78';c.fillRect(x,resourceY+.30,width*reloadFraction(e),.10);}
  if(e.key==='gubo'&&g.buff(e,'guboReload')){const left=e.buffs.guboReload-g.time;c.fillStyle='#2c1019';c.fillRect(x,resourceY+.32,width,.13);c.fillStyle='#a72b47';c.fillRect(x,resourceY+.32,width*Math.min(1,left/4),.13);r.text(`흉탄 ${left.toFixed(1)}s · 아군 ≤35%`,e.x,resourceY+.64,'#ec93a4',.22);}

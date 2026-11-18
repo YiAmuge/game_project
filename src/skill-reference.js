@@ -49,6 +49,7 @@ function basicRanges(key,g,e,transformed){
  if(key==='yi')return[row('기본','사거리 '+r+' · 관통 파편 3개'),row('오감도','사거리 '+number(range+1)+' · 관통 파편 7개')];
  if(key==='gahwan')return[row('전체 공격','사거리 '+r+' · 직선 폭 1.5'),row('근접 추가 공격','같은 직선 안 거리 3.25 이내')];
  if(key==='rudolph')return[row('공격 범위','중심점 사거리 '+r+' · 반경 2.1675')];
+ if(key==='maxim')return[row('돌진','지정 위치까지 '+r),row('근접 휘두르기','조준 거리 2 이내 · 반경 2 · 전방 반원')];
  if(key==='mei')return[row('돌진','지정 위치까지 '+r),row('연타','자신 중심 반경 1.6 · 탄창 수만큼')];
  if(key==='ahab')return[row('직격','사거리 '+r+' · 직선 투사체'),row('폭발','적중 지점 반경 2')];
  if(key==='honglu')return[row('공격 범위','자신 중심 반경 '+r)];
@@ -61,6 +62,7 @@ function basicRanges(key,g,e,transformed){
  return[row('공격 범위','사거리 '+r+' · 직선'+(widths[key]?' 폭 '+number(widths[key]):''))];
 }
 function skillRanges(key,index,g,e,transformed,variant){
+ if(key==='maxim'){if(index===0)return[row('발동','7.5 이동 · 최대 5초마다 1회')];if(index===2)return[row('돌진','최대 5초 · 커서 방향 조작'),row('충돌','자신 중심 반경 2.8')];if(index===3)return[row('충격파','사거리 12 · 부채꼴 150°')];}
  if(key==='mei'&&index===0)return[row('화상','같은 적 3회 피해 · 2초간 0.5초마다')];
  if(key==='mei'&&index===2)return[row('정주','지정 방향으로 4.5 돌진'),row('회축','자신 중심 반경 3.6 · 2초 내 재사용')];
  if(key==='mei'&&index===3)return[row('철산고','3.6 돌진 · 0.6초 정신집중'),row('회축 연계','1.3초 이내 · 거리 1.8 · 즉시 돌진')];
@@ -111,8 +113,9 @@ function skillRanges(key,index,g,e,transformed,variant){
  return[row('지정 대상','사거리 '+range)];
 }
 function cooldownLabel(key,index,g,e,transformed,variant){
- if(index===0)return ({ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
+ if(index===0)return ({maxim:'발동 대기시간 5초',ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
+  if(key==='maxim')return '탄창 3개 · 1개 장전 0.9초 · 공격 간격 0.7초';
   if(key==='mei')return '탄창 4개 · 1개 장전 0.75초 · 연타 간격 0.15초';
   if(key==='moses')return '숨 '+Moses.airCap(g,e)+' · 공격 간격 0.3초';
   if(key==='ezra')return '탄창 4개 · 전탄 소진 후 일괄 장전 2.5초 · 장전 속도 보정 1.5배';

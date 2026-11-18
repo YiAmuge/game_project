@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import {ATLAS_FILES} from '../src/art.js';
 import { CHAMPIONS } from '../src/data.js';
 import { WEAPON_ART,weaponGeometry,gripPivot,drawWeapon } from '../src/weapon-art.js';
 import { UNCHANGED_HANDS,TWO_HANDED_GRIPS,BARE_HAND_COLORS,gripAppearance,gripLayout } from '../src/weapon-grips.js';
@@ -8,18 +9,18 @@ import { decodePNG } from '../tools/png.mjs';
 
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 test('all held weapons have the requested glove or body skin tone, with the five existing hand styles excluded',()=>{
- const black=['sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra'],brown=['alisa','dongrang'];
+ const black=['maxim','sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra'],brown=['alisa','dongrang'];
  assert.deepEqual([...UNCHANGED_HANDS].sort(),['meursault','sora','ppui','queequeg','gregor'].sort());
  for(const key of Object.keys(CHAMPIONS)){const p=gripAppearance(key);if(UNCHANGED_HANDS.has(key)){assert.equal(p,null,key);continue;}assert.ok(p,key);assert.equal(p.material,black.includes(key)?'black':brown.includes(key)?'brown':key==='ahab'?'white':key==='kromer'?'gray':key==='moses'?'metal':'skin',key);if(p.material==='skin')assert.equal(p.base,BARE_HAND_COLORS[key]);}
  assert.equal(Object.keys(BARE_HAND_COLORS).length,16);
 });
 test('two-handed weapons include middle staff and rifle barrel support hands',()=>{
- assert.deepEqual([...TWO_HANDED_GRIPS].sort(),['sinclair','marton','honglu','dongrang','hohenheim','rudolph'].sort());
+ assert.deepEqual([...TWO_HANDED_GRIPS].sort(),['maxim','sinclair','marton','honglu','dongrang','hohenheim','rudolph'].sort());
  for(const key of Object.keys(CHAMPIONS)){const [asset,length]=WEAPON_ART[key],points=gripLayout(key,asset,weaponGeometry(asset,length),gripPivot(key));assert.equal(points.length,UNCHANGED_HANDS.has(key)||key==='ezra'||key==='mei'?0:TWO_HANDED_GRIPS.has(key)||['jamila','gubo'].includes(key)?2:1,key);if(points.length===2){if(key==='rudolph')close(points[1].x,(.5-gripPivot(key))*weaponGeometry(asset,length).span);else if(['jamila','gubo'].includes(key)){close(points[1].source[0],.70);close(points[1].source[1],key==='gubo'?.44:.60);}else close(points[1].x-points[0].x,.27);assert.equal(points[1].offHand,true);}for(const p of points){assert.ok(Math.abs(p.x)<(key==='gubo'?1.5:key==='jamila'?1.1:key==='rudolph'?.9:.5)&&Math.abs(p.y)<.35,key);}}
 });
 test('every chosen grip touches opaque handle pixels in the latest independent weapon source',async()=>{
- const original=decodePNG(await readFile(new URL('../src/assets/weapons-v36.png',import.meta.url))),jamila=decodePNG(await readFile(new URL('../src/assets/jamila-v62.png',import.meta.url))),kromer=decodePNG(await readFile(new URL('../src/assets/kromer-v102.png',import.meta.url))),arcana=decodePNG(await readFile(new URL('../src/assets/arcana-v102.png',import.meta.url)));
- for(const key of Object.keys(CHAMPIONS)){const [asset,length]=WEAPON_ART[key],m=weaponGeometry(asset,length);for(const p of gripLayout(key,asset,m,gripPivot(key))){const png=m.frame.sheet===19?arcana:m.frame.sheet===17?kromer:m.frame.sheet===15?jamila:original,x=m.frame.x+Math.round(p.source[0]*m.frame.w),y=m.frame.y+Math.round(p.source[1]*m.frame.h);assert.equal(png.data[(y*png.width+x)*4+3],255,key+' must grip the handle');}}
+ const atlases=new Map();
+ for(const key of Object.keys(CHAMPIONS)){const [asset,length]=WEAPON_ART[key],m=weaponGeometry(asset,length);for(const p of gripLayout(key,asset,m,gripPivot(key))){if(!atlases.has(m.frame.sheet))atlases.set(m.frame.sheet,decodePNG(await readFile(new URL('../src/assets/'+ATLAS_FILES[m.frame.sheet]+'.png',import.meta.url))));const png=atlases.get(m.frame.sheet),x=m.frame.x+Math.round(p.source[0]*m.frame.w),y=m.frame.y+Math.round(p.source[1]*m.frame.h);assert.equal(png.data[(y*png.width+x)*4+3],255,key+' must grip the handle');}}
 });
 test('grips match the actual drawn shaft slices after extension, source rotation and size changes',()=>{
  const oldImage=globalThis.Image,oldDocument=globalThis.document;globalThis.Image=class{complete=true;naturalWidth=2048;};globalThis.document={getElementById:()=>null};

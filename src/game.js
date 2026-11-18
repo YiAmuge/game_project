@@ -1,3 +1,5 @@
+import * as Maxim from './maxim.js';
+import {MAXIM} from './maxim-data.js';
 import * as Mei from './mei.js';
 import {MEI} from './mei-data.js';
 import * as AhabEgo from './ahab-ego.js';
@@ -150,7 +152,7 @@ export class Game {
   schedule(source,delay,fn,{autonomous=false}={}){const kind=source.actionKind||'skill',mobility=this.actionSource===source?this.mobilityEvent:undefined;this.events.push({source,autonomous,at:this.time+delay,fn:()=>this.action(source,kind,fn,mobility)});}
   usedMobility(e,event=this.actionSource===e?this.mobilityEvent:undefined){Augments.onMobility(this,e,event);}
   teleport(e,point){Object.assign(e,point);this.usedMobility(e);}
-  startMotion(e,d,len,{speed=RULES.dashSpeed,maxSpeed=RULES.dashSpeed,kind='dash',onStep,onComplete,onCollision,ignoreWalls=false,minDuration=0,follow=null,stopDistance=0,arcHeight=1.1,phaseEnemies=false,phaseNonChampions=false,source,actionTag,forcedMaxSpeed=RULES.knockSpeed}={}){
+  startMotion(e,d,len,{speed=RULES.dashSpeed,maxSpeed=RULES.dashSpeed,kind='dash',onStep,onComplete,onCollision,ignoreWalls=false,minDuration=0,follow=null,stopDistance=0,arcHeight=1.1,phaseEnemies=false,phaseNonChampions=false,phaseCreeps=false,source,actionTag,forcedMaxSpeed=RULES.knockSpeed}={}){
     if(!e.alive||['boss','sewingKing'].includes(e.camp)||!['champion','minion','neutral','trooper'].includes(e.kind)||e.returning)return false;
     const forced=kind==='knock';
     if(forced&&(GuboUltimate.guarded(this,e)||e.invulnerableUntil>this.time||e.ccImmuneUntil>this.time||e.state?.donCharge||Yan.barraging(this,e)))return false;
@@ -161,7 +163,7 @@ export class Game {
     if(forced&&e.state?.swordHeldBy){const owner=this.units.find(a=>a.id===e.state.swordHeldBy);if(owner)V12.releaseGrab(this,owner);}
     const actionKind=e.actionKind||'skill',mobility=this.actionSource===e?this.mobilityEvent:{},wrap=fn=>fn&&((...args)=>this.action(e,actionKind,()=>fn(...args),mobility));
     onStep=wrap(onStep);onComplete=wrap(onComplete);onCollision=wrap(onCollision);
-    this.cancelRecall(e);e.motion={actionTag,visualOrigin:{x:e.x,y:e.y},actionKind,phaseEnemies:!forced&&phaseEnemies,phaseNonChampions:!forced&&phaseNonChampions,lastClear:{x:e.x,y:e.y},dx:d.x,dy:d.y,remaining:len,total:len,speed:Math.min(speed,forced?forcedMaxSpeed:maxSpeed),kind,arcHeight,forced,onStep,onComplete,onCollision,ignoreWalls,startedAt:this.time,elapsed:0,minDuration,follow,stopDistance};
+    this.cancelRecall(e);e.motion={actionTag,visualOrigin:{x:e.x,y:e.y},actionKind,phaseEnemies:!forced&&phaseEnemies,phaseNonChampions:!forced&&phaseNonChampions,phaseCreeps:!forced&&phaseCreeps,lastClear:{x:e.x,y:e.y},dx:d.x,dy:d.y,remaining:len,total:len,speed:Math.min(speed,forced?forcedMaxSpeed:maxSpeed),kind,arcHeight,forced,onStep,onComplete,onCollision,ignoreWalls,startedAt:this.time,elapsed:0,minDuration,follow,stopDistance};
     if(!forced&&len>1e-8)this.usedMobility(e,mobility);
     if(forced&&len>0)this.triggerDisrupt(source,e);
     if(len<.001&&!minDuration){delete e.motion;onComplete?.();}return true;
@@ -188,7 +190,7 @@ export class Game {
     return {x:e.x,y:e.y};
   }
   recall(e,{mode='auto'}={}){
-    if(Bough.storm(this,e))return false;
+    if(Bough.storm(this,e)||Maxim.rushing(e))return false;
     if(e.state.kromerGrab)return false;
     if(e.recall||Infiltration.absent(e)){this.cancelRecall(e);return true;}
     if(e.kind!=='champion'||!e.alive||e.state.posthumous||e.motion||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||this.winner!==null)return false;
@@ -238,17 +240,17 @@ export class Game {
   rewindCooldowns(e,seconds){e.qCd=Math.max(0,e.qCd+seconds);e.rCd=Math.max(0,e.rCd+seconds);for(const key of ['meiRReady','yiReady','knifeReady','treeReady','egoQReady','ppuiReady','mosesReady'])if(Number.isFinite(e.state[key]))e.state[key]=Math.max(this.time,e.state[key]+seconds);if(['nelly','dongrang'].includes(e.key))e.state.qDelayUntil=Math.max(this.time,e.state.qDelayUntil||0)+seconds;}
   attackStyle(e){if(Sora.ego(this,e))return 'sweep';return e.key==='ezra'?Ezra.weapon(this,e).style:CHAMPIONS[e.key]?.attackStyle;}
   passiveCooldown(e){
-    const ready={ppui:e.passiveReady,yi:e.passiveReady,kim:e.passiveReady,ishmael:e.passiveReady,gregor:e.state.mutateReady,sora:e.state.orderAt,don:e.state.villainAt,rudolph:e.state.exhaustedUntil,dongbaek:Number.isFinite(e.state.petalReady)?e.state.petalReady:0,ryoshu:e.lastCombat+2}[e.key]||0;
+    const ready={maxim:e.state.rhinoReady,ppui:e.passiveReady,yi:e.passiveReady,kim:e.passiveReady,ishmael:e.passiveReady,gregor:e.state.mutateReady,sora:e.state.orderAt,don:e.state.villainAt,rudolph:e.state.exhaustedUntil,dongbaek:Number.isFinite(e.state.petalReady)?e.state.petalReady:0,ryoshu:e.lastCombat+2}[e.key]||0;
     return Math.max(0,ready-this.time);
   }
   cooldown(e,slot){if(AhabEgo.active(e)&&slot==='q')return 0;if(e.key==='yan'&&slot==='q'&&Yan.distorted(this,e))return 5*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e));return (e.key==='sora'&&slot==='q'&&Sora.ego(this,e)?Sora.SORA.egoQCooldown:Bough.cooldown(e,slot,CHAMPIONS[e.key][slot]))*(Augments.has(e,'cooldown15')?.85:1)*Augments.cooldownFactor(e)/(1+this.haste(e))*(1-rivalBonus(e,'cooldown'));}
-  attackInterval(e){if(e.key==='mei')return MEI.interval;if(AhabEgo.active(e))return .2;if(e.key==='moses')return Moses.MOSES.interval;if(Nosferatu.bloodfiend(this,e))return combatSeconds(Nosferatu.NOSFERATU.rAttackEvery);const c=CHAMPIONS[e.key];return combatSeconds(c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier));}
+  attackInterval(e){if(e.key==='maxim')return MAXIM.interval;if(e.key==='mei')return MEI.interval;if(AhabEgo.active(e))return .2;if(e.key==='moses')return Moses.MOSES.interval;if(Nosferatu.bloodfiend(this,e))return combatSeconds(Nosferatu.NOSFERATU.rAttackEvery);const c=CHAMPIONS[e.key];return combatSeconds(c.attackTime*(c.attackTime<=RULES.fastAttackThreshold?1:RULES.attackIntervalMultiplier));}
   reloadPaused(e){if(Ppui.stormActive(this,e)||e.key==='dongbaek'&&this.stat(e,'disarm'))return true;if(e.key==='dongbaek'&&e.state.usedPetal&&e.attackCd>0)return false;if(Sora.ego(this,e)||e.key==='alisa'&&this.buff(e,'alisaReload'))return false;if(e.key==='sinclair'&&this.buff(e,'marks')||e.key==='myo'&&this.buff(e,'rabbitFrenzy'))return false;return e.attackCd>1e-8||Boolean(e.state.donCharge)||e.player&&this.input.fire&&(e.ammo>=1||e.key==='dongbaek'&&(e.state.petals??3)>0)&&!this.stat(e,'stun')&&!this.stat(e,'disarm')&&!e.motion;}
   ammoCap(e){return Skills.ammoCap(this,e);}
   attackRange(e){if(AhabEgo.active(e))return 9;if(e.key==='moses')return Moses.breath(this,e).range;if(e.key==='ezra')return Ezra.weapon(this,e).range+Augments.rangeBonus(e);if(e.key==='hohenheim')return Hohenheim.attackRange(this,e);return ((Sora.ego(this,e)?Sora.SORA.egoRadius:e.range)+(e.key==='yi'&&this.buff(e,'ogamdo')?1:0))*(e.key==='gregor'&&this.buff(e,'mutant')?1.3:1)+Augments.rangeBonus(e)+Bough.fistBonus(this,e);}
   bonusStats(e){
     const power=this.powerScale(e)*Skills.damageBonus(this,e,{hp:e.hp,maxHp:e.maxHp})*(!['dongrang','moses'].includes(e.key)&&this.buff(e,'marks')?1.12:1)*(1-this.powerWeak(e));
-    return {power:Math.round((power-1)*100),health:Math.round((e.maxHp/championBaseHealth(e.key)-1)*100+1e-8),speed:Math.round((this.speed(e)/championBaseSpeed(e.key)-1)*100),haste:Math.round(this.haste(e)*100),reload:Math.round((e.key==='ezra'?Ezra.reloadMultiplier(this,e)-1:e.key==='jamila'?this.reloadMultiplier(e)-1:RULES.reload[Skills.reloadGrade(e)]/this.reloadInterval(e)-1)*100)};
+    return {power:Math.round((power-1)*100),health:Math.round((e.maxHp/championBaseHealth(e.key)-1)*100+1e-8),speed:Math.round((this.speed(e)/championBaseSpeed(e.key)-1)*100),haste:Math.round(this.haste(e)*100),reload:Math.round((e.key==='ezra'?Ezra.reloadMultiplier(this,e)-1:e.key==='maxim'?MAXIM.reload/this.reloadInterval(e)-1:e.key==='jamila'?this.reloadMultiplier(e)-1:RULES.reload[Skills.reloadGrade(e)]/this.reloadInterval(e)-1)*100)};
   }
   shield(e) { return e.shields.filter(s=>s.until>this.time).reduce((sum,s)=>sum+s.value,0); }
   yiShield(e){return e.shields.find(s=>s.value>0&&s.until>this.time&&s.passive==='yi');}
@@ -261,6 +263,7 @@ export class Game {
     if(e.lcaTrooper)return e.snapshot.speed*(1+Jamila.squadBonus(this,e))*(1-Math.min(.5,Math.max(this.stat(e,'slow'),this.stat(e,'yanLock'))));
     if(e.kind!=='champion')return e.kind==='minion'?2.5:Math.ceil((CampBuffs.BUFF_CREEPS[e.camp]?2.7*.85:2.7)*.8*10-1e-9)/10;
     const c=CHAMPIONS[e.key],base=championBaseSpeed(e.key); let mult=1+upgradeRate(e,'speed')+ c.growth.speed*(e.level-1)+Augments.speedRate(this,e)+Jamila.squadBonus(this,e);
+    mult+=Maxim.speedBonus(this,e);
     mult+=this.buffValue(e,'arcanaStride',Queen.QUEEN.qSpeed)+(Nosferatu.bloodfiend(this,e)?.5:0);
     if(e.key==='gregor'&&this.buff(e,'mutant'))mult+=.1;
     if(Yan.barraging(this,e))mult+=Yan.YAN.qSpeed;
@@ -297,7 +300,7 @@ export class Game {
   haste(e) { return Math.max(0,upgradeRate(e,'haste')+(Bough.active(e)?.05:0)+Bough.voyage(e)*.025+(Augments.has(e,'carrier')?.03:0)+this.extraRate(e)+(this.discipline(e)?.12:0)+this.buffValue(e,'augBattleHaste',.25)+(Augments.has(e,'forceBattery')?.1:0)-this.stat(e,'hasteWeak')); }
   extraRate(e){return (e.key==='ryoshu'&&this.time-e.lastCombat>=2?.2:0)+this.buffValue(e,'ishmaelSurvive',.2)+(this.buff(e,'coins')?(e.state.coinHeads||0)*.08:0)+this.buffValue(e,'mosesWhite',.2)+Moses.passiveRate(this,e);}
   reloadMultiplier(e){if(e.lcaTrooper)return Math.max(.2,e.snapshot.reload-this.stat(e,'reloadWeak'));return Math.max(.2,1+upgradeRate(e,'reload')+Augments.resentment(e)+Augments.reloadRate(this,e)+(Augments.has(e,'blackOrb')?.1:0)+(Sora.ego(this,e)?Sora.SORA.egoReload:0)+(e.key==='ahab'?.15:0)+this.buffValue(e,'queequegUlt',.4)+this.buffValue(e,'explore',.2)+this.buffValue(e,'marks',.2)+this.buffValue(e,'guboReload',.35)+this.extraRate(e)+(this.discipline(e)?.12:0)+(this.buff(e,'rabbitHunt')?(e.state.rabbitStacks||0)*.2:0)+this.buffValue(e,'rabbitFrenzy',.6)+this.buffValue(e,'alisaReload',.3)+(e.key==='dongbaek'&&e.qCd<=0?.2:0)+this.buffValue(e,'flowerReload',.4)+this.buffValue(e,'outisReload',.3)+(Augments.has(e,'reloadStacks')?(e.state.augReloadStacks||0)*.05:0)+(e.key==='ahab'&&this.buff(e,'ahabCover')?(e.state.coverStacks||0)*.2:0)-this.stat(e,'reloadWeak'));}
-  reloadInterval(e){if(e.key==='mei')return .75/this.reloadMultiplier(e);if(e.key==='moses')return combatSeconds(.8/this.reloadMultiplier(e));if(e.key==='ezra')return Ezra.reloadDuration(this,e);return e.key==='jamila'?Jamila.reloadDuration(this,e):combatSeconds(RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*this.reloadMultiplier(e)));}
+  reloadInterval(e){if(e.key==='maxim')return combatSeconds(MAXIM.reload/this.reloadMultiplier(e));if(e.key==='mei')return .75/this.reloadMultiplier(e);if(e.key==='moses')return combatSeconds(.8/this.reloadMultiplier(e));if(e.key==='ezra')return Ezra.reloadDuration(this,e);return e.key==='jamila'?Jamila.reloadDuration(this,e):combatSeconds(RULES.reload[Skills.reloadGrade(e)]/(RULES.reloadEfficiency*this.reloadMultiplier(e)));}
   changeAmmo(e,amount,{external=true}={}){if(!Number.isFinite(e.ammo)||external&&(e.key==='ezra'||AhabEgo.active(e)))return 0;const old=e.ammo;e.ammo=Math.max(0,Math.min(this.ammoCap(e),e.ammo+amount));return e.ammo-old;}
   support() {}
   addShield(target,value,source,seconds=3,copy=true) {
@@ -527,14 +530,14 @@ export class Game {
     if(e.actionKind!=='basic'&&e.key!=='moses')this.emitSound('shot',e,{slot:options.slot??e.castSlot});
     this.projectiles.push({source:e,damageKind:e.actionKind||'skill',x:e.x,y:e.y,slot:e.actionKind==='skill'?e.castSlot:undefined,bornAt:this.time,origin:{x:e.x,y:e.y},dx:dir.x,dy:dir.y,damage,remaining:range,width:.18,speed:22,knock:0,color:e.key==='gubo'?'#a62c45':e.team===0?'#92d5dd':'#e6a097',theme:e.key,hitIds:new Set(),...(e.key==='outis'&&e.actionKind==='basic'?{sound:{family:'spear',phase:'outis-basic-hit'}}:{}),...options});
   }
-  cone(e,dir,range,angle,damage,onHit=()=>{},{exclude,sound}={}) {
-    angle=angle>=Math.PI*2-1e-8?angle:e.actionKind==='basic'?basicFanAngle(e.key):FAN_ANGLE;
+  cone(e,dir,range,angle,damage,onHit=()=>{},{exclude,sound,visual=true}={}) {
+    angle=angle>=Math.PI*2-1e-8||e.key==='maxim'?angle:e.actionKind==='basic'?basicFanAngle(e.key):FAN_ANGLE;
     for(const target of this.units.filter(u=>this.hostile(e,u))) {
       if(exclude?.has(target.id))continue;
       const d=direction(e,target);
-      if(distance(e,target)<=range+target.radius&&d.x*dir.x+d.y*dir.y>=Math.cos(angle/2)&&this.clearLine(e,target)) {const shield=this.shield(target),actual=this.deal(e,target,damage,{sound});onHit(target,actual,Math.max(0,shield-this.shield(target)));}
+      if(distance(e,target)<=range+target.radius&&d.x*dir.x+d.y*dir.y+1e-8>=Math.cos(angle/2)&&this.clearLine(e,target)) {const shield=this.shield(target),actual=this.deal(e,target,damage,{sound});onHit(target,actual,Math.max(0,shield-this.shield(target)));}
     }
-    this.effects.push({source:e.id,damageKind:e.actionKind||'basic',slot:e.actionKind==='skill'?e.castSlot:undefined,shape:{kind:'cone',range,spread:angle,angle:Math.atan2(dir.y,dir.x)},type:['thrust','punch','whip','flame'].includes(this.attackStyle(e))?'thrust':'slash',x:e.x,y:e.y,angle:Math.atan2(dir.y,dir.x),spread:angle,r:range,color:e.key==='gregor'?CHAMPIONS[e.key].color:e.team===0?'#bce5e5':'#eaa39c',theme:e.key,side:(e.attackSerial||0)%2?1:-1,life:.28,maxLife:.28});
+    if(visual)this.effects.push({source:e.id,damageKind:e.actionKind||'basic',slot:e.actionKind==='skill'?e.castSlot:undefined,shape:{kind:'cone',range,spread:angle,angle:Math.atan2(dir.y,dir.x)},type:['thrust','punch','whip','flame'].includes(this.attackStyle(e))?'thrust':'slash',x:e.x,y:e.y,angle:Math.atan2(dir.y,dir.x),spread:angle,r:range,color:e.key==='gregor'?CHAMPIONS[e.key].color:e.team===0?'#bce5e5':'#eaa39c',theme:e.key,side:(e.attackSerial||0)%2?1:-1,life:.28,maxLife:.28});
   }
   addMark(e,n=1) {
     if(e.key==='sinclair'&&this.buff(e,'marks'))return;
@@ -543,7 +546,7 @@ export class Game {
   }
   attack(e,point,options={}) {return this.action(e,'basic',()=>this.attackAction(e,point,options));}
   attackAction(e,point,options={}) {
-    if(Bough.storm(this,e))return false;
+    if(Bough.storm(this,e)||Maxim.rushing(e))return false;
     if(e.aiThinking&&point?.kind&&!BotAI.safeTowerTarget(this,e,point))return false;
     if(!e.alive||this.winner!==null)return false;
     if(this.stat(e,'taunt')&&!options.taunted)return false;
@@ -551,6 +554,7 @@ export class Game {
     if(this.training&&e===this.player)Training.refreshOptions(this);
     if(Ppui.stormActive(this,e)||e.key==='kim'&&carried(this,e))return false;
     if(e.state.ahabUlt||e.key==='heathcliff'&&this.buff(e,'heathUlt')||this.stat(e,'disarm')||e.state.donCharge||e.motion||this.hidden(e)||this.stat(e,'stun')||e.channelUntil>this.time||e.attackCd>0)return false;
+    if(e.key==='maxim')return Maxim.attack(this,e,point);
     if(e.key==='mei')return Mei.attack(this,e,point);
     if(AhabEgo.active(e))return AhabEgo.attack(this,e,point);
     if(e.key==='moses')return Moses.attack(this,e,point,options);
@@ -580,6 +584,7 @@ export class Game {
   }
   cast(e,slot,point,options={}) {return this.action(e,'skill',()=>this.castAction(e,slot,point,options));}
   castAction(e,slot,point,options={}) {
+    if(Maxim.rushing(e))return false;
     if(Bough.storm(this,e)&&slot!=='r')return false;
     if(!['q','r'].includes(slot)||!point)return false;
     if(e.aiThinking&&V08.movementSkill(e,slot)&&!BotAI.safeTowerPoint(this,e,point))return false;
@@ -597,8 +602,8 @@ export class Game {
     if(Skills.isOffensive(e,slot))e.lastAttackAt=this.time;
     if(!duringHarpoon){e.facing=Math.atan2(d.y,d.x);e.castAt=this.time;e.castSlot=slot;e.visualCast={slot,at:this.time,point:{...point},origin:{x:e.x,y:e.y},angle:e.facing,healthy:e.hp/e.maxHp>=.5};}e.healingEvent={key:`cast-${e.id}-${e.castSerial=(e.castSerial||0)+1}`,at:this.time};e.revealedUntil=this.time+1.25;
     if(e.key==='gubo'&&slot==='q')this.emitSound('reload',e,{phase:'gubo-reload'});
-    else if(!(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))&&!(e.key==='ryoshu'&&Bough.active(e)&&slot==='r')&&!['mei','yi','queen','ezra','moses'].includes(e.key)&&!(e.key==='myo'&&slot==='q')&&!(e.key==='gubo'&&slot==='r')&&!(e.key==='hohenheim'&&slot==='r')&&!(e.key==='nelly'&&slot==='q'))this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
-    if(!(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))&&!['mei','moses'].includes(e.key)&&!(slot==='r'&&['ishmael','marton','ryoshu'].includes(e.key)))this.effects.push({type:'cast',x:e.x,y:e.y,angle:e.facing,r:slot==='r'?(e.key==='meursault'?8:5):3,theme:e.key,slot,life:slot==='r'?.9:.55,maxLife:slot==='r'?.9:.55});
+    else if(!(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))&&!(e.key==='ryoshu'&&Bough.active(e)&&slot==='r')&&!['maxim','mei','yi','queen','ezra','moses'].includes(e.key)&&!(e.key==='myo'&&slot==='q')&&!(e.key==='gubo'&&slot==='r')&&!(e.key==='hohenheim'&&slot==='r')&&!(e.key==='nelly'&&slot==='q'))this.emitSound(slot==='r'?'ultimate':'cast',e);Augments.onCast(this,e);
+    if(!(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))&&!['maxim','mei','moses'].includes(e.key)&&!(slot==='r'&&['ishmael','marton','ryoshu'].includes(e.key)))this.effects.push({type:'cast',x:e.x,y:e.y,angle:e.facing,r:slot==='r'?(e.key==='meursault'?8:5):3,theme:e.key,slot,life:slot==='r'?.9:.55,maxLife:slot==='r'?.9:.55});
     if(Skills.cast(this,e,slot,point,d,options))return true;
     const destination=(max)=>{const len=Math.min(max,distance(e,point));return {x:clamp(e.x+d.x*len,this.bounds.x+.6,this.bounds.x+this.bounds.w-.6),y:clamp(e.y+d.y*len,this.bounds.y+.6,this.bounds.y+this.bounds.h-.6)};};
     if(slot==='q') {
@@ -829,7 +834,7 @@ export class Game {
     if(!this.training&&this.time+1e-8>=RULES.firstWaveAt+RULES.waveEvery*this.wave)this.spawnWave();this.flushMinions();
     for(const e of this.units)e.bodyOrigin={x:e.x,y:e.y};
     for(const e of this.units) {
-      const restore=this.controllers?this.enterController(e):null;const controlledAim=restore?captureMobileAim(this):null;try{
+      const forcedMovement=Boolean(e.motion?.forced||!e.alive||e.recall||Infiltration.absent(e));const restore=this.controllers?this.enterController(e):null;const controlledAim=restore?captureMobileAim(this):null;try{
       Infestation.tick(this,e);if(e.alive)Skills.tickBurn(this,e);e.attackCd=Math.max(0,e.attackCd-dt);
       if(e.trainingDummy){Training.tickDummy(this,e,dt);if(e.alive){Ppui.tick(this,e);Kromer.tick(this,e,dt);CampBuffs.tick(this,e);}continue;}
       if(e.kind==='champion') {
@@ -845,7 +850,7 @@ export class Game {
       if(e.kind==='summon'){Yan.tickHand(this,e,dt);continue;}
       if(e.lcaTrooper){const moved=Boolean(e.motion);this.updateMotion(e,dt);Jamila.tickTrooper(this,e,dt,{moving:moved||Boolean(e.motion)});continue;}
       if(e.kind==='core'&&e.hp/e.maxHp<.35&&this.time-(e.lastDamageAt||0)>=10){let ward=e.shields.find(s=>s.source==='core-ward');if(!ward){ward={source:'core-ward',until:Infinity,value:0};e.shields.push(ward);}ward.value=e.maxHp*.15;}
-      const moving=Boolean(e.motion);this.updateMotion(e,dt);if(!e.alive)continue;
+      const moving=Boolean(e.motion);Maxim.prepare(this,e,dt);this.updateMotion(e,dt);if(!e.alive)continue;
       if(e.kind==='champion') {
         if(e.player&&e.recall&&(this.input.x||this.input.y||this.input.fire))this.cancelRecall(e);
         this.updateRecall(e);if(Infiltration.absent(e))continue;
@@ -868,7 +873,7 @@ export class Game {
       } else if(e.kind==='minion'){if(V08.controlTaunt(this,e,dt))continue;if(!moving&&!e.motion)this.aiMinion(e,dt);}
       else if(e.kind==='neutral')this.aiNeutral(e,dt);
       else if(e.kind!=='bait')this.aiStructure(e);
-      }finally{if(e.kind==='champion'&&e.alive)Augments.moved(this,e,e.bodyOrigin);if(controlledAim)followMobileAim(this,controlledAim);restore?.();}
+      }finally{if(e.kind==='champion'&&e.alive){Augments.moved(this,e,e.bodyOrigin);Maxim.moved(this,e,e.bodyOrigin,{forced:forcedMovement});}if(controlledAim)followMobileAim(this,controlledAim);restore?.();}
     }
     const due=this.events.filter(ev=>ev.at<=this.time+1e-8);this.events=this.events.filter(ev=>ev.at>this.time+1e-8);
     for(const ev of due)if(ev.autonomous||ev.source.alive&&!this.stat(ev.source,'stun'))ev.fn();

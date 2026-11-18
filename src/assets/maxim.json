@@ -1,0 +1,55 @@
+{
+  "source": "source/maxim-approved.png",
+  "sha256": "917f2929a8699fc795dd29140642601acd8f0c37b5d9e19237b0fa0707619e73",
+  "note": "Final reduced-head armored body with screen-right orange mantle; asymmetric reference hammer",
+  "frames": {
+    "maxim": {
+      "x": 8,
+      "y": 8,
+      "w": 284,
+      "h": 432,
+      "sheet": 25,
+      "rotation": 0,
+      "source": "source/maxim-approved.png",
+      "sourceRect": [
+        120,
+        27,
+        472,
+        718
+      ],
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 32,
+      "heightScale": 1.08,
+      "foot": [
+        0.46,
+        1
+      ],
+      "face": [
+        30,
+        0,
+        180,
+        168
+      ]
+    },
+    "maximHammer": {
+      "x": 8,
+      "y": 448,
+      "w": 440,
+      "h": 283,
+      "sheet": 25,
+      "rotation": 0,
+      "source": "source/maxim-approved.png",
+      "sourceRect": [
+        831,
+        129,
+        932,
+        598
+      ],
+      "grip": [
+        0.17,
+        0.475
+      ]
+    }
+  }
+}

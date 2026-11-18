@@ -1,3 +1,4 @@
+import * as Maxim from './maxim.js';
 import * as Mei from './mei.js';
 import * as AhabEgo from './ahab-ego.js';
 import * as Bough from './golden-bough.js';
@@ -46,7 +47,7 @@ export function area(g,e,p,r,damage,hit=()=>{},options={}){
  }
  return hits;
 }
-export const dashBasic=(g,e)=>['mei','don','myo','starbuck'].includes(e.key)||e.key==='ezra'&&Ezra.movementWeapon(g,e);
+export const dashBasic=(g,e)=>['maxim','mei','don','myo','starbuck'].includes(e.key)||e.key==='ezra'&&Ezra.movementWeapon(g,e);
 export const dashLength=(e,n)=>n+(['don','starbuck'].includes(e.key)?rangeBonus(e):0);
 function dashRectangleHit(t,origin,to,d,halfWidth){
  const dx=t.x-origin.x,dy=t.y-origin.y,along=dx*d.x+dy*d.y,side=Math.abs(dx*d.y-dy*d.x),covered=(to.x-origin.x)*d.x+(to.y-origin.y)*d.y;
@@ -92,13 +93,14 @@ export function canRecast(g,e,slot){
  if(New.recast(g,e,slot))return true;
  return slot==='q'&&((e.key==='ishmael'&&g.buff(e,'ishmaelShield'))||(e.key==='alisa'&&g.buff(e,'alisaReload')));
 }
-export function init(g,e){Mei.init(g,e);Moses.init(g,e);Ezra.init(g,e);Ppui.init(g,e);New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
-export function onRespawn(g,e){Mei.init(g,e);Moses.init(g,e);Ezra.init(g,e);New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
+export function init(g,e){Maxim.init(g,e);Mei.init(g,e);Moses.init(g,e);Ezra.init(g,e);Ppui.init(g,e);New.init(g,e);V06.init(g,e);V08.init(g,e);Sora.init(g,e);Yan.init(g,e);}
+export function onRespawn(g,e){Maxim.init(g,e);Mei.init(g,e);Moses.init(g,e);Ezra.init(g,e);New.onRespawn(g,e);Sora.onRespawn(g,e);Yan.init(g,e);}
 export const coverMultiplier=New.coverMultiplier;
 export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.key==='maxim')return Maxim.validate(g,e,slot);
  if(e.key==='mei')return Mei.validate(g,e,slot);
  if(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))return !AhabEgo.active(e)||AhabEgo.available(e,slot);
  if(e.key==='moses')return Moses.validate(g,e,slot,options);
@@ -182,6 +184,7 @@ function shockIshmael(g,e){
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 export function cast(g,e,slot,p,d,options={}){
+ if(e.key==='maxim'){Maxim.cast(g,e,slot,p,d);return true;}
  if(e.key==='mei'){Mei.cast(g,e,slot,p,d);return true;}
  if(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))return AhabEgo.cast(g,e,slot,p);
  if(e.key==='moses'){Moses.cast(g,e,slot,d,options);return true;}
@@ -309,6 +312,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
+ Maxim.tick(g,e);
  Mei.tick(g,e);
  AhabEgo.tick(g,e);Bough.tick(g,e);Moses.tick(g,e,dt);
  Queen.tick(g,e);Nosferatu.tick(g,e);Ezra.tick(g,e,dt);

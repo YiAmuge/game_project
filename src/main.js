@@ -1,3 +1,4 @@
+import * as Maxim from './maxim.js';
 import * as Mei from './mei.js';
 import * as AhabEgo from './ahab-ego.js';
 import {MATCH_MODES,procedurePrice} from './match-modes.js';
@@ -77,9 +78,9 @@ window.addEventListener('mouseup',e=>{if(!PING_MOUSE_BUTTONS[e.button]||!inMatch
 window.addEventListener('auxclick',e=>{if(PING_MOUSE_BUTTONS[e.button]&&inMatch())e.preventDefault();},true);
 
 function chargeChampion(e){return ['yan','hohenheim'].includes(e.key);}
-function cancelBasicCharge(e){if(onlineMatch&&!onlineMatch.host){onlineMatch.command({action:'cancelCharge'});return;}Yan.cancelCharge(e);Hohenheim.cancelCharge(e);Moses.cancelCharge(e);cancelHeath(e);Don.cancel(game,e);}
-const chargeTactical=e=>e.key==='don'||e.key==='heathcliff'&&!game.buff(e,'heathUlt');
-const releaseTactical=(g,e,p)=>onlineMatch&&!onlineMatch.host?onlineMatch.command({action:'releaseTactical',point:p}):e.key==='don'?Don.release(g,e,p):releaseHeath(g,e,p);
+function cancelBasicCharge(e){if(onlineMatch&&!onlineMatch.host){onlineMatch.command({action:'cancelCharge'});return;}Yan.cancelCharge(e);Hohenheim.cancelCharge(e);Moses.cancelCharge(e);cancelHeath(e);Don.cancel(game,e);Maxim.stop(game,e);}
+const chargeTactical=e=>e.key==='maxim'||e.key==='don'||e.key==='heathcliff'&&!game.buff(e,'heathUlt');
+const releaseTactical=(g,e,p)=>onlineMatch&&!onlineMatch.host?onlineMatch.command({action:'releaseTactical',point:p}):e.key==='maxim'?Maxim.release(g,e):e.key==='don'?Don.release(g,e,p):releaseHeath(g,e,p);
 function releaseBasicCharge(g,e,p){if(e.key==='moses'&&!mobile?.enabled)return false;if(onlineMatch&&!onlineMatch.host)return onlineMatch.command({action:'releaseBasic',point:p});return e.key==='moses'?Moses.release(g,e,p):e.key==='hohenheim'?Hohenheim.release(g,e,p):Yan.release(g,e,p);}
 function clearInput(){mobile?.cancel();pingMenu?.cancel();game.input.precision=false;cancelBasicCharge(game.player);delete game.targeting;keys.clear();game.input.fire=false;game.input.x=0;game.input.y=0;}
 function cancelDrag(){if(drag?.key==='moses')Moses.selectInput(game,game.player,false);drag=null;$('drag-wheel').classList.add('hidden');}
@@ -255,7 +256,7 @@ $('arena').addEventListener('pointerdown',e=>{
   }else skill('q');
  }
 });
-window.addEventListener('pointerup',e=>{if(mobile?.enabled&&e.pointerType==='touch'){pingMenu.end('pointer-'+e.pointerId);return;}if(pingMenu.end('pointer-'+e.pointerId))return;if(e.button===2||e.target.closest?.('#q-btn'))game.input.precision=false;if(Infiltration.absent(game.player)){game.input.fire=false;return;}if((e.button===2||e.target.closest?.('#q-btn'))&&chargeTactical(game.player)&&(game.player.state.chargeAt!==undefined||game.player.state.donCharge)){if(active())releaseTactical(game,game.player,game.input.aim);else cancelBasicCharge(game.player);}if(e.button===0){game.input.fire=false;if(active())releaseBasicCharge(game,game.player,game.input.aim);else cancelBasicCharge(game.player);}if(e.button===2&&drag){updateDrag(e);const chosen=drag.choice,owner=drag.owner;if(chosen&&game.player.id===owner)skill('q',{direction:chosen});else toast('전술기 선택 취소');cancelDrag();}});
+window.addEventListener('pointerup',e=>{if(mobile?.enabled&&e.pointerType==='touch'){pingMenu.end('pointer-'+e.pointerId);return;}if(pingMenu.end('pointer-'+e.pointerId))return;if(e.button===2||e.target.closest?.('#q-btn'))game.input.precision=false;if(Infiltration.absent(game.player)){game.input.fire=false;return;}if((e.button===2||e.target.closest?.('#q-btn'))&&chargeTactical(game.player)&&(game.player.state.chargeAt!==undefined||game.player.state.donCharge||game.player.state.maximQ)){if(active())releaseTactical(game,game.player,game.input.aim);else cancelBasicCharge(game.player);}if(e.button===0){game.input.fire=false;if(active())releaseBasicCharge(game,game.player,game.input.aim);else cancelBasicCharge(game.player);}if(e.button===2&&drag){updateDrag(e);const chosen=drag.choice,owner=drag.owner;if(chosen&&game.player.id===owner)skill('q',{direction:chosen});else toast('전술기 선택 취소');cancelDrag();}});
 window.addEventListener('pointercancel',()=>{pingMenu.cancel();game.input.precision=false;game.input.fire=false;cancelBasicCharge(game.player);});
 for(const type of ['contextmenu','selectstart','dragstart'])$('arena').addEventListener(type,e=>e.preventDefault());
 function mapPoint(canvas,e){const r=canvas.getBoundingClientRect();const bounds=game.bounds;return {x:bounds.x+(e.clientX-r.left)/r.width*bounds.w,y:bounds.y+(e.clientY-r.top)/r.height*bounds.h};}
@@ -276,7 +277,7 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Tab'&&inMatch()){e.preventDefault();if(!e.repeat)showScore(true);return;}
  if(['Space','ArrowUp','ArrowDown','KeyW','KeyA','KeyS','KeyD'].includes(e.code))e.preventDefault();
  if(e.code==='F12'&&!e.repeat){e.preventDefault();fullscreen();return;}
- if(e.code==='Escape'&&!e.repeat){if(pingMenu.press){pingMenu.cancel();return;}if(Infiltration.absent(game.player)){game.cancelRecall(game.player);return;}if(mode==='codex'){closeCodex();return;}if(game.player.state.yanCharge||game.player.state.hohenCharge||game.player.state.donCharge){cancelBasicCharge(game.player);game.input.fire=false;return;}if(game.targeting){delete game.targeting;return;}if(game.player.state.chargeAt!==undefined){cancelBasicCharge(game.player);game.input.fire=false;return;}if(globalTarget){cancelGlobal();return;}if(game.player.recall){game.cancelRecall(game.player);return;}if(drag){cancelDrag();return;}if(scoreOpen){showScore(false);return;}if(document.fullscreenElement)return;if(!$('shop').classList.contains('hidden'))$('shop').classList.add('hidden');else togglePause();return;}
+ if(e.code==='Escape'&&!e.repeat){if(pingMenu.press){pingMenu.cancel();return;}if(Infiltration.absent(game.player)){game.cancelRecall(game.player);return;}if(mode==='codex'){closeCodex();return;}if(game.player.state.yanCharge||game.player.state.hohenCharge||game.player.state.donCharge||game.player.state.maximQ){cancelBasicCharge(game.player);game.input.fire=false;return;}if(game.targeting){delete game.targeting;return;}if(game.player.state.chargeAt!==undefined){cancelBasicCharge(game.player);game.input.fire=false;return;}if(globalTarget){cancelGlobal();return;}if(game.player.recall){game.cancelRecall(game.player);return;}if(drag){cancelDrag();return;}if(scoreOpen){showScore(false);return;}if(document.fullscreenElement)return;if(!$('shop').classList.contains('hidden'))$('shop').classList.add('hidden');else togglePause();return;}
  if(e.code==='KeyB'&&!e.repeat){e.preventDefault();if(active()&&!globalTarget&&!scoreOpen){if(!recallChoice.beginKey(pointer?.x,pointer?.y))recallAction();}return;}
  if(e.code==='KeyG'&&!e.repeat){e.preventDefault();toggleShop();return;}
  if(PING_KEYS[e.code]){e.preventDefault();const rect=$('arena').getBoundingClientRect(),p=pointer||{x:rect.x+rect.width/2,y:rect.y+rect.height/2};pingMenu.keyDown(e,p.x,p.y);return;}
