@@ -10,6 +10,7 @@ import{EZRA}from'./ezra-data.js';
 import{ammoSlots}from'./ezra.js';
 import{drawDebuffBadges,drawPulseIcon}from'./champion-update-effects.js';
 import*as Moses from'./moses.js';
+import {drawNikolaiMark} from './nikolai-vfx.js';
 import{pulse,PPUI}from'./ppui.js';
 import{drawKromerEffects}from'./kromer-vfx.js';
 import{drawLevelBadge}from'./level-badge.js';
@@ -62,7 +63,7 @@ export function stackInfo(e,g){
 export const championHealthY=(e,g)=>e.y-2.7-(stackGauge(e,g)?.55:0)-(e.key==='gubo'&&g.buff(e,'guboReload')?.55:0);
 export const overheadY=(e,g)=>championHealthY(e,g)-.42;
 export function championHud(r,e,g){
- const c=r.ctx,gauge=stackGauge(e,g),guboGauge=e.key==='gubo'&&g.buff(e,'guboReload'),width=2.65,x=e.x-width/2,y=championHealthY(e,g);
+ const c=r.ctx,gauge=stackGauge(e,g),guboGauge=e.key==='gubo'&&g.buff(e,'guboReload'),width=2.65,x=e.x-width/2,y=championHealthY(e,g);drawNikolaiMark(c,e,g,y);
  c.save();c.fillStyle='#081317';c.fillRect(x-.06,y-.06,width+.12,.46);
  paintHealth(c,e,g,x,y,width,.34,e.player?'#7bd387':e.team===g.player.team?'#79bbc9':'#d7877e');
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);

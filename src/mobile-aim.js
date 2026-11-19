@@ -37,7 +37,7 @@ export function mobileAutoAim(g,e,slot='basic',{category,targetId,movement}={}){
  const spec=slot==='basic'?{range:distorted(g,e)?YAN.handLeash:g.attackRange(e),radius:0,kind:'basic'}:skillTargeting(g,e,slot);
  const range=spec.range||0,visible=t=>t.alive&&!g.hidden(t)&&g.visibleTo(e.team,t)&&g.clearLine(e,t),inRange=(t,r=range)=>distance(e,t)<=r+(t.radius||0)+1e-8;
  const reach=slot==='basic'?basicAimReach(g,e):autoAimReach(spec),nearest=nearestMovementAim(g,e,slot),order=(a,b)=>distance(e,a)-distance(e,b)||a.id-b.id;
- const allEnemies=e.key==='yi'&&slot==='r'?[]:mobileAttackTargets(g,e,Infinity,{ignoreWalls:spec.ignoreWalls}).filter(t=>(!category||attackCategory(t)===category)&&(!(e.key==='nelly'&&slot==='r')||t.kind==='champion'));
+ const allEnemies=e.key==='yi'&&slot==='r'?[]:mobileAttackTargets(g,e,Infinity,{ignoreWalls:spec.ignoreWalls}).filter(t=>(!category||attackCategory(t)===category)&&(!(e.key==='nelly'&&slot==='r')||t.kind==='champion')&&(!spec.championsOnly||t.kind==='champion'));
  const prioritize=list=>[...list.filter(t=>inRange(t,reach)),...list.filter(t=>!inRange(t,reach))];
  const enemies=prioritize(nearest?allEnemies.sort(order):allEnemies);
  if(e.key==='moses'&&slot==='basic'){

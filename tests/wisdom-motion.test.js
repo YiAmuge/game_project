@@ -15,7 +15,7 @@ function arena(key='faust'){
  g.input.aim={x:46,y:20};g.aiChampion=g.aiMinion=g.aiNeutral=g.aiStructure=()=>{};
  return{g,p};
 }
-function enemy(g){return g.entity({kind:'minion',team:1,x:43,y:20,maxHp:100000,hp:100000,armor:99999,radius:.1,range:0,lastDamageAt:999,lastAttackAt:999});}
+function enemy(g){const t=g.makeChampion('faust',1,g.nextId);Object.assign(t,{x:43,y:20,maxHp:100000,hp:100000,armor:99999,radius:.1,range:0,lastDamageAt:999,lastAttackAt:999});return t;}
 
 test('Wisdom deals five armor-independent hits at 0.2-second intervals using activation power',()=>{
  const{g,p}=arena(),t=enemy(g),hits=[],deal=g.deal.bind(g),amount=75+g.powerScale(p)*140;
@@ -29,29 +29,29 @@ test('Wisdom pending hits survive source death but stop when their target dies',
  const{g,p}=arena(),t=enemy(g),amount=75+g.powerScale(p)*140;g.deal(p,t,1,{fixed:true});g.kill(p,t);run(g,1.01);near(100000-t.hp,1+5*amount);
  const second=arena(),victim=enemy(second.g);second.g.deal(second.p,victim,1,{fixed:true});second.g.kill(victim,second.p);run(second.g,1.01);assert.equal(second.g.effects.filter(f=>f.type==='wisdomSlash').length,0);
 });
-test('dash and teleport share the two-second reduction gate and reduce remaining cooldown by five percent',()=>{
+test('dash and teleport share the two-second reduction gate and subtract two seconds from remaining cooldown',()=>{
  const{g,p}=arena();p.state.wisdomReady=10;
- assert.ok(g.startMotion(p,{x:1,y:0},1));near(p.state.wisdomReady,9.5);near(p.state.wisdomMoveReady,2);delete p.motion;
- g.time=.5;g.teleport(p,{x:42,y:20});near(p.state.wisdomReady,9.5);near(p.state.wisdomMoveReady,2);
- g.time=1.999;g.teleport(p,{x:43,y:20});near(p.state.wisdomReady,9.5);
- g.time=2;g.teleport(p,{x:44,y:20});near(p.state.wisdomReady,9.125);near(p.state.wisdomMoveReady,4);
- g.time=3;assert.ok(g.startMotion(p,{x:1,y:0},1));near(p.state.wisdomReady,9.125);
+ assert.ok(g.startMotion(p,{x:1,y:0},1));near(p.state.wisdomReady,8);near(p.state.wisdomMoveReady,2);delete p.motion;
+ g.time=.5;g.teleport(p,{x:42,y:20});near(p.state.wisdomReady,8);near(p.state.wisdomMoveReady,2);
+ g.time=1.999;g.teleport(p,{x:43,y:20});near(p.state.wisdomReady,8);
+ g.time=2;g.teleport(p,{x:44,y:20});near(p.state.wisdomReady,6);near(p.state.wisdomMoveReady,4);
+ g.time=3;assert.ok(g.startMotion(p,{x:1,y:0},1));near(p.state.wisdomReady,6);
 });
 test('unused or expired Wisdom cooldown never arms the two-second gate',()=>{
  const{g,p}=arena();g.teleport(p,{x:42,y:20});assert.equal(p.state.wisdomMoveReady,undefined);
  p.state.wisdomReady=1;g.time=1;g.teleport(p,{x:43,y:20});assert.equal(p.state.wisdomMoveReady,undefined);
- p.state.wisdomReady=11;g.teleport(p,{x:44,y:20});near(p.state.wisdomReady,10.5);near(p.state.wisdomMoveReady,3);
+ p.state.wisdomReady=11;g.teleport(p,{x:44,y:20});near(p.state.wisdomReady,9);near(p.state.wisdomMoveReady,3);
 });
 test('one multi-stage skill cannot reduce cooldown twice even when its later movement is after two seconds',()=>{
  const{g,p}=arena();p.state.wisdomReady=10;
  g.action(p,'skill',()=>{g.teleport(p,{x:42,y:20});g.schedule(p,3,()=>g.teleport(p,{x:40,y:20}));});
- run(g,3.01);near(p.state.wisdomReady,9.5);near(p.x,40);
- g.teleport(p,{x:41,y:20});near(p.state.wisdomReady,g.time+(9.5-g.time)*.95);
+ run(g,3.01);near(p.state.wisdomReady,8);near(p.x,40);
+ g.teleport(p,{x:41,y:20});near(p.state.wisdomReady,6);
 });
 test('motion callbacks retain the originating skill across a long return movement',()=>{
  const{g,p}=arena();p.state.wisdomReady=10;
  g.action(p,'skill',()=>g.startMotion(p,{x:1,y:0},3,{speed:1,onComplete:()=>g.teleport(p,{x:40,y:20})}));
- run(g,3.01);near(p.state.wisdomReady,9.5);near(p.x,40);near(p.state.wisdomMoveReady,2);
+ run(g,3.01);near(p.state.wisdomReady,8);near(p.x,40);near(p.state.wisdomMoveReady,2);
 });
 test('failed and forced movement and normal walking do not activate the reduction',()=>{
  const{g,p}=arena();p.state.wisdomReady=10;g.status(p,'root',1,1,p);assert.equal(g.startMotion(p,{x:1,y:0},2),false);near(p.state.wisdomReady,10);
@@ -60,29 +60,29 @@ test('failed and forced movement and normal walking do not activate the reductio
 });
 test('valid blink ultimates activate Wisdom and rejected casts do not',()=>{
  for(const key of ['yi','ryoshu','nelly']){
-  const{g,p}=arena(key);p.state.wisdomReady=10;assert.ok(g.cast(p,'r',g.input.aim),key);near(p.state.wisdomReady,9.5);near(p.state.wisdomMoveReady,2);
-  p.rCd=0;g.time=2;g.status(p,'silence',1,1,p);assert.equal(g.cast(p,'r',g.input.aim),false,key);near(p.state.wisdomReady,9.5);
+  const{g,p}=arena(key);p.state.wisdomReady=10;assert.ok(g.cast(p,'r',g.input.aim),key);near(p.state.wisdomReady,8);near(p.state.wisdomMoveReady,2);
+  p.rCd=0;g.time=2;g.status(p,'silence',1,1,p);assert.equal(g.cast(p,'r',g.input.aim),false,key);near(p.state.wisdomReady,8);
  }
 });
 test('Arayashiki counts its opening teleport and does not count its ending recast',()=>{
  const{g,p}=arena('ryoshu');p.goldenBough=true;p.state.wisdomReady=10;p.hp=p.maxHp=100000;
- assert.ok(g.cast(p,'r',g.input.aim));near(p.state.wisdomReady,9.5);run(g,2.01);assert.ok(g.cast(p,'r',p));near(p.state.wisdomReady,9.5);near(p.state.wisdomMoveReady,2);
+ assert.ok(g.cast(p,'r',g.input.aim));near(p.state.wisdomReady,8);run(g,2.01);assert.ok(g.cast(p,'r',p));near(p.state.wisdomReady,8);near(p.state.wisdomMoveReady,2);
 });
 test('Nosferatu manual return is a new mobility use but automatic reversion is not',()=>{
  for(const manual of [true,false]){
-  const{g,p}=arena('nosferatu');p.state.wisdomReady=10;assert.ok(g.cast(p,'r',g.input.aim));near(p.state.wisdomReady,9.5);
-  if(manual){run(g,2.01);assert.ok(g.cast(p,'r',p));near(p.state.wisdomReady,g.time+(9.5-g.time)*.95);}
-  else{run(g,5.01);near(p.state.wisdomReady,9.5);near(p.state.wisdomMoveReady,2);}
+  const{g,p}=arena('nosferatu');p.state.wisdomReady=10;assert.ok(g.cast(p,'r',g.input.aim));near(p.state.wisdomReady,8);
+  if(manual){run(g,2.01);assert.ok(g.cast(p,'r',p));near(p.state.wisdomReady,6);}
+  else{run(g,5.01);near(p.state.wisdomReady,8);near(p.state.wisdomMoveReady,2);}
  }
 });
 test('dash basic attacks activate the same shared two-second gate',()=>{
  for(const key of ['mei','ezra','don']){
-  const{g,p}=arena(key);p.state.wisdomReady=10;assert.ok(g.attack(p,g.input.aim),key);near(p.state.wisdomReady,9.5);near(p.state.wisdomMoveReady,2);
+  const{g,p}=arena(key);p.state.wisdomReady=10;assert.ok(g.attack(p,g.input.aim),key);near(p.state.wisdomReady,8);near(p.state.wisdomMoveReady,2);
  }
 });
 test('Wisdom readiness and mobility gate survive the online snapshot round trip',()=>{
  const{g,p}=arena(),guest=arena('yi').g;p.state.wisdomReady=10;g.teleport(p,{x:42,y:20});
- const packet=JSON.parse(JSON.stringify(new SnapshotWriter().capture(g,true)));assert.ok(applySnapshot(guest,packet,p.id));near(guest.player.state.wisdomReady,9.5);near(guest.player.state.wisdomMoveReady,2);
+ const packet=JSON.parse(JSON.stringify(new SnapshotWriter().capture(g,true)));assert.ok(applySnapshot(guest,packet,p.id));near(guest.player.state.wisdomReady,8);near(guest.player.state.wisdomMoveReady,2);
  assert.equal(guest.player.state.wisdomMovement,undefined);
 });
 test('normal swings finish at forty percent and stay active at the arrival angle until the original end',()=>{
@@ -123,5 +123,5 @@ test('Kromer impalement keeps its penetration aligned to the torso at the faster
 });
 test('Wisdom description includes the shared two-second mobility gate',()=>{
  const item=AUGMENTS.find(a=>a.key==='wisdom'),text=item.text||item.description||item.desc;
- assert.match(text,/0.2초.*총 5회/);assert.match(text,/남은.*5%/);assert.match(text,/2초마다 1회/);
+ assert.match(text,/0.2초.*총 5회/);assert.match(text,/남은.*2초/);assert.match(text,/2초마다 1회/);
 });

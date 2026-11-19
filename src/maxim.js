@@ -1,4 +1,4 @@
-import {forwardEnd} from './dash-hit.js';
+import {forwardEnd,stationaryContact} from './dash-hit.js';
 import * as Effects from './bough-effects.js';
 import {MAXIM as P,maximUltimateArea} from './maxim-data.js';
 import {distance,direction,segmentDistance} from './geometry.js';
@@ -36,11 +36,8 @@ export function attack(g,e,point){
  e.state.maximAttack={at:g.time,until:g.time+(near?.28:.3),angle,near};g.cancelRecall(e);sound(g,e,'swing',undefined,near?'maxim-sweep':'maxim-charge');
  if(near){g.cone(e,d,P.nearRange,Math.PI,P.swingDamage,()=>{},{sound:{family:'hammer',element:'physical'}});fx(g,e,'maximSwing',{r:P.nearRange,life:.25,maxLife:.25});return true;}
  const len=Math.min(g.attackRange(e),distance(e,point)),hits=new Set();
- return g.startMotion(e,d,len,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,phaseEnemies:true,actionTag:'maximBasic',onStep:(from,to)=>{
-  for(const t of [...g.units])if(g.hostile(e,t)&&!hits.has(t.id)&&segmentDistance(t,from,forwardEnd(to,d))<=t.radius+e.radius+.18&&g.clearLine(from,t)){
-   hits.add(t.id);g.deal(e,t,P.dashDamage,{damageKind:'basic',sound:{family:'hammer',element:'physical'}});
-  }
- },onComplete:()=>fx(g,e,'maximDust',{x:e.x,y:e.y,from:origin,r:.8,life:.3,maxLife:.3})});
+ const strike=(from,to,extra=1.2)=>{for(const t of [...g.units])if(g.hostile(e,t)&&!hits.has(t.id)&&segmentDistance(t,from,forwardEnd(to,d,extra))<=t.radius+e.radius+.18&&g.clearLine(from,t)){hits.add(t.id);g.deal(e,t,P.dashDamage,{damageKind:'basic',sound:{family:'hammer',element:'physical'}});}};
+ return g.startMotion(e,d,len,{speed:P.dashSpeed,maxSpeed:P.dashSpeed,phaseEnemies:true,actionTag:'maximBasic',onStep:strike,onCollision:()=>stationaryContact(g,e,origin,d,strike),onComplete:()=>fx(g,e,'maximDust',{x:e.x,y:e.y,from:origin,r:.8,life:.3,maxLife:.3})});
 }
 export function stop(g,e){
  if(!rushing(e))return false;

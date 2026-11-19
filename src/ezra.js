@@ -1,4 +1,4 @@
-import {forwardEnd,forwardDistance} from './dash-hit.js';
+import {forwardEnd,forwardDistance,stationaryContact} from './dash-hit.js';
 import * as Effects from './bough-effects.js';
 import{distance,direction,segmentDistance}from'./geometry.js';
 import{has,rangeBonus}from'./augments.js';
@@ -64,7 +64,7 @@ function perform(g,e,index,p,d,kind,slot){
   g.addShield(e,e.maxHp*w.shield,`ezra-glove-${e.id}`,w.shieldTime);g.addBuff(e,'ezraGloveStride',1,{copy:false});
   const hits=new Set(),len=w.dash+rangeBonus(e);g.emitSound('swing',e,{damageKind:kind,slot,stance:index,family:w.family});
   g.effects.push({type:'thrust',source:e.id,theme:'ezra',weaponIndex:index,damageKind:kind,slot,x:e.x,y:e.y,r:len,angle:Math.atan2(d.y,d.x),shape:{kind:'rect',range:len,width:1.2,angle:Math.atan2(d.y,d.x)},life:.18,maxLife:.18});
-  g.startMotion(e,d,len,{speed:44,maxSpeed:44,phaseEnemies:true,actionTag:'ezraGlove',onStep:(from,to)=>{if(!valid())return;for(const t of[...g.units])if(g.hostile(e,t)&&!hits.has(t.id)&&segmentDistance(t,from,kind==='basic'?forwardEnd(to,d):to)<=t.radius+.6&&g.clearLine(e,t)){hits.add(t.id);hit(g,e,t,w,index,kind,slot);}},onComplete:()=>{if(valid())e.state.ezraAttack.phase='strike';}});
+  const origin={x:e.x,y:e.y},strike=(from,to,extra=1.2)=>{if(!valid())return;for(const t of[...g.units])if(g.hostile(e,t)&&!hits.has(t.id)&&segmentDistance(t,from,kind==='basic'?forwardEnd(to,d,extra):to)<=t.radius+.6&&g.clearLine(e,t)){hits.add(t.id);hit(g,e,t,w,index,kind,slot);}};g.startMotion(e,d,len,{speed:44,maxSpeed:44,phaseEnemies:true,actionTag:'ezraGlove',onStep:strike,onCollision:()=>stationaryContact(g,e,origin,d,strike),onComplete:()=>{if(valid())e.state.ezraAttack.phase='strike';}});
  }else if(index===1||index===2){
   e.attackCd=Math.max(e.attackCd,combatSeconds((w.hits-1)*w.every+.1));for(let i=0;i<w.hits;i++)if(i===0)apply();else g.schedule(e,i*w.every,apply);
  }else if(index===3){

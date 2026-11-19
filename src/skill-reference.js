@@ -64,6 +64,7 @@ function basicRanges(key,g,e,transformed){
  return[row('공격 범위','사거리 '+r+' · 직선'+(widths[key]?' 폭 '+number(widths[key]):''))];
 }
 function skillRanges(key,index,g,e,transformed,variant){
+ if(key==='nikolai'){if(index===0)return[row('표적','한 명 · 10초'),row('강화 조건','자신의 표적이 사거리 10 이내')];if(index===1)return[row('기본 검기','사거리 8 · 관통'),row('표적 추적 중','사거리 2.5 · 관통')];if(index===2)return[row('전투 지휘','자신 중심 반경 8 · 3초')];if(index===3)return[row('처분','대상 지정 거리 7.5 · 적 챔피언 한 명')];}
  if(key==='maxim'){if(index===0)return[row('발동','7.5 이동 · 최대 5초마다 1회')];if(index===2)return[row('돌진','최대 7초 · 커서 방향 조작'),row('충돌','자신 중심 반경 2.8')];if(index===3)return[row('충격파','사거리 12 · 부채꼴 150°')];}
  if(key==='mei'&&index===0)return[row('화상','같은 적 3회 피해 · 2초간 0.5초마다')];
  if(key==='mei'&&index===2)return[row('정주','지정 방향으로 4.5 돌진'),row('회축','자신 중심 반경 3.6 · 2초 내 재사용')];

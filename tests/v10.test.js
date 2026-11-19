@@ -75,7 +75,7 @@ test('Yi passive shields every nearby ally by their own HP with a twenty-percent
  for(let i=1;i<=7;i++){g.time=i*1.5;g.deal(p,t,1);}close(g.shield(a),a.maxHp*.2);
 });
 test('Yi ultimate fans seven bullets across the widened angle with one extra range',()=>{
- const {g,p,t}=quiet('yi');g.cast(p,'r',p);close(g.attackRange(p),7.5);g.attack(p,t);assert.equal(g.projectiles.length,7);assert.ok(g.projectiles.every(b=>b.remaining===7.5));const angles=g.projectiles.map(b=>Math.atan2(b.dy,b.dx));assert.ok(Math.max(...angles)-Math.min(...angles)>1.4);
+ const {g,p,t}=quiet('yi');g.cast(p,'r',p);close(g.attackRange(p),8.7);g.attack(p,t);assert.equal(g.projectiles.length,7);assert.ok(g.projectiles.every(b=>b.remaining===8.7));const angles=g.projectiles.map(b=>Math.atan2(b.dy,b.dx));assert.ok(Math.max(...angles)-Math.min(...angles)>1.12);
 });
 test('Rudolph whip radius and range shrink while ultimate scales with actual SP spent',()=>{
  const {g,p,t}=quiet('rudolph');close(g.attackRange(p),7.65);t.x=44;t.y=10.1;g.attack(p,{x:44,y:7});close(t.hp,100000);p.ammo=57;g.cast(p,'r',{x:43,y:7});close(g.pending[0].damage,57*8.5);close(p.ammo,0);
@@ -114,7 +114,7 @@ test('consumables have no live module, champion resource, purchase, use or codex
  const {g,p}=quiet();assert.equal(existsSync(new URL('../src/items.js',import.meta.url)),false);assert.equal(g.usePotion,undefined);assert.equal(g.buyConsumable,undefined);assert.equal(g.sellConsumable,undefined);assert.equal('potion' in p,false);assert.equal('CONSUMABLES' in Catalog,false);assert.equal(g.buy(p,'potion'),false);
 });
 test('Starbuck joins ordinary drafts with requested grades, harpoon damage and jungle rewards',()=>{
- const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,37);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,55*1.1);
+ const {g,p,t}=quiet('starbuck');assert.equal(Object.keys(CHAMPIONS).length,38);assert.deepEqual([CHAMPIONS.starbuck.power,CHAMPIONS.starbuck.health,CHAMPIONS.starbuck.speed,p.ammo,CHAMPIONS.starbuck.reload],[3,4,2,2,3]);g.units=[p];const n=g.makeNeutral(42,7,'side');const before=n.hp;g.deal(p,n,100,{fixed:true});close(before-n.hp,112);g.kill(n,p);close(p.xp,55*1.1);
 });
 test('Starbuck every basic hits along a 3.75 dash with either full or partial ammo',()=>{
  const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,0);close(p.motion.total,3.75);run(g,.5);close(hp-t.hp,200*.9);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.ok(p.motion);close(p.motion.total,3.75);

@@ -9,7 +9,7 @@ import { decodePNG } from '../tools/png.mjs';
 
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 test('all held weapons have the requested glove or body skin tone, with the five existing hand styles excluded',()=>{
- const black=['maxim','sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra'],brown=['alisa','dongrang'];
+ const black=['nikolai','maxim','sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra'],brown=['alisa','dongrang'];
  assert.deepEqual([...UNCHANGED_HANDS].sort(),['meursault','sora','ppui','queequeg','gregor'].sort());
  for(const key of Object.keys(CHAMPIONS)){const p=gripAppearance(key);if(UNCHANGED_HANDS.has(key)){assert.equal(p,null,key);continue;}assert.ok(p,key);assert.equal(p.material,black.includes(key)?'black':brown.includes(key)?'brown':key==='ahab'?'white':key==='kromer'?'gray':key==='moses'?'metal':'skin',key);if(p.material==='skin')assert.equal(p.base,BARE_HAND_COLORS[key]);}
  assert.equal(Object.keys(BARE_HAND_COLORS).length,16);

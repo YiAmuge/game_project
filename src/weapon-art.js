@@ -1,3 +1,4 @@
+import * as Nikolai from './nikolai.js';
 import {MAXIM} from './maxim-data.js';
 import {MAXIM_HEAD,maximHammerPoint,maximWeaponState,drawMaximCurrent} from './maxim-weapon.js';
 import {maxLevel,storm} from './golden-bough.js';
@@ -25,6 +26,7 @@ export const HANDLE_EXTENSIONS={
 };
 export const MEI_FIST_SIZE=.36*1.2;
 export const WEAPON_ART={
+ nikolai:['nikolaiSaber',2.55],
  maxim:['maximHammer',2.35],
  mei:['meiRightFist',MEI_FIST_SIZE],
  moses:['mosesPipe',1.05],ezra:['ezraGlove',.483],
@@ -38,7 +40,7 @@ export const WEAPON_ART={
  hohenheim:['hohenheimStaff',2.6],alisa:['alisaClub',1.75],marton:['martonHammer',2.4],queequeg:['queequegHarpoon',2.25],starbuck:['starbuckHarpoon',2.45],kim:['kimSword',2.35],ppui:['ppuiHand',.48],sora:['soraFists',.84*.75],yan:['yanSword',3],
 };
 export const MIDDLE_GRIP=new Set(['starbuck','don','sinclair','honglu','dongrang','hohenheim','marton','rudolph']);
-export const gripPivot=key=>key==='maxim'?.17:key==='moses'?.30:key==='queen'?.42:key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
+export const gripPivot=key=>key==='nikolai'?.09:key==='maxim'?.17:key==='moses'?.30:key==='queen'?.42:key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
 export function equippedWeapon(g,e){
  if(e.key==='ahab'&&e.state.gasharpoon)return [e.state.gasharpoon.bladeMissingUntil>g.time?'ahabGasArmEmpty':'ahabGasArm',2.6,FRAMES.ahabGasArm.grip[0]];
  if(e.key==='ezra'){const index=e.state.ezraAttack?.until>g.time?e.state.ezraAttack.weapon:Ezra.currentIndex(g,e),w=Ezra.weapon(g,e,index);return [w.asset,w.length,w.pivot];}
@@ -56,7 +58,7 @@ export const SORA_CLAW_LENGTH=1.65*.8*.88;
 export const ISHMAEL_SHIELD_LENGTH=.38;
 export const EMISSION_ANCHORS={gubo:[.99,.32],rudolph:[.94,.48],myo:[.995,.50],jamila:[.99,.23]};
 // Anatomical hands in crown-to-sole world units, independent of hair/ornaments.
-export const HAND_ANCHORS={maxim:[-.32,-.88],mei:[-.43,-.94],moses:[-.30,-.75],ezra:[-.30,-.72],queen:[-.35,-.88],nosferatu:[-.35,-.7],kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
+export const HAND_ANCHORS={nikolai:[-.29,-.88],maxim:[-.32,-.88],mei:[-.43,-.94],moses:[-.30,-.75],ezra:[-.30,-.72],queen:[-.35,-.88],nosferatu:[-.35,-.7],kromer:[-.30,-.78],jamila:[-.29,-.57],yan:[-.29,-.78],sora:[-.3,-.78],kim:[-.34,-.75],ppui:[-.29,-.8],starbuck:[-.32,-.8],yi:[-.28,-.8],faust:[-.29,-.8],ryoshu:[-.29,-.8],don:[-.29,-.8],meursault:[-.33,-.8],honglu:[-.3,-.8],heathcliff:[-.33,-.8],ishmael:[-.31,-.8],rodya:[-.32,-.8],sinclair:[-.28,-.8],outis:[-.29,-.8],gregor:[-.31,-.8],dongbaek:[-.34,-.8],dongrang:[-.36,-.8],ahab:[-.43,-.8],queequeg:[-.4,-.8],nelly:[-.3,-.8],gubo:[-.33,-.8],gahwan:[-.3,-.8],hohenheim:[-.32,-.8],alisa:[-.3,-.8],marton:[-.34,-.8],myo:[-.3,-.8],rudolph:[-.32,-.8]};
 export function spriteOrigin(g,e,extraLift=0){return {x:e.x,y:e.y+.3+Math.sin(g.time*3+e.id)*.025-leapLift(e)-extraLift};}
 export function equipmentPose(g,e,extraLift=levitationLift(g,e)){
  const origin=spriteOrigin(g,e,extraLift),f=FRAMES[visualForm(g,e)],aim=e.facing??(e.team?Math.PI:0),stance=basicStance(g,e)||(!combatPoseActive(g,e)&&Math.abs(Math.sin(aim))<1e-6?restingStance(g,e,aim):null),facing=stance?.weaponFacing??aim,flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f?.mirror)?-1:1,[baseX,y]=HAND_ANCHORS[e.key]||[-.3,-.8],x=baseX*(e.key==='sora'&&g.buff(e,'soraEgo')?1.1:1);
@@ -385,7 +387,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0,orientation,headScale=1,hands,offHandOpacity=1,energy=0}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);if(orientation){c.scale(orientation.flip,1);c.rotate(orientation.angle);}else orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip,hands,offHandOpacity});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,headScale,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();if(key==='maximHammer')drawMaximCurrent(c,loadAtlas(m.frame.sheet),m,pivot,headScale,energy,g.time);if(key==='ezraDrill')drawEzraDrillEffect(c,g,e,m,pivot);drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip,hands,offHandOpacity});
+  c.save();c.translate(hand.x,hand.y);if(orientation){c.scale(orientation.flip,1);c.rotate(orientation.angle);}else orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip,hands,offHandOpacity});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,headScale,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();if(key==='nikolaiSaber'&&attacking&&Nikolai.empowered(g,e)&&r.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=.85;c.shadowColor='#ff642a';c.shadowBlur=14;c.beginPath();c.rect(m.span*(.2-pivot),-m.height*m.scale,m.span*.82,m.height*m.scale*2);c.clip();c.drawImage(r.skillVfx.tintFrame(loadAtlas(m.frame.sheet),m.frame,'#ff6b2d'),-m.span*pivot,-m.height*m.scale/2,m.span,m.height*m.scale);c.restore();}if(key==='maximHammer')drawMaximCurrent(c,loadAtlas(m.frame.sheet),m,pivot,headScale,energy,g.time);if(key==='ezraDrill')drawEzraDrillEffect(c,g,e,m,pivot);drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip,hands,offHandOpacity});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},key==='maximHammer'?maximCrystalVector(headScale):{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){const body=FRAMES.yanDistorted,height=2.1*body.heightScale,right=height*body.w/body.h*(1-body.foot[0]);c.save();c.translate(p.origin.x+right+1.72,p.origin.y-.6);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
@@ -397,6 +399,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  }
  if(e.key==='moses'){const pose=mosesWeaponPose(g,e,p);held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:null,trail:false,gripY:pose.gripY});return true;}
  if(e.key==='gahwan'&&e.state.gahwanR){const pose=gahwanChargePose(g,e,p);c.save();c.shadowColor='#ff193e';c.shadowBlur=14;held(entry[0],entry[1],pose.hand,pose.angle,pose.pivot,{mode:null,trail:false,centerGrip:true});c.restore();return true;}
+ if(e.key==='nikolai'){const v=e.visualCast,age=v?.slot==='r'?g.time-v.at:99,active=age>=0&&age<.3;held(entry[0],entry[1],p.right,active?v.angle+(weaponSwingProgress(age/.3)-.5)*2.25:p.angle,entry[2],{trail:active||p.attacking,hands:1});return true;}
  if(e.key==='maxim'){const pose=maximWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand??p.right,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust||0,trail:pose.trail,part:pose.part,orientation:pose.orientation,headScale:pose.headScale,hands:pose.hands,offHandOpacity:pose.offHandOpacity,energy:pose.energy});return true;}
  if(e.key==='ezra'){const pose=ezraWeaponPose(g,e,p,camera);held(entry[0],entry[1],pose.hand,pose.angle,entry[2],{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,gripY:pose.gripY,flipY:pose.flipY,part:pose.part});return true;}
  if(e.key==='jamila'){const pose=jamilaWeaponPose(g,e,p);held(pose.asset,pose.length,pose.hand,pose.angle,pose.asset==='jamilaKopis'?.12:.238,{mode:pose.mode,progress:pose.progress,thrust:pose.thrust,trail:pose.trail,dim:pose.dim,gripY:pose.gripY,part:'kopis'});return true;}

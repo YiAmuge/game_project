@@ -3,7 +3,7 @@ import{AUGMENTS,RULES,UPGRADE_STEPS}from'./data.js';
 import*as Augments from'./augments.js';
 import{distance,direction}from'./geometry.js';
 const healthUsers=new Set(['maxim','ezra','nosferatu','marton','kim','yi','honglu','ppui','alisa','queequeg','meursault','sora']);
-const skillUsers=new Set(['moses','queen','yi','rudolph','hohenheim','gahwan','dongbaek','honglu','ppui','queequeg','kromer','nelly','yan']);
+const skillUsers=new Set(['nikolai','moses','queen','yi','rudolph','hohenheim','gahwan','dongbaek','honglu','ppui','queequeg','kromer','nelly','yan']);
 const magazineUsers=new Set(['mei','ezra','rudolph','hohenheim','jamila','yan']);
 const priorities={combat:['power15','range7','blackOrb','reloadStacks','wisdom','finalBullet','duelManual'],survival:['glaive','forceBattery','traumaGuard','writtenOrder','resentment','kAmpule','antimatter'],tech:['cooldown15','maskDeLu','magazine2','battleHaste','carrier','adaptiveSpeed','highRisk']};
 export const goldenLane=e=>['ryoshu','gahwan'].includes(e.key)?e.position==='top':e.key==='yi'?e.position==='bottom':true;

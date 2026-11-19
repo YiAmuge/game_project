@@ -1,3 +1,4 @@
+import {NIKOLAI_DATA} from './nikolai-data.js';
 import{MAXIM_DATA}from'./maxim-data.js';
 import{MEI_DATA}from'./mei-data.js';
 import{ARCANA_DATA}from'./arcana-data.js';
@@ -48,6 +49,7 @@ export const CORE_POSITIONS=BASE_DIVIDERS.map((wall,team)=>{const area=FOUNTAIN_
 export const WELL_ROOMS=[{x:-3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width+3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:1}];
 export function inWell(e,team=e.team){const w=FOUNTAIN_AREAS[team];return Boolean(w&&e.x>=w.x&&e.x<=w.x+w.w&&e.y>=w.y&&e.y<=w.y+w.h);}
 export const CHAMPIONS = {
+  nikolai:NIKOLAI_DATA,
   maxim:MAXIM_DATA,
   mei:MEI_DATA,
   ...ARCANA_DATA,
@@ -75,14 +77,15 @@ export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!CHAMPIONS[key]));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const BASE_HEALTH={maxim:2900,mei:1900,sora:2500,moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
-export const BASE_SPEED={maxim:4,mei:3.2,sora:3.6,moses:2.85,ezra:3.6,yi:4.35,rudolph:3.25};
+export const BASE_HEALTH={nikolai:2000,maxim:2900,mei:1900,sora:2500,moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
+export const BASE_SPEED={nikolai:3.5,maxim:4,mei:3.2,sora:3.6,moses:2.85,ezra:3.6,yi:4.35,rudolph:3.25};
 export const championBaseHealth=key=>BASE_HEALTH[key]??RULES.health[RUNTIME_CHAMPIONS[key].health]*(RUNTIME_CHAMPIONS[key].healthMultiplier||1);
 export const championBaseSpeed=key=>BASE_SPEED[key]??RULES.speed[RUNTIME_CHAMPIONS[key].speed];
 
-export const ARMOR_GRADES={maxim:3,mei:4,moses:2,ezra:3,queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:2,yan:4};
+export const ARMOR_GRADES={nikolai:1,maxim:3,mei:4,moses:2,ezra:3,queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:2,yan:4};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS))c.armor=ARMOR_GRADES[key]??2;
 export const GROWTH={
+ nikolai:[.05,.05,.012],
  maxim:[.052,.065,.012],
  mei:[.052,.055,.012],
  queen:[.055,.045,.013],nosferatu:[.055,.055,.016],
@@ -90,7 +93,7 @@ export const GROWTH={
  jamila:[.045,.055,.01],
  faust:[.055,.045,.008],yi:[.042,.052,.012],sinclair:[.058,.048,.016],meursault:[.038,.075,.007],don:[.052,.061,.013],ryoshu:[.064,.04,.017],honglu:[.046,.055,.014],heathcliff:[.061,.063,.01],ishmael:[.043,.072,.009],rodya:[.054,.065,.011],outis:[.06,.047,.01],gregor:[.045,.074,.008],gubo:[.063,.044,.006],gahwan:[.051,.049,.011],nelly:[.066,.043,.018],ahab:[.057,.041,.009],alisa:[.058,.057,.012],rudolph:[.05,.048,.007],moses:[.036,.058,.01],ezra:[.052,.067,.012],myo:[.064,.038,.015],dongbaek:[.053,.044,.01],dongrang:[.041,.075,.008],hohenheim:[.06,.039,.008],marton:[.038,.077,.009],queequeg:[.046,.079,.008],starbuck:[.058,.06,.013],kim:[.048,.068,.011],ppui:[.035,.054,.012],sora:[.06,.046,.013],yan:[.043,.058,.01],
 };
-export const ATTACK_STYLES={maxim:'sweep',mei:'punch',queen:'slash',nosferatu:'slash',kromer:'thrust',jamila:'shot',faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
+export const ATTACK_STYLES={nikolai:'slash',maxim:'sweep',mei:'punch',queen:'slash',nosferatu:'slash',kromer:'thrust',jamila:'shot',faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
 
 CHAMPIONS.rodya.r=30;CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=5.2;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
@@ -163,6 +166,7 @@ export const lanePath = (team, lane) => {
   return team===0?points:points.reverse();
 };
 export const CHAMPION_ROLES={
+ nikolai:['지원','암살','support'],
  maxim:['돌격','top'],
  mei:['돌격','암살','top'],
  moses:['지원','support'],ezra:['돌격','top'],
@@ -172,7 +176,7 @@ export const CHAMPION_ROLES={
  yi:['지원','방해','support'],faust:['저격','bottom'],sinclair:['암살','jungle'],don:['돌격','암살','top'],meursault:['보호','방해','top'],gubo:['저격','bottom'],kim:['보호','top'],queequeg:['지원','보호','support'],ppui:['지원','support'],gahwan:['방해','저격','support'],hohenheim:['저격','방해','bottom'],alisa:['암살','돌격','jungle'],marton:['보호','방해','top'],nelly:['암살','jungle'],myo:['암살','jungle'],rudolph:['저격','bottom'],dongbaek:['저격','bottom'],dongrang:['보호','top'],outis:['저격','암살','bottom'],heathcliff:['돌격','top'],ryoshu:['암살','jungle'],ishmael:['방해','보호','support'],honglu:['지원','support'],rodya:['방해','support'],gregor:['보호','top'],ahab:['저격','암살','bottom'],starbuck:['암살','방해','jungle'],sora:['암살','돌격','jungle'],yan:['방해','보호','support']
 };
 for(const [key,values] of Object.entries(CHAMPION_ROLES)){const c=CHAMPIONS[key];c.roles=values.slice(0,-1);c.role=c.roles[0];c.recommendedPosition=values.at(-1);}
-CHAMPIONS.ryoshu.ammo=3;CHAMPIONS.nelly.range=1.8;CHAMPIONS.alisa.range=2;CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
+CHAMPIONS.yi.range=7.7;CHAMPIONS.yi.damage=100;CHAMPIONS.ryoshu.ammo=3;CHAMPIONS.nelly.range=1.8;CHAMPIONS.alisa.range=2;CHAMPIONS.alisa.healthMultiplier=.6;CHAMPIONS.alisa.damage=140;
 
 export const AUGMENT_RULES={cost:500,refund:.7,slots:6,categorySlots:2};
 export const AUGMENTS=[
@@ -182,7 +186,7 @@ export const AUGMENTS=[
  {key:'range7',group:'combat',name:'N사 고정팀 가방',text:'기본 공격 사거리 +2.5. 관통 또는 범위 공격이 가능한 기본 공격은 사거리 +1.3을 적용'},
  {key:'reloadStacks',group:'combat',name:'엄숙한 애도',text:'공격 적중 시 장전속도 +5% 중첩, 최대 5중첩. 획득 시 3초로 갱신, 3초마다 1중첩 감소. 최대 중첩 중 공격 중에도 장전이 15% 속도로 진행'},
  {key:'glaive',group:'survival',name:'경혈식 글레이브',text:'전투력 +10% · 준 체력 피해의 30%만큼 흡혈'},
- {key:'wisdom',group:'combat',name:'지혜성도',text:"전투력 +7%. 10초마다 적에게 피해를 입히면 0.2초 간격으로 (75 + 현재 전투력 5%당 7) 고정 피해를 총 5회 입힌다. 돌진·도약·순간이동 기술을 사용하면 남은 지혜성도 쿨타임이 5% 감소한다. 쿨타임 감소는 2초마다 1회 발동한다."},
+ {key:'wisdom',group:'combat',name:'지혜성도',text:"전투력 +7%. 10초마다 적 챔피언에게 피해를 입히면 0.2초 간격으로 (75 + 현재 전투력 5%당 7) 고정 피해를 총 5회 입힌다. 돌진·도약·순간이동 기술을 사용하면 남은 지혜성도 쿨타임이 2초 감소한다. 쿨타임 감소는 2초마다 1회 발동한다."},
  {key:'duelManual',group:'combat',name:'듀엘교본 3권',text:"이동속도 +5%. 적에게 피해를 입힐 때마다 이동속도 +2%·전투력 +5%를 얻으며 최대 5중첩이다. 5초마다 1중첩 감소한다."},
  {key:'resentment',group:'survival',name:'원한 문신',text:'잃은 체력 10%마다 전투력·방어력·장전속도 +5%, 최대 8중첩. 현재 체력에 따라 실시간 적용'},
  {key:'kAmpule',group:'survival',name:'보급형 K사 앰플',text:"최대 체력 +7%. 자신의 기술을 포함한 치명적인 피해를 받으면 최대 체력의 50%로 체력을 복구하고 군중제어를 해제한다. 1초간 군중제어 면역·이동속도 +30%. 복구할 때마다 최대 체력이 영구적으로 2.5% 증가한다. 재사용 대기시간 60초."},

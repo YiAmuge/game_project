@@ -94,8 +94,8 @@ export function cast(g,e,slot,p,d){
  }
  if(e.key==='nelly'){
   if(slot==='q'){
-   s.knifeCharges=(s.knifeCharges??2)-1;if(!Number.isFinite(s.knifeReady))s.knifeReady=g.time+g.cooldown(e,'q');e.qCd=s.knifeCharges>0?0:s.knifeReady-g.time;let refunded=false;
-   for(const off of [-.28,-.14,0,.14,.28])g.bullet(e,{x:Math.cos(e.facing+off),y:Math.sin(e.facing+off)},70,7,{speed:18,pierce:Infinity,beforeHit:t=>{e.state.knifeRefundCast=true;if(!refunded&&t.state?.nellyMarks?.[e.id]?.active){refunded=true;refundKnife(g,e);}},onHit:()=>{delete e.state.knifeRefundCast;}});
+   s.knifeCharges=(s.knifeCharges??2)-1;if(!Number.isFinite(s.knifeReady))s.knifeReady=g.time+g.cooldown(e,'q');e.qCd=s.knifeCharges>0?0:s.knifeReady-g.time;let refunded=false;const hits=new Map();
+   for(const off of [-.28,-.14,0,.14,.28])g.bullet(e,{x:Math.cos(e.facing+off),y:Math.sin(e.facing+off)},70,7,{speed:18,pierce:Infinity,beforeHit:(t,p)=>{const n=hits.get(t.id)||0;p.damage=n?56:70;hits.set(t.id,n+1);e.state.knifeRefundCast=true;if(!refunded&&t.state?.nellyMarks?.[e.id]?.active){refunded=true;refundKnife(g,e);}},onHit:()=>{delete e.state.knifeRefundCast;}});
   }else{
    e.ammo=Math.min(g.ammoCap(e),e.ammo+2);g.teleport(e,g.safeLanding(e,p,7));const t=targetAt(g,e,e,1.2);
    // Apply the forced mark after the opening strike so the following three hits preserve it.

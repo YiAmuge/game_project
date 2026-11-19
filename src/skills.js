@@ -1,4 +1,5 @@
-import {forwardEnd} from './dash-hit.js';
+import * as Nikolai from './nikolai.js';
+import {forwardEnd,stationaryContact} from './dash-hit.js';
 import * as Effects from './bough-effects.js';
 import * as Maxim from './maxim.js';
 import * as Mei from './mei.js';
@@ -58,11 +59,9 @@ function dashRectangleHit(t,origin,to,d,halfWidth){
 }
 export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
  const hitIds=new Set(),origin={x:e.x,y:e.y};
+ const strike=(from,to,extra=1.2)=>{if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&(options.exactWidth?dashRectangleHit(t,origin,e.actionKind==='basic'?forwardEnd(to,d,extra):to,d,options.hitWidth??.6):segmentDistance(t,from,e.actionKind==='basic'?forwardEnd(to,d,extra):to)<t.radius+(options.hitWidth??.6)*(e.actionKind==='basic'?1.2:1))&&g.clearLine(e,t)){hitIds.add(t.id);const shield=g.shield(t),actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual,Math.max(0,shield-g.shield(t)));}};
  if(options.exactWidth)g.effects.push({type:'thrust',source:e.id,theme:e.key,damageKind:e.actionKind||'basic',x:e.x,y:e.y,r:len,angle:Math.atan2(d.y,d.x),shape:{kind:'rect',range:len,width:(options.hitWidth??.6)*2,angle:Math.atan2(d.y,d.x)},life:.25,maxLife:.25});
- return g.startMotion(e,d,len,{phaseEnemies:typeof damage==='function'||damage>0||Boolean(options.offensive),...options,onComplete:result=>options.onComplete?.({...result,hitIds}),onStep:(from,to)=>{
-  if(typeof damage==='function'||damage>0)for(const t of [...g.units])if(g.hostile(e,t)&&!hitIds.has(t.id)&&(options.exactWidth?dashRectangleHit(t,origin,e.actionKind==='basic'?forwardEnd(to,d):to,d,options.hitWidth??.6):segmentDistance(t,from,e.actionKind==='basic'?forwardEnd(to,d):to)<t.radius+(options.hitWidth??.6)*(e.actionKind==='basic'?1.2:1))&&g.clearLine(e,t)){hitIds.add(t.id);const shield=g.shield(t),actual=g.deal(e,t,typeof damage==='function'?damage(t):damage);hit(t,actual,Math.max(0,shield-g.shield(t)));}
-  g.effects.push({type:options.swordTrail?'ryoshuTrail':'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});
- }});
+ return g.startMotion(e,d,len,{phaseEnemies:typeof damage==='function'||damage>0||Boolean(options.offensive),...options,onCollision:info=>{stationaryContact(g,e,origin,d,strike);options.onCollision?.(info);},onComplete:result=>options.onComplete?.({...result,hitIds}),onStep:(from,to)=>{strike(from,to);g.effects.push({type:options.swordTrail?'ryoshuTrail':'line',...from,to,theme:e.key,color:CHAMPIONS[e.key].color,life:.18,maxLife:.18});}});
 }
 export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
@@ -80,8 +79,9 @@ function guboTarget(g,e,p,allyOnly=false){
  const ally=targetAt(g,e,p,12,e.team,t=>g.canGuboHitAlly(e,t));if(allyOnly)return ally;
  return [ally,targetAt(g,e,p,12)].filter(Boolean).sort((a,b)=>distance(p,a)-distance(p,b))[0];
 }
-export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['honglu','rudolph','moses','gubo','rodya'].includes(e.key)&&slot==='q'));}
+export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['nikolai','honglu','rudolph','moses','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(slot==='q'&&Nikolai.recast(g,e))return true;
  if(e.key==='mei'&&slot==='q')return Mei.recast(g,e);
  if(e.key==='mei'&&slot==='r'&&e.goldenBough)return Mei.charges(g,e).current>0;
  if(AhabEgo.empowered(e)&&slot==='r'||AhabEgo.active(e))return AhabEgo.available(e,slot);
@@ -103,6 +103,7 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(e.key==='nikolai')return Nikolai.validate(g,e,slot,p);
  const stock=Effects.charges(g,e,slot);if(stock&&(!stock.current||e.key==='starbuck'&&e.boughStarbuckGate>g.time))return false;
  if(e.key==='maxim')return Maxim.validate(g,e,slot);
  if(e.key==='mei')return Mei.validate(g,e,slot);
@@ -148,6 +149,7 @@ export function beforeBasic(g,e,point,options={}){
  return true;
 }
 export function basic(g,e,p,d,options={}){
+ if(e.key==='nikolai'){Nikolai.basic(g,e,d);return true;}
  if(e.key==='moses'){Moses.basic(g,e,d);return true;}
  if(e.key==='ezra'){Ezra.basic(g,e,p,d);return true;}
  if(e.key==='queen'){Queen.basic(g,e,d);return true;}
@@ -188,6 +190,7 @@ function shockIshmael(g,e){
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 export function cast(g,e,slot,p,d,options={}){
+ if(e.key==='nikolai')return Nikolai.cast(g,e,slot,p,d);
  if(e.key==='maxim'){Maxim.cast(g,e,slot,p,d);return true;}
  if(e.key==='mei'){Mei.cast(g,e,slot,p,d);return true;}
  if(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))return AhabEgo.cast(g,e,slot,p);
@@ -206,7 +209,7 @@ export function cast(g,e,slot,p,d,options={}){
   else{e.qCd=0;if(!Bough.active(e))g.addBuff(e,'donLifesteal',7);dash(g,e,d,Math.min(6.5,distance(e,p)),300,(t,actual)=>g.heal(e,e,actual*.4,false),{actionTag:'donR'});}
   return true;
  case 'ryoshu':
-  if(slot==='q'){e.state.ryoshuStep=true;const len=3.5;e.invulnerableUntil=g.time+len/RULES.dashSpeed;g.changeAmmo(e,1,{external:false});dash(g,e,d,len,160,()=>{},{swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
+  if(slot==='q'){e.state.ryoshuStep=true;const len=3.5;e.invulnerableUntil=g.time+len/(RULES.dashSpeed*2);g.changeAmmo(e,1,{external:false});dash(g,e,d,len,160,()=>{},{speed:RULES.dashSpeed*2,maxSpeed:RULES.dashSpeed*2,swordTrail:true,onComplete:()=>e.invulnerableUntil=0});}
   else{
    if(Bough.active(e)){Bough.castStorm(g,e,p);return true;}
    const len=Math.min(7,distance(e,p)),rawDest={x:clamp(e.x+d.x*len,g.bounds.x+.6,g.bounds.x+g.bounds.w-.6),y:clamp(e.y+d.y*len,g.bounds.y+.6,g.bounds.y+g.bounds.h-.6)};
@@ -317,6 +320,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
+ Nikolai.tick(g,e);
  Maxim.tick(g,e);
  Mei.tick(g,e);
  AhabEgo.tick(g,e);Bough.tick(g,e,dt);Moses.tick(g,e,dt);
