@@ -1,3 +1,4 @@
+import * as Nikolai from './nikolai.js';
 import {dashBasic} from './skills.js';
 import {DASH_ATTACK_REACH} from './dash-hit.js';
 import * as Mei from './mei.js';
@@ -40,6 +41,7 @@ export function mobileAutoAim(g,e,slot='basic',{category,targetId,movement}={}){
  const allEnemies=e.key==='yi'&&slot==='r'?[]:mobileAttackTargets(g,e,Infinity,{ignoreWalls:spec.ignoreWalls}).filter(t=>(!category||attackCategory(t)===category)&&(!(e.key==='nelly'&&slot==='r')||t.kind==='champion')&&(!spec.championsOnly||t.kind==='champion'));
  const prioritize=list=>[...list.filter(t=>inRange(t,reach)),...list.filter(t=>!inRange(t,reach))];
  const enemies=prioritize(nearest?allEnemies.sort(order):allEnemies);
+ if(e.key==='nikolai'&&slot==='r'){const candidates=enemies.filter(t=>inRange(t,range)),target=candidates.find(t=>Nikolai.marked(g,e,t))||candidates.find(t=>t.id===targetId)||candidates[0];return{point:target?{x:target.x,y:target.y}:{x:e.x,y:e.y},target,mode:'auto',unavailable:!target};}
  if(e.key==='moses'&&slot==='basic'){
   const nearby=allEnemies.filter(t=>inRange(t,reach)),target=nearby.filter(t=>t.kind==='champion').sort((a,b)=>a.hp-b.hp||order(a,b))[0]||nearby[0];
   return{point:target?{x:target.x,y:target.y}:{x:e.x+Math.cos(e.facing||0)*range,y:e.y+Math.sin(e.facing||0)*range},target,manualFallback:false,mode:'auto',unavailable:Boolean(category&&!target)};

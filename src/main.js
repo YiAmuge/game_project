@@ -36,6 +36,7 @@ import * as Sora from './sora.js';
 import * as Yan from './yan.js';
 import * as Hohenheim from './hohenheim.js';
 import * as Don from './don.js';
+import * as Nikolai from './nikolai.js';
 import { skillTargeting, castPoint } from './targeting.js';
 import { AUGMENTS, AUGMENT_RULES, unlockedItem,unlockedGroup,augmentText,augmentName, has, categoryCount,categoryFits,slots,usedSlots,fits,sellable,cost as augmentCost,saleValue,absorbedOrder } from './augments.js';
 import { releaseHeath,cancelHeath } from './skills.js';
@@ -115,11 +116,16 @@ function skill(slot,options={}){
  if(!active()||scoreOpen||Infiltration.absent(game.player)&&!Jamila.infiltrationUltimate(game,game.player,slot))return false;
  const p=game.player;if(game.training)Training.refreshOptions(game);
  if(slot==='q'&&DRAG_KEYS.includes(p.key)&&!options.direction){toast(p.key==='moses'?'우클릭을 누르고 상하좌우로 드래그하세요.':'우클릭을 누르고 좌우로 드래그하세요.');return false;}
- const target=options.point||game.input.aim;
+ let target=options.point||game.input.aim;
  const spec=skillTargeting(game,p,slot);
  if(!options.confirm&&spec.confirm&&spec.kind!=='global'){
   if(!p.alive||p.motion||game.hidden(p)||game.stat(p,'stun')||game.stat(p,'silence')&&!(p.key==='meursault'&&slot==='q')||p.channelUntil>game.time||p[slot+'Cd']>0&&!canRecast(game,p,slot)){toast('지금은 이 스킬을 준비할 수 없습니다.');return false;}
   cancelBasicCharge(p);game.input.fire=false;game.targeting={slot,options};toast('사거리 표시 · 좌클릭으로 시전 · 우클릭 / Esc 취소');return true;
+ }
+ if(p.key==='nikolai'&&slot==='r'){
+  const picked=options.targetId?Nikolai.ultimateTarget(game,p,target,options):!mobile?.enabled&&pointer?renderer.championAt(pointer.x,pointer.y,game,Nikolai.ultimateTargets(game,p))||Nikolai.ultimateTarget(game,p,game.input.aim):Nikolai.ultimateTarget(game,p,target);
+  if(!picked){toast('사거리 안의 적 챔피언을 지정하세요.');return false;}
+  target={x:picked.x,y:picked.y};options={...options,targetId:picked.id};
  }
  const casted=game.cast(p,slot,target,options);if(casted)delete game.targeting;if(!casted)toast('재사용 대기·대상·군중제어 조건을 확인하세요.');updateHud();return casted;
 }
@@ -347,7 +353,7 @@ function frame(t){
  pingMenu.tick();
  if(active()){
   game.input.x=globalTarget?0:mobile?.enabled?mobile.axes.x:Number(keys.has('KeyD'))-Number(keys.has('KeyA'));game.input.y=globalTarget?0:mobile?.enabled?mobile.axes.y:Number(keys.has('KeyS'))-Number(keys.has('KeyW'));
-  if(pointer){renderer.follow(game,true);game.input.aim=renderer.point(pointer.x,pointer.y);}
+  if(pointer){renderer.follow(game,true);game.input.aim=renderer.point(pointer.x,pointer.y);if(game.player.key==='nikolai'&&game.targeting?.slot==='r')game.targeting.targetId=(renderer.championAt(pointer.x,pointer.y,game,Nikolai.ultimateTargets(game,game.player))||Nikolai.ultimateTarget(game,game.player,game.input.aim))?.id;}
  }else if(onlineMatch){game.input.x=0;game.input.y=0;game.input.fire=false;}
  const simulate=onlineMatch?onlineMatch.host&&!presentation.blocking:simulationAllowed();
  if(simulate){accumulator+=elapsed*(onlineMatch?1:speed);while(accumulator>=1/30&&game.winner===null){renderer.follow(game,true);game.step(1/30);accumulator-=1/30;}if(game.winner!==null&&mode==='playing')handleOutcome();}else accumulator=0;

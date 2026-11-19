@@ -24,7 +24,7 @@ export const NIKOLAI_FRAMES={
     ],
     "face": [
       59,
-      67,
+      56,
       174,
       151
     ]

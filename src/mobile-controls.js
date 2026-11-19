@@ -96,7 +96,7 @@ export class MobileControls{
    if(distorted(g,p)&&!s.manual){const now=performance.now();if(now-this.lastTap<280&&p.alive&&!g.stat(p,'stun')&&!g.stat(p,'disarm')&&!g.hidden(p))commandHand(g,p,p);else g.attack(p,point);this.lastTap=now;}
    else{if(!s.beganBasic&&!s.handMoved)g.attack(p,point);this.api.releaseBasic(g,p,point);}
   }else if(s.slot==='q'&&this.api.chargeTactical(p)){if(!s.started&&p.qCd<=0)this.api.skill('q',{point,confirm:true});this.api.releaseTactical(g,p,point);}
-  else this.api.skill(s.slot,{point,confirm:true,manual:s.manual});
+  else this.api.skill(s.slot,{point,confirm:true,manual:s.manual,...(p.key==='nikolai'&&s.slot==='r'&&!s.manual&&auto.target?{targetId:auto.target.id}:{})});
   this.finishAim(g);
  }
  finishAim(g){delete g.mobileAim;document.body.classList.remove('mobile-aiming','mobile-canceling');}

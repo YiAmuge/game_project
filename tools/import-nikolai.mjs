@@ -13,7 +13,7 @@ for(const [key,x0,x1]of [['nikolai',0,Math.floor(input.width*.30)],['nikolaiSabe
  const body=key==='nikolai',crown=115*input.height/818,scale=body?400/(b-crown):440/(r-l+1),w=Math.ceil((r-l+1)*scale),h=Math.ceil((b-t+1)*scale),data=new Uint8Array(w*h*4);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const sx=l+Math.min(r-l,Math.floor(x/scale)),sy=t+Math.min(b-t,Math.floor(y/scale)),a=(sy*input.width+sx)*4;if(input.data[a+3]<160)continue;data.set(input.data.subarray(a,a+3),(y*w+x)*4);data[(y*w+x)*4+3]=255;}
  const frame={sheet:26,rotation:0,source,sourceRect:[l,t,r-l+1,b-t+1]};
- if(body)Object.assign(frame,{heightBasis:'crown',referenceHeight:400,crownOffset:h-400,heightScale:h/400,foot:[.5,1],face:[Math.round((175-l)*scale),Math.round((125-t)*scale),Math.round(300*scale),Math.round(260*scale)]});
+ if(body)Object.assign(frame,{heightBasis:'crown',referenceHeight:400,crownOffset:h-400,heightScale:h/400,foot:[.5,1],face:[Math.round((175-l)*scale),Math.round((105-t)*scale),Math.round(300*scale),Math.round(260*scale)]});
  else Object.assign(frame,{grip:[.09,.5]});
  sprites.push({key,w,h,data,frame});
 }

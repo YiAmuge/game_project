@@ -1,5 +1,5 @@
 import {NIKOLAI as P} from './nikolai-data.js';
-import {distance,direction} from './geometry.js';
+import {distance} from './geometry.js';
 const fx=(g,e,type,more={})=>g.effects.push({type,source:e.id,theme:'nikolai',x:e.x,y:e.y,life:.45,maxLife:.45,...more});
 export const marked=(g,e,t)=>Boolean(t?.alive&&t.state?.nikolaiMarks?.[e.id]?.until>g.time);
 export const target=(g,e)=>g.units.find(t=>marked(g,e,t));
@@ -23,8 +23,14 @@ export function afterDamage(g,e,t,total,{kind,origin,sound}={}){
  g.heal(e,e,P.rHeal+e.maxHp*P.rHealth,false,{skillHeal:true});
 }
 export const recast=(g,e)=>e.key==='nikolai'&&Boolean(e.state.nikolaiCommand?.until>g.time&&!e.state.nikolaiCommand.converted);
-export function ultimateTarget(g,e,p){return g.units.filter(t=>t.kind==='champion'&&g.hostile(e,t)&&g.visibleTo(e.team,t)&&distance(e,t)<=P.rRange+t.radius&&g.clearLine(e,t)).sort((a,b)=>distance(a,p)-distance(b,p))[0];}
-export const validate=(g,e,slot,p)=>slot==='q'||Boolean(ultimateTarget(g,e,p));
+export function ultimateTargets(g,e){return g.units.filter(t=>t.kind==='champion'&&g.hostile(e,t)&&g.visibleTo(e.team,t)&&!t.state?.posthumous&&!t.returning&&!(t.invulnerableUntil>g.time)&&distance(e,t)<=P.rRange+t.radius&&g.clearLine(e,t));}
+export function ultimateTarget(g,e,p,{targetId}={}){
+ const candidates=ultimateTargets(g,e),id=targetId??p?.id;
+ if(id!==undefined)return candidates.find(t=>t.id===id);
+ if(!p)return undefined;
+ return candidates.filter(t=>distance(t,p)<=t.radius+.65).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id)[0];
+}
+export const validate=(g,e,slot,p,options={})=>slot==='q'||Boolean(ultimateTarget(g,e,p,options));
 export function basic(g,e,d){
  const enhanced=empowered(g,e);
  g.bullet(e,d,P.damage,g.attackRange(e),{pierce:Infinity,width:.3,speed:23,swordWave:true,nikolaiWave:true,nikolaiEmpowered:enhanced,color:enhanced?'#ff9a36':'#fff5e6',sound:{family:'blade',phase:enhanced?'nikolai-empowered-hit':'nikolai-basic-hit'},beforeHit:(t,p)=>{p.damage=P.damage+(enhanced&&marked(g,e,t)?P.closeBonus:0);}});
@@ -38,11 +44,11 @@ function disposal(g,e,t){
   if(i===0)hit();else g.schedule(e,i*P.rEvery,hit,{autonomous:true});
  }
 }
-export function cast(g,e,slot,p,d){
+export function cast(g,e,slot,p,d,options={}){
  if(slot==='r'){
-  const t=ultimateTarget(g,e,p);if(!t)return false;
+  const t=ultimateTarget(g,e,p,options);if(!t)return false;
   g.emitSound('swing',e,{family:'blade',slot:'r',phase:'nikolai-disposal'});
-  g.bullet(e,direction(e,t),0,2,{target:t,homing:true,speed:28,width:.35,remaining:2,championsOnly:true,nikolaiWave:true,nikolaiEmpowered:true,slot:'r',swordWave:true,onHit:(t,p)=>{if(t.alive&&!(t.invulnerableUntil>g.time))disposal(g,e,t);}});return true;
+  fx(g,e,'nikolaiDisposal',{target:t.id,to:{x:t.x,y:t.y},life:.24,maxLife:.24});disposal(g,e,t);return true;
  }
  if(recast(g,e)){
   e.state.nikolaiCommand.converted=true;

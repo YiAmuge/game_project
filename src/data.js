@@ -77,7 +77,7 @@ export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!CHAMPIONS[key]));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const BASE_HEALTH={nikolai:2000,maxim:2900,mei:1900,sora:2500,moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
+export const BASE_HEALTH={nikolai:2200,maxim:2900,mei:1900,sora:2500,moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
 export const BASE_SPEED={nikolai:3.5,maxim:4,mei:3.2,sora:3.6,moses:2.85,ezra:3.6,yi:4.35,rudolph:3.25};
 export const championBaseHealth=key=>BASE_HEALTH[key]??RULES.health[RUNTIME_CHAMPIONS[key].health]*(RUNTIME_CHAMPIONS[key].healthMultiplier||1);
 export const championBaseSpeed=key=>BASE_SPEED[key]??RULES.speed[RUNTIME_CHAMPIONS[key].speed];

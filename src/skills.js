@@ -103,7 +103,7 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
- if(e.key==='nikolai')return Nikolai.validate(g,e,slot,p);
+ if(e.key==='nikolai')return Nikolai.validate(g,e,slot,p,options);
  const stock=Effects.charges(g,e,slot);if(stock&&(!stock.current||e.key==='starbuck'&&e.boughStarbuckGate>g.time))return false;
  if(e.key==='maxim')return Maxim.validate(g,e,slot);
  if(e.key==='mei')return Mei.validate(g,e,slot);
@@ -190,7 +190,7 @@ function shockIshmael(g,e){
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 export function cast(g,e,slot,p,d,options={}){
- if(e.key==='nikolai')return Nikolai.cast(g,e,slot,p,d);
+ if(e.key==='nikolai')return Nikolai.cast(g,e,slot,p,d,options);
  if(e.key==='maxim'){Maxim.cast(g,e,slot,p,d);return true;}
  if(e.key==='mei'){Mei.cast(g,e,slot,p,d);return true;}
  if(AhabEgo.empowered(e)&&(slot==='r'||AhabEgo.active(e)))return AhabEgo.cast(g,e,slot,p);

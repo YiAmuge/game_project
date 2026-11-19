@@ -593,6 +593,7 @@ export class Game {
     if(e.aiThinking&&V08.movementSkill(e,slot)&&!BotAI.safeTowerPoint(this,e,point))return false;
     if(Jamila.infiltrationUltimate(this,e,slot))return Jamila.deployFromInfiltration(this,e,slot);
     if(e.key==='mei'&&slot==='q'&&Mei.recast(this,e))e.state.meiKickFacing=e.facing;
+    if(e.key==='nikolai'&&slot==='r'){const selected=Nikolai.ultimateTarget(this,e,point,options);if(!selected)return false;options={...options,targetId:selected.id};point={x:selected.x,y:selected.y};}
     point=castPoint(e,point,skillTargeting(this,e,slot),this.bounds);if(V08.movementSkill(e,slot))point=trapPoint(this,e,point);
     if(this.training&&e===this.player)Training.refreshOptions(this);
     const recast=Skills.canRecast(this,e,slot);

@@ -28,7 +28,7 @@ export function makeOnlineGame(match,memberId){
 export function cancelCharge(g,e){Soleil.cancel(e);Moses.choose(g,e,false);Yan.cancelCharge(e);Hohenheim.cancelCharge(e);Moses.cancelCharge(e);cancelHeath(e);Don.cancel(g,e);Maxim.stop(g,e);}
 export function releaseBasic(g,e,p){return Soleil.active(e)?Soleil.release(g,e,p):e.key==='moses'?Moses.release(g,e,p):e.key==='hohenheim'?Hohenheim.release(g,e,p):Yan.release(g,e,p);}
 export function releaseTactical(g,e,p){return e.key==='maxim'?Maxim.release(g,e):e.key==='don'?Don.release(g,e,p):releaseHeath(g,e,p);}
-const options=value=>({...(typeof value?.direction==='string'&&['left','right','up','down'].includes(value.direction)?{direction:value.direction}:{}),...(value?.manual===true?{manual:true}:{}),...(value?.queenAim===true?{queenAim:true}:{}),...(value?.targetKind&&['champion','minion','building','creep'].includes(value.targetKind)?{targetKind:value.targetKind}:{})});
+const options=value=>({...(Number.isSafeInteger(value?.targetId)&&value.targetId>0?{targetId:value.targetId}:{}),...(typeof value?.direction==='string'&&['left','right','up','down'].includes(value.direction)?{direction:value.direction}:{}),...(value?.manual===true?{manual:true}:{}),...(value?.queenAim===true?{queenAim:true}:{}),...(value?.targetKind&&['champion','minion','building','creep'].includes(value.targetKind)?{targetKind:value.targetKind}:{})});
 export function executeCommand(g,e,p){
  if(!e||!p||!g.controllers?.get(e.id)?.connected||g.winner!==null||g.presentation?.type==='intro')return false;
  if(p.point&&!validPoint(p.point))return false;

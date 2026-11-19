@@ -24,7 +24,7 @@ import { combatStyle } from './combat-style.js';
 import { championPresentation } from './champion-vfx.js';
 import { drawEyeGlow } from './sprite-eyes.js';
 import{drawResentmentBody}from'./augment-effects.js';
-import { leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
+import { projectFeet,leapLift,renderAnchor,leapOpacity } from './projection-25d.js';
 import { MotionTrails,ribbonSections,drawRibbon,captureBlade,projectBlade } from './weapon-trails.js';
 import * as CombatVisuals from './combat-visuals.js';
 import * as Yan from './yan.js';
@@ -61,6 +61,17 @@ export class Renderer {
   }
   follow(game,playing){this.prepare(game);const cinematic=cinematicCamera(game);const now=performance.now(),dt=Math.min(.1,Math.max(0,(now-(this.viewAt??now))/1000));this.viewAt=now;const target=Math.max(Infiltration.cameraView(game,game.player),queenCameraView(game,game.player),mosesZoom(game,game.player));this.viewBlend=cinematic?.view??((this.viewBlend??1)+(target-(this.viewBlend??1))*(1-Math.exp(-dt/(game.player.state.queenR?.phase==='charging'?.16:.085))));if(Math.abs(this.viewBlend-target)<.001&&!cinematic)this.viewBlend=target;this.camera.update(this.width,this.height,cinematic?.anchor||game.player.state.infiltration?.point||renderAnchor(game.player),playing,this.viewBlend);this.scale=this.camera.scale;this.ox=this.camera.ox;this.oy=this.camera.oy;}
   point(clientX,clientY) {const r=this.canvas.getBoundingClientRect();return this.camera.screenToWorld(clientX-r.left,clientY-r.top);}
+  championAt(clientX,clientY,g,candidates=g.champions()) {
+    const rect=this.canvas.getBoundingClientRect(),x=clientX-rect.left,y=clientY-rect.top,hits=[];
+    for(const e of candidates){
+      if(!e.alive||g.hidden(e))continue;
+      const form=visualForm(g,e),f=FRAMES[form];if(!f)continue;
+      const h=spriteHeight(form)*(e.state.bloodfiend?1.15:1),w=h*f.w/f.h,flip=(Math.cos(bodyFacing(g,e))<0)!==Boolean(f.mirror),left=flip?w*((f.foot?.[0]??.5)-1):-w*(f.foot?.[0]??.5),top=-h*(f.foot?.[1]??1),origin=spriteOrigin(g,e,championPresentation(g,e).lift),feet=g.training25d?projectFeet(this.camera,e):{...this.camera.worldToScreen(e),offset:0,scale:this.camera.scale},scale=feet.scale,pad=4;
+      const a=feet.x+(origin.x-e.x+left)*scale,b=feet.y+(origin.y-e.y-feet.offset+top)*scale;
+      if(x>=a-pad&&x<=a+w*scale+pad&&y>=b-pad&&y<=b+h*scale+pad)hits.push(e);
+    }
+    return hits.sort((a,b)=>b.y-a.y||a.id-b.id)[0];
+  }
   circle(x,y,r,fill,stroke=null,width=.07) {const c=this.ctx;c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
   line(points,color,width,dash=[]) {const c=this.ctx;c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.setLineDash(dash);c.stroke();c.setLineDash([]);}
   text(text,x,y,color='#afbdac',size=.5,align='center',serif=false) {const c=this.ctx;c.fillStyle=color;c.font=`${size}px ${serif?'Georgia':'"Malgun Gothic", Arial'}, sans-serif`;c.textAlign=align;c.textBaseline='middle';c.fillText(text,x,y);}
@@ -213,7 +224,7 @@ export class Renderer {
     if(!this.groundPass&&game.training25d){this.follow(game,playing);this.scene25d.draw(game,playing);return;}
     this.follow(game,playing);
     const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);if(this.groundPass)c.clearRect(0,0,this.width,this.height);else{c.fillStyle='#111b20';c.fillRect(0,0,this.width,this.height);}if(this.groundTransform)c.transform(...this.groundTransform);else{c.translate(this.ox,this.oy);c.scale(this.scale,this.scale);}
-    this.floor(game);this.camps(game);for(const bait of game.units.filter(e=>e.kind==='bait'&&e.alive)){this.circle(bait.x,bait.y,6.5,'#02ebf708','#66f4eec0',.075);this.circle(bait.x,bait.y,6.42,null,'#c8ffff55',.025);}for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}if(!this.groundPass)drawMeiScene(this.ctx,this.camera,game);if(!this.groundPass)drawMaximScene(this.ctx,this.camera,game);if(!this.groundPass)drawNikolaiScene(this.ctx,this.camera,game);if(!this.groundPass)drawGasharpoonScene(this.ctx,this.camera,game);if(!this.groundPass)drawArayashikiCuts(this.ctx,this.camera,game);for(const corpse of game.corpses)this.corpse(corpse,game);for(const f of game.effects)if(!this.groundPass&&f.type==='arayashikiDissolve')drawDissolve(this,game,f);
+    this.floor(game);this.camps(game);for(const bait of game.units.filter(e=>e.kind==='bait'&&e.alive)){this.circle(bait.x,bait.y,6.5,'#02ebf708','#66f4eec0',.075);this.circle(bait.x,bait.y,6.42,null,'#c8ffff55',.025);}for(const n of game.units.filter(n=>n.kind==='neutral')){creepPattern(this,n,game);sewingPattern(this,n,game);if(n.camp==='boss')bossPattern(this,n,game);}if(!this.groundPass)drawMeiScene(this.ctx,this.camera,game);if(!this.groundPass)drawMaximScene(this.ctx,this.camera,game);if(!this.groundPass){this.ctx.save();this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);drawNikolaiScene(this.ctx,this.camera,game);this.ctx.restore();}if(!this.groundPass)drawGasharpoonScene(this.ctx,this.camera,game);if(!this.groundPass)drawArayashikiCuts(this.ctx,this.camera,game);for(const corpse of game.corpses)this.corpse(corpse,game);for(const f of game.effects)if(!this.groundPass&&f.type==='arayashikiDissolve')drawDissolve(this,game,f);
 
     for(const p of game.pending){const color=THEMES[p.source.key]?.light||'#d3b978';this.circle(p.x,p.y,p.r,`${color}18`,`${color}99`,.05);this.circle(p.x,p.y,p.r*(1-Math.min(1,(p.at-game.time)/(p.windup||1.25))),null,color,.08);for(let i=0;i<8;i++){const a=i*Math.PI/4+game.time;this.line([{x:p.x+Math.cos(a)*(p.r-.3),y:p.y+Math.sin(a)*(p.r-.3)},{x:p.x+Math.cos(a)*p.r,y:p.y+Math.sin(a)*p.r}],color,.06);}}
     for(const e of game.champions())if(game.visibleTo((game.player?.team??0),e))chargePreview(this,e,game);

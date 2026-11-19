@@ -1,3 +1,4 @@
+import * as Nikolai from './nikolai.js';
 import {NIKOLAI} from './nikolai-data.js';
 import * as Yan from './yan.js';
 import * as Effects from './bough-effects.js';
@@ -23,7 +24,7 @@ import { STARBUCK } from './v10-champions.js';
 import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
- if(e.key==='nikolai')return slot==='q'?{kind:'self',range:0,radius:8,confirm:false}:{kind:'target',range:NIKOLAI.rRange,radius:.35,championsOnly:true,confirm:false};
+ if(e.key==='nikolai')return slot==='q'?{kind:'self',range:0,radius:8,confirm:false}:{kind:'target',range:NIKOLAI.rRange,radius:.35,championsOnly:true,confirm:true};
  if(e.key==='yan'&&slot==='r'&&Effects.empowered(e)&&Yan.distorted(g,e))return{kind:'circle',range:10,radius:3.5,confirm:false};
  if(e.key==='alisa'&&slot==='r'&&Effects.empowered(e))return{kind:'circle',range:8.6,radius:4,ignoreWalls:true,confirm:true};
  if(e.key==='queequeg'&&slot==='q'&&Effects.empowered(e))return{kind:'self',range:0,radius:8,confirm:false};
@@ -59,6 +60,12 @@ export function targetingPreview(r,g){
  if((!g.targeting&&!g.mobileAim)||!g.player.alive||g.mobileAim?.slot==='basic')return;
  const slot=g.mobileAim?.slot||g.targeting.slot,e=g.player,spec=skillTargeting(g,e,slot),p=castPoint(e,g.input.aim,spec,g.bounds),d=direction(e,p),color=slot==='r'?'#e4bbff':'#8ee5ed',c=r.ctx;
  c.save();c.setLineDash([.15,.15]);if(spec.range)r.circle(e.x,e.y,spec.range,color+'08',color+'aa',.045);c.setLineDash([]);
+ if(e.key==='nikolai'&&slot==='r'){
+  const targets=Nikolai.ultimateTargets(g,e),selected=Nikolai.ultimateTarget(g,e,g.input.aim,{targetId:g.mobileAim?.autoTarget??g.targeting?.targetId});
+  for(const t of targets)r.circle(t.x,t.y,t.radius+.18,null,'#ffa44e88',.04);
+  if(selected){r.circle(selected.x,selected.y,selected.radius+.32,'#ff9c4d28','#ffbd72',.07);r.line([{x:e.x,y:e.y},{x:selected.x,y:selected.y}],'#ffb35d88',.035);}
+  if(!g.mobileAim)r.text('적 챔피언 지정 · 좌클릭 시전 · 우클릭 / Esc 취소',e.x,e.y+2.2,'#ffd1a0',.32);c.restore();return;
+ }
  if(['circle','self','target'].includes(spec.kind)){r.circle(p.x,p.y,spec.radius,color+'25',color,.075);if(spec.innerRadius)r.circle(p.x,p.y,spec.innerRadius,'#f2bbec18','#f2bbec',.055);r.circle(p.x,p.y,.16,color);}
  if(spec.kind==='line'){
   const end={x:e.x+d.x*spec.range,y:e.y+d.y*spec.range},side={x:-d.y*spec.radius,y:d.x*spec.radius};
