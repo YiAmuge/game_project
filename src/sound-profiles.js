@@ -1,5 +1,5 @@
 // Sound timbres describe the held material and the ability, independently of team tint.
-export const WEAPON_VOICES={
+export const WEAPON_VOICES={denis:['rifle','metal',1.1],
  nikolai:['blade','metal',.9],
  maxim:['hammer','physical',1.4],
  mei:['punch','fire',1.1],
@@ -13,7 +13,7 @@ export const WEAPON_VOICES={
  ryoshu:['katana','metal',.85],ishmael:['mace','water',1.2],honglu:['glaive','water',.95],rodya:['axe','metal',1.15],gregor:['organic','organic',1.1],
  ahab:['spear','water',1.15],starbuck:['spear','water',1],sora:['punch','chain',1.4],yan:['greatsword','metal',1.5],moses:['smoke','smoke',.55],ezra:['punch','metal',1.1],
 };
-export const SKILL_VOICES={
+export const SKILL_VOICES={denis:{q:['rifle','metal'],r:['rifle','wind']},
  nikolai:{q:['radio','electric'],r:['blade','electric']},
  maxim:{q:['hammer','physical'],r:['hammer','physical']},
  mei:{q:['punch','fire'],r:['punch','fire']},

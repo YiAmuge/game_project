@@ -69,6 +69,7 @@ export function championHud(r,e,g){
  c.lineWidth=.045;c.strokeStyle='#081317';c.strokeRect(x-.04,y-.04,width+.08,.42);
  c.lineWidth=.065;c.strokeStyle='#132020';c.font='bold .255px Arial';c.textAlign='center';c.textBaseline='middle';const hp=e.trainingDummy?.infinite?'∞':`${Math.max(0,Math.ceil(e.hp))} / ${Math.round(e.maxHp)}`;c.strokeText(hp,e.x,y+.17);c.fillStyle='#fff7de';c.fillText(hp,e.x,y+.17);
  drawLevelBadge(r,e,x,y,g);
+ if(e.key==='denis'&&e.state.denisRound){const sx=x+width+.30,sy=y+.17,round=e.state.denisRound;c.save();c.translate(sx,sy);c.fillStyle=round==='ice'?'#a9e7ff':round==='fire'?'#f35b32':'#f5f6f8';c.strokeStyle=round==='armor'?'#89929b':'#273b4a';c.lineWidth=.035;c.beginPath();c.moveTo(0,-.26);c.lineTo(.10,-.10);c.lineTo(.10,.22);c.lineTo(-.10,.22);c.lineTo(-.10,-.10);c.closePath();c.fill();c.stroke();c.restore();}
  if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1000)),sx,sy+.43,'#e8e9b6',.24);}
  if(e.key==='ppui'){const sx=e.x+width/2+.29,sy=y+.07;drawPulseIcon(c,sx,sy);r.text(String(pulse(e)),sx,sy+.43,'#ffb5c4',.24);}
  if(e.trainingDummy){c.restore();return;}
@@ -141,6 +142,7 @@ export function championEffects(r,e,g){
 }
 function chargeBar(r,e,progress,color){const c=r.ctx;c.fillStyle='#17222ddd';c.fillRect(e.x-.85,e.y+.9,1.7,.16);c.fillStyle=color;c.fillRect(e.x-.85,e.y+.9,1.7*progress,.16);c.lineWidth=.025;c.strokeStyle=color;c.strokeRect(e.x-.85,e.y+.9,1.7,.16);}
 export function chargePreview(r,e,g){
+ if(e.key==='denis'&&e.state.denisCharge){chargeBar(r,e,Math.min(1,(g.time-e.state.denisCharge.at)/1),'#f3d68e');return;}
  if(e.key==='don'&&e.state.donCharge&&e.alive){
   const shape=Don.chargeShape(g,e,e.player?g.input.aim:e.state.donCharge.aim),d=shape.d,end={x:e.x+d.x*shape.range,y:e.y+d.y*shape.range},side={x:-d.y*shape.width/2,y:d.x*shape.width/2};
   r.polygon([[e.x+side.x,e.y+side.y],[end.x+side.x,end.y+side.y],[end.x-side.x,end.y-side.y],[e.x-side.x,e.y-side.y]],'#e8c94a24','#ffe18a');chargeBar(r,e,shape.progress,'#ffe18a');return;

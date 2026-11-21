@@ -15,7 +15,7 @@ function opponent(g) {return g.champions(1).find(c=>c.key==='faust')||g.makeCham
 
 test('41 champion records retain four named skills',()=>{
   const roster=JSON.parse(readFileSync(new URL('../src/roster.json',import.meta.url)));
-  assert.equal(roster.length,41);assert.equal(new Set(roster.map(c=>c.id)).size,41);
+  assert.equal(roster.length,42);assert.equal(new Set(roster.map(c=>c.id)).size,42);
   for(const c of roster){assert.equal(c.skills.length,4);assert.ok(c.skills.every(s=>s.name&&s.description.length>20));}
 });
 test('match starts with 4+4 champions, four towers, two cores and twelve initial neutrals',()=>{

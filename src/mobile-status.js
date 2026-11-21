@@ -13,6 +13,7 @@ const debuffNames={stun:'기절',silence:'침묵',root:'속박',slow:'감속',di
 function passiveActive(g,e){
  switch(e.key){
  case'maxim':return e.shields.some(s=>s.source===`maxim-rhino-${e.id}`&&s.value>0&&s.until>g.time);
+ case'denis':return Boolean(e.state.denisCharge||e.state.denisBurst);
  case'yi':return e.shields.some(s=>s.passive==='yi'&&s.value>0&&s.until>g.time);
  case'kim':return g.buff(e,'swordDiscipline');
  case'ishmael':return g.buff(e,'ishmaelSurvive');

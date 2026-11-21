@@ -64,6 +64,7 @@ function basicRanges(key,g,e,transformed){
  return[row('공격 범위','사거리 '+r+' · 직선'+(widths[key]?' 폭 '+number(widths[key]):''))];
 }
 function skillRanges(key,index,g,e,transformed,variant){
+ if(key==='denis'){if(index===0)return[row('집중 사격','1초 유지 후 해제 · 탄창 전부 소모 · 0.25초 간격'),row('적중 조건','대상별 3발 · 관통 대상 각각 누적')];if(index===1)return[row('격발','사거리 8.7 · 철갑은 관통')];if(index===2)return[row('탄환 선택','위: 빙결 · 왼쪽: 화염 · 오른쪽: 철갑'),row('비축','최대 2회 · 1회 충전 11초')];return[row('충격탄','사거리 10 · 비챔피언 관통')];}
  if(key==='nikolai'){if(index===0)return[row('표적','한 명 · 10초'),row('강화 조건','자신의 표적이 사거리 10 이내')];if(index===1)return[row('기본 검기','사거리 8 · 관통'),row('표적 추적 중','사거리 2.5 · 관통')];if(index===2)return[row('전투 지휘','자신 중심 반경 8 · 3초')];if(index===3)return[row('처분','대상 지정 거리 7.5 · 적 챔피언 한 명')];}
  if(key==='maxim'){if(index===0)return[row('발동','7.5 이동 · 최대 5초마다 1회')];if(index===2)return[row('돌진','최대 7초 · 커서 방향 조작'),row('충돌','자신 중심 반경 2.8')];if(index===3)return[row('충격파','사거리 12 · 부채꼴 150°')];}
  if(key==='mei'&&index===0)return[row('화상','같은 적 3회 피해 · 2초간 0.5초마다')];
@@ -116,7 +117,7 @@ function skillRanges(key,index,g,e,transformed,variant){
  return[row('지정 대상','사거리 '+range)];
 }
 function cooldownLabel(key,index,g,e,transformed,variant){
- if(index===0)return ({maxim:'발동 대기시간 5초',ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
+ if(index===0)return ({denis:'재사용 12초',maxim:'발동 대기시간 5초',ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
   if(key==='maxim')return '탄창 3개 · 1개 장전 0.9초 · 공격 간격 0.7초';
   if(key==='mei')return '탄창 4개 · 1개 장전 0.75초 · 연타 간격 0.15초';
@@ -131,7 +132,7 @@ function cooldownLabel(key,index,g,e,transformed,variant){
  }
  if(index===3&&variant===1&&['sora','yan'].includes(key))return '변신 재사용 대기 없음';
  if(key==='nosferatu'&&index===2)return '쿨타임 '+number(g.cooldown(e,'q'))+'초 · 2.5초 내 최대 2회 재사용';
- const charges=index===2&&(key==='moses'||key==='ppui'||key==='nelly'||key==='sora'&&transformed)?2:1;
+ const charges=index===2&&(key==='denis'||key==='moses'||key==='ppui'||key==='nelly'||key==='sora'&&transformed)?2:1;
  return (charges>1?'충전당 ':'쿨타임 ')+number(key==='myo'&&index===2?.15:g.cooldown(e,index===2?'q':'r'))+'초'+(charges>1?' · 최대 '+charges+'회 충전':'');
 }
 export function cleanSkillDetails(text){

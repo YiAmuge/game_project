@@ -1,3 +1,4 @@
+import {DENIS_FRAMES} from './denis-sprites.js';
 import {NIKOLAI_FRAMES} from './nikolai-sprites.js';
 import {MAXIM_FRAMES} from './maxim-sprites.js';
 import {MEI_FRAMES} from './mei-sprites.js';
@@ -43,10 +44,10 @@ export const FRAMES = {
   gregor:{"x": 1152, "y": 532, "w": 384, "h": 492, "sheet": 1},
 };
 Object.assign(FRAMES,SPRITE_FRAMES,CLERK_FRAMES,MINION_FRAMES,NEEDLE_FRAMES,BOSS_FRAMES,JAMILA_FRAMES,WORLD_FRAMES,KROMER_FRAMES);
-Object.assign(FRAMES,ULTIMATE_WEAPON_FRAMES,ARCANA_FRAMES,EZRA_FRAMES,MOSES_FRAMES,GOLDEN_WEAPON_FRAMES,AHAB_EGO_FRAMES,MEI_FRAMES,MAXIM_FRAMES,NIKOLAI_FRAMES);
+Object.assign(FRAMES,ULTIMATE_WEAPON_FRAMES,ARCANA_FRAMES,EZRA_FRAMES,MOSES_FRAMES,GOLDEN_WEAPON_FRAMES,AHAB_EGO_FRAMES,MEI_FRAMES,MAXIM_FRAMES,NIKOLAI_FRAMES,DENIS_FRAMES);
 for(const [key,face]of Object.entries(PORTRAIT_CROPS))if(FRAMES[key])FRAMES[key].face=face;
-export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62','world-v69','kromer-v102','ultimate-weapons-v102','arcana-v102','ezra-v103','moses-v103','ryoshu-arayashiki','ahab-gasharpoon','mei','maxim','nikolai'];
-const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62','world-data-v69','kromer-data-v102','ultimate-weapon-data-v102','arcana-data-v102','ezra-data-v103','moses-data-v103','ryoshu-arayashiki-data','ahab-gasharpoon-data','mei-data','maxim-data','nikolai-data'];
+export const ATLAS_FILES=['champions','champions-extra','champions-v05','champions-v06','champions-v08','champions-v10','champions-v12','champions-v13','champions-v17','champions-v36','weapons-v36','clerks-v49','minions-v52','needles-v54','boss-v55','jamila-v62','world-v69','kromer-v102','ultimate-weapons-v102','arcana-v102','ezra-v103','moses-v103','ryoshu-arayashiki','ahab-gasharpoon','mei','maxim','nikolai','denis'];
+const ATLAS_IDS=['sprite-data','sprite-data-extra','sprite-data-v05','sprite-data-v06','sprite-data-v08','sprite-data-v10','sprite-data-v12','sprite-data-v13','sprite-data-v17','sprite-data-v36','weapon-data-v36','clerk-data-v49','minion-data-v52','needle-data-v54','boss-data-v55','jamila-data-v62','world-data-v69','kromer-data-v102','ultimate-weapon-data-v102','arcana-data-v102','ezra-data-v103','moses-data-v103','ryoshu-arayashiki-data','ahab-gasharpoon-data','mei-data','maxim-data','nikolai-data','denis-data'];
 const atlasImages=new Map();
 export function visualForm(g,e){
  if(e.key==='ahab'&&e.state?.gasharpoon)return 'ahabGasBody';
@@ -60,6 +61,7 @@ export function visualForm(g,e){
 }
 export const spriteHeight=(key,height=2.1)=>height*(FRAMES[key]?.heightScale||1);
 export const THEMES = {
+ denis:{light:'#e6cd77',dark:'#392d25',accent:'#fff3bf',weapon:'rifle'},
  nikolai:{light:'#fff4e4',dark:'#302a28',accent:'#ff9538',weapon:'sabre'},
  maxim:{light:'#f9b952',dark:'#332d26',accent:'#ffd68a',weapon:'hammer'},
  queen:{light:'#fff0b5',dark:'#6c184d',accent:'#ff69c1',weapon:'wand'},nosferatu:{light:'#ff647c',dark:'#350a20',accent:'#c41134',weapon:'wine'},

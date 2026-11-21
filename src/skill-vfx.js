@@ -104,9 +104,9 @@ export class SkillVFX {
    if(this.seenProjectiles.has(p))continue;this.seenProjectiles.add(p);const origin=p.origin||p.source;if(!origin||!visible(origin))continue;
    const key=p.theme||p.source?.key;if(key==='moses'||p.gasharpoon)continue;if(key==='jamila'&&p.source.state.jamilaQ&&p.source.state.jamilaQ.phase!=='retreat')continue;const s=combatStyle(key,game,p.source,{kind:p.damageKind||'basic',slot:p.slot,type:key==='rodya'?'iceAxe':undefined});observed.add(key);
    let shotOrigin=origin;
-   const myo=key==='myo'&&p.slot==='q'&&myoFiring(game,p.source),lca=key==='jamila'&&p.lca,muzzle=key==='gubo'&&p.damageKind==='basic'||myo||lca;
+   const myo=key==='myo'&&p.slot==='q'&&myoFiring(game,p.source),lca=key==='jamila'&&p.lca||key==='denis'&&p.denisShot,muzzle=key==='gubo'&&p.damageKind==='basic'||myo||lca;
    if((key==='gubo'||myo||lca)&&camera.screenToWorld){const tip=myo||lca?weaponEmissionScreen(game,p.source,camera,origin):guboEffectAxis(game,p.source,camera,origin,{angle:Math.atan2(p.dy,p.dx)}).start,ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
-   this.emit(key==='outis'&&p.damageKind==='basic'?'pierce':'shot',shotOrigin,myo||lca?(p.bornAt??game.time):game.time,{...s,...(muzzle?{color:myo||lca?'#d56827':'#71172c',accent:myo?'#ffb45c':lca?'#ffce70':'#bd354e',dark:myo||lca?'#4b2012':'#1b080f',height:.875,ownerId:p.source.id,muzzle:myo?'myo':lca?'lca':true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:myo?.05:lca?.065:.18});
+   this.emit(key==='outis'&&p.damageKind==='basic'?'pierce':'shot',shotOrigin,myo||lca?(p.bornAt??game.time):game.time,{...s,...(muzzle?{color:myo||lca?'#d56827':'#71172c',accent:myo?'#ffb45c':lca?'#ffce70':'#bd354e',dark:myo||lca?'#4b2012':'#1b080f',height:.875,ownerId:p.source.id,muzzle:myo?'myo':lca?'lca':true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:p.denisShock?.7:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:p.denisShock?.11:myo?.05:lca?.065:.18});
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);

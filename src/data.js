@@ -1,3 +1,4 @@
+import {DENIS_DATA} from './denis-data.js';
 import {NIKOLAI_DATA} from './nikolai-data.js';
 import{MAXIM_DATA}from'./maxim-data.js';
 import{MEI_DATA}from'./mei-data.js';
@@ -49,7 +50,7 @@ export const CORE_POSITIONS=BASE_DIVIDERS.map((wall,team)=>{const area=FOUNTAIN_
 export const WELL_ROOMS=[{x:-3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:0},{x:RULES.width+3.5*MAP_X,y:MAP_CENTER.y,r:5.2,team:1}];
 export function inWell(e,team=e.team){const w=FOUNTAIN_AREAS[team];return Boolean(w&&e.x>=w.x&&e.x<=w.x+w.w&&e.y>=w.y&&e.y<=w.y+w.h);}
 export const CHAMPIONS = {
-  nikolai:NIKOLAI_DATA,
+  denis:DENIS_DATA,nikolai:NIKOLAI_DATA,
   maxim:MAXIM_DATA,
   mei:MEI_DATA,
   ...ARCANA_DATA,
@@ -77,14 +78,15 @@ export const NEW_CHAMPION_KEYS=['don','ryoshu','honglu','heathcliff','ishmael','
 for(const key of NEW_CHAMPION_KEYS)CHAMPIONS[key]=NEW_DATA[key]||EXTRA_CHAMPIONS[key];
 export const EXPERIMENTAL_CHAMPIONS=Object.fromEntries(Object.entries(EXTRA_CHAMPIONS).filter(([key])=>!CHAMPIONS[key]));
 export const RUNTIME_CHAMPIONS={...CHAMPIONS,...EXPERIMENTAL_CHAMPIONS};
-export const BASE_HEALTH={nikolai:2200,maxim:2900,mei:1900,sora:2500,moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
-export const BASE_SPEED={nikolai:3.5,maxim:4,mei:3.2,sora:3.6,moses:2.85,ezra:3.6,yi:4.35,rudolph:3.25};
+export const BASE_HEALTH={denis:2600,nikolai:2200,maxim:2900,mei:1900,sora:2500,moses:2700,ezra:3100,yi:2800,rudolph:3300,starbuck:3000,nelly:2500,marton:3800,faust:2800,dongrang:3000,jamila:3000,nosferatu:2400};
+export const BASE_SPEED={denis:3.1,nikolai:3.5,maxim:4,mei:3.2,sora:3.6,moses:2.85,ezra:3.6,yi:4.35,rudolph:3.25};
 export const championBaseHealth=key=>BASE_HEALTH[key]??RULES.health[RUNTIME_CHAMPIONS[key].health]*(RUNTIME_CHAMPIONS[key].healthMultiplier||1);
 export const championBaseSpeed=key=>BASE_SPEED[key]??RULES.speed[RUNTIME_CHAMPIONS[key].speed];
 
-export const ARMOR_GRADES={nikolai:1,maxim:3,mei:4,moses:2,ezra:3,queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:2,yan:4};
+export const ARMOR_GRADES={denis:1,nikolai:1,maxim:3,mei:4,moses:2,ezra:3,queen:1,nosferatu:1,kromer:5,jamila:4,yi:1,faust:2,sinclair:2,don:4,meursault:5,gubo:1,kim:4,queequeg:2,ppui:1,gahwan:3,hohenheim:1,alisa:3,marton:5,nelly:2,myo:1,rudolph:2,dongbaek:2,dongrang:2,outis:2,heathcliff:4,ryoshu:2,ishmael:5,honglu:3,rodya:3,gregor:4,ahab:1,starbuck:2,sora:2,yan:4};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS))c.armor=ARMOR_GRADES[key]??2;
 export const GROWTH={
+ denis:[.055,.045,.008],
  nikolai:[.05,.05,.012],
  maxim:[.052,.065,.012],
  mei:[.052,.055,.012],
@@ -93,7 +95,7 @@ export const GROWTH={
  jamila:[.045,.055,.01],
  faust:[.055,.045,.008],yi:[.042,.052,.012],sinclair:[.058,.048,.016],meursault:[.038,.075,.007],don:[.052,.061,.013],ryoshu:[.064,.04,.017],honglu:[.046,.055,.014],heathcliff:[.061,.063,.01],ishmael:[.043,.072,.009],rodya:[.054,.065,.011],outis:[.06,.047,.01],gregor:[.045,.074,.008],gubo:[.063,.044,.006],gahwan:[.051,.049,.011],nelly:[.066,.043,.018],ahab:[.057,.041,.009],alisa:[.058,.057,.012],rudolph:[.05,.048,.007],moses:[.036,.058,.01],ezra:[.052,.067,.012],myo:[.064,.038,.015],dongbaek:[.053,.044,.01],dongrang:[.041,.075,.008],hohenheim:[.06,.039,.008],marton:[.038,.077,.009],queequeg:[.046,.079,.008],starbuck:[.058,.06,.013],kim:[.048,.068,.011],ppui:[.035,.054,.012],sora:[.06,.046,.013],yan:[.043,.058,.01],
 };
-export const ATTACK_STYLES={nikolai:'slash',maxim:'sweep',mei:'punch',queen:'slash',nosferatu:'slash',kromer:'thrust',jamila:'shot',faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
+export const ATTACK_STYLES={denis:'shot',nikolai:'slash',maxim:'sweep',mei:'punch',queen:'slash',nosferatu:'slash',kromer:'thrust',jamila:'shot',faust:'slash',yi:'shot',sinclair:'slash',meursault:'punch',don:'thrust',ryoshu:'slash',honglu:'sweep',heathcliff:'slash',ishmael:'slash',rodya:'slash',outis:'shot',gregor:'slash',gubo:'shot',gahwan:'thrust',nelly:'slash',ahab:'throw',alisa:'slash',rudolph:'whip',moses:'shot',ezra:'punch',myo:'slash',dongbaek:'sweep',dongrang:'slash',hohenheim:'shot',marton:'sweep',queequeg:'thrust',starbuck:'thrust',kim:'slash',ppui:'shot',sora:'punch',yan:'slash'};
 for(const [key,c] of Object.entries(RUNTIME_CHAMPIONS)){const [power,health,speed]=GROWTH[key];c.growth={power,health,speed};c.attackStyle=ATTACK_STYLES[key];}
 
 CHAMPIONS.rodya.r=30;CHAMPIONS.rodya.q=12;CHAMPIONS.rodya.range=5.2;CHAMPIONS.rodya.brief='검기로 적을 약화시키는 동전의 도박사';CHAMPIONS.ryoshu.range=2.2;
@@ -166,6 +168,7 @@ export const lanePath = (team, lane) => {
   return team===0?points:points.reverse();
 };
 export const CHAMPION_ROLES={
+ denis:['저격','bottom'],
  nikolai:['지원','암살','support'],
  maxim:['돌격','top'],
  mei:['돌격','암살','top'],

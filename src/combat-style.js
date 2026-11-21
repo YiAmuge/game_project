@@ -4,6 +4,7 @@ import{FAN_ANGLE,basicFanAngle}from'./data.js';
 export const NEUTRAL={color:'#e6e7e9',accent:'#ffffff',dark:'#45484f',element:'metal'};
 const style=(color,element='metal',accent=color,dark='#33353b')=>({color,element,accent,dark});
 export const CHAMPION_STYLES={
+ denis:style('#e6cd77','metal','#fff3bf','#514727'),
  nikolai:style('#ff9a3d','metal','#fff5e7','#302a28'),
  maxim:style('#ed9d42','metal','#ffe0a1','#57412a'),
  mei:style('#ff4b20','fire','#ffce39','#a32615'),

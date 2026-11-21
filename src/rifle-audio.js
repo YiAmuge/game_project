@@ -5,6 +5,8 @@ export const RIFLE_SAMPLES=[
  {id:'guboRifle',file:'freesound_community-sniper-rifle-5989.mp3'},
 ];
 export function rifleSoundProfile(voice){
+ if(voice.key==='denis'&&voice.cue==='reload')return{id:'jamilaReload',pitch:-1,duration:1.512,fullLength:true,rates:[1,1,1],offset:0,gain:.85,dry:true,fadeOut:.006};
+ if(voice.key==='denis'&&voice.cue==='weapon')return{id:'guboRifle',pitch:voice.slot==='r'?-4:0,duration:voice.slot==='r'?1.6:.8,rates:[1,1,1],offset:0,gain:voice.slot==='r'?1.05:.76,dry:true,fadeOut:.16};
  const family=voice.impactFamily||voice.family,variant=((Math.trunc(voice.variant)||0)%4+4)%4;
  if(voice.cue==='impact'&&['rifle','pistol','shotgun','cannon'].includes(family))return{id:'firearmImpact',pitch:[-.9,.35,-.25,1.1][variant]+(family==='cannon'?-.5:family==='shotgun'?-.35:family==='pistol'?.15:0),duration:.38*(1+[0,.015,-.015,.008][variant]),rates:[.985,1.025,.99].map(n=>n*(1+[0,.01,-.01,.005][variant])),offset:0,gain:(.68*.70)*Math.max(.85,Math.min(1.12,.85+(voice.weight||1)*.15)),dry:true,fadeOut:.12};
  if(voice.cue==='reload'&&(voice.key==='jamila'&&voice.phase==='lca-reload'||voice.key==='gubo'&&voice.phase==='gubo-reload'))return{id:'jamilaReload',pitch:0,duration:1.512,fullLength:true,rates:[1,1,1],offset:0,gain:.85,dry:true,fadeOut:.006};

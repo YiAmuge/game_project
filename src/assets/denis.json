@@ -1,0 +1,101 @@
+{
+  "source": "source/denis.png",
+  "expressionSource": "source/denis-expression.png",
+  "rifleSource": "source/denis-rifle.png",
+  "rifleSha256": "ee521fe2233c8f729f1e6b2d80a85e2b8a53b4e7fa14078525e3f8751f675a52",
+  "sha256": "c0607ef571074c5439d1f0c969ab93ac24c85509539bf33b4edc09ceef2ca34b",
+  "expressionSha256": "242ebe83ce0a6b815e7325b316721cf682b304629f8020fb7a8fc818d3fef896",
+  "note": "Screen-right three-quarter body, detached rifle; passive overlays only aligned eye/mouth patches.",
+  "frames": {
+    "denis": {
+      "x": 8,
+      "y": 8,
+      "w": 174,
+      "h": 400,
+      "sheet": 27,
+      "rotation": 0,
+      "source": "source/denis.png",
+      "sourceRect": [
+        266,
+        79,
+        540,
+        1244
+      ],
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 0,
+      "heightScale": 1,
+      "foot": [
+        0.5,
+        1
+      ],
+      "face": [
+        20.578778135048232,
+        26.04501607717042,
+        138.2636655948553,
+        138.2636655948553
+      ]
+    },
+    "denisRifle": {
+      "x": 8,
+      "y": 416,
+      "w": 500,
+      "h": 66,
+      "sheet": 27,
+      "rotation": 0,
+      "source": "source/denis-rifle.png",
+      "sourceRect": [
+        660,
+        397,
+        1157,
+        153
+      ],
+      "grip": [
+        0.27,
+        0.66
+      ],
+      "muzzle": [
+        0.77,
+        0.31
+      ]
+    },
+    "denisEye": {
+      "x": 8,
+      "y": 490,
+      "w": 22,
+      "h": 35,
+      "sheet": 27,
+      "rotation": 0,
+      "source": "source/denis-expression.png",
+      "sourceRect": [
+        642,
+        355,
+        68,
+        108
+      ],
+      "bodyOffset": [
+        121,
+        89
+      ]
+    },
+    "denisMouth": {
+      "x": 8,
+      "y": 533,
+      "w": 33,
+      "h": 26,
+      "sheet": 27,
+      "rotation": 0,
+      "source": "source/denis-expression.png",
+      "sourceRect": [
+        590,
+        475,
+        103,
+        81
+      ],
+      "bodyOffset": [
+        104,
+        127
+      ]
+    }
+  }
+}

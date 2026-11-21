@@ -24,6 +24,7 @@ import { STARBUCK } from './v10-champions.js';
 import { KIM_COUNTER_HALF_WIDTH,projectileHitWidth } from './projectile-rules.js';
 // Shared by the input controller, simulation and preview so the displayed range is the cast range.
 export function skillTargeting(g,e,slot){
+ if(e.key==='denis')return slot==='q'?{kind:'self',range:0,radius:0,confirm:false}:{kind:'line',range:10,radius:.28,confirm:false,championsOnly:true};
  if(e.key==='nikolai')return slot==='q'?{kind:'self',range:0,radius:8,confirm:false}:{kind:'target',range:NIKOLAI.rRange,radius:.35,championsOnly:true,confirm:true};
  if(e.key==='yan'&&slot==='r'&&Effects.empowered(e)&&Yan.distorted(g,e))return{kind:'circle',range:10,radius:3.5,confirm:false};
  if(e.key==='alisa'&&slot==='r'&&Effects.empowered(e))return{kind:'circle',range:8.6,radius:4,ignoreWalls:true,confirm:true};

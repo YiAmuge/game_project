@@ -6,7 +6,7 @@ export const TWO_HANDED_GRIPS=new Set(['sinclair','marton','honglu','dongrang','
 const BLACK_GLOVES=new Set(['nikolai','maxim','sinclair','hohenheim','gubo','gahwan','myo','rudolph','yan','kim','jamila','ezra']);
 const BROWN_GLOVES=new Set(['alisa','dongrang']);
 // Midtones sampled from the latest body faces, independent of team tint.
-export const BARE_HAND_COLORS={mei:'#f8d8c8',queen:'#f8dfdc',nosferatu:'#eee0e5',yi:'#f8d8c0',faust:'#f0e0d8',don:'#f8d8c0',ryoshu:'#f8d0c0',honglu:'#f8d8c8',heathcliff:'#d09880',ishmael:'#f8d0c0',rodya:'#f8d8c8',outis:'#e0a880',nelly:'#f0a888',dongbaek:'#f8d8b8',marton:'#c89878',starbuck:'#d88848'};
+export const BARE_HAND_COLORS={denis:'#ead8c9',mei:'#f8d8c8',queen:'#f8dfdc',nosferatu:'#eee0e5',yi:'#f8d8c0',faust:'#f0e0d8',don:'#f8d8c0',ryoshu:'#f8d0c0',honglu:'#f8d8c8',heathcliff:'#d09880',ishmael:'#f8d0c0',rodya:'#f8d8c8',outis:'#e0a880',nelly:'#f0a888',dongbaek:'#f8d8b8',marton:'#c89878',starbuck:'#d88848'};
 const GLOVE_PALETTES={
  black:{base:'#292e38',shadow:'#141820',light:'#59616f',outline:'#090c11'},
  brown:{base:'#805a3b',shadow:'#4b3425',light:'#ad8357',outline:'#291e18'},
@@ -24,6 +24,7 @@ export function gripAppearance(key){
 // Source-space handle centerlines. Placement happens after shaft stretching,
 // normalization and rotation, so both hands stay clustered at the final grip.
 export const GRIP_PATHS={
+ denisRifle:[[.27,.66],[.27,.66]],
  nikolaiSaber:[[.025,.5],[.145,.5]],maximHammer:[[.17,.475],[.33,.475]],mosesPipe:[MOSES_FRAMES.mosesPipe.grip,[.9,MOSES_FRAMES.mosesPipe.grip[1]]],
  ezraHammer:[[.09,.43],[.27,.43]],ezraDrill:[[.08,.31],[.34,.31]],ezraAxe:[[.25,.43],[.25,.88]],
  queenWand:[[.5,.53],[.5,.67]],nosWine:[[.5,.76],[.5,.85]],
@@ -51,9 +52,9 @@ const layouts=new Map();
 export function gripLayout(key,asset,m,pivot,hands){
  if(!gripAppearance(key)||!m||!GRIP_PATHS[asset])return [];
  const cacheKey=[key,asset,m.scale,pivot,hands].join('/');if(layouts.has(cacheKey))return layouts.get(cacheKey);
- const [a,b]=GRIP_PATHS[asset],at=t=>gripSourcePoint([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],m,pivot),first=at(0),last=at(1),kind=asset==='guboRifle'||asset==='myoRifle'||asset==='jamilaRifle'?'gun':asset==='ishmaelShield'?'shield':'shaft';
+ const [a,b]=GRIP_PATHS[asset],at=t=>gripSourcePoint([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],m,pivot),first=at(0),last=at(1),kind=asset==='denisRifle'||asset==='guboRifle'||asset==='myoRifle'||asset==='jamilaRifle'?'gun':asset==='ishmaelShield'?'shield':'shaft';
  const nearest=x=>{let low=0,high=1;const target=Math.max(Math.min(first.x,last.x),Math.min(Math.max(first.x,last.x),x));for(let i=0;i<24;i++){const t=(low+high)/2;if((at(t).x<target)===(last.x>=first.x))low=t;else high=t;}return {...at((low+high)/2),kind};};
- const primary=nearest(0),support=asset==='guboRifle'?{...gripSourcePoint([.70,.44],m,pivot),kind,offHand:true}:asset==='jamilaRifle'?{...gripSourcePoint([.70,.60],m,pivot),kind,offHand:true}:asset==='ezraAxe'?{...nearest(primary.x+.625),offHand:true}:key==='rudolph'?{...gripSourcePoint([.50,.53],m,pivot),kind,offHand:true}:{...nearest(primary.x+.27),offHand:true},points=hands===2||hands!==1&&TWO_HANDED_GRIPS.has(key)||asset==='jamilaRifle'||asset==='guboRifle'||asset==='ezraAxe'?[primary,support]:[primary];
+ const primary=nearest(0),support=asset==='denisRifle'?{...gripSourcePoint([.6,.35],m,pivot),kind,offHand:true}:asset==='guboRifle'?{...gripSourcePoint([.70,.44],m,pivot),kind,offHand:true}:asset==='jamilaRifle'?{...gripSourcePoint([.70,.60],m,pivot),kind,offHand:true}:asset==='ezraAxe'?{...nearest(primary.x+.625),offHand:true}:key==='rudolph'?{...gripSourcePoint([.50,.53],m,pivot),kind,offHand:true}:{...nearest(primary.x+.27),offHand:true},points=hands===2||hands!==1&&TWO_HANDED_GRIPS.has(key)||asset==='denisRifle'||asset==='jamilaRifle'||asset==='guboRifle'||asset==='ezraAxe'?[primary,support]:[primary];
  if(layouts.size>=64)layouts.delete(layouts.keys().next().value);layouts.set(cacheKey,points);return points;
 }
 const textures=new Map();
