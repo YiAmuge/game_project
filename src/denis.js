@@ -21,7 +21,7 @@ export function fire(g,e,point,round,volley,heavy=false){
  const d=g.aim(e,point),power=g.powerScale(e)*(1-g.powerWeak(e));animation(g,e,d,heavy?'r':'basic');
  if(!heavy)g.emitSound('shot',e,{phase:'denis-basic',family:'rifle'});
  const shields=new Map();
- g.bullet(e,d,heavy?P.rDamage:P.damage,heavy?P.rRange:g.attackRange(e),{speed:heavy?32:28,width:heavy?.28:.11,lca:!heavy,denisShot:true,denisRound:round,denisShock:heavy,color:heavy&&!round?'#f7fbff':roundColor(round),championsOnly:heavy,pierce:!heavy&&round==='armor'?Infinity:0,sound:{family:'rifle',phase:heavy?'denis-shock-hit':'denis-basic-hit'},beforeHit:t=>shields.set(t.id,g.shield(t)),onHit:(t,p,actual)=>{
+ g.bullet(e,d,heavy?P.rDamage:P.damage,heavy?P.rRange:g.attackRange(e),{speed:heavy?32:28,width:heavy?.336:.11,lca:!heavy,denisShot:true,denisRound:round,denisShock:heavy,color:heavy&&!round?'#f7fbff':roundColor(round),championsOnly:heavy,pierce:round==='armor'?Infinity:0,sound:{family:'rifle',phase:heavy?'denis-shock-hit':'denis-basic-hit'},beforeHit:t=>shields.set(t.id,g.shield(t)),onHit:(t,p,actual)=>{
   if(actual+Math.max(0,(shields.get(t.id)||0)-g.shield(t))<=0)return;
   let count=0;if(volley){count=volley.hits[t.id]=(volley.hits[t.id]||0)+1;if(count===P.hits)g.addBuff(e,'denisReload',P.reloadDuration);}
   // Each piercing projectile visits every target once; thresholds are per target.
@@ -33,14 +33,14 @@ export function attack(g,e,point){
  if(e.state.denisBurst||e.ammo<1)return false;
  if(e.state.denisCharge){e.state.denisCharge.aim={...point};return false;}
  g.cancelRecall(e);
- if(e.ammo>=2&&!(e.denisReady>g.time)){e.state.denisCharge={at:g.time,aim:{...point}};e.lastAttackAt=g.time;return true;}
+ if(e.ammo>=3&&!(e.denisReady>g.time)){e.state.denisCharge={at:g.time,aim:{...point}};e.lastAttackAt=g.time;return true;}
  const round=e.state.denisRound;delete e.state.denisRound;e.ammo--;e.attackCd=P.interval;fire(g,e,point,round);return true;
 }
 export function release(g,e,point){
  const c=e.state.denisCharge;if(e.key!=='denis'||!c)return false;cancelCharge(e);
  if(blocked(g,e)||e.ammo<1)return false;
  const round=e.state.denisRound;delete e.state.denisRound;
- const burst=g.time-c.at+1e-8>=P.charge&&e.ammo>=2&&!(e.denisReady>g.time),count=burst?Math.floor(e.ammo):1;e.ammo-=count;e.attackCd=P.interval;
+ const burst=g.time-c.at+1e-8>=P.charge&&e.ammo>=3&&!(e.denisReady>g.time),count=burst?Math.min(3,Math.floor(e.ammo)):1;e.ammo-=count;e.attackCd=P.interval;
  if(burst){e.denisReady=g.time+P.passiveCooldown;const v={left:count-1,next:g.time+P.burstEvery,round,hits:{},aim:{...(point||c.aim)}};e.state.denisBurst=v;g.action(e,'basic',()=>fire(g,e,point||c.aim,round,v));if(!v.left)delete e.state.denisBurst;}
  else g.action(e,'basic',()=>fire(g,e,point||c.aim,round));
  return true;

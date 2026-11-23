@@ -119,9 +119,8 @@ test('Starbuck joins ordinary drafts with requested grades, harpoon damage and j
 test('Starbuck every basic hits along a 3.75 dash with either full or partial ammo',()=>{
  const {g,p,t}=quiet('starbuck');t.x=41.4;const hp=t.hp;g.attack(p,t);close(hp-t.hp,0);close(p.motion.total,3.75);run(g,.5);close(hp-t.hp,200*.9);assert.ok(p.x>t.x);p.attackCd=0;p.ammo=1;const x=p.x;g.attack(p,{x:x+1,y:p.y});assert.ok(p.motion);close(p.motion.total,3.75);
 });
-test('Starbuck tactical hits five times at .3 intervals with increasing damage and stops after a miss',()=>{
- const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p)hits.push({at:g.time,n});return deal(e,t,n,o);};g.cast(p,'q',t);run(g,1.9);assert.equal(hits.length,5);for(let i=0;i<5;i++){close(hits[i].at,.3*i,.02);close(hits[i].n,150*1.045**i);}close(g.stat(t,'slow'),.13);p.qCd=0;t.y=14;hits.length=0;g.cast(p,'q',{x:45,y:7});run(g,2);assert.equal(hits.length,0);
-});
+test('Starbuck tactical uses five deliberate casts with six-percent damage increments',()=>{const {g,p,t}=quiet('starbuck');t.x=42;const hits=[],deal=g.deal.bind(g);g.deal=(e,t,n,o)=>{if(e===p&&!o?.fixed)hits.push({at:g.time,n});return deal(e,t,n,o);};for(let i=0;i<5;i++){assert.ok(g.cast(p,'q',t));run(g,.2);}assert.equal(hits.length,5);for(let i=0;i<5;i++)close(hits[i].n,140*(1+.06*i));close(g.stat(t,'slow'),.3);assert.equal(p.state.starbuckChain,undefined);assert.ok(p.qCd>0);});
+
 test('Starbuck ultimate leaps for .7 seconds and resets tactical on hit or miss',()=>{
  const {g,p,t}=quiet('starbuck');t.x=46;p.qCd=5;assert.ok(g.cast(p,'r',{x:46,y:7}));assert.ok(g.hidden(p));const hp=t.hp;run(g,.65);assert.ok(p.x>40&&p.x<46);close(t.hp,hp);run(g,.1);assert.equal(g.hidden(p),false);assert.ok(p.x>44&&t.hp<hp);close(p.qCd,0);assert.ok(distance(p,t)>=p.radius+t.radius);
  const f=quiet('starbuck');f.t.y=14;f.p.qCd=5;f.g.cast(f.p,'r',{x:46,y:7});run(f.g,.8);close(f.p.qCd,0);

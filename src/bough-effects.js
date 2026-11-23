@@ -4,7 +4,7 @@ export const convertsPower=e=>empowered(e,'ryoshu');
 export const extraAmmo=e=>e.augments?.includes('magazine2')?2:0;
 export const soleil=e=>empowered(e,'meursault');
 export const pulseSteps=e=>Math.floor(Math.min(100,Math.floor((e.ppuiHealing||0)/1000))/10);
-export const healthRate=e=>empowered(e,'ppui')?pulseSteps(e)*.02:0;
+export const healthRate=()=>0;
 export const powerRate=e=>!empowered(e)?0:e.key==='gubo'?Math.min(7,e.guboAllyKills||0)*.07:e.key==='rudolph'?Math.min(20,e.rudolphReturns||0)*.01:soleil(e)?extraAmmo(e)*.035:0;
 export const armorMultiplier=e=>soleil(e)?1+extraAmmo(e)*.035:1;
 export const nellyRate=(g,e)=>empowered(e,'nelly')&&e.state.boughNellyUntil>g.time?.15:0;
@@ -23,7 +23,7 @@ export function finalMultiplier(g,source,target){
  if(guard(g,target))mult*=.5;
  return mult;
 }
-export const chargeSlot=e=>empowered(e)?e.key==='starbuck'?'r':e.key==='ezra'?'q':null:null;
+export const chargeSlot=e=>empowered(e)?['denis','starbuck'].includes(e.key)?'r':e.key==='ezra'?'q':null:null;
 function stock(g,e){const slot=chargeSlot(e);if(!slot)return null;const all=e.state.boughStocks??={};return all[slot]??={current:2,ready:Infinity};}
 export function charges(g,e,slot){
  if(slot!==chargeSlot(e))return null;const s=stock(g,e),gate=e.key==='starbuck'?Math.max(0,(e.boughStarbuckGate||0)-g.time):0;

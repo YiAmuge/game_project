@@ -4,7 +4,7 @@ import { dash,area,dashLength } from './skills.js';
 import { canOccupy,settleBody } from './collision.js';
 import { trapPoint } from './confinement.js';
 
-export const STARBUCK={basicRange:3.75,basicDash:3.75,qDamage:150,qRange:2.782,qAngle:1.6478,qInterval:.3,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320,trapDuration:2.5};
+export const STARBUCK={basicRange:3.75,basicDash:3.75,qDamage:140,qRange:2.5,qRadius:2.5,qAngle:Math.PI*2,qInterval:0,qSlow:1.5,rRange:8,rRadius:1.8,rDamage:320,trapDuration:2.5};
 export function validate(g,e,slot,p){return e.key!=='starbuck'||slot!=='r'||!g.blocked(p.x,p.y,e.radius)&&canOccupy(g,e,trapPoint(g,e,p),{phaseEnemies:true});}
 export function basic(g,e,p,d){
  if(e.key!=='starbuck')return false;
@@ -13,18 +13,11 @@ export function basic(g,e,p,d){
 export function cast(g,e,slot,p,d){
  if(e.key!=='starbuck')return false;
  if(slot==='q'){
-  const hits=new Map(),chain={d:{...d},until:g.time+.3};e.state.starbuckStab=chain;
-  const stab=index=>{
-   if(!e.alive||g.stat(e,'silence')||g.stat(e,'stun')){delete e.state.starbuckStab;return;}
-   e.lastAttackAt=g.time;e.attackAt=g.time;e.attackFacing=Math.atan2(d.y,d.x);
-   let hit=false;g.cone(e,d,STARBUCK.qRange,STARBUCK.qAngle,STARBUCK.qDamage*1.045**index,t=>{
-    hit=true;g.status(t,'slow',.13,STARBUCK.qSlow,e);const count=(hits.get(t.id)||0)+1;hits.set(t.id,count);
-    if(count>=3&&t.kind==='champion')g.status(t,'root',1,.35,e);
-   });
-   g.effects.push({type:'slash',x:e.x,y:e.y,r:STARBUCK.qRange,angle:Math.atan2(d.y,d.x),spread:STARBUCK.qAngle,theme:e.key,life:.2,maxLife:.2});
-   chain.until=g.time+(hit&&index<4?STARBUCK.qInterval+.08:.16);
-   if(hit&&index<4)g.schedule(e,STARBUCK.qInterval,()=>stab(index+1));
-  };stab(0);
+  const old=e.state.starbuckChain,index=old?.until>g.time?old.index:0,bonus=old?.until>g.time?old.bonus:0,damage=STARBUCK.qDamage*(1+bonus);
+  const point={x:p.x,y:p.y};e.state.starbuckStab={at:g.time,until:g.time+.32,point,angle:Math.atan2(d.y,d.x)};
+  let hit=false;area(g,e,point,STARBUCK.qRadius,0,t=>{const shield=g.shield(t),actual=g.deal(e,t,damage),total=actual+Math.max(0,shield-g.shield(t));if(total<=0)return;hit=true;t.state??={};const stacks=t.state.starbuckSlows??={},prior=stacks[e.id];stacks[e.id]={amount:Math.min(.30,(prior?.until>g.time?prior.amount:0)+.13),until:g.time+1.5};g.status(t,'slow',stacks[e.id].amount,1.5,e);if(index===4&&t.alive)g.deal(e,t,total*.2,{fixed:true,proc:false,augmentOrigin:'starbuckQ'});});
+  if(hit&&index<4){e.qCd=0;e.state.starbuckChain={index:index+1,bonus:bonus+.06,until:g.time+5};}else delete e.state.starbuckChain;
+  g.effects.push({type:'starbuckSlam',source:e.id,x:point.x,y:point.y,r:STARBUCK.qRadius,angle:Math.atan2(d.y,d.x),theme:e.key,life:.38,maxLife:.38});
  }else{
   const origin={x:e.x,y:e.y},destination=trapPoint(g,e,p);e.untargetableUntil=g.time+.7;e.channelUntil=g.time+.7;
   g.effects.push({type:'ring',...origin,r:1,color:'#b4d9ce',life:.7,maxLife:.7},{type:'ring',...destination,r:STARBUCK.rRadius,color:'#b4d9ce',life:.7,maxLife:.7});

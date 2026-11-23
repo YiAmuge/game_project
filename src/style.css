@@ -797,3 +797,5 @@ body.mobile-ui.in-game #mobile-shop-tabs button[data-group=special].selected{bac
 .match-mode-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.match-mode-options button{text-align:left;display:flex;flex-direction:column;gap:12px;min-height:180px;padding:22px;border:1px solid #667d81;background:#1a3038;color:#e8e6d7}.match-mode-options strong{font-size:24px;color:#ead397}.match-mode-options small{line-height:1.8;color:#b5c9c9}.match-mode-options button:hover,.match-mode-options button:focus-visible{border-color:#e6c77f;background:#2a4145}
 #online-match-mode,#online-create-mode{padding:8px;background:#173139;border:1px solid #758581;color:#eedca6}
 @media(max-width:450px){.match-mode-options{grid-template-columns:1fr}.match-mode-options button{min-height:130px;padding:15px}}
+#recall-choice [data-choice="buffet"]{grid-column:1 / -1;border-top:1px solid #7f3b46;color:#ffc4cc}#recall-choice [data-choice="buffet"].selected{background:#852b42;color:#fff0e8}
+#recall-choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}

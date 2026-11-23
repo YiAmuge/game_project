@@ -1,3 +1,4 @@
+import * as Buffet from './buffet.js';
 import * as Denis from './denis.js';
 import * as Nikolai from './nikolai.js';
 import {forwardEnd,stationaryContact} from './dash-hit.js';
@@ -67,6 +68,7 @@ export function dash(g,e,d,len,damage=0,hit=()=>{},options={}){
 export const heathCharge=Reworks.heathCharge;
 export const releaseHeath=Reworks.releaseHeath;
 export function skillCharges(g,e,slot){
+ if(Buffet.active(e))return null;
  const enhanced=Effects.charges(g,e,slot);if(enhanced)return enhanced;if(AhabEgo.active(e)&&['q','r'].includes(slot))return{current:AhabEgo.available(e,slot)?1:0,max:1,remaining:0};
  if(e.key==='denis'&&slot==='q')return Denis.charges(g,e);if(slot==='r')return Bough.charges(g,e);if(slot!=='q')return null;if(e.key==='moses')return Moses.charges(g,e);if(e.key==='nosferatu')return Nosferatu.charges(g,e);if(e.key==='ppui')return Ppui.charges(g,e);
  const s=e.state||{},values=e.key==='nelly'?[s.knifeCharges??2,2,s.knifeReady]:e.key==='sora'&&Sora.ego(g,e)?[s.egoQCharges??2,2,s.egoQReady]:null;
@@ -82,6 +84,7 @@ function guboTarget(g,e,p,allyOnly=false){
 }
 export function isOffensive(e,slot){return !((e.key==='yi'&&slot==='r')||(e.key==='meursault'&&slot==='q')||(['denis','nikolai','honglu','rudolph','moses','gubo','rodya'].includes(e.key)&&slot==='q'));}
 export function canRecast(g,e,slot){
+ if(Buffet.active(e))return slot==='r'&&Buffet.storm(g,e);
  if(slot==='q'&&Nikolai.recast(g,e))return true;
  if(e.key==='mei'&&slot==='q')return Mei.recast(g,e);
  if(e.key==='mei'&&slot==='r'&&e.goldenBough)return Mei.charges(g,e).current>0;
@@ -104,6 +107,7 @@ export const guardAlly=New.guardAlly;
 export const transfer=New.transfer;
 export const receivedMultiplier=New.receivedMultiplier;
 export function validateSkill(g,e,slot,p,options={}){
+ if(Buffet.active(e))return Buffet.validate(g,e,slot);
  if(e.key==='denis')return Denis.validate(g,e,slot,p,options);
  if(e.key==='nikolai')return Nikolai.validate(g,e,slot,p,options);
  const stock=Effects.charges(g,e,slot);if(stock&&(!stock.current||e.key==='starbuck'&&e.boughStarbuckGate>g.time))return false;
@@ -133,6 +137,7 @@ export function validateSkill(g,e,slot,p,options={}){
  return true;
 }
 export function ammoCap(g,e){
+ if(Buffet.active(e))return 3+(has(e,'magazine2')?2:0);
  if(Effects.soleil(e))return 1;if(AhabEgo.active(e))return AhabEgo.PARAMETERS.ammo;
  if(e.lcaTrooper)return 16;if(e.key==='jamila')return 16+(has(e,'magazine2')?8:0);
  const extra=(has(e,'magazine2')?2:0)+(e.key==='faust'&&e.level>=Bough.maxLevel(e)?1:0)+(e.key==='myo'&&g.buff(e,'rabbitFrenzy')?2:0);
@@ -192,6 +197,7 @@ function shockIshmael(g,e){
  delete e.buffs.ishmaelShield;e.state.shockAt=0;area(g,e,e,4.5,200,t=>{g.status(t,'stun',1,.8,e);if(t.kind==='champion')e.rCd=Math.max(0,e.rCd-5);});g.effects.push({type:'ishmaelShock',source:e.id,x:e.x,y:e.y,r:4.5,theme:e.key,life:.6,maxLife:.6});
 }
 export function cast(g,e,slot,p,d,options={}){
+ if(Buffet.active(e))return Buffet.cast(g,e,slot,p);
  if(e.key==='denis')return Denis.cast(g,e,slot,p,d,options);
  if(e.key==='nikolai')return Nikolai.cast(g,e,slot,p,d,options);
  if(e.key==='maxim'){Maxim.cast(g,e,slot,p,d);return true;}
@@ -323,6 +329,7 @@ export function interceptDeath(g,e,killer){
 }
 export function decayMentalWhip(g,t){for(const mark of Object.values(t.state?.mentalWhip||{})){if(mark.stage>0){mark.decayAt??=mark.at+2;while(mark.stage>0&&g.time+1e-8>=mark.decayAt){mark.stage--;mark.decayAt+=2;}}}}
 export function tick(g,e,dt){
+ Buffet.tick(g,e);if(e.state.starbuckChain?.until<=g.time)delete e.state.starbuckChain;
  Denis.tick(g,e);
  Nikolai.tick(g,e);
  Maxim.tick(g,e);

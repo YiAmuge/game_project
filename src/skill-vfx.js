@@ -106,12 +106,12 @@ export class SkillVFX {
    let shotOrigin=origin;
    const myo=key==='myo'&&p.slot==='q'&&myoFiring(game,p.source),lca=key==='jamila'&&p.lca||key==='denis'&&p.denisShot,muzzle=key==='gubo'&&p.damageKind==='basic'||myo||lca;
    if((key==='gubo'||myo||lca)&&camera.screenToWorld){const tip=myo||lca?weaponEmissionScreen(game,p.source,camera,origin):guboEffectAxis(game,p.source,camera,origin,{angle:Math.atan2(p.dy,p.dx)}).start,ground=camera.worldToScreen(origin,0),raised=camera.worldToScreen(origin,.875);shotOrigin=camera.screenToWorld(tip.x,tip.y-(raised.y-ground.y));}
-   this.emit(key==='outis'&&p.damageKind==='basic'?'pierce':'shot',shotOrigin,myo||lca?(p.bornAt??game.time):game.time,{...s,...(muzzle?{color:myo||lca?'#d56827':'#71172c',accent:myo?'#ffb45c':lca?'#ffce70':'#bd354e',dark:myo||lca?'#4b2012':'#1b080f',height:.875,ownerId:p.source.id,muzzle:myo?'myo':lca?'lca':true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:p.denisShock?.7:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:p.denisShock?.11:myo?.05:lca?.065:.18});
+   this.emit(key==='outis'&&p.damageKind==='basic'?'pierce':'shot',shotOrigin,myo||lca?(p.bornAt??game.time):game.time,{...s,...(muzzle?{color:myo||lca?'#d56827':'#71172c',accent:myo?'#ffb45c':lca?'#ffce70':'#bd354e',dark:myo||lca?'#4b2012':'#1b080f',height:.875,ownerId:p.source.id,muzzle:myo?'myo':lca?'lca':true,light:.16}:{}),angle:Math.atan2(p.dy??p.target?.y-p.y,p.dx??p.target?.x-p.x),radius:p.denisShock?1.1:.45,count:muzzle?0:p.source?.kind==='champion'?4:2,life:p.denisShock?.16:myo?.05:lca?.065:.18});
   }
   for(const e of game.champions()){
    if(this.seenAttacks.get(e)===e.attackSerial)continue;this.seenAttacks.set(e,e.attackSerial);
    // Maxim emits its near swing explicitly. Its ram has contact effects only.
-   if(!e.attackSerial||e.trainingDummy||['maxim','moses','ezra','dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
+   if(e.buffet)continue;if(!e.attackSerial||e.trainingDummy||['maxim','moses','ezra','dongbaek','ppui','rudolph'].includes(e.key)||observed.has(e.key)||!e.alive||game.time-e.attackAt>.3||!visible(e))continue;
    const attack=game.attackStyle(e),kind=({slash:'slash',sweep:'slash',thrust:'pierce',punch:'impact',shot:'shot',throw:'shot',whip:'pierce',flame:'impact'})[attack];if(!kind)continue;
    const s=combatStyle(e.key,game,e,{kind:'basic'}),angle=e.attackFacing??e.facing??0,radius=game.attackRange(e),shape={kind:attack==='sweep'?'circle':attack==='punch'?'rect':'cone',range:radius,width:radius,spread:basicFanAngle(e.key),angle};
    this.emit(kind,e,e.attackAt,{...s,angle,radius,shape,count:10});

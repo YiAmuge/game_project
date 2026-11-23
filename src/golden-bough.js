@@ -14,8 +14,9 @@ export function levelXp(level){if(level<=10)return RULES.xp[level-1];let xp=RULE
 export const voyage=e=>active(e)&&e.key==='ishmael'?Math.min(8,e.ishmaelUltimateHits||0):0;
 export const fistBonus=()=>0;
 export const outisRadius=(g,e)=>active(e)?g.attackRange(e):2.5;
-export function cooldown(e,slot,base){if(!active(e))return base;if(slot==='q'&&e.key==='maxim')return Math.max(0,base-3);if(slot!=='r')return base;return ({ryoshu:12,honglu:35,ahab:45})[e.key]??Math.max(0,base-({yi:37,don:15,heathcliff:15}[e.key]||0));}
+export function cooldown(e,slot,base){if(!active(e))return base;if(slot==='q'&&e.key==='maxim')return Math.max(0,base-3);if(slot!=='r')return base;return ({ryoshu:12,honglu:35,ahab:45})[e.key]??Math.max(0,base-({denis:15,yi:37,don:15,heathcliff:15}[e.key]||0));}
 export const TEXT={
+ denis:'궁극기 기본 재사용 대기시간이 15초 감소하며 최대 2회 비축한다. 사용한 횟수는 순서대로 충전된다.',
  mei:'궁극기를 최대 2회 비축한다. 사용한 횟수는 순서대로 충전되며 회축 연계로 사용한 궁극기는 해당 충전의 재사용 대기시간을 50% 환급한다.',
  ahab:GASHARPOON_TEXT,
  yi:'궁극기 기본 재사용 대기시간이 37초 감소하고 최대 2회 비축한다. 사용한 횟수는 순서대로 충전된다.',
@@ -54,7 +55,7 @@ export function abilityInfo(g,e){
  if(e.key==='faust'){info.passiveText=info.passiveText.replaceAll('최대 레벨 10','최대 레벨 12').replace('초당 자동 경험치 9','초당 자동 경험치 18');info.rText=c.rText.replaceAll('최대 레벨 10','최대 레벨 12');}
  if(e.key==='don')info.rText=c.rText.replace('사용 시 7초간 피갈망을 얻는다.','피갈망은 영구 적용된다.');
  if(e.key==='rodya')info.passiveText=c.passiveText.replace('전투력이 1%','전투력이 3%');
- if(['mei','yi','heathcliff','sinclair'].includes(e.key))info.rText=c.rText+' 황금 가지: '+TEXT[e.key];
+ if(['denis','mei','yi','heathcliff','sinclair'].includes(e.key))info.rText=c.rText+' 황금 가지: '+TEXT[e.key];
  if(['rodya'].includes(e.key))info.qText=c.qText+' 황금 가지: '+TEXT[e.key];
  if(['gregor'].includes(e.key))info.basicText=c.basicText+' 황금 가지: '+TEXT[e.key];
  if(e.key==='ryoshu')Object.assign(info,{ultimate:'천살성도 - 아라야시키',rText:TEXT.ryoshu});
@@ -75,6 +76,7 @@ export function giftNotes(key){
  if(BOUGH_EXPANSION_TEXT[key])return[{label:key==='meursault'?'기본공격 변경':'전용 강화',text:TEXT[key]}];
  if(CHANGED_ULTIMATES[key])return [...(key==='ryoshu'?[{label:'능력치 전환',text:'추가 전투력을 같은 비율의 추가 체력으로 모두 전환한다.'}]:[]),{label:'궁극기 변경',text:CHANGED_ULTIMATES[key]+'로 변경된다. 상세 효과는 궁극기 도감의 황금 가지 항목에서 확인한다.'}];
  const notes={
+  denis:[['궁극기','기본 재사용 대기시간 −15초 · 최대 2회 비축.']],
   mei:[['궁극기 비축','최대 2회 비축하며 사용한 횟수는 순서대로 충전한다. 회축 연계는 해당 충전의 재사용 대기시간을 50% 환급한다.']],
   yi:[['궁극기 재사용','기본 재사용 대기시간 −37초. 최대 2회 비축하며 사용한 횟수는 순서대로 충전된다.']],
   faust:[['성장','최대 레벨 12. 자동 경험치를 포함한 모든 경험치 획득량 2배.'],['최대 레벨 효과','최종 피해의 7% 추가 고정 피해. 해당 추가 피해의 50%만큼 회복한다.']],

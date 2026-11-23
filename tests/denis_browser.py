@@ -28,7 +28,7 @@ async def main():
    await p.wait_for_timeout(100);assert await p.evaluate('Boolean(__moba.game.player.state.denisCharge)'),(mode,'hold starts charge');await p.evaluate('advance(1.01)')
    if mobile:await touch('touchEnd')
    else:await p.mouse.up()
-   await p.wait_for_timeout(100);assert await p.evaluate('Boolean(__moba.game.player.state.denisBurst)'),(mode,'release starts barrage');assert await p.evaluate('__moba.game.player.ammo===0');await p.evaluate('advance(.08)');await p.wait_for_timeout(80);await p.screenshot(path=str(ART/f'denis-{mode}-burst.png'))
+   await p.wait_for_timeout(100);assert await p.evaluate('Boolean(__moba.game.player.state.denisBurst)'),(mode,'release starts barrage');assert await p.evaluate('__moba.game.player.ammo===2');await p.evaluate('advance(.08)');await p.wait_for_timeout(80);await p.screenshot(path=str(ART/f'denis-{mode}-burst.png'))
    # Pixel delta proves the actual Renderer25D pass draws the bullet and expression.
    pixels=await p.evaluate("""()=>{const g=__moba.game,r=__moba.renderer,c=r.ctx,projectiles=g.projectiles,burst=g.player.state.denisBurst;r.draw(g,true);const a=c.getImageData(0,0,r.canvas.width,r.canvas.height).data;g.projectiles=[];delete g.player.state.denisBurst;r.draw(g,true);const z=c.getImageData(0,0,r.canvas.width,r.canvas.height).data;g.projectiles=projectiles;g.player.state.denisBurst=burst;let n=0;for(let i=0;i<a.length;i+=4)if(Math.abs(a[i]-z[i])+Math.abs(a[i+1]-z[i+1])+Math.abs(a[i+2]-z[i+2])>30)n++;r.draw(g,true);return n;}""")
    assert pixels>12,(mode,'visible bullet/expression',pixels)

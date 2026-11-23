@@ -11,7 +11,7 @@ export function projectileAppearance(p,g){
  const type=p.denisShock?'swordRay':key==='kromerNail'?'nail':key==='sewingNeedle'?'needle':key==='outis'&&p.damageKind==='basic'?'swordRay':p.swordWave||key==='faust'||p.theme==='boss'?'wave':({yi:'glass',nelly:'knife',rodya:'axe',ppui:'nail',ishmael:'harpoon',ahab:'harpoon',starbuck:'harpoon'}[key])||(['tower','core'].includes(p.source?.kind)?'cannon':'bullet');
  const h=p.source?.kind==='minion'?(p.visualHeight??1):p.source?.kind==='tower'?2.1:p.source?.kind==='core'?1.7:.95;
  const empowered=key==='gubo'&&(p.guboEmpowered??(p.source&&g.buff(p.source,'guboReload')));
- return {...style,...(p.denisShot?{color:p.color,accent:p.denisRound==='fire'?'#ffcb54':'#f5fcff',dark:p.denisRound==='ice'?'#4d819b':p.denisRound==='fire'?'#7e291c':'#666e79',visualWidth:p.denisShock?.24:undefined}:{}),...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(p.lcaShieldRound?{color:'#59b8ff',accent:'#c1ebff',dark:'#173c69'}:{}),...(type==='swordRay'?{visualWidth:p.denisShock?.24:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:p.denisShot||key==='gubo'||key==='ppui'||key==='myo'&&p.slot==='q',aura:p.denisRound==='armor'?'#ffffff':p.lcaShieldRound?'#3b9eff':p.guboUltimate?'#d24b66':empowered?'#a32b44':null};
+ return {...style,...(p.nikolaiWave?{color:p.color,accent:p.nikolaiEmpowered?'#fff1c4':'#fff7ed',dark:'#a35a2c'}:{}),...(p.denisShot?{color:p.color,accent:p.denisRound==='fire'?'#ffcb54':'#f5fcff',dark:p.denisRound==='ice'?'#4d819b':p.denisRound==='fire'?'#7e291c':'#666e79',visualWidth:p.denisShock?.24:undefined}:{}),...(key==='gubo'?{color:empowered?'#8e2039':'#651b2d',accent:'#be5265',dark:'#230912'}:{}),...(p.lcaShieldRound?{color:'#59b8ff',accent:'#c1ebff',dark:'#173c69'}:{}),...(type==='swordRay'?{visualWidth:p.denisShock?.288:.06}:{}),type,height:h,width:Math.max(.1,(p.width||.14)*2),spin:type==='axe',visualScale:(p.denisShock?1.2:1)*(p.slot==='r'&&['rodya','ishmael'].includes(key)?1/1.5:1)*(key==='nelly'&&p.slot==='q'?.8:key==='ppui'?.7:1),tint:p.denisShot||key==='gubo'||key==='ppui'||key==='myo'&&p.slot==='q',aura:p.nikolaiWave&&p.nikolaiEmpowered?'#ff9a36':p.denisRound==='armor'?'#ffffff':p.lcaShieldRound?'#3b9eff':p.guboUltimate?'#d24b66':empowered?'#a32b44':null};
 }
 export function beamAppearance(key){
  const width=key==='gubo'?2.5:key==='rudolph'?3.5:1,color=key==='gubo'?'#74192e':key==='rudolph'?'#dc9852':'#a3d6d2',tuned=['gubo','rudolph'].includes(key);
@@ -75,7 +75,7 @@ export class ProjectileVFX {
  draw(c,camera,game){
   c.save();
   for(const p of game.projectiles){
-   if(p.gasharpoon||p.nikolaiWave)continue;
+   if(p.gasharpoon)continue;
    if(drawMosesPoint(c,camera,p,game.time))continue;
    if(drawArcanaProjectile(c,camera,game,p))continue;
    const style=projectileAppearance(p,game),base=camera.worldToScreen(p,style.height),at=this.position(p,game,camera,style.height),dir=p.target?Math.atan2(p.target.y-p.y,p.target.x-p.x):Math.atan2(p.dy??0,p.dx??1),next=camera.worldToScreen({x:p.x+Math.cos(dir),y:p.y+Math.sin(dir)},style.height);

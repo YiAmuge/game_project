@@ -1,6 +1,6 @@
 // Head crops in normalized atlas pixels. Kim and Dongrang include the upper torso.
 // Body/weapon art and all other portrait crops are unchanged.
-export const PORTRAIT_SCALES={ezra:.9};
+export const PORTRAIT_SCALES={denis:.92,ezra:.9};
 export const PORTRAIT_CROPS={
  mei:[4,15,224,186],
  kromer:[50,0,185,156],

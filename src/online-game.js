@@ -42,7 +42,7 @@ export function executeCommand(g,e,p){
    case'releaseBasic':return releaseBasic(g,e,point);
    case'releaseTactical':return releaseTactical(g,e,point);
    case'cancelCharge':cancelCharge(g,e);return true;
-   case'recall':return g.recall(e,{mode:['auto','recall','infiltration'].includes(p.mode)?p.mode:'auto'});
+   case'recall':return g.recall(e,{mode:['auto','recall','infiltration','buffet'].includes(p.mode)?p.mode:'auto'});
    case'cancelRecall':g.cancelRecall(e);return true;
    case'infiltrate':return g.infiltrate(e);
    case'buy':return g.buy(e,p.key);

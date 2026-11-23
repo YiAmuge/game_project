@@ -102,6 +102,7 @@ export function refreshOptions(g){
  const p=g.player,o=g.practice;if(!p?.alive)return;
  if(o.infiniteAmmo&&!AhabEgo.active(p)){p.ammo=g.ammoCap(p);p.reloadProgress=0;if(p.state.exhaustedUntil){delete p.state.exhaustedUntil;delete p.status.silence;}}
  if(o.noCooldown){
+  if(p.key==='denis'&&p.state.boughStocks?.r){p.state.boughStocks.r.current=2;p.state.boughStocks.r.ready=Infinity;}
   if(p.key==='denis'){p.state.denisStocks=2;p.state.denisStockReady=Infinity;}
   if(p.key==='mei'&&p.goldenBough){p.state.meiRCharges=2;p.state.meiRReady=0;p.state.meiRQueue=[];}
   if(p.key==='yi'&&Bough.active(p)){p.state.yiCharges=2;p.state.yiReady=0;}

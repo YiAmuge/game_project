@@ -34,7 +34,7 @@ export function stackInfo(e,g){
  if(e.key==='rudolph'&&Effects.empowered(e))return{label:'생환',value:e.rudolphReturns||0,max:20,color:'#f5bd78',textOnly:true};
  if(e.key==='sora'&&Effects.permanentSora(e))return{label:'영구 개화 E.G.O · 말살 '+e.state.egoQCharges+'/2',color:'#e7cb80',textOnly:true};
  if(e.key==='ishmael'&&Bough.active(e))return{label:'항해',value:Bough.voyage(e),max:8,color:'#e8cc71',textOnly:true};
- if(e.key==='ppui')return{label:'맥동',value:pulse(e),max:PPUI.pulseCap,color:'#f4a9bb',textOnly:true};
+ if(e.key==='ppui'&&!e.buffet)return{label:'맥동',value:pulse(e),max:PPUI.pulseCap,color:'#f4a9bb',textOnly:true};
  if(e.key==='ahab'&&e.state.recastUntil>g.time)return{label:'재사용 '+(e.state.recastUntil-g.time).toFixed(1)+'s',textOnly:true,color:'#ffcf7c'};
  if(e.key==='nosferatu')return {label:'혈찬',value:Math.floor(e.state.bloodFeast||0),max:Math.floor(bloodCapacity(g,e)),color:'#ed3c65',textOnly:true};
  if(e.key==='queen'&&e.state.queenR)return{label:'아르카나',value:queenStage(g,e),max:3,color:'#ff9ce0',textOnly:true};
@@ -71,10 +71,12 @@ export function championHud(r,e,g){
  drawLevelBadge(r,e,x,y,g);
  if(e.key==='denis'&&e.state.denisRound){const sx=x+width+.30,sy=y+.17,round=e.state.denisRound;c.save();c.translate(sx,sy);c.fillStyle=round==='ice'?'#a9e7ff':round==='fire'?'#f35b32':'#f5f6f8';c.strokeStyle=round==='armor'?'#89929b':'#273b4a';c.lineWidth=.035;c.beginPath();c.moveTo(0,-.26);c.lineTo(.10,-.10);c.lineTo(.10,.22);c.lineTo(-.10,.22);c.lineTo(-.10,-.10);c.closePath();c.fill();c.stroke();c.restore();}
  if(e.key==='dongrang'){const sx=e.x+width/2+.29,sy=y+.07;r.polygon([[sx,sy-.23],[sx+.16,sy-.13],[sx+.19,sy+.04],[sx+.1,sy+.2],[sx-.08,sy+.2],[sx-.16,sy+.05],[sx-.12,sy-.12]],'#9cac57','#d8d48b');r.line([{x:sx-.08,y:sy+.12},{x:sx+.07,y:sy-.11}],'#d4dc98',.025);r.text(String(Math.floor((e.totalHealingReceived||0)/1000)),sx,sy+.43,'#e8e9b6',.24);}
- if(e.key==='ppui'){const sx=e.x+width/2+.29,sy=y+.07;drawPulseIcon(c,sx,sy);r.text(String(pulse(e)),sx,sy+.43,'#ffb5c4',.24);}
+ if(e.key==='ppui'&&!e.buffet){const sx=e.x+width/2+.29,sy=y+.07;drawPulseIcon(c,sx,sy);r.text(String(pulse(e)),sx,sy+.43,'#ffb5c4',.24);}
  if(e.trainingDummy){c.restore();return;}
  const resourceY=y+.51,cap=g.ammoCap(e);
- if(e.key==='hohenheim'){
+ if(e.key==='denis'){const progress=Math.max(0,Math.min(1,1-g.passiveCooldown(e)/12)),ready=progress>=1&&e.ammo>=3;c.fillStyle='#172329';c.fillRect(x,resourceY+.29,width,.105);c.fillStyle=ready?'#ffe1a0':'#958976';c.fillRect(x,resourceY+.29,width*progress,.105);if(ready){c.save();c.shadowColor='#ffd17a';c.shadowBlur=6;c.strokeStyle='#ffe5a8';c.lineWidth=.025;c.strokeRect(x,resourceY+.29,width,.105);c.restore();}}
+ if(e.buffet&&e.state.buffetR){r.text('∞',e.x,resourceY+.12,'#f5a1b5',.30);
+ }else if(e.key==='hohenheim'){
   const shape=Hohenheim.chargeShape(g,e,e.player?g.input.aim:e.state.hohenCharge?.aim||{x:e.x+1,y:e.y});
   const bounds=[0,.3,.6,1],gap=.055,w=(width-2*gap)/3;for(let i=0;i<3;i++){const left=x+i*(w+gap),fraction=Math.max(0,Math.min(1,(shape.progress-bounds[i])/(bounds[i+1]-bounds[i])));c.fillStyle='#173439';c.fillRect(left,resourceY,w,.24);c.fillStyle=shape.hits>i?'#c4ffff':'#528a94';c.fillRect(left,resourceY,w*fraction,.24);c.strokeStyle='#a5e4e9';c.lineWidth=.025;c.strokeRect(left,resourceY,w,.24);}if(shape.progress>=1-1e-8){c.save();c.strokeStyle='#439cff';c.shadowColor='#238dff';c.shadowBlur=9+Math.sin(g.time*16)*4;c.lineWidth=.055;c.strokeRect(x-.035,resourceY-.035,width+.07,.31);c.restore();}
  }else if(e.key==='moses'){
@@ -93,7 +95,8 @@ export function championHud(r,e,g){
   const count=Math.ceil(cap/4),ready=shieldRounds(e),gap=1.15/Math.max(1,count);for(let i=0;i<count;i++){const px=e.x+.15+i*gap;c.fillStyle=i<ready?'#63bcff':'#24415a';c.beginPath();c.moveTo(px,resourceY+.23);c.lineTo(px,resourceY+.085);c.quadraticCurveTo(px+.04,resourceY-.005,px+.08,resourceY+.085);c.lineTo(px+.08,resourceY+.23);c.closePath();c.fill();}
  }else{
   const gap=.075,w=(width-gap*(cap-1))/cap;
-  for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)&&e.key!=='ezra'?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?'#f2d07c':'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}
+  const nikolaiGlow=e.key==='nikolai'&&g.units.some(t=>t.alive&&t.state?.nikolaiMarks?.[e.id]?.until>g.time&&Math.hypot(t.x-e.x,t.y-e.y)<=10);if(nikolaiGlow){c.save();c.shadowColor='#ff9a36';c.shadowBlur=9;}
+  for(let i=0;i<cap;i++){const px=x+i*(w+gap);c.fillStyle='#14221e';c.fillRect(px,resourceY,w,.18);c.strokeStyle='#6b7560';c.lineWidth=.025;c.strokeRect(px,resourceY,w,.18);const fraction=i<Math.floor(e.ammo)?1:i===Math.floor(e.ammo)&&e.key!=='ezra'?Math.min(1,e.reloadProgress/g.reloadInterval(e)):0;c.fillStyle=i<e.ammo?(nikolaiGlow?'#ff9a36':'#f2d07c'):'#95885f';c.fillRect(px+.015,resourceY+.015,(w-.03)*fraction,.15);}if(nikolaiGlow)c.restore();
  }
  if(e.key==='myo'&&Effects.empowered(e)){const ratio=(e.state.myoTacticalAmmo??cap)/cap,gy=resourceY+.3;c.fillStyle='#1c2935';c.fillRect(x,gy,width,.15);c.fillStyle='#91c8df';c.fillRect(x,gy,width*ratio,.15);r.text('Q '+Math.floor(e.state.myoTacticalAmmo??cap)+' / '+cap,e.x,gy+.075,'#e7f5ff',.17);}
  if(e.key==='maxim'&&e.state.maximQ){const q=e.state.maximQ,ratio=Math.max(0,Math.min(1,(q.until-g.time)/(q.until-q.at))),gy=resourceY+.30;c.fillStyle='#312116';c.fillRect(x,gy,width,.13);c.fillStyle='#f6ab4c';c.fillRect(x,gy,width*ratio,.13);c.strokeStyle='#ba8749';c.lineWidth=.025;c.strokeRect(x,gy,width,.13);}
@@ -172,7 +175,7 @@ export function championGroundEffects(r,e,g){
 export function stackGauge(e,g){
  if(e.key==='don'&&Effects.empowered(e)||e.key==='sora'&&Effects.permanentSora(e))return null;
  if(e.state.soleilCharge)return{color:'#ffd279',ratio:Math.min(1,(g.time-e.state.soleilCharge.at)/1.5),label:'Garde',timer:false,max:1};
- if(e.key==='ppui'){const full=pulse(e)>=PPUI.pulseCap,value=(e.ppuiHealing||0)%1000;return{color:'#ef637e',ratio:full?1:value/1000,label:full?'맥동 최대':`다음 맥동까지 ${Math.ceil(1000-value)} 치유`,max:1};}
+ if(e.key==='ppui'&&!e.buffet){const full=pulse(e)>=PPUI.pulseCap,value=(e.ppuiHealing||0)%1000;return{color:'#ef637e',ratio:full?1:value/1000,label:full?'맥동 최대':`다음 맥동까지 ${Math.ceil(1000-value)} 치유`,max:1};}
  if(e.key==='nosferatu'){const s=e.state.bloodfiend;return{ratio:s?Math.max(0,(s.until-g.time)/10):(e.state.bloodFeast||0)/bloodCapacity(g,e),color:'#ed3c65',label:s?'':`혈찬 ${Math.floor(e.state.bloodFeast||0)} / ${Math.floor(bloodCapacity(g,e))}`,timer:Boolean(s),max:s?0:bloodCapacity(g,e)/200};}
  if(e.key==='queen'&&e.state.queenR){const s=e.state.queenR;return{ratio:s.phase==='charging'?Math.min(1,(g.time-s.at)/3.75):s.stage/3,color:'#ff91dc',label:'',timer:false,max:3};}
  if(e.key==='dongrang'){const value=(e.totalHealingReceived||0)%1000;return{color:'#d8d48b',ratio:value/1000,label:`다음 양분까지 ${Math.ceil(1000-value)} 회복`,max:1};}

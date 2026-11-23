@@ -1,3 +1,4 @@
+import * as Buffet from './buffet.js';
 import {SOLEIL_TEXT,BOUGH_EXPANSION_TEXT,BOUGH_SKILL_SLOTS} from './bough-expansion-data.js';
 import {MAXIM} from './maxim-data.js';
 import {CHANGED_ULTIMATES,ultimateNotes,cooldown as boughCooldown} from './golden-bough.js';
@@ -27,6 +28,7 @@ const section=(title,text)=>{text=text.trim();return{title,text:text.startsWith(
 function referenceArena(key,transformed){
  const id=key+':'+transformed;if(cache.has(id))return cache.get(id);
  const g=new Game(key,'bottom',{mode:'training',seed:70}),e=g.player;g.time=0;g.units=[e];e.lastCombat=0;if(key==='dongbaek')e.qCd=1;
+ if(transformed&&key==='ppui'){e.buffet=true;e.name='뷔페';e.armor=10;e.range=6.5;e.maxHp=g.maxHp(e);e.hp=e.maxHp;e.ammo=g.ammoCap(e);}
  if(transformed&&key==='ahab'){g.buyAugment(e,'goldenBough');AhabEgo.begin(g,e);}
  if(transformed&&key==='sora'){e.buffs.soraEgo=Infinity;e.state.egoQCharges=SORA.egoQCharges;}
  if(transformed&&key==='nosferatu')e.state.bloodfiend={until:10,at:0,hp:e.hp,feast:0,x:e.x,y:e.y};
@@ -64,8 +66,9 @@ function basicRanges(key,g,e,transformed){
  return[row('공격 범위','사거리 '+r+' · 직선'+(widths[key]?' 폭 '+number(widths[key]):''))];
 }
 function skillRanges(key,index,g,e,transformed,variant){
- if(key==='denis'){if(index===0)return[row('집중 사격','1초 유지 후 해제 · 탄창 전부 소모 · 0.25초 간격'),row('적중 조건','대상별 3발 · 관통 대상 각각 누적')];if(index===1)return[row('격발','사거리 8.7 · 철갑은 관통')];if(index===2)return[row('탄환 선택','위: 빙결 · 왼쪽: 화염 · 오른쪽: 철갑'),row('비축','최대 2회 · 1회 충전 11초')];return[row('충격탄','사거리 10 · 비챔피언 관통')];}
- if(key==='nikolai'){if(index===0)return[row('표적','한 명 · 10초'),row('강화 조건','자신의 표적이 사거리 10 이내')];if(index===1)return[row('기본 검기','사거리 8 · 관통'),row('표적 추적 중','사거리 2.5 · 관통')];if(index===2)return[row('전투 지휘','자신 중심 반경 8 · 3초')];if(index===3)return[row('처분','대상 지정 거리 7.5 · 적 챔피언 한 명')];}
+ if(Buffet.active(e))return index===0?[row('붉은 신','자신 중심 반경 8')]:index===1?[row('사복검','사거리 6.5 · 부채꼴 120°')]:index===2?[row('못','자신 중심 반경 7 · 대상마다 1회')]:[row('자동 공격·마무리','사거리 8 · 전방 반원 180°')];
+ if(key==='denis'){if(index===0)return[row('집중 사격','탄창 3개 이상 · 1초 유지 후 해제 · 최대 3발 · 0.25초 간격'),row('적중 조건','대상별 3발 · 관통 대상 각각 누적')];if(index===1)return[row('격발','사거리 8.7 · 철갑은 관통')];if(index===2)return[row('탄환 선택','위: 빙결 · 왼쪽: 화염 · 오른쪽: 철갑'),row('비축','최대 2회 · 1회 충전 11초')];return[row('충격탄','사거리 10 · 비챔피언 관통')];}
+ if(key==='nikolai'){if(index===0)return[row('표적','한 명 · 10초'),row('강화 조건','자신의 표적이 사거리 10 이내')];if(index===1)return[row('기본 검기','사거리 8 · 관통'),row('표적 추적 중','사거리 2.5 · 관통')];if(index===2)return[row('전투 지휘','자신 중심 반경 8 · 5초 · 재사용 시 5초 갱신')];if(index===3)return[row('처분','커서 주변에서 즉시 지정 · 사거리 7.5 · 적 챔피언 한 명')];}
  if(key==='maxim'){if(index===0)return[row('발동','7.5 이동 · 최대 5초마다 1회')];if(index===2)return[row('돌진','최대 7초 · 커서 방향 조작'),row('충돌','자신 중심 반경 2.8')];if(index===3)return[row('충격파','사거리 12 · 부채꼴 150°')];}
  if(key==='mei'&&index===0)return[row('화상','같은 적 3회 피해 · 2초간 0.5초마다')];
  if(key==='mei'&&index===2)return[row('정주','지정 방향으로 4.5 돌진'),row('회축','자신 중심 반경 3.6 · 2초 내 재사용')];
@@ -117,6 +120,7 @@ function skillRanges(key,index,g,e,transformed,variant){
  return[row('지정 대상','사거리 '+range)];
 }
 function cooldownLabel(key,index,g,e,transformed,variant){
+ if(Buffet.active(e))return ['아군 구호 65초','탄창 3개 · 1개 장전 0.6초 · 공격 간격 0.7초','쿨타임 12초 · 정신집중 0.3초','쿨타임 50초 · 최초 사용 즉시 시작'][index];
  if(index===0)return ({denis:'재사용 12초',maxim:'발동 대기시간 5초',ppui:'재사용 15초',yi:'재사용 1.5초',kim:'재사용 1초',ishmael:'재사용 70초',gregor:'변이 재사용 30초',outis:'보호막 재사용 1초',don:'대상별 재사용 6초',nelly:'표식 재부여 3초',sora:transformed?'지속 '+SORA.egoDuration+'초':'표식 주기 3초',yan:'대상별 재부여 3초'})[key]||'상시';
  if(index===1){
   if(key==='maxim')return '탄창 3개 · 1개 장전 0.9초 · 공격 간격 0.7초';
@@ -155,7 +159,7 @@ export function skillReference(key,index,transformed=false,variant){
  const {g,e}=referenceArena(key,transformed),c=championDescription(key,transformed),[title,field]=fields[index];
  if(key==='ahab'&&transformed)return gasharpoonSkillReference(index,c);
  const alternate=index===3&&variant!==undefined?c.baseUltimates?.[variant]:null;
- const summaryKey=transformed?(key==='sora'?'soraEgo':key==='nosferatu'?'bloodfiend':'yanDistorted'):key;
+ const summaryKey=Buffet.active(e)?'buffet':transformed?(key==='sora'?'soraEgo':key==='nosferatu'?'bloodfiend':'yanDistorted'):key;
  let summary=SKILL_SUMMARIES[summaryKey]?.[index]||c[field]?.split(/[.!?]/u)[0]||'';
  if(alternate){summary=key==='sora'?(variant===0?'새 지령을 부여하고 기존 지령을 갱신합니다.':'대행 5중첩으로 12초간 개화 E.G.O 상태가 됩니다.'):(variant===0?'주변의 적 챔피언에게 가짜 지령을 부여하고 갱신합니다.':'불길한 힘 6중첩으로 20초간 뒤틀림 상태가 됩니다.');}
  const rawDetails=alternate?cleanSkillDetails(alternate.description):SKILL_DETAILS[summaryKey]?.[index]??cleanSkillDetails(c[field]||''),details=index===1?cleanBasicDetails(rawDetails):rawDetails,labels=key==='mei'&&index===2?['정주','회축']:key==='mei'&&index===3?['철산고','회축 연계']:key==='ahab'&&index===2?['명령 전환','엄호해라!','자, 막아내라!']:key==='ezra'&&index===1?['공방무기','알라스 공방 장갑','네스터 공방 망치','스크류 아틀리에제 드릴 망치','나미르 공방 건틀릿']:key==='gubo'&&index===0?['아군 처형','처형 파급']:key==='jamila'&&index===3?['전투원 소환','LCA 우제트 전투원']:null;return{title:alternate?.name||c[title],cooldown:cooldownLabel(key,index,g,e,transformed,variant),ranges:skillRanges(key,index,g,e,transformed,variant),summary,details,summarySections:labels?summary.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null,sections:labels?details.split(/\n\s*\n/).map((text,i)=>section(labels[i],text)):null};
@@ -176,6 +180,7 @@ export function skillTextHTML(text){
 
 
 export function goldenUltimateReference(key){
+ if(key==='denis')return{title:'충격탄',cooldown:'충전당 35초 · 최대 2회 비축',ranges:[row('관통 충격탄','사거리 10 · 직선 폭 0.672')],summary:'궁극기를 최대 2회 비축하며 기본 재사용 대기시간이 15초 감소한다.',details:CHAMPIONS.denis.rText.replace('재사용 대기시간은 50초다.','충전당 재사용 대기시간은 35초이며 최대 2회 비축한다.'),sections:null,summarySections:null};
  if(key==='ahab')return {title:GASHARPOON_NAME,cooldown:'쿨타임 45초 · 최대 12초 변신',ranges:[row('변신','자신')],summary:GASHARPOON_TEXT,details:GASHARPOON_TEXT,sections:null,summarySections:null};
  if(!CHANGED_ULTIMATES[key])return null;
  const notes=ultimateNotes(key),details=notes.map(n=>n.label+': '+n.text).join('\n\n');

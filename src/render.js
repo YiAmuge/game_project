@@ -1,3 +1,4 @@
+import {drawBuffetBody} from './buffet-vfx.js';
 import {drawDenisBody,drawDenisScene} from './denis-vfx.js';
 import {drawNikolaiScene,drawNikolaiBody} from './nikolai-vfx.js';
 import {drawMaximScene} from './maxim-vfx.js';
@@ -186,7 +187,7 @@ export class Renderer {
     const visual=visualForm(game,e),f=FRAMES[visual],h=spriteHeight(visual)*(e.state.bloodfiend?1.15:1),w=f?h*f.w/f.h:1.25,left=-w*(f?.foot?.[0]??.5),top=-h*(f?.foot?.[1]??1),atlas=this.atlasFor(visual);
     c.save();const appearance=championPresentation(game,e),origin=spriteOrigin(game,e,appearance.lift);c.globalAlpha*=appearance.dim;if(appearance.frozen)c.filter='grayscale(.6) sepia(.2) hue-rotate(155deg) brightness(1.12)';c.translate(origin.x,origin.y);const lean=meiRushLean(game,e);if(lean.x||lean.y)c.transform(1,0,-lean.x,1-lean.y,0,0);if((Math.cos(angle)<0)!==Boolean(f?.mirror))c.scale(-1,1);
     if(f&&atlas.complete&&atlas.naturalWidth){
-      c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);drawDenisBody(this,c,game,e,atlas,f,{left,top,w,h});drawResentmentBody(c,game,e,f,atlas,{left,top,w,h});drawNikolaiBody(this,c,game,e,atlas,f,{left,top,w,h});
+      c.imageSmoothingEnabled=false;c.drawImage(atlas,f.x,f.y,f.w,f.h,left,top,w,h);drawDenisBody(this,c,game,e,atlas,f,{left,top,w,h});drawBuffetBody(this,c,game,e,atlas,f,{left,top,w,h});drawResentmentBody(c,game,e,f,atlas,{left,top,w,h});drawNikolaiBody(this,c,game,e,atlas,f,{left,top,w,h});
       if(e.key==='maxim'&&e.state.maximQ&&this.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=.14;c.shadowColor='#f5a13d';c.shadowBlur=8;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f5a13d'),left,top,w,h);c.restore();}
       if(meiRushGlow(game,e)>0&&this.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=meiRushGlow(game,e);c.shadowColor='#ff5122';c.shadowBlur=18*meiRushGlow(game,e)/.65;c.drawImage(this.skillVfx.tintFrame(atlas,f,'#ff5221'),left,top,w,h);c.restore();}
       if(e.key==='alisa'&&e.state.detonatesAt>game.time&&this.skillVfx){c.save();c.globalAlpha*=.15+.65*Math.max(0,Math.min(1,(game.time-e.state.detonationAt)/2));c.drawImage(this.skillVfx.tintFrame(atlas,f,'#f25934'),left,top,w,h);c.restore();}

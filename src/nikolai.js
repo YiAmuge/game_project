@@ -28,7 +28,7 @@ export function ultimateTarget(g,e,p,{targetId}={}){
  const candidates=ultimateTargets(g,e),id=targetId??p?.id;
  if(id!==undefined)return candidates.find(t=>t.id===id);
  if(!p)return undefined;
- return candidates.filter(t=>distance(t,p)<=t.radius+.65).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id)[0];
+ return candidates.filter(t=>distance(t,p)<2).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id)[0];
 }
 export const validate=(g,e,slot,p,options={})=>slot==='q'||Boolean(ultimateTarget(g,e,p,options));
 export function basic(g,e,d){
@@ -51,8 +51,8 @@ export function cast(g,e,slot,p,d,options={}){
   fx(g,e,'nikolaiDisposal',{target:t.id,to:{x:t.x,y:t.y},life:.24,maxLife:.24});disposal(g,e,t);return true;
  }
  if(recast(g,e)){
-  e.state.nikolaiCommand.converted=true;
-  for(const a of g.champions(e.team)){const v=a.state.nikolaiOrders?.[e.id];if(v?.until>g.time){v.mode='power';fx(g,e,'nikolaiConvert',{x:a.x,y:a.y,target:a.id});}}
+  e.state.nikolaiCommand.converted=true;e.state.nikolaiCommand.until=g.time+P.qDuration;
+  for(const a of g.champions(e.team)){const v=a.state.nikolaiOrders?.[e.id];if(v?.until>g.time){v.mode='power';v.until=g.time+P.qDuration;fx(g,e,'nikolaiConvert',{x:a.x,y:a.y,target:a.id});}}
  }else{
   const until=g.time+P.qDuration;e.state.nikolaiCommand={until,converted:false};
   for(const a of g.champions(e.team))if(a.alive&&!g.hidden(a)&&distance(e,a)<=P.qRange+a.radius){a.state.nikolaiOrders??={};a.state.nikolaiOrders[e.id]={source:e.id,until,mode:'regen',next:g.time+P.qEvery};fx(g,e,'nikolaiBuff',{x:a.x,y:a.y,target:a.id});}

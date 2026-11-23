@@ -1,3 +1,4 @@
+import * as Buffet from './buffet.js';
 import * as Nikolai from './nikolai.js';
 import {MAXIM} from './maxim-data.js';
 import * as Bough from './golden-bough.js';
@@ -91,7 +92,7 @@ const supportKeys=new Set(['ppui','honglu','queequeg','meursault','yi','queen'])
 export function supportSkills(g,e,enemy){
  if(!supportKeys.has(e.key))return;
  if(g.time<(e.aiSupportAt||0))return;e.aiSupportAt=g.time+.15;const ally=healTarget(g,e,8),lowEnemy=enemy?.kind==='champion'&&enemy.hp/enemy.maxHp<.3;
- if(e.key==='ppui'&&ally&&distance(e,ally)<=7&&ally.hp/ally.maxHp<.65)g.cast(e,'q',e);
+ if(e.key==='ppui'&&!Buffet.active(e)&&ally&&distance(e,ally)<=7&&ally.hp/ally.maxHp<.65)g.cast(e,'q',e);
  if(e.key==='honglu'){
   if((ally&&distance(e,ally)<=6||enemy&&distance(e,enemy)<=6)&&(!e.state.insightUntil||ally&&ally.hp/ally.maxHp<.25||e.state.insightUntil-g.time<.15))g.cast(e,'q',e);
   const urgent=ally&&(ally.hp/ally.maxHp<.25||cleansable(g,ally))&&!lowEnemy;if(!g.zones.some(z=>z.kind==='waterfall'&&z.source===e&&z.until>g.time)&&(enemy?.kind==='champion'||urgent))g.cast(e,'r',jointAim(g,e,enemy,urgent?ally:null,8.5,6.5));
@@ -111,6 +112,7 @@ export function basicTarget(g,e,enemy){
 }
 export function combatSkills(g,e,target){
  if(!target||!safeTowerTarget(g,e,target)||g.time<(e.aiSkillAt||0))return;e.aiSkillAt=g.time+.15;supportSkills(g,e,target);const d=distance(e,target);
+ if(Buffet.eligible(g,e)&&g.time-e.lastCombat>2){g.recall(e,{mode:'buffet'});return;}if(Buffet.active(e)){if(d<=7)g.cast(e,'q',target);if(d<=8&&!e.state.buffetR)g.cast(e,'r',target);return;}
  if(e.key==='denis'){if(!e.state.denisRound)g.cast(e,'q',e,{direction:target.kind==='champion'?'left':'right'});if(target.kind==='champion'&&d<=10)g.cast(e,'r',target);return;}
  if(e.key==='nikolai'){const allies=g.champions(e.team).filter(a=>a.alive&&distance(e,a)<=8);if(Nikolai.recast(g,e)){if(allies.every(a=>a.hp>a.maxHp*.75))g.cast(e,'q',e);}else if(allies.some(a=>a.hp<a.maxHp*.85)||target.kind==='champion')g.cast(e,'q',e);if(target.kind==='champion'&&d<=7.5)g.cast(e,'r',target);return;}
  if(e.key==='maxim'){if(e.state.maximQ){e.state.maximQ.target=target.id;return;}if(target.kind==='champion'&&d<=12)g.cast(e,'r',target);if(!e.state.maximR&&d>MAXIM.nearRange&&d<15)g.cast(e,'q',target);return;}

@@ -1,3 +1,4 @@
+import {drawBuffetWeapon} from './buffet-vfx.js';
 import * as Nikolai from './nikolai.js';
 import {MAXIM} from './maxim-data.js';
 import {MAXIM_HEAD,maximHammerPoint,maximWeaponState,drawMaximCurrent} from './maxim-weapon.js';
@@ -43,6 +44,7 @@ export const WEAPON_ART={
 export const MIDDLE_GRIP=new Set(['starbuck','don','sinclair','honglu','dongrang','hohenheim','marton','rudolph']);
 export const gripPivot=key=>key==='denis'?.27:key==='nikolai'?.09:key==='maxim'?.17:key==='moses'?.30:key==='queen'?.42:key==='jamila'?.238:key==='kromer'?.11:MIDDLE_GRIP.has(key)?.25:.12;
 export function equippedWeapon(g,e){
+ if(e.buffet)return ['buffetSword',6,.055];
  if(e.key==='ahab'&&e.state.gasharpoon)return [e.state.gasharpoon.bladeMissingUntil>g.time?'ahabGasArmEmpty':'ahabGasArm',2.6,FRAMES.ahabGasArm.grip[0]];
  if(e.key==='ezra'){const index=e.state.ezraAttack?.until>g.time?e.state.ezraAttack.weapon:Ezra.currentIndex(g,e),w=Ezra.weapon(g,e,index);return [w.asset,w.length,w.pivot];}
  if(e.key==='ryoshu'&&e.goldenBough&&(e.arayashikiWeapon||g.zones.some(z=>z.kind==='arayashiki'&&z.source===e&&!z.posthumous&&z.until>g.time)))return ['ryoshuArayashiki',2.1,.15];
@@ -116,6 +118,11 @@ export function ahabSlamPose(g,e,p,camera){
  // Finish the fast strike before the scheduled return dash begins.
  const remaining=(e.state.ahabSlamAt??-99)-g.time;if(remaining>.13||remaining<=.01)return null;
  return forwardGroundStrikePose(g,e,p,camera,.13-remaining,{impact:.1,recovery:.02,depth:.06,head:[.99,.5],progress:(.13-remaining)/.12,angle:e.visualCast?.angle??p.facing});
+}
+export function starbuckTacticalPose(g,e,p=equipmentPose(g,e),camera){
+ const s=e.state.starbuckStab;if(!s||s.until<=g.time)return null;
+ const progress=Math.max(0,Math.min(1,(g.time-s.at)/.22)),ground=frontGroundPoint(e,p,camera,{angle:s.angle,distance:Math.hypot(s.point.x-e.x,s.point.y-e.y)}),baseAngle=.95+progress*.4,angle=Math.cos(s.angle)<0?Math.PI-baseAngle:baseAngle,[asset,length,pivot]=equippedWeapon(g,e),tip=gripSourcePoint([.99,.46],weaponGeometry(asset,length),pivot),pose=weaponOrientation(angle),dx=pose.flip*(tip.x*Math.cos(pose.angle)-tip.y*Math.sin(pose.angle)),dy=tip.x*Math.sin(pose.angle)+tip.y*Math.cos(pose.angle);
+ return{angle,hand:{x:ground.x-dx,y:ground.y-dy-(1-progress)*.9},ground,progress};
 }
 export function starbuckSlamPose(g,e,p,camera){
  if(e.key!=='starbuck')return null;
@@ -271,6 +278,7 @@ export function gregorCenterline(u){
 }
 export const myoFiring=(g,e)=>e.key==='myo'&&e.castSlot==='q'&&g.time-(e.castAt??-99)>=0&&g.time-e.castAt<.5;
 export function drawBackEquipment(r,e,g,{lift=0}={}){
+ if(e.buffet)return;
  if(e.state.kromerHeldBy)return;
  if(e.key==='mei'){drawMeiFists(r,e,g,lift,'back');return;}
  if(e.key==='heathcliff'&&g.buff(e,'heathUlt')){drawHeathSweep(r,e,g,lift,'back');return;}
@@ -379,6 +387,7 @@ function maximPose(g,e,p,camera,headScale){
 }
 export function maximWeaponPose(g,e,p=equipmentPose(g,e),camera){const appearance=maximWeaponState(g,e);return {...maximPose(g,e,p,camera,appearance.headScale),...appearance};}
 export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
+ if(e.buffet){drawBuffetWeapon(r,e,g,equipmentPose(g,e,lift));return true;}
  if(e.key==='mei'){drawMeiFists(r,e,g,lift);return true;}
  const c=r.ctx,entry=equippedWeapon(g,e);if(!entry)return false;
  if(e.state.kromerHeldBy)return true;
@@ -389,7 +398,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
  const p=equipmentPose(g,e,lift),{attacking,age,slash}=p;
  const held=(key,length,hand=p.right,angle=p.angle,pivot=entry[2],{thrust=0,trail=slash&&attacking,part='weapon',flipY=1,straighten=0,mode,progress,centerGrip=false,dim=1,gripY=0,orientation,headScale=1,hands,offHandOpacity=1,energy=0}={})=>{
   const accent=mode===undefined?basicWeaponAccent(g,e,p):weaponMotionAccent(e.key,mode,progress),displayLength=length*accent.scale,m=weaponGeometry(key,displayLength);if(!m)return;
-  c.save();c.translate(hand.x,hand.y);if(orientation){c.scale(orientation.flip,1);c.rotate(orientation.angle);}else orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip,hands,offHandOpacity});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,headScale,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();if(key==='nikolaiSaber'&&attacking&&Nikolai.empowered(g,e)&&r.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=.85;c.shadowColor='#ff642a';c.shadowBlur=14;c.beginPath();c.rect(m.span*(.2-pivot),-m.height*m.scale,m.span*.82,m.height*m.scale*2);c.clip();c.drawImage(r.skillVfx.tintFrame(loadAtlas(m.frame.sheet),m.frame,'#ff6b2d'),-m.span*pivot,-m.height*m.scale/2,m.span,m.height*m.scale);c.restore();}if(key==='maximHammer')drawMaximCurrent(c,loadAtlas(m.frame.sheet),m,pivot,headScale,energy,g.time);if(key==='ezraDrill')drawEzraDrillEffect(c,g,e,m,pivot);drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip,hands,offHandOpacity});
+  c.save();c.translate(hand.x,hand.y);if(orientation){c.scale(orientation.flip,1);c.rotate(orientation.angle);}else orientWeapon(c,angle);c.translate(thrust+accent.outward,-gripY*m.height*m.scale);if(flipY!==1)c.scale(1,flipY);drawGripHands(c,e.key,key,m,pivot,'back',{centered:centerGrip,hands,offHandOpacity});c.save();if(dim<1)c.filter=`brightness(${dim})`;drawWeapon(c,key,displayLength,{pivot,straighten,headScale,disabled:Boolean(g.stat(e,'disarm')&&!e.status.disarm?.hideVisual)});c.restore();if(key==='nikolaiSaber'&&Nikolai.empowered(g,e)&&r.skillVfx){c.save();c.globalCompositeOperation='screen';c.globalAlpha*=.85;c.shadowColor='#ff642a';c.shadowBlur=14;c.beginPath();c.rect(m.span*(.2-pivot),-m.height*m.scale,m.span*.82,m.height*m.scale*2);c.clip();c.drawImage(r.skillVfx.tintFrame(loadAtlas(m.frame.sheet),m.frame,'#ff6b2d'),-m.span*pivot,-m.height*m.scale/2,m.span,m.height*m.scale);c.restore();}if(key==='maximHammer')drawMaximCurrent(c,loadAtlas(m.frame.sheet),m,pivot,headScale,energy,g.time);if(key==='ezraDrill')drawEzraDrillEffect(c,g,e,m,pivot);drawWeaponCharge(c,r,g,e,m,pivot);drawGripHands(c,e.key,key,m,pivot,'front',{centered:centerGrip,hands,offHandOpacity});
   r.weaponTrail(e,g,part,{x:m.span*(.25-pivot),y:0},key==='maximHammer'?maximCrystalVector(headScale):{x:m.span*(1-pivot),y:0},trail);c.restore();
  };
  if(e.key==='yan'&&e.previewStance&&g.buff(e,'yanDistorted')){const body=FRAMES.yanDistorted,height=2.1*body.heightScale,right=height*body.w/body.h*(1-body.foot[0]);c.save();c.translate(p.origin.x+right+1.72,p.origin.y-.6);drawWeapon(c,'yanHand',3.2,{pivot:.5});c.restore();return true;}
@@ -451,6 +460,7 @@ export function drawEquipment(r,e,g,{lift=0,camera=r.camera}={}){
   // Shield follows the left hand/body only; its matrix never contains attack angle.
   held('ishmaelShield',ISHMAEL_SHIELD_LENGTH*(g.buff(e,'ishmaelShield')?1.35:1),{x:p.left.x,y:p.left.y+.14},0,.5,{mode:null,trail:false,part:'shield'});
   const d=e.state.ishmaelCast?.d,angle=e.state.ishmaelCast?.windupUntil>g.time?Math.atan2(d.y,d.x):p.angle;held('ishmaelMace',2.05,p.right,angle,.12);
+ }else if(e.key==='starbuck'&&e.state.starbuckStab?.until>g.time){const strike=starbuckTacticalPose(g,e,p,camera);held(entry[0],entry[1],strike.hand,strike.angle,entry[2],{mode:null,trail:false});
  }else if(e.key==='starbuck'&&e.motion?.kind==='leap'&&e.motion.elapsed/Math.max(.01,e.motion.minDuration)<=.5){
   return true;
  }else if(e.key==='starbuck'&&starbuckSlamPose(g,e,p,camera)){

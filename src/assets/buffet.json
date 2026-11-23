@@ -1,0 +1,79 @@
+{
+  "sources": {
+    "buffet": {
+      "source": "source/buffet.png",
+      "sha256": "d9d394e6aa6cc6d4006f58b191ad14a50ba2df312182d6ab2e70c4b321b220c7"
+    },
+    "buffetSword": {
+      "source": "source/buffet-weapon.png",
+      "sha256": "d879b48ea2cb0417e6ddbf8fb0c4b26c5c2933bcbc391b5cab7c9ad2a12478a6"
+    }
+  },
+  "note": "Crown and decorative hands excluded from height; game presentation scales body by 1.10.",
+  "frames": {
+    "buffet": {
+      "x": 8,
+      "y": 8,
+      "w": 495,
+      "h": 469,
+      "sheet": 28,
+      "rotation": 0,
+      "source": "source/buffet.png",
+      "sourceRect": [
+        50,
+        34,
+        1202,
+        1139
+      ],
+      "heightBasis": "crown",
+      "referenceHeight": 400,
+      "crownOffset": 69,
+      "heightScale": 1.1725,
+      "foot": [
+        0.51,
+        1
+      ],
+      "face": [
+        156,
+        50,
+        218,
+        156
+      ]
+    },
+    "buffetSword": {
+      "x": 8,
+      "y": 485,
+      "w": 700,
+      "h": 95,
+      "sheet": 28,
+      "rotation": 0,
+      "source": "source/buffet-weapon.png",
+      "sourceRect": [
+        850,
+        306,
+        1295,
+        176
+      ],
+      "grip": [
+        0.055,
+        0.45
+      ],
+      "bladeFrom": 0.13
+    },
+    "buffetHand": {
+      "x": 8,
+      "y": 588,
+      "w": 96,
+      "h": 97,
+      "sheet": 28,
+      "rotation": 0,
+      "source": "source/buffet.png",
+      "sourceRect": [
+        320,
+        124,
+        173,
+        174
+      ]
+    }
+  }
+}

@@ -31,7 +31,7 @@ export function tick(g,e){
 export function afterDamage(g,source,target,dealt,{campBonus=true,transferred=false}={}){
  if(!campBonus||transferred||source.kind!=='champion'||!g.buff(source,'amplify')||dealt<=0)return;
  const drain=g.buffValue(source,'amplify',CAMP_BUFFS.pulseDrain)*dealt;
- g.heal(null,source,drain,false,{healingKey:'amplify'});
+ g.heal(null,source,drain,false,{healingKey:'amplify',lifesteal:true});
  if(target.alive)g.deal(source,target,g.buffValue(source,'amplify',CAMP_BUFFS.pulseDamage)*dealt,{fixed:true,proc:false,campBonus:false});
 }
 export function swing(g,e,target){

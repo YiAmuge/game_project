@@ -23,10 +23,8 @@ test('Starbuck jungle damage +12% preserves +10% creep XP',()=>{
 test('Starbuck partial-ammo basics hit a 1.5-wide dash corridor for 200 base damage',()=>{
  const {g,p,t}=quiet();p.ammo=1;Object.assign(t,{x:43,y:7.7});const hp=t.hp;assert.ok(g.attack(p,{x:48,y:7}));assert.ok(p.motion);close(hp-t.hp,0);run(g,.5);close(hp-t.hp,200*.9);assert.ok(p.x>42.7);
 });
-test('Starbuck third tactical hit roots for .35 seconds, damage and cadence increase correctly',()=>{
- const {g,p,t}=quiet();g.cast(p,'q',t);run(g,.59);assert.equal(g.stat(t,'root'),0);run(g,.03);assert.equal(g.stat(t,'root'),1);close(t.status.root.until,.95,.02);assert.ok(p.state.starbuckStab.until>g.time);
- close(10000-t.hp,150*(1+1.045+1.045**2)*.9);run(g,1);assert.equal(g.stat(t,'root'),0);
-});
+test('Starbuck final manual recast adds twenty percent true damage and clears the chain',()=>{const{g,p,t}=quiet();for(let i=0;i<5;i++)assert.ok(g.cast(p,'q',t));assert.equal(g.stat(t,'root'),0);close(g.stat(t,'slow'),.3);assert.equal(p.state.starbuckChain,undefined);close(10000-t.hp,140*(1+1.06+1.12+1.18+1.24)*.9+140*1.24*.9*.2);});
+
 function capture(key='faust'){
  const {g,p,t}=quiet();t.key=key;t.name=CHAMPIONS[key].name;t.range=CHAMPIONS[key].range;t.ammo=CHAMPIONS[key].ammo;t.hp=4000;
  const other=g.makeChampion('faust',1,10);Object.assign(other,{x:46,y:8.3,hp:6000,maxHp:10000});Object.assign(t,{x:46,y:7});p.qCd=5;p.ammo=0;g.cast(p,'r',{x:46,y:7});run(g,.75);return {g,p,t,other};
